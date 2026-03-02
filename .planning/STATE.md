@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 1 of 7 (Foundation)
-Plan: 2 of 3 in current phase (01-02 complete, awaiting human verify checkpoint)
-Status: In progress — checkpoint:human-verify
-Last activity: 2026-03-02 -- 01-02 data pipeline complete, awaiting build verification
+Plan: 2 of 3 in current phase (01-01 and 01-02 complete)
+Status: In progress — 01-03 (search index) is next
+Last activity: 2026-03-02 -- 01-01 design system complete; 01-02 data pipeline complete
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (01-02 at checkpoint — auto-completable after verify)
-- Average duration: ~2 min
-- Total execution time: ~2 min
+- Total plans completed: 2
+- Average duration: ~4 min
+- Total execution time: ~7 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 1 | 2 min | 2 min |
+| 1. Foundation | 2 | ~7 min | ~4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02
+- Last 5 plans: 01-02, 01-01
 - Trend: Building
 
 *Updated after each plan completion*
@@ -49,6 +49,9 @@ Recent decisions affecting current work:
 - [01-02]: Slug format is LOWER(REPLACE(firstName,' ','-'))+'-'+LOWER(REPLACE(lastName,' ','-')) — consistent across generateStaticParams and query lookups.
 - [01-02]: dynamicParams=false on bowler route — unknown slugs get immediate 404, DB never queried at runtime.
 - [01-02]: Force-commit .env.local.example despite .env* gitignore — example template files must be tracked.
+- [01-01]: DM_Serif_Display requires weight: '400' — it is NOT a variable font (Inter is, needs no weight).
+- [01-01]: @theme inline (not @theme) — Tailwind utilities resolve to values, not CSS variable references.
+- [01-01]: Server/client split in layout — Header/Footer are server components, MobileNav/SearchBar are 'use client'.
 
 ### Pending Todos
 
@@ -63,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: 01-02 checkpoint:human-verify — npm run build verification needed with real Azure SQL credentials
-Resume file: .planning/phases/01-foundation/01-02-SUMMARY.md
+Stopped at: Completed 01-01-PLAN.md (design system and page shell)
+Resume file: .planning/phases/01-foundation/01-01-SUMMARY.md

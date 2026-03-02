@@ -13,7 +13,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **INFRA-02**: Build-time data fetching from Azure SQL (serverless free tier, only wakes during builds/admin)
 - [ ] **INFRA-03**: Pre-built search index for client-side bowler search (619 bowlers, no live DB needed)
 - [ ] **INFRA-04**: Build/revalidation pipeline triggered after data updates
-- [ ] **INFRA-05**: Design system tokens defined (cream/navy/red palette, bold typography, DM Serif Display + Inter)
+- [x] **INFRA-05**: Design system tokens defined (cream/navy/red palette, bold typography, DM Serif Display + Inter)
 
 ### Bowler Profiles
 
@@ -86,8 +86,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Cross-Cutting
 
 - [ ] **XCUT-01**: Cross-linking everywhere (every name and team is a clickable link)
-- [ ] **XCUT-02**: Mobile-responsive layout (tables scroll/reflow, charts resize)
-- [ ] **XCUT-03**: Graceful handling of missing data (empty tables, sparse historical records)
+- [x] **XCUT-02**: Mobile-responsive layout (tables scroll/reflow, charts resize)
+- [x] **XCUT-03**: Graceful handling of missing data (empty tables, sparse historical records)
 
 ## v2 Requirements
 
@@ -144,7 +144,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-02 | Phase 1 | Pending |
 | INFRA-03 | Phase 1 | Pending |
 | INFRA-04 | Phase 1 | Pending |
-| INFRA-05 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Complete |
 | BWLR-01 | Phase 2 | Pending |
 | BWLR-02 | Phase 2 | Pending |
 | BWLR-03 | Phase 2 | Pending |
@@ -185,8 +185,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMN-01 | Phase 7 | Pending |
 | ADMN-02 | Phase 7 | Pending |
 | XCUT-01 | Phase 2 | Pending |
-| XCUT-02 | Phase 1 | Pending |
-| XCUT-03 | Phase 1 | Pending |
+| XCUT-02 | Phase 1 | Complete |
+| XCUT-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 47 total

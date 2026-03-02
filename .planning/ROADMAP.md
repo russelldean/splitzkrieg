@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 01-01-PLAN.md — Design system tokens, fonts, responsive page shell (Header/Footer/MobileNav)
+- [x] 01-01-PLAN.md — Design system tokens, fonts, responsive page shell (Header/Footer/MobileNav)
 - [x] 01-02-PLAN.md — Azure SQL data pipeline, static bowler page generation, revalidation endpoint
 - [ ] 01-03-PLAN.md — Pre-built search index and client-side fuzzy search with Fuse.js
 
@@ -145,7 +145,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/3 | In progress | - |
+| 1. Foundation | 2/3 | In progress | - |
 | 2. Bowler Profiles | 0/3 | Not started | - |
 | 3. Search and Home Page | 0/3 | Not started | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
