@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Database connection pool singleton handles Azure SQL cold starts with 60s timeout
-- [ ] **INFRA-02**: Server Components with streaming used for all data fetching (not API routes, due to Vercel timeout limits)
-- [ ] **INFRA-03**: ISR caching with 1-hour revalidation and on-demand revalidation after data syncs
-- [ ] **INFRA-04**: Loading skeletons at every route for cold start UX
+- [ ] **INFRA-01**: Static site generation with on-demand revalidation after data syncs (data changes biweekly)
+- [ ] **INFRA-02**: Build-time data fetching from Azure SQL (serverless free tier, only wakes during builds/admin)
+- [ ] **INFRA-03**: Pre-built search index for client-side bowler search (619 bowlers, no live DB needed)
+- [ ] **INFRA-04**: Build/revalidation pipeline triggered after data updates
 - [ ] **INFRA-05**: Design system tokens defined (cream/navy/red palette, bold typography, DM Serif Display + Inter)
 
 ### Bowler Profiles
@@ -27,6 +27,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **BWLR-10**: Profile shows career timeline (teams played for, chronological)
 - [ ] **BWLR-11**: Color-coded performance in all score tables (200+ green, 250+ gold)
 - [ ] **BWLR-12**: Shareable URL with OG meta tags (splitzkrieg.org/bowler/russ-smith)
+- [ ] **BWLR-15**: Achievement badges on profile (100 career games, first 200+ game, first 600+ series, etc.)
 
 ### Search
 
@@ -55,6 +56,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **LEAD-03**: Sortable tables with links to bowler profiles
 - [ ] **LEAD-04**: Scratch vs handicap toggle on all stats views
 - [ ] **LEAD-05**: League-wide aggregate stats dashboard (total games, total pins, unique bowlers)
+- [ ] **LEAD-06**: Progressive leaderboards showing who held the record at each league night (e.g., top male/female scratch average over time)
 
 ### Champions & Playoffs
 

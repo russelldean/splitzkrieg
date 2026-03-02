@@ -89,7 +89,7 @@ Bowlers can look themselves up and explore their stats — career averages, pers
 - **Tech stack**: Next.js (App Router) + React + Tailwind CSS + Recharts. Decisions made, not negotiable.
 - **Data**: Historical data is migrated but some tables (matchResults, playoffResults, seasonChampions) are empty. Website must handle missing data gracefully.
 - **Domain**: splitzkrieg.org registered, ready to point to Vercel.
-- **Cold starts**: Azure SQL auto-pause accepted. First visitor after idle waits 30-60s.
+- **Static hybrid**: Public site is fully static (SSG + on-demand revalidation). Azure SQL only wakes during builds and admin work. Visitors never hit the database — instant loads, $0 hosting. Easy to switch to always-on ($15/month) later if needed.
 
 ## Key Decisions
 
@@ -99,7 +99,9 @@ Bowlers can look themselves up and explore their stats — career averages, pers
 | Next.js monolith (no separate backend) | API routes + server components = one codebase, one deployment | — Pending |
 | Vercel hosting | Made for Next.js, free tier generous, push-to-deploy | — Pending |
 | Computed columns for handicaps | Standardizes 225/95%/FLOOR across all 35 seasons, eliminates stored value drift | — Pending |
-| Accept DB cold starts | Low-traffic league site, not worth burning vCore seconds on keep-alive | — Pending |
+| Static hybrid architecture | Data changes biweekly — pre-render everything, DB only wakes for builds/admin. $0 hosting, instant loads. | — Pending |
+| Achievement badges on profiles | Celebrate real milestones (100 games, 200+ game) — recognition, not gamification | — Pending |
+| Progressive leaderboards | Baseball Reference-style "who held the record at each point in time" | — Pending |
 | Manual Google Sheets sync | Every ~2 weeks until admin tools replace Sheets in Phase 6 | — Pending |
 | No unique constraint on scores | Legitimate duplicates exist (subs bowling for two teams, double-headers) | — Pending |
 | Metrograph-inspired design | Bold typography, cream/navy/red palette — achievable with Tailwind | — Pending |
