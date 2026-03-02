@@ -21,7 +21,7 @@ const config: sql.config = {
   options: {
     encrypt: true,
     trustServerCertificate: false,
-    connectionTimeout: 120000, // 120s for Azure SQL cold start
+    connectTimeout: 120000, // 120s for Azure SQL cold start
     requestTimeout: 30000,
   },
 };
