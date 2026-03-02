@@ -11,7 +11,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **INFRA-01**: Static site generation with on-demand revalidation after data syncs (data changes biweekly)
 - [ ] **INFRA-02**: Build-time data fetching from Azure SQL (serverless free tier, only wakes during builds/admin)
-- [ ] **INFRA-03**: Pre-built search index for client-side bowler search (619 bowlers, no live DB needed)
+- [x] **INFRA-03**: Pre-built search index for client-side bowler search (619 bowlers, no live DB needed)
 - [ ] **INFRA-04**: Build/revalidation pipeline triggered after data updates
 - [x] **INFRA-05**: Design system tokens defined (cream/navy/red palette, bold typography, DM Serif Display + Inter)
 
@@ -142,7 +142,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | INFRA-01 | Phase 1 | Pending |
 | INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Complete |
 | INFRA-04 | Phase 1 | Pending |
 | INFRA-05 | Phase 1 | Complete |
 | BWLR-01 | Phase 2 | Pending |

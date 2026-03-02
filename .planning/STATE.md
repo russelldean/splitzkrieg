@@ -9,29 +9,29 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation)
-Plan: 2 of 3 in current phase (01-01 and 01-02 complete)
-Status: In progress — 01-03 (search index) is next
-Last activity: 2026-03-02 -- 01-01 design system complete; 01-02 data pipeline complete
+Phase: 1 of 7 (Foundation) -- COMPLETE
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 1 complete -- ready for Phase 2 planning
+Last activity: 2026-03-02 -- 01-03 search index complete; Phase 1 Foundation done
 
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: ~4 min
-- Total execution time: ~7 min
+- Total plans completed: 3
+- Average duration: ~3 min
+- Total execution time: ~9 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 2 | ~7 min | ~4 min |
+| 1. Foundation | 3 | ~9 min | ~3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02, 01-01
-- Trend: Building
+- Last 5 plans: 01-03, 01-02, 01-01
+- Trend: Phase 1 complete
 
 *Updated after each plan completion*
 
@@ -52,6 +52,8 @@ Recent decisions affecting current work:
 - [01-01]: DM_Serif_Display requires weight: '400' — it is NOT a variable font (Inter is, needs no weight).
 - [01-01]: @theme inline (not @theme) — Tailwind utilities resolve to values, not CSS variable references.
 - [01-01]: Server/client split in layout — Header/Footer are server components, MobileNav/SearchBar are 'use client'.
+- [01-03]: Used bowlers.slug column directly for search index instead of generating from firstName/lastName -- ensures consistency with pre-rendered bowler pages.
+- [01-03]: Static route handler with force-static generates search JSON at build time -- pattern for any future build-time data endpoints.
 
 ### Pending Todos
 
@@ -66,5 +68,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 01-01-PLAN.md (design system and page shell)
-Resume file: .planning/phases/01-foundation/01-01-SUMMARY.md
+Stopped at: Completed 01-03-PLAN.md (search index) -- Phase 1 Foundation complete
+Resume file: .planning/phases/01-foundation/01-03-SUMMARY.md

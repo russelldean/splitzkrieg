@@ -12,7 +12,7 @@ Build a stats-driven reference site for the Splitzkrieg Bowling League, starting
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Static generation, build-time data pipeline, design system, and project structure
+- [x] **Phase 1: Foundation** - Static generation, build-time data pipeline, design system, and project structure
 - [ ] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
 - [ ] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot
 - [ ] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons)
@@ -37,7 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Design system tokens, fonts, responsive page shell (Header/Footer/MobileNav)
 - [x] 01-02-PLAN.md — Azure SQL data pipeline, static bowler page generation, revalidation endpoint
-- [ ] 01-03-PLAN.md — Pre-built search index and client-side fuzzy search with Fuse.js
+- [x] 01-03-PLAN.md — Pre-built search index and client-side fuzzy search with Fuse.js
 
 ### Phase 2: Bowler Profiles
 **Goal**: A bowler can visit their profile page and see their complete career -- stats by season, personal records, average progression chart, and game scores -- all cross-linked and shareable
@@ -145,7 +145,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In progress | - |
+| 1. Foundation | 3/3 | Complete | 2026-03-02 |
 | 2. Bowler Profiles | 0/3 | Not started | - |
 | 3. Search and Home Page | 0/3 | Not started | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
