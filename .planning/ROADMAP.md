@@ -12,7 +12,7 @@ Build a stats-driven reference site for the Splitzkrieg Bowling League, starting
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Database connection, design system, loading states, and project structure
+- [ ] **Phase 1: Foundation** - Static generation, build-time data pipeline, design system, and project structure
 - [ ] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
 - [ ] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot
 - [ ] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons)
@@ -23,21 +23,21 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Foundation
-**Goal**: A working Next.js app connected to Azure SQL with the Metrograph design system, loading skeletons, and graceful cold-start handling -- the foundation every feature inherits
+**Goal**: A statically generated Next.js site with build-time Azure SQL data fetching, Metrograph design system, pre-built search index, and on-demand revalidation pipeline -- the foundation every feature inherits
 **Depends on**: Nothing (first phase)
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05, XCUT-02, XCUT-03
 **Success Criteria** (what must be TRUE):
-  1. App connects to Azure SQL and returns data from a test query, surviving a cold start without crashing or timing out
-  2. Navigating to any route during a cold start shows a branded loading skeleton, not a blank page or error
+  1. Build process connects to Azure SQL, fetches data, and generates static pages (handles DB cold start with retry/timeout at build time, not visitor time)
+  2. Every generated page loads instantly for visitors with zero database round-trips -- fully pre-rendered HTML
   3. Design system is visible -- cream/navy/red palette, DM Serif Display headings, Inter body text render correctly
-  4. Layout is mobile-responsive at 375px width (nav, footer, skeleton all reflow correctly)
-  5. A second visit to a cached page loads instantly via ISR (no database round-trip)
-**Plans**: TBD
+  4. Layout is mobile-responsive at 375px width (nav, footer, page shell all reflow correctly)
+  5. On-demand revalidation endpoint triggers static regeneration after data syncs (build runs, new pages deploy, visitors always see fresh static content)
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Design system tokens, fonts, responsive page shell (Header/Footer/MobileNav)
+- [ ] 01-02-PLAN.md — Azure SQL data pipeline, static bowler page generation, revalidation endpoint
+- [ ] 01-03-PLAN.md — Pre-built search index and client-side fuzzy search with Fuse.js
 
 ### Phase 2: Bowler Profiles
 **Goal**: A bowler can visit their profile page and see their complete career -- stats by season, personal records, average progression chart, and game scores -- all cross-linked and shareable
@@ -145,7 +145,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planned | - |
 | 2. Bowler Profiles | 0/3 | Not started | - |
 | 3. Search and Home Page | 0/3 | Not started | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
