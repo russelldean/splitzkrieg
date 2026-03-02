@@ -138,59 +138,59 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | TBD | Pending |
-| INFRA-02 | TBD | Pending |
-| INFRA-03 | TBD | Pending |
-| INFRA-04 | TBD | Pending |
-| INFRA-05 | TBD | Pending |
-| BWLR-01 | TBD | Pending |
-| BWLR-02 | TBD | Pending |
-| BWLR-03 | TBD | Pending |
-| BWLR-04 | TBD | Pending |
-| BWLR-05 | TBD | Pending |
-| BWLR-07 | TBD | Pending |
-| BWLR-08 | TBD | Pending |
-| BWLR-10 | TBD | Pending |
-| BWLR-11 | TBD | Pending |
-| BWLR-12 | TBD | Pending |
-| SRCH-01 | TBD | Pending |
-| SRCH-02 | TBD | Pending |
-| TEAM-01 | TBD | Pending |
-| TEAM-02 | TBD | Pending |
-| TEAM-03 | TBD | Pending |
-| TEAM-04 | TBD | Pending |
-| SEASN-01 | TBD | Pending |
-| SEASN-02 | TBD | Pending |
-| SEASN-03 | TBD | Pending |
-| SEASN-04 | TBD | Pending |
-| SEASN-05 | TBD | Pending |
-| LEAD-01 | TBD | Pending |
-| LEAD-02 | TBD | Pending |
-| LEAD-03 | TBD | Pending |
-| LEAD-04 | TBD | Pending |
-| LEAD-05 | TBD | Pending |
-| CHMP-01 | TBD | Pending |
-| CHMP-02 | TBD | Pending |
-| CHMP-03 | TBD | Pending |
-| CONT-01 | TBD | Pending |
-| CONT-02 | TBD | Pending |
-| CONT-03 | TBD | Pending |
-| HOME-01 | TBD | Pending |
-| HOME-02 | TBD | Pending |
-| HOME-03 | TBD | Pending |
-| HOME-04 | TBD | Pending |
-| HOME-05 | TBD | Pending |
-| ADMN-01 | TBD | Pending |
-| ADMN-02 | TBD | Pending |
-| XCUT-01 | TBD | Pending |
-| XCUT-02 | TBD | Pending |
-| XCUT-03 | TBD | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Pending |
+| BWLR-01 | Phase 2 | Pending |
+| BWLR-02 | Phase 2 | Pending |
+| BWLR-03 | Phase 2 | Pending |
+| BWLR-04 | Phase 2 | Pending |
+| BWLR-05 | Phase 2 | Pending |
+| BWLR-07 | Phase 5 | Pending |
+| BWLR-08 | Phase 5 | Pending |
+| BWLR-10 | Phase 5 | Pending |
+| BWLR-11 | Phase 2 | Pending |
+| BWLR-12 | Phase 2 | Pending |
+| SRCH-01 | Phase 3 | Pending |
+| SRCH-02 | Phase 3 | Pending |
+| TEAM-01 | Phase 4 | Pending |
+| TEAM-02 | Phase 4 | Pending |
+| TEAM-03 | Phase 4 | Pending |
+| TEAM-04 | Phase 4 | Pending |
+| SEASN-01 | Phase 4 | Pending |
+| SEASN-02 | Phase 4 | Pending |
+| SEASN-03 | Phase 4 | Pending |
+| SEASN-04 | Phase 4 | Pending |
+| SEASN-05 | Phase 4 | Pending |
+| LEAD-01 | Phase 5 | Pending |
+| LEAD-02 | Phase 5 | Pending |
+| LEAD-03 | Phase 5 | Pending |
+| LEAD-04 | Phase 5 | Pending |
+| LEAD-05 | Phase 5 | Pending |
+| CHMP-01 | Phase 6 | Pending |
+| CHMP-02 | Phase 6 | Pending |
+| CHMP-03 | Phase 6 | Pending |
+| CONT-01 | Phase 6 | Pending |
+| CONT-02 | Phase 6 | Pending |
+| CONT-03 | Phase 6 | Pending |
+| HOME-01 | Phase 3 | Pending |
+| HOME-02 | Phase 3 | Pending |
+| HOME-03 | Phase 3 | Pending |
+| HOME-04 | Phase 3 | Pending |
+| HOME-05 | Phase 3 | Pending |
+| ADMN-01 | Phase 7 | Pending |
+| ADMN-02 | Phase 7 | Pending |
+| XCUT-01 | Phase 2 | Pending |
+| XCUT-02 | Phase 1 | Pending |
+| XCUT-03 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 43 total
-- Mapped to phases: 0
-- Unmapped: 43 ⚠️
+- v1 requirements: 47 total
+- Mapped to phases: 47
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after initial definition*
+*Last updated: 2026-03-02 after roadmap creation*
