@@ -43,7 +43,7 @@ export async function generateSearchIndex(): Promise<SearchEntry[]> {
         b.slug,
         COUNT(DISTINCT r.seasonID) AS seasonsActive
       FROM bowlers b
-      LEFT JOIN roster r ON r.bowlerID = b.bowlerID
+      LEFT JOIN teamRosters r ON r.bowlerID = b.bowlerID
       GROUP BY b.bowlerID, b.bowlerName, b.slug
       ORDER BY b.bowlerName
     `);
