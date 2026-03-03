@@ -104,8 +104,7 @@ export default function ResourcesPage() {
             Resources &amp; Quick Links
           </h1>
           <p className="font-body text-navy/50 mt-2 text-lg">
-            Everything you need, all in one place. No more hunting through group
-            texts.
+            Everything you need, all in one place. No more hunting through emails.
           </p>
         </div>
 
