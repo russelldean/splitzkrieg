@@ -39,16 +39,6 @@ const resources: ResourceCategory[] = [
     ],
   },
   {
-    category: 'Bowling Alley',
-    links: [
-      {
-        label: 'Village Lanes',
-        href: 'https://www.villagelanes.com',
-        description: 'Our home lanes in Durham, NC',
-      },
-    ],
-  },
-  {
     category: 'Social',
     links: [
       {
@@ -60,6 +50,16 @@ const resources: ResourceCategory[] = [
         label: 'Facebook Group',
         href: 'https://www.facebook.com/groups/27865497820',
         description: 'Join the conversation',
+      },
+    ],
+  },
+  {
+    category: 'Remembering Village Lanes',
+    links: [
+      {
+        label: 'Village Lanes',
+        href: 'https://www.villagelanes.com',
+        description: 'Where it all started. Durham, NC.',
       },
     ],
   },
