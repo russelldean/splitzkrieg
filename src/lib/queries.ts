@@ -100,6 +100,7 @@ export interface BowlerCareerSummary {
   lastYear: number | null;
   seasonsPlayed: number;
   teamsPlayedFor: number;
+  firstMatchDate: string | null;
 }
 
 /**
@@ -124,7 +125,17 @@ export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<Bo
             WHERE bowlerID = @bowlerID
               AND isPenalty = 0
               AND teamID IS NOT NULL
-          ) AS teamsPlayedFor
+          ) AS teamsPlayedFor,
+          (
+            SELECT MIN(sch.matchDate)
+            FROM scores sc2
+            JOIN schedule sch
+              ON  sch.seasonID = sc2.seasonID
+              AND sch.week     = sc2.week
+              AND (sch.team1ID = sc2.teamID OR sch.team2ID = sc2.teamID)
+            WHERE sc2.bowlerID = @bowlerID
+              AND sc2.isPenalty = 0
+          ) AS firstMatchDate
         FROM vw_BowlerCareerSummary v
         WHERE v.bowlerID = @bowlerID
       `);

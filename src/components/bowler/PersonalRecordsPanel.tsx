@@ -6,6 +6,18 @@ interface Props {
   careerSummary: BowlerCareerSummary | null;
 }
 
+function formatFirstNight(summary: BowlerCareerSummary): string {
+  if (summary.firstMatchDate) {
+    return new Date(summary.firstMatchDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+  if (summary.firstYear) return String(summary.firstYear);
+  return '\u2014';
+}
+
 export function PersonalRecordsPanel({ careerSummary }: Props) {
   if (!careerSummary) {
     return (
@@ -22,31 +34,29 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
     <section>
       <h2 className="font-heading text-2xl text-navy mb-4">Personal Records</h2>
       <div className="bg-white rounded-lg border border-navy/10 p-6">
-        {/* 6-column grid: top row spans cols 1-2, 3-4, 5-6; bottom row offset to cols 2-3, 4-5 for W stagger */}
-        <div className="grid grid-cols-6 gap-y-6 gap-x-4">
-          <div className="col-span-2">
-            <RecordCard
-              label="High Game"
-              value={careerSummary.highGame}
-              colorClass={scoreColorClass(careerSummary.highGame)}
-            />
-          </div>
-          <div className="col-span-2">
-            <RecordCard
-              label="High Series"
-              value={careerSummary.highSeries}
-              colorClass={seriesColorClass(careerSummary.highSeries)}
-            />
-          </div>
-          <div className="col-span-2">
-            <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
-          </div>
-          <div className="col-start-2 col-span-2">
-            <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
-          </div>
-          <div className="col-start-4 col-span-2">
-            <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6">
+          <RecordCard
+            label="High Game"
+            value={careerSummary.highGame}
+            colorClass={scoreColorClass(careerSummary.highGame)}
+          />
+          <RecordCard
+            label="High Series"
+            value={careerSummary.highSeries}
+            colorClass={seriesColorClass(careerSummary.highSeries)}
+          />
+          <RecordCard
+            label="Career Avg"
+            value={careerSummary.careerAverage?.toFixed(1) ?? null}
+          />
+          <RecordCard
+            label="Total Pins"
+            value={careerSummary.totalPins?.toLocaleString() ?? null}
+          />
+          <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
+          <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
+          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
+          <RecordCard label="First Night" value={formatFirstNight(careerSummary)} />
         </div>
       </div>
     </section>
@@ -59,7 +69,7 @@ function RecordCard({
   colorClass = '',
 }: {
   label: string;
-  value: number | null;
+  value: string | number | null;
   colorClass?: string;
 }) {
   return (

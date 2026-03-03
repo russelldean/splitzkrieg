@@ -4,11 +4,12 @@ import { TeamBreakdown, type TeamStat } from '@/components/bowler/TeamBreakdown'
 
 interface Props {
   careerSummary: BowlerCareerSummary | null;
+  currentAvg: string | null;
   shareUrl: string;
   teams: TeamStat[];
 }
 
-export function BowlerHero({ careerSummary, shareUrl, teams }: Props) {
+export function BowlerHero({ careerSummary, currentAvg, shareUrl, teams }: Props) {
   const name = careerSummary?.bowlerName ?? 'Unknown Bowler';
 
   return (
@@ -23,7 +24,7 @@ export function BowlerHero({ careerSummary, shareUrl, teams }: Props) {
       </div>
 
       <div className="flex flex-wrap items-start gap-2 mt-6">
-        <StatPill label="Career Avg" value={careerSummary?.careerAverage?.toFixed(1) ?? null} />
+        <StatPill label="Current Avg" value={currentAvg} />
         <StatPill label="Total Games" value={careerSummary?.totalGamesBowled ?? null} />
         <StatPill
           label="Seasons Active"

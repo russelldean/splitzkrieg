@@ -100,9 +100,14 @@ export default async function BowlerPage({
       pct: totalNights > 0 ? Math.round((t.nights / totalNights) * 100) : 0,
     }));
 
+  // Current avg = most recent season's average (seasonStats sorted oldest→newest)
+  const currentAvg = seasonStats.length > 0
+    ? seasonStats[seasonStats.length - 1].seasonAverage?.toFixed(1) ?? null
+    : null;
+
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <BowlerHero careerSummary={careerSummary} shareUrl={shareUrl} teams={teams} />
+      <BowlerHero careerSummary={careerSummary} currentAvg={currentAvg} shareUrl={shareUrl} teams={teams} />
 
       <div className="mt-8 space-y-8">
         <PersonalRecordsPanel careerSummary={careerSummary} />
