@@ -2,14 +2,9 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Fuse from 'fuse.js';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { SearchEntry } from '@/lib/search-index';
 
-const browseCategories = [
-  { label: 'Bowlers', href: '/bowlers', description: 'Browse all bowlers' },
-  { label: 'Teams', href: '/teams', description: 'View team rosters' },
-];
 
 export function SearchBar() {
   const [query, setQuery] = useState('');
@@ -73,10 +68,9 @@ export function SearchBar() {
 
   const hasResults = results.length > 0;
   const isSearching = query.length >= 2;
-  const showBrowse = isFocused && !isSearching;
   const showResults = isFocused && isSearching && hasResults;
   const showNoResults = isFocused && isSearching && !hasResults;
-  const isDropdownOpen = showBrowse || showResults || showNoResults;
+  const isDropdownOpen = showResults || showNoResults;
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Escape') {
@@ -127,34 +121,6 @@ export function SearchBar() {
         aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
         aria-label="Search bowlers"
       />
-
-      {/* Browse categories when focused with no query */}
-      {showBrowse && (
-        <div
-          id={listboxId}
-          className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-navy/10 z-50 overflow-hidden"
-        >
-          <div className="px-3 py-1.5 border-b border-navy/5">
-            <span className="text-xs font-body text-navy/40 uppercase tracking-wider">Browse</span>
-          </div>
-          {browseCategories.map((cat) => (
-            <Link
-              key={cat.href}
-              href={cat.href}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                inputRef.current?.blur();
-                setIsFocused(false);
-                router.push(cat.href);
-              }}
-              className="block px-4 py-2.5 hover:bg-cream-dark transition-colors"
-            >
-              <span className="font-body text-sm font-medium text-navy block">{cat.label}</span>
-              <span className="font-body text-xs text-navy/40 block">{cat.description}</span>
-            </Link>
-          ))}
-        </div>
-      )}
 
       {/* Search results */}
       {showResults && (
