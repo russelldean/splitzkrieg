@@ -22,22 +22,31 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
     <section>
       <h2 className="font-heading text-2xl text-navy mb-4">Personal Records</h2>
       <div className="bg-white rounded-lg border border-navy/10 p-6">
-        <div className="grid grid-cols-3 gap-4">
-          <RecordCard
-            label="High Game"
-            value={careerSummary.highGame}
-            colorClass={scoreColorClass(careerSummary.highGame)}
-          />
-          <RecordCard
-            label="High Series"
-            value={careerSummary.highSeries}
-            colorClass={seriesColorClass(careerSummary.highSeries)}
-          />
-          <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
-        </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
-          <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
+        {/* 6-column grid: top row spans cols 1-2, 3-4, 5-6; bottom row offset to cols 2-3, 4-5 for W stagger */}
+        <div className="grid grid-cols-6 gap-y-6 gap-x-4">
+          <div className="col-span-2">
+            <RecordCard
+              label="High Game"
+              value={careerSummary.highGame}
+              colorClass={scoreColorClass(careerSummary.highGame)}
+            />
+          </div>
+          <div className="col-span-2">
+            <RecordCard
+              label="High Series"
+              value={careerSummary.highSeries}
+              colorClass={seriesColorClass(careerSummary.highSeries)}
+            />
+          </div>
+          <div className="col-span-2">
+            <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
+          </div>
+          <div className="col-start-2 col-span-2">
+            <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
+          </div>
+          <div className="col-start-4 col-span-2">
+            <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
+          </div>
         </div>
       </div>
     </section>
