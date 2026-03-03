@@ -74,9 +74,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **HOME-01**: Home page with league branding and Metrograph-inspired design
 - [ ] **HOME-02**: Prominent bowler search bar front and center
-- [ ] **HOME-03**: Current season snapshot (standings, recent results)
-- [ ] **HOME-04**: Countdown clock to next bowling night
-- [ ] **HOME-05**: Quick stats ticker (total bowlers, total games, league since 2007)
+- [x] **HOME-03**: Current season snapshot (standings, recent results)
+- [x] **HOME-04**: Countdown clock to next bowling night
+- [x] **HOME-05**: Quick stats ticker (total bowlers, total games, league since 2007)
 
 ### Admin
 
@@ -179,9 +179,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONT-03 | Phase 6 | Pending |
 | HOME-01 | Phase 3 | Pending |
 | HOME-02 | Phase 3 | Pending |
-| HOME-03 | Phase 3 | Pending |
-| HOME-04 | Phase 3 | Pending |
-| HOME-05 | Phase 3 | Pending |
+| HOME-03 | Phase 3 | Complete |
+| HOME-04 | Phase 3 | Complete |
+| HOME-05 | Phase 3 | Complete |
 | ADMN-01 | Phase 7 | Pending |
 | ADMN-02 | Phase 7 | Pending |
 | XCUT-01 | Phase 2 | Complete |
