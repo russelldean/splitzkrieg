@@ -44,6 +44,7 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
             label="Career Avg"
             value={careerSummary.careerAverage?.toFixed(1) ?? null}
           />
+          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
           <RecordCard
             label="High Game"
             value={careerSummary.highGame}
@@ -54,7 +55,6 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
             value={careerSummary.highSeries}
             colorClass={seriesColorClass(careerSummary.highSeries)}
           />
-          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
           <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
           <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
         </div>
@@ -72,13 +72,18 @@ function RecordCard({
   value: string | number | null;
   colorClass?: string;
 }) {
+  // Show X (bowling strike symbol) for zero counts
+  const isStrike = value === 0;
+  const display = value === null ? '\u2014' : isStrike ? 'X' : value;
+  const strikeClass = isStrike ? 'text-red-600/30' : '';
+
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs uppercase tracking-wide text-navy/50 font-body">
         {label}
       </span>
-      <span className={`text-3xl font-heading ${colorClass}`.trim()}>
-        {value ?? '\u2014'}
+      <span className={`text-3xl font-heading ${colorClass || strikeClass}`.trim()}>
+        {display}
       </span>
     </div>
   );
