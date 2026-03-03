@@ -147,10 +147,10 @@ export function SearchBar() {
                 router.push(cat.href);
                 setIsFocused(false);
               }}
-              className="flex items-center justify-between px-4 py-2.5 hover:bg-cream-dark transition-colors"
+              className="block px-4 py-2.5 hover:bg-cream-dark transition-colors"
             >
-              <span className="font-body text-sm font-medium text-navy">{cat.label}</span>
-              <span className="font-body text-xs text-navy/40">{cat.description}</span>
+              <span className="font-body text-sm font-medium text-navy block">{cat.label}</span>
+              <span className="font-body text-xs text-navy/40 block">{cat.description}</span>
             </Link>
           ))}
         </div>
