@@ -3,10 +3,50 @@ import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 
 const navLinks = [
-  { href: '/bowlers', label: 'Bowlers' },
-  { href: '/teams', label: 'Teams' },
-  { href: '/seasons', label: 'Seasons' },
-  { href: '/leaderboards', label: 'Leaderboards' },
+  {
+    href: '/bowlers',
+    label: 'Bowlers',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <circle cx="10" cy="5" r="3" />
+        <path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      </svg>
+    ),
+  },
+  {
+    href: '/teams',
+    label: 'Teams',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <circle cx="7" cy="5" r="2.5" />
+        <circle cx="13" cy="5" r="2.5" />
+        <path d="M2 16c0-2.8 2.2-5 5-5s5 2.2 5 5M8 16c0-2.8 2.2-5 5-5s5 2.2 5 5" />
+      </svg>
+    ),
+  },
+  {
+    href: '/seasons',
+    label: 'Seasons',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <rect x="3" y="4" width="14" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="7" y1="2" x2="7" y2="5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="13" y1="2" x2="13" y2="5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: '/leaderboards',
+    label: 'Leaderboards',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <rect x="2" y="10" width="4" height="8" rx="0.5" />
+        <rect x="8" y="4" width="4" height="14" rx="0.5" />
+        <rect x="14" y="7" width="4" height="11" rx="0.5" />
+      </svg>
+    ),
+  },
 ];
 
 export function Header() {
@@ -35,8 +75,9 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-navy font-body text-sm font-medium hover:text-red transition-colors"
+                className="flex items-center gap-1.5 text-navy font-body text-sm font-medium hover:text-red transition-colors"
               >
+                {link.icon}
                 {link.label}
               </Link>
             ))}

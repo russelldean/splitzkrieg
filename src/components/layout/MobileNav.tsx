@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 
 interface NavLink {
   href: string;
   label: string;
+  icon?: ReactNode;
 }
 
 interface MobileNavProps {
@@ -49,8 +51,9 @@ export function MobileNav({ links }: MobileNavProps) {
               key={link.href}
               href={link.href}
               onClick={() => setIsOpen(false)}
-              className="block px-4 py-3 text-sm font-body font-medium text-navy hover:bg-cream-dark transition-colors"
+              className="flex items-center gap-2 px-4 py-3 text-sm font-body font-medium text-navy hover:bg-cream-dark transition-colors"
             >
+              {link.icon}
               {link.label}
             </Link>
           ))}

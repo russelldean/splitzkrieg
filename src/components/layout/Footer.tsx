@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 const secondaryLinks = [
   { href: '/about', label: 'About' },
@@ -25,12 +26,16 @@ export function Footer() {
         </nav>
 
         {/* Branding */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-navy/10">
-          <span className="font-heading text-navy/50 text-sm">
-            Splitzkrieg Bowling League
-          </span>
+        <div className="flex flex-col items-center gap-4 pt-4 border-t border-navy/10">
+          <Image
+            src="/splitzkrieg logo.png"
+            alt="Splitzkrieg Bowling League"
+            width={200}
+            height={72}
+            className="h-20 w-auto mix-blend-multiply opacity-60"
+          />
           <span className="font-body text-navy/40 text-sm">
-            Since 2007
+            Village Lanes &middot; Durham, NC &middot; Since 2007
           </span>
         </div>
       </div>
