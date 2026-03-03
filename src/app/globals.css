@@ -37,7 +37,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  @utility animate-ticker {
+  .animate-ticker {
     animation: none;
   }
 }
