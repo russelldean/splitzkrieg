@@ -36,20 +36,24 @@ export function Footer() {
               height={146}
               className="h-16 sm:h-20 w-auto opacity-50"
             />
-            <Image
-              src="/splitzkrieg logo.png"
-              alt="Splitzkrieg Bowling League"
-              width={200}
-              height={72}
-              className="h-16 sm:h-20 w-auto mix-blend-multiply opacity-60"
-            />
-            <Image
-              src="/Splitzkrieg Bowling Buddy logo.png"
-              alt="Splitzkrieg Bowling Buddy"
-              width={160}
-              height={141}
-              className="h-16 sm:h-20 w-auto mix-blend-multiply opacity-50"
-            />
+            <Link href="/bowler/matt-tauch" title="Logo by Matt Tauch">
+              <Image
+                src="/splitzkrieg logo.png"
+                alt="Splitzkrieg Bowling League"
+                width={200}
+                height={72}
+                className="h-16 sm:h-20 w-auto mix-blend-multiply opacity-60 hover:opacity-80 transition-opacity"
+              />
+            </Link>
+            <Link href="/bowler/matt-tauch" title="Logo by Matt Tauch">
+              <Image
+                src="/Splitzkrieg Bowling Buddy logo.png"
+                alt="Splitzkrieg Bowling Buddy"
+                width={160}
+                height={141}
+                className="h-16 sm:h-20 w-auto mix-blend-multiply opacity-50 hover:opacity-80 transition-opacity"
+              />
+            </Link>
           </div>
           <p className="font-body text-navy/40 text-sm">
             Durham, NC &middot; Since 2007
