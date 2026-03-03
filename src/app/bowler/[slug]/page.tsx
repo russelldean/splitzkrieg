@@ -16,9 +16,12 @@ import {
   getBowlerCareerSummary,
   getBowlerSeasonStats,
   getBowlerGameLog,
+  getBowlerOfTheWeek,
 } from '@/lib/queries';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
+import { LastWeekHighlight } from '@/components/bowler/LastWeekHighlight';
+import type { WeekDelta } from '@/components/bowler/LastWeekHighlight';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
 import { GameLog } from '@/components/bowler/GameLog';
@@ -73,11 +76,14 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, botwID] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
+    getBowlerOfTheWeek(),
   ]);
+
+  const isBowlerOfTheWeek = botwID === bowler.bowlerID;
 
   // Derive team breakdown from season stats
   const teamMap = new Map<string, { teamName: string; teamSlug: string | null; nights: number }>();
@@ -100,20 +106,76 @@ export default async function BowlerPage({
       pct: totalNights > 0 ? Math.round((t.nights / totalNights) * 100) : 0,
     }));
 
-  // Current avg = most recent season's average (seasonStats sorted oldest→newest)
-  const currentAvg = seasonStats.length > 0
-    ? seasonStats[seasonStats.length - 1].seasonAverage?.toFixed(1) ?? null
+  // Current avg = rolling 27-game average (used for handicap on bowling nights)
+  const currentAvg = careerSummary?.rollingAvg?.toFixed(1) ?? null;
+  const rollingAvgDelta = careerSummary?.rollingAvg != null && careerSummary?.prevRollingAvg != null
+    ? careerSummary.rollingAvg - careerSummary.prevRollingAvg
     : null;
+
+  // Compute last-week deltas (only for current season bowlers)
+  // seasonStats is newest-first, gameLog is newest-season-first with ascending weeks within
+  const latestSeason = seasonStats.length > 0 ? seasonStats[0] : null;
+  const latestSeasonLog = gameLog.filter(w => latestSeason && w.seasonID === latestSeason.seasonID);
+  const lastWeek = latestSeasonLog.length > 0 ? latestSeasonLog[latestSeasonLog.length - 1] : null;
+
+  // Only show for bowlers active in the most recent season
+  // Check if latest season is the current one (most recent year in the data)
+  const isCurrentSeason = latestSeason && seasonStats.length > 0;
+
+  let weekDelta: WeekDelta | null = null;
+  if (isCurrentSeason && lastWeek && careerSummary) {
+    const games = [lastWeek.game1, lastWeek.game2, lastWeek.game3].filter(
+      (g): g is number => g !== null && g > 0
+    );
+    const weekPins = games.reduce((sum, g) => sum + g, 0);
+    const weekMaxGame = games.length > 0 ? Math.max(...games) : 0;
+    const weekSeries = lastWeek.scratchSeries ?? 0;
+    const week200 = games.filter(g => g >= 200).length;
+    const weekSeries600 = weekSeries >= 600 ? 1 : 0;
+
+    // Compute what career avg was before this week
+    const prevTotalPins = (careerSummary.totalPins ?? 0) - weekPins;
+    const prevTotalGames = (careerSummary.totalGamesBowled ?? 0) - games.length;
+    const prevAvg = prevTotalGames > 0 ? prevTotalPins / prevTotalGames : null;
+    const currentCareerAvg = careerSummary.careerAverage ?? null;
+    const avgChange = currentCareerAvg !== null && prevAvg !== null
+      ? currentCareerAvg - prevAvg
+      : null;
+
+    weekDelta = {
+      totalPins: weekPins,
+      totalGames: games.length,
+      games200Plus: week200,
+      series600Plus: weekSeries600,
+      turkeys: lastWeek.turkeys,
+      avgChange,
+      newHighGame: careerSummary.highGame !== null && weekMaxGame >= careerSummary.highGame,
+      newHighSeries: careerSummary.highSeries !== null && weekSeries >= careerSummary.highSeries,
+    };
+  }
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <BowlerHero careerSummary={careerSummary} currentAvg={currentAvg} shareUrl={shareUrl} teams={teams} />
+      <BowlerHero
+        careerSummary={careerSummary}
+        currentAvg={currentAvg}
+        currentAvgDelta={isCurrentSeason && rollingAvgDelta !== null
+          ? `${rollingAvgDelta >= 0 ? '+' : ''}${rollingAvgDelta.toFixed(1)}`
+          : null}
+        shareUrl={shareUrl}
+        teams={teams}
+        isBowlerOfTheWeek={isBowlerOfTheWeek}
+      />
 
       <div className="mt-8 space-y-8">
-        <PersonalRecordsPanel careerSummary={careerSummary} />
+        {lastWeek && weekDelta && (
+          <LastWeekHighlight week={lastWeek} delta={weekDelta} />
+        )}
+
+        <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} />
 
         {seasonStats.length >= 3 && (
-          <AverageProgressionChart seasons={seasonStats} />
+          <AverageProgressionChart seasons={[...seasonStats].reverse()} />
         )}
 
         <SeasonStatsTable seasons={seasonStats} />

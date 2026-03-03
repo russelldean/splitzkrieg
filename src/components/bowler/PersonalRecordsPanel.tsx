@@ -1,9 +1,10 @@
 import type { BowlerCareerSummary } from '@/lib/queries';
-import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
+import type { WeekDelta } from './LastWeekHighlight';
 
 interface Props {
   careerSummary: BowlerCareerSummary | null;
+  delta?: WeekDelta | null;
 }
 
 function formatFirstNight(summary: BowlerCareerSummary): string {
@@ -18,7 +19,7 @@ function formatFirstNight(summary: BowlerCareerSummary): string {
   return '\u2014';
 }
 
-export function PersonalRecordsPanel({ careerSummary }: Props) {
+export function PersonalRecordsPanel({ careerSummary, delta }: Props) {
   if (!careerSummary) {
     return (
       <section>
@@ -39,24 +40,43 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
           <RecordCard
             label="Total Pins"
             value={careerSummary.totalPins?.toLocaleString() ?? null}
+            delta={delta ? `+${delta.totalPins.toLocaleString()}` : undefined}
           />
           <RecordCard
             label="Career Avg"
             value={careerSummary.careerAverage?.toFixed(1) ?? null}
+            delta={delta?.avgChange != null
+              ? `${delta.avgChange >= 0 ? '+' : ''}${delta.avgChange.toFixed(1)}`
+              : undefined}
+            deltaVariant={delta?.avgChange != null && delta.avgChange < 0 ? 'negative' : 'positive'}
           />
-          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
+          <RecordCard
+            label="Turkeys"
+            value={careerSummary.totalTurkeys}
+            delta={delta?.turkeys ? `+${delta.turkeys}` : undefined}
+          />
           <RecordCard
             label="High Game"
             value={careerSummary.highGame}
-            colorClass={scoreColorClass(careerSummary.highGame)}
+            delta={delta?.newHighGame ? 'NEW' : undefined}
+            deltaVariant="new"
           />
           <RecordCard
             label="High Series"
             value={careerSummary.highSeries}
-            colorClass={seriesColorClass(careerSummary.highSeries)}
+            delta={delta?.newHighSeries ? 'NEW' : undefined}
+            deltaVariant="new"
           />
-          <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
-          <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
+          <RecordCard
+            label="200+ Games"
+            value={careerSummary.games200Plus}
+            delta={delta && delta.games200Plus > 0 ? `+${delta.games200Plus}` : undefined}
+          />
+          <RecordCard
+            label="600+ Series"
+            value={careerSummary.series600Plus}
+            delta={delta && delta.series600Plus > 0 ? `+${delta.series600Plus}` : undefined}
+          />
         </div>
       </div>
     </section>
@@ -66,25 +86,40 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
 function RecordCard({
   label,
   value,
-  colorClass = '',
+  delta,
+  deltaVariant = 'positive',
 }: {
   label: string;
   value: string | number | null;
-  colorClass?: string;
+  delta?: string;
+  deltaVariant?: 'positive' | 'negative' | 'new';
 }) {
   // Show X (bowling strike symbol) for zero counts
   const isStrike = value === 0;
   const display = value === null ? '\u2014' : isStrike ? 'X' : value;
   const strikeClass = isStrike ? 'text-red-600/50 font-bold' : '';
 
+  const deltaColors = {
+    positive: 'text-green-600',
+    negative: 'text-red-500',
+    new: 'text-amber-600 font-bold',
+  };
+
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs uppercase tracking-wide text-navy/50 font-body">
         {label}
       </span>
-      <span className={`text-3xl font-heading ${colorClass || strikeClass}`.trim()}>
-        {display}
-      </span>
+      <div className="flex items-baseline gap-1.5">
+        <span className={`text-3xl font-heading ${strikeClass}`.trim()}>
+          {display}
+        </span>
+        {delta && (
+          <span className={`text-xs font-body ${deltaColors[deltaVariant]}`}>
+            {delta}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

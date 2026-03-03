@@ -101,6 +101,8 @@ export interface BowlerCareerSummary {
   seasonsPlayed: number;
   teamsPlayedFor: number;
   firstMatchDate: string | null;
+  rollingAvg: number | null;
+  prevRollingAvg: number | null;
 }
 
 /**
@@ -135,7 +137,53 @@ export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<Bo
               AND (sch.team1ID = sc2.teamID OR sch.team2ID = sc2.teamID)
             WHERE sc2.bowlerID = @bowlerID
               AND sc2.isPenalty = 0
-          ) AS firstMatchDate
+          ) AS firstMatchDate,
+          COALESCE(
+            (
+              SELECT CAST(SUM(pins) * 1.0 / NULLIF(COUNT(*), 0) AS DECIMAL(5,1))
+              FROM (
+                SELECT TOP 27 score AS pins
+                FROM (
+                  SELECT s2.game1 AS score, s2.seasonID, s2.week, 1 AS GameNum
+                  FROM scores s2 WHERE s2.bowlerID = @bowlerID AND s2.game1 > 0 AND s2.game1 IS NOT NULL
+                  UNION ALL
+                  SELECT s2.game2, s2.seasonID, s2.week, 2
+                  FROM scores s2 WHERE s2.bowlerID = @bowlerID AND s2.game2 > 0 AND s2.game2 IS NOT NULL
+                  UNION ALL
+                  SELECT s2.game3, s2.seasonID, s2.week, 3
+                  FROM scores s2 WHERE s2.bowlerID = @bowlerID AND s2.game3 > 0 AND s2.game3 IS NOT NULL
+                ) games
+                JOIN seasons sn ON games.seasonID = sn.seasonID
+                ORDER BY sn.year DESC,
+                         CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC,
+                         games.week DESC,
+                         games.GameNum DESC
+              ) recent
+            ),
+            (SELECT b2.establishedAvg FROM bowlers b2 WHERE b2.bowlerID = @bowlerID)
+          ) AS rollingAvg,
+          (
+            SELECT CAST(SUM(pins) * 1.0 / NULLIF(COUNT(*), 0) AS DECIMAL(5,1))
+            FROM (
+              SELECT score AS pins
+              FROM (
+                SELECT s3.game1 AS score, s3.seasonID, s3.week, 1 AS GameNum
+                FROM scores s3 WHERE s3.bowlerID = @bowlerID AND s3.game1 > 0 AND s3.game1 IS NOT NULL
+                UNION ALL
+                SELECT s3.game2, s3.seasonID, s3.week, 2
+                FROM scores s3 WHERE s3.bowlerID = @bowlerID AND s3.game2 > 0 AND s3.game2 IS NOT NULL
+                UNION ALL
+                SELECT s3.game3, s3.seasonID, s3.week, 3
+                FROM scores s3 WHERE s3.bowlerID = @bowlerID AND s3.game3 > 0 AND s3.game3 IS NOT NULL
+              ) allGames
+              JOIN seasons sn2 ON allGames.seasonID = sn2.seasonID
+              ORDER BY sn2.year DESC,
+                       CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC,
+                       allGames.week DESC,
+                       allGames.GameNum DESC
+              OFFSET 3 ROWS FETCH NEXT 27 ROWS ONLY
+            ) prevRecent
+          ) AS prevRollingAvg
         FROM vw_BowlerCareerSummary v
         WHERE v.bowlerID = @bowlerID
       `);
@@ -167,7 +215,7 @@ export interface BowlerSeasonStats {
 /**
  * Season-by-season stats for the stats table.
  * Queries scores directly (not the view) to get teamSlug for /team/[slug] cross-links.
- * Ordered chronologically (oldest to newest) -- table is NOT sortable per design decision.
+ * Ordered reverse chronologically (newest to oldest) -- table is NOT sortable per design decision.
  * Returns [] if DB unavailable or no data.
  */
 export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeasonStats[]> {
@@ -216,8 +264,8 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
           sc.seasonID, sn.romanNumeral, sn.displayName,
           sn.year, sn.period, t.teamName, t.slug
         ORDER BY
-          sn.year ASC,
-          CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END ASC
+          sn.year DESC,
+          CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
       `);
     return result.recordset;
   } catch (err) {
@@ -237,6 +285,7 @@ export interface GameLogWeek {
   game2: number | null;
   game3: number | null;
   scratchSeries: number | null;
+  turkeys: number;
 }
 
 /**
@@ -263,7 +312,8 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
           sc.game1,
           sc.game2,
           sc.game3,
-          sc.scratchSeries
+          sc.scratchSeries,
+          ISNULL(sc.turkeys, 0) AS turkeys
         FROM scores sc
         JOIN seasons sn ON sc.seasonID = sn.seasonID
         LEFT JOIN schedule sch
@@ -288,3 +338,34 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
     return [];
   }
 }
+
+/**
+ * Returns the bowlerID of the Bowler of the Week — the bowler with the highest
+ * handicap series (handSeries) in the most recent week of the most recent season.
+ * Cached to deduplicate across all 625 bowler page builds.
+ */
+export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db.request().query<{ bowlerID: number }>(`
+      SELECT TOP 1 sc.bowlerID
+      FROM scores sc
+      JOIN seasons sn ON sc.seasonID = sn.seasonID
+      WHERE sc.isPenalty = 0
+        AND sc.seasonID = (
+          SELECT TOP 1 seasonID FROM seasons
+          ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+        )
+        AND sc.week = (
+          SELECT MAX(sc2.week) FROM scores sc2
+          WHERE sc2.seasonID = sc.seasonID AND sc2.isPenalty = 0
+        )
+      ORDER BY sc.handSeries DESC
+    `);
+    return result.recordset[0]?.bowlerID ?? null;
+  } catch (err) {
+    console.warn('getBowlerOfTheWeek: DB unavailable', err);
+    return null;
+  }
+});
