@@ -41,7 +41,7 @@ export default async function Home() {
               alt="Splitzkrieg Bowling League"
               width={400}
               height={144}
-              className="h-32 sm:h-44 w-auto"
+              className="h-32 sm:h-44 w-auto mix-blend-multiply"
               unoptimized
               priority
             />
@@ -52,11 +52,13 @@ export default async function Home() {
 
           {/* Explore Cards — above the fold */}
           <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {quickLinks.map((link) => (
+            {quickLinks.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all"
+                className={`group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all ${
+                  i === quickLinks.length - 1 ? 'col-span-2 sm:col-span-1 mx-auto sm:mx-0 max-w-[calc(50%-0.375rem)] sm:max-w-none' : ''
+                }`}
               >
                 <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
                   {link.label}
