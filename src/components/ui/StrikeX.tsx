@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react';
 
 /**
- * Replaces uppercase X characters in a string with a styled bowling-strike X.
+ * Replaces X/x characters in a string with a styled bowling-strike X.
  * Use in display text (names, season numerals, headings) — not in URLs or metadata.
+ * Preserves original case (uppercase X stays X, lowercase x stays x).
  */
 export function strikeX(text: string): ReactNode {
-  if (!text.includes('X')) return text;
+  if (!/x/i.test(text)) return text;
 
-  const parts = text.split(/(X)/g);
+  const parts = text.split(/([Xx])/g);
   return parts.map((part, i) =>
-    part === 'X' ? (
-      <span key={i} className="text-red-600/50 font-bold">
-        X
+    part === 'X' || part === 'x' ? (
+      <span key={i} className="text-red-600/60 font-bold">
+        {part}
       </span>
     ) : (
       part
