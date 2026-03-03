@@ -26,14 +26,30 @@ export function Footer() {
         </nav>
 
         {/* Branding */}
-        <div className="flex flex-col items-center gap-4 pt-4 border-t border-navy/10">
-          <Image
-            src="/splitzkrieg logo.png"
-            alt="Splitzkrieg Bowling League"
-            width={200}
-            height={72}
-            className="h-20 w-auto mix-blend-multiply opacity-60"
-          />
+        <div className="flex flex-col items-center gap-6 pt-4 border-t border-navy/10">
+          <div className="flex items-center justify-center gap-8 sm:gap-12">
+            <Image
+              src="/59524_441728757459_7049293_n.jpg"
+              alt="Splitzkrieg classic logo"
+              width={60}
+              height={146}
+              className="h-20 w-auto opacity-50"
+            />
+            <Image
+              src="/splitzkrieg logo.png"
+              alt="Splitzkrieg Bowling League"
+              width={200}
+              height={72}
+              className="h-20 w-auto mix-blend-multiply opacity-60"
+            />
+            <Image
+              src="/Splitzkrieg Bowling Buddy logo.png"
+              alt="Splitzkrieg Bowling Buddy"
+              width={160}
+              height={141}
+              className="h-20 w-auto mix-blend-multiply opacity-50"
+            />
+          </div>
           <span className="font-body text-navy/40 text-sm">
             Village Lanes &middot; Durham, NC &middot; Since 2007
           </span>
