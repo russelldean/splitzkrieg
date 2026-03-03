@@ -13,7 +13,7 @@ Build a stats-driven reference site for the Splitzkrieg Bowling League, starting
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Static generation, build-time data pipeline, design system, and project structure
-- [ ] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
+- [x] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
 - [ ] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot
 - [ ] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons)
 - [ ] **Phase 5: Leaderboards and Profile Depth** - All-time leaderboards and enriched bowler profile features
@@ -54,7 +54,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md -- Data layer: query functions (career, season, game log) and scoreColorClass utility
 - [x] 02-02-PLAN.md -- Static components: BowlerHero, PersonalRecordsPanel, SeasonStatsTable, OG metadata
-- [ ] 02-03-PLAN.md -- TBD
+- [x] 02-03-PLAN.md -- Client components: AverageProgressionChart (Recharts 3), GameLog accordion, full page assembly
 
 ### Phase 3: Search and Home Page
 **Goal**: Bowlers can find any bowler by name from the home page and see a current-season snapshot of the league
@@ -146,7 +146,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-02 |
-| 2. Bowler Profiles | 2/3 | In progress | - |
+| 2. Bowler Profiles | 3/3 | Complete | 2026-03-02 |
 | 3. Search and Home Page | 0/3 | Not started | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
 | 5. Leaderboards and Profile Depth | 0/3 | Not started | - |

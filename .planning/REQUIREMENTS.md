@@ -20,8 +20,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **BWLR-01**: User can view bowler profile with career summary header (name, seasons active, career average, total games, teams played for)
 - [x] **BWLR-02**: Profile shows season-by-season stats table with career totals row
 - [x] **BWLR-03**: Profile shows personal records panel (high game, high series, 200+ count, 600+ count, turkeys)
-- [ ] **BWLR-04**: Profile shows average progression line chart across seasons
-- [ ] **BWLR-05**: Profile shows game log with week-by-week scores expandable per season
+- [x] **BWLR-04**: Profile shows average progression line chart across seasons
+- [x] **BWLR-05**: Profile shows game log with week-by-week scores expandable per season
 - [ ] **BWLR-07**: Profile shows milestone tracker (approaching milestones)
 - [ ] **BWLR-08**: Profile shows leaderboard context ("Ranked Nth in...") for top bowlers
 - [ ] **BWLR-10**: Profile shows career timeline (teams played for, chronological)
@@ -148,8 +148,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BWLR-01 | Phase 2 | Complete |
 | BWLR-02 | Phase 2 | Complete |
 | BWLR-03 | Phase 2 | Complete |
-| BWLR-04 | Phase 2 | Pending |
-| BWLR-05 | Phase 2 | Pending |
+| BWLR-04 | Phase 2 | Complete |
+| BWLR-05 | Phase 2 | Complete |
 | BWLR-07 | Phase 5 | Pending |
 | BWLR-08 | Phase 5 | Pending |
 | BWLR-10 | Phase 5 | Pending |
