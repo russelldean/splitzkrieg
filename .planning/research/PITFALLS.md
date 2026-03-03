@@ -4,6 +4,12 @@
 **Researched:** 2026-03-02
 **Confidence:** MEDIUM (training data only -- no web verification available; however these are well-established patterns across multiple documented sources in training data)
 
+> **ARCHITECTURAL OVERRIDE (2026-03-02):** This research was written before the **static hybrid** decision.
+> - **Pitfall 1 (Cold-Start UX) is now a build-time concern only.** Visitors get static HTML — no DB waits, no skeletons for cold starts. Build process handles cold starts with retry/timeout.
+> - **Pitfall 2 (Vercel timeout) is now a build-time concern.** Build functions have longer timeouts than request-time serverless functions.
+> - **Pitfall 5 (Server/Client boundary) still applies** but the boundary is simpler: pages are static, Client Components are for interactivity only.
+> - References to "first visitor waiting 30-60s," "loading.tsx skeletons," and "Server Component streaming" reflect the OLD architecture where visitors could trigger DB queries.
+
 ## Critical Pitfalls
 
 ### Pitfall 1: Azure SQL Serverless Auto-Pause Destroys First-Visit Experience

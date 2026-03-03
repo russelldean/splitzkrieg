@@ -4,6 +4,12 @@
 **Researched:** 2026-03-02
 **Confidence:** MEDIUM (web search/doc verification unavailable; versions verified from package.json and training data)
 
+> **ARCHITECTURAL OVERRIDE (2026-03-02):** This research was written before the **static hybrid** decision. The stack is the same but the usage pattern has changed:
+> - **mssql connection pool** is used at build time only, not during visitor requests
+> - **Server Components** render at build time (static generation), not at request time
+> - **Search** uses a pre-built JSON index with fuse.js client-side, not a live `/api/search` endpoint
+> - References to "Server Component data fetching at request time" and "connection pool per serverless function" reflect the OLD architecture
+
 ## Recommended Stack
 
 ### Core Technologies

@@ -4,6 +4,15 @@
 **Researched:** 2026-03-02
 **Confidence:** HIGH (Next.js 16 official docs verified, schema analyzed, infrastructure constraints known)
 
+> **ARCHITECTURAL OVERRIDE (2026-03-02):** This research was written before the **static hybrid** decision. Key changes:
+> - **All public pages are statically generated (SSG) at build time.** DB is accessed during builds only — visitors get pure static HTML.
+> - **No visitor-facing cold starts.** The 30-60s Azure SQL wake-up is handled with build-time retry logic.
+> - **No loading.tsx skeletons for DB waits.** Pages are pre-rendered. Loading states are for client-side page transitions only.
+> - **Search is a pre-built JSON index**, not a live `/api/search` endpoint.
+> - **Pattern 5 (Graceful Cold-Start UX) is obsolete** for visitors. Cold starts are build-time only.
+> - **Data Flow diagrams below show the OLD runtime model.** The actual flow is: Build fetches from DB → generates static HTML → Vercel CDN serves to visitors → revalidation triggers rebuild.
+> - The connection pool, query patterns, and component structure are still valid but run at **build time**, not request time.
+
 ## Standard Architecture
 
 ### System Overview

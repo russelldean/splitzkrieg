@@ -96,7 +96,7 @@ Bowlers can look themselves up and explore their stats — career averages, pers
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Azure SQL over Postgres/Supabase | Russ already knows SQL Server, same T-SQL syntax, portfolio signal | — Pending |
-| Next.js monolith (no separate backend) | API routes + server components = one codebase, one deployment | — Pending |
+| Next.js monolith (no separate backend) | Static generation + API routes for revalidation = one codebase, one deployment | — Pending |
 | Vercel hosting | Made for Next.js, free tier generous, push-to-deploy | — Pending |
 | Computed columns for handicaps | Standardizes 225/95%/FLOOR across all 35 seasons, eliminates stored value drift | — Pending |
 | Static hybrid architecture | Data changes biweekly — pre-render everything, DB only wakes for builds/admin. $0 hosting, instant loads. | — Pending |

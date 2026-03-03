@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Working Next.js app connected to Azure SQL with the Metrograph-inspired design system, loading skeletons for cold starts, mobile responsiveness, and graceful missing data handling. This is the foundation every subsequent page inherits — no feature pages yet.
+Statically generated Next.js site with build-time Azure SQL data fetching, Metrograph-inspired design system, pre-built search index, on-demand revalidation pipeline, and mobile responsiveness. Visitors never hit the database — all pages are pre-rendered HTML with instant loads. This is the foundation every subsequent page inherits — no feature pages yet.
 
 </domain>
 
@@ -25,10 +25,16 @@ Working Next.js app connected to Azure SQL with the Metrograph-inspired design s
 - Footer: Secondary nav links (About, Rules, Blog, Join) plus league info. "Since 2007" branding.
 - Mobile: Hamburger menu for nav links, search bar stays prominent
 
-### Loading & Cold Starts
-- Claude's Discretion: Skeleton design, loading animation style, cold start messaging
-- Key constraint: Azure SQL cold starts take 30-60 seconds. First visitor after idle must see branded loading state, not blank page or error.
-- Skeletons should match the warm cream palette — not generic gray bars
+### Build-Time Data Pipeline
+- Static hybrid architecture: all public pages are pre-rendered at build time. Azure SQL only wakes during builds and admin work — visitors never hit the database.
+- Azure SQL cold starts (30-60s) are a build-time concern only. Build process must handle retries/timeouts gracefully.
+- On-demand revalidation: after biweekly data syncs, trigger rebuild so fresh stats deploy as new static pages.
+- Pre-built search index: bowler names baked into a JSON file at build time for instant client-side search (no live DB query needed).
+
+### Page Transition States
+- Claude's Discretion: Loading animation style for client-side page transitions (route changes within the SPA)
+- Transitions should match the warm cream palette — not generic gray bars
+- These are brief navigation transitions, not cold-start waits — keep them light and fast
 
 ### Page Shell & Layout
 - Claude's Discretion: Max width, content density, whitespace, grid system
@@ -58,12 +64,14 @@ Working Next.js app connected to Azure SQL with the Metrograph-inspired design s
 - Tailwind CSS v4 with @theme inline block in globals.css
 - Currently uses Geist fonts (will be replaced with DM Serif Display + Inter)
 - No components, hooks, or utilities exist yet
+- Static hybrid: pages use generateStaticParams + fetch at build time, not runtime server components hitting DB
 
 ### Integration Points
 - layout.tsx: Root layout needs font setup, nav shell, footer
 - globals.css: Tailwind @theme block needs design tokens (colors, fonts, spacing)
-- No database connection exists yet — mssql package not installed
-- No environment variables configured (.env.local needed for Azure SQL connection string)
+- No database connection exists yet — mssql package not installed (used at build time only, not in client bundle)
+- No environment variables configured (.env.local needed for Azure SQL connection string — used during build/revalidation only)
+- Revalidation endpoint needed: API route to trigger on-demand ISR after data syncs
 
 </code_context>
 

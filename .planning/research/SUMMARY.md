@@ -5,13 +5,23 @@
 **Researched:** 2026-03-02
 **Confidence:** MEDIUM-HIGH
 
+> **ARCHITECTURAL OVERRIDE (2026-03-02):** This research was written before the **static hybrid** decision. The architecture has fundamentally changed:
+> - **All public pages are statically generated (SSG) at build time.** Azure SQL is only accessed during builds and admin operations — visitors never hit the database.
+> - **No visitor-facing cold starts.** The 30-60s Azure SQL wake-up is a build-time concern handled with retry logic, not a visitor UX problem.
+> - **No loading skeletons for DB waits.** Pages are pre-rendered HTML. Loading states are only needed for client-side page transitions.
+> - **Search is a pre-built JSON index** (fuse.js on a static file), not a live API route hitting the DB.
+> - **On-demand revalidation** triggers a static rebuild after data syncs, deploying new pre-rendered pages.
+> - References to "Server Components fetching data at runtime," "cold-start UX," "loading.tsx for DB waits," and "ISR caching" below reflect the OLD architecture. Read them with this context.
+
 ## Executive Summary
 
-Splitzkrieg is a sports reference site in the mold of Baseball Reference and Baseball Savant, applied to an 18-year-old recreational bowling league with 619 bowlers and 22,817+ score rows. The target experience is not "another league management site" — it is the first place bowlers go to look up their stats, argue about career averages, and share profiles in the group chat. The product already has a deployed Next.js 16 + Tailwind v4 + Azure SQL stack, which is well-suited to the domain: Server Components for zero-JS stat pages, ISR for instant repeat visits, and raw SQL for the complex aggregations (CTEs, window functions, rolling averages) that would be painful in an ORM.
+Splitzkrieg is a sports reference site in the mold of Baseball Reference and Baseball Savant, applied to an 18-year-old recreational bowling league with 619 bowlers and 22,817+ score rows. The target experience is not "another league management site" — it is the first place bowlers go to look up their stats, argue about career averages, and share profiles in the group chat. The product already has a deployed Next.js 16 + Tailwind v4 + Azure SQL stack, which is well-suited to the domain.
 
-The recommended approach is to build in layers that mirror the Baseball Reference model: establish the infrastructure (database pool, design system, loading states) first, then build the bowler profile page as the centerpiece the entire site is organized around, then expand the browsable universe with team and season pages, then add the "get lost in data" layer of leaderboards, game logs, and percentile rankings. The profile page is the product — when a bowler sees their career stats laid out by season with an average-progression chart for the first time, that is the moment the site proves its value.
+**Static hybrid architecture:** The entire public site is statically generated at build time. Data changes biweekly — there is no need for runtime database access. Build scripts fetch from Azure SQL, pre-render every page as static HTML, and generate a client-side search index. Visitors get instant page loads with zero database round-trips. On-demand revalidation (triggered after data syncs) rebuilds affected pages and deploys fresh static content. Azure SQL only wakes during builds and admin work — $0 hosting, instant loads, no cold-start UX concerns.
 
-The primary risks are infrastructure-level, not feature-level. Azure SQL's serverless auto-pause creates 30-60 second cold starts that will make the site appear broken to first-time visitors arriving from a group chat link. This must be addressed in Phase 1 with skeleton UIs, proper loading states, and graceful timeout handling — not after the features are built. The mssql connection pool singleton pattern and the Server vs Client Component boundary are similarly foundational: get them right from the start or every subsequent phase inherits the debt.
+The recommended approach is to build in layers that mirror the Baseball Reference model: establish the infrastructure (build-time data pipeline, design system, static generation) first, then build the bowler profile page as the centerpiece the entire site is organized around, then expand the browsable universe with team and season pages, then add the "get lost in data" layer of leaderboards, game logs, and percentile rankings. The profile page is the product — when a bowler sees their career stats laid out by season with an average-progression chart for the first time, that is the moment the site proves its value.
+
+The primary risks are build-pipeline-level, not feature-level. Azure SQL's serverless auto-pause creates 30-60 second cold starts that must be handled during the build process (retry logic, generous timeouts) so builds complete reliably. The build-time data fetching pattern and the static/client component boundary are foundational: get them right from the start or every subsequent phase inherits the debt.
 
 ## Key Findings
 
@@ -72,29 +82,30 @@ The feature landscape is well-understood. Baseball Reference and Basketball Refe
 
 ### Architecture Approach
 
-The architecture follows Next.js App Router best practices for a read-heavy multi-entity site. Pages are Server Components that fetch data directly from Azure SQL via a singleton `mssql` connection pool. Client Components are reserved for genuinely interactive elements: Recharts charts (require browser APIs), the bowler search typeahead, sortable/filterable tables, and the scratch/handicap toggle. This minimizes the JavaScript bundle shipped to the browser — most of the site is server-rendered HTML.
+The architecture is **static hybrid**: all public pages are pre-rendered at build time using Next.js static generation. Azure SQL is accessed only during builds (via `generateStaticParams` and page-level data fetching at build time). Visitors receive pure static HTML from Vercel's CDN — no database round-trips, no serverless functions, no cold starts. Client Components are reserved for genuinely interactive elements: Recharts charts (require browser APIs), the bowler search (fuse.js on a pre-built JSON index), sortable/filterable tables, and the scratch/handicap toggle.
 
-The critical architectural boundary is `lib/db/queries/` — all SQL lives here, wrapped in `React.cache()` for request-level deduplication. No SQL in page components, ever. The `server-only` package enforces this at build time. ISR with `revalidate: 3600` handles caching: bowler profiles serve from Vercel's edge CDN on repeat visits and rebuild in the background after data syncs. An on-demand revalidation webhook (`/api/revalidate`) allows immediate cache busting after manual score imports.
+The critical architectural boundary is `lib/db/queries/` — all SQL lives here. No SQL in page components, ever. The `server-only` package enforces this at build time. On-demand revalidation via API route triggers static regeneration after biweekly data syncs — new pre-rendered pages deploy automatically.
 
 **Major components:**
-1. `lib/db/pool.ts` — singleton mssql connection pool with globalThis HMR safety and 60s timeout for Azure cold starts
-2. `lib/db/queries/` — entity-specific query modules (bowlers, teams, seasons, scores, leaderboards) wrapped in `React.cache()`
-3. Server Component pages (`app/bowlers/[slug]/page.tsx`, etc.) — fetch data, render HTML, pass serializable props to client children
+1. `lib/db/pool.ts` — singleton mssql connection pool with 60s timeout for Azure cold starts (used at build time only)
+2. `lib/db/queries/` — entity-specific query modules (bowlers, teams, seasons, scores, leaderboards)
+3. Static pages (`app/bowlers/[slug]/page.tsx`, etc.) — fetch data at build time via `generateStaticParams`, render as static HTML
 4. `components/charts/` — Recharts wrappers as Client Components, receiving pre-fetched data as props
-5. `components/ui/` — design system atoms (stat cards, data tables, skeletons, page headers) in the Metrograph aesthetic
-6. `app/api/` — minimal API surface: `/api/search` for typeahead, `/api/revalidate` for cache invalidation
+5. `components/ui/` — design system atoms (stat cards, data tables, page headers) in the Metrograph aesthetic
+6. `app/api/revalidate/` — on-demand revalidation endpoint to trigger rebuilds after data syncs
+7. `public/search-index.json` (or similar) — pre-built bowler search index generated at build time for client-side fuse.js search
 
 ### Critical Pitfalls
 
-1. **Azure SQL cold start (30-60s) + Vercel function timeout (10s for API routes)** — Use Server Components with Suspense (longer streaming timeout than API routes), ISR for profile pages so repeat visits skip the database entirely, `loading.tsx` skeletons at every route, and an on-brand "waking up" message. Set `connectionTimeout: 60000` in the mssql config. Consider a keep-alive cron if cold starts remain intolerable post-launch (costs ~22% of free-tier vCore budget).
+1. **Azure SQL cold start during builds (30-60s)** — The DB auto-pauses after idle. Builds must handle the wake-up with `connectionTimeout: 60000` and retry logic. This is a build reliability concern, not a visitor UX concern — visitors get static HTML and never touch the DB.
 
-2. **mssql connection pool leaks in serverless** — Use the singleton pool pattern with a module-scope Promise variable and `globalThis` fallback for HMR safety. Set `pool.max: 5` (not the default 10 — free tier has ~30 concurrent connection limit), `pool.min: 0`, and short `idleTimeoutMillis`. Reset the promise to null on connection error so the next call retries.
+2. **mssql connection pool management during builds** — Use the singleton pool pattern with `globalThis` for HMR safety during dev. Set `pool.max: 5` (free tier has ~30 concurrent connection limit), `pool.min: 0`. Ensure the pool closes cleanly after build completes.
 
-3. **Server/Client Component boundary confusion** — Data fetching belongs in Server Components (`page.tsx`). Interactivity (charts, search, sortable tables) belongs in Client Components that receive pre-fetched data as serializable props. Never add `"use client"` to a page component. Push it to leaf components only. Install `server-only` in `lib/db.ts` to catch accidental client imports at build time.
+3. **Static vs Client Component boundary** — Data fetching happens at build time in page components. Client Components are only for interactive elements (charts, search, sortable tables) that receive pre-built data as props. Never add `"use client"` to a page component. Push it to leaf components. Install `server-only` in `lib/db.ts` to catch accidental client imports.
 
-4. **Client-side rendering of large datasets** — 619 bowlers on a leaderboard, 800+ score rows for long-tenured bowlers. Never send raw score rows to the client. Aggregate in SQL (averages, ranks, totals). Paginate leaderboards server-side with OFFSET/FETCH. For charts, use season averages (max 35 points) not weekly averages. Disable Recharts animation for datasets over ~100 points.
+4. **Pre-aggregating data for static pages** — 619 bowlers, 22K+ score rows. All aggregation (averages, ranks, totals) must happen in SQL at build time. Static pages receive pre-computed data. For charts, use season averages (max 35 points) not weekly averages. The search index should be a pre-built JSON file, not a live query.
 
-5. **Vercel function region vs Azure SQL region** — Azure SQL is in North Central US. Default Vercel function region is San Francisco. Set Vercel function region to `cle1` (Cleveland) or `iad1` (Washington DC) to minimize latency. This is a one-line config change with immediate impact.
+5. **Vercel function region vs Azure SQL region (build time)** — Azure SQL is in North Central US. Set Vercel function region to `cle1` (Cleveland) or `iad1` (Washington DC) to minimize build-time DB latency.
 
 ## Implications for Roadmap
 
@@ -102,24 +113,24 @@ Based on combined research, the architecture has clear dependency layers that di
 
 ### Phase 1: Foundation and Infrastructure
 
-**Rationale:** Every subsequent feature touches the database, uses the design system, and inherits the Server/Client Component pattern. Building this wrong once means fixing it everywhere. All 6 critical pitfalls are addressed here.
+**Rationale:** Every subsequent feature uses the build-time data pipeline, design system, and static generation pattern. Building this wrong once means fixing it everywhere.
 
-**Delivers:** Working database connection layer, design system tokens, loading skeletons, revalidation webhook, project structure
+**Delivers:** Build-time data fetching pipeline, static generation setup, design system tokens, pre-built search index infrastructure, revalidation endpoint, project structure
 
 **Addresses:** Infrastructure prerequisites for all features
 
-**Avoids:** Connection pool leaks, credential exposure, Vercel timeout failures, function region mismatch, missing loading states
+**Avoids:** Build failures from DB cold starts, connection pool issues, credential exposure, function region mismatch
 
 **Includes:**
-- `lib/db/pool.ts` singleton with cold-start handling
+- `lib/db/pool.ts` singleton with cold-start retry handling (build-time only)
 - `lib/db/types.ts` TypeScript types matching schema
 - `server-only` guard on all database modules
 - Tailwind `@theme` design tokens (cream, navy, red, gold palette; DM Serif Display + Inter fonts)
 - `cn()` utility (clsx + tailwind-merge)
-- `loading.tsx` skeletons at every route segment
 - Root layout (nav shell, footer)
-- `/api/revalidate` webhook
+- `/api/revalidate` endpoint for on-demand static regeneration after data syncs
 - Vercel function region configuration
+- Build-time search index generation infrastructure
 
 **Research flag:** Standard patterns — no deep research needed. mssql pool singleton and Tailwind v4 `@theme` configuration are well-documented.
 
@@ -131,11 +142,11 @@ Based on combined research, the architecture has clear dependency layers that di
 
 **Features from FEATURES.md:** Bowler profile page, season-by-season stats table, personal records panel, average progression chart, shareable URLs, social OG cards
 
-**Architecture from ARCHITECTURE.md:** First use of Server Component page + Client Component chart split, `React.cache()` query pattern, ISR with `generateStaticParams`
+**Architecture from ARCHITECTURE.md:** First use of static page generation with `generateStaticParams`, build-time query pattern, Client Component chart integration
 
-**Avoids:** Client-side data overload (aggregate in SQL, not JS), missing mobile layout (verify at 375px), penalty row pollution in averages, missing data for low-game-count bowlers
+**Avoids:** Client-side data overload (aggregate in SQL at build time, not JS at runtime), missing mobile layout (verify at 375px), penalty row pollution in averages, missing data for low-game-count bowlers
 
-**Research flag:** Standard patterns — Server Component + Recharts + TanStack Table are well-documented.
+**Research flag:** Standard patterns — static generation + Recharts + TanStack Table are well-documented.
 
 ### Phase 3: Bowler Search and Directory
 
