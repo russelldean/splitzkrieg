@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Bowlers can look themselves up and explore their stats -- career averages, personal records, season-by-season history. The bowler profile page must be amazing.
-**Current focus:** Phase 2: Bowler Profiles
+**Current focus:** Phase 2 approved, ready for Phase 3
 
 ## Current Position
 
-Phase: 2 of 7 (Bowler Profiles)
-Plan: 3 of 3 in current phase (plans 1-3 complete)
-Status: 02-03 chart and game log complete -- Phase 2 done, awaiting human verification
-Last activity: 2026-03-02 -- 02-03 Recharts chart, game log accordion, full page assembly
+Phase: 2 of 7 (Bowler Profiles) — COMPLETE, approved by user
+Plan: 3 of 3 in current phase (all plans complete + extensive checkpoint feedback)
+Status: Phase 2 done — user approved, ready to move to Phase 3
+Last activity: 2026-03-02 — Final checkpoint round, committed and pushed
 
 Progress: [██████░░░░] 60%
 
@@ -64,19 +64,30 @@ Recent decisions affecting current work:
 - [02-03]: Recharts 3.7.0 installed -- confirmed React 19 compatible, no ResizeObserver issues.
 - [02-03]: metadataBase uses NEXT_PUBLIC_SITE_URL env var with fallback to splitzkrieg.org.
 - [02-03]: GameLog uses arbitrary Tailwind opacity (bg-navy/[0.02]) for subtle hover effects.
+- [Checkpoint]: Current Avg = rolling 27-game average (handicap basis), falls back to establishedAvg for bowlers without games.
+- [Checkpoint]: prevRollingAvg computed via OFFSET 3 ROWS FETCH NEXT 27 to show rolling avg delta.
+- [Checkpoint]: Season stats and game logs both reverse chronological (newest first). Chart gets reversed copy.
+- [Checkpoint]: Score color formatting removed from personal records — kept only in game logs.
+- [Checkpoint]: Bowler of the Week = highest handSeries in most recent week, shown as SVG rosette ribbon.
+- [Checkpoint]: Nav icons added (person, group, calendar, bar chart) — Metrograph-inspired.
+- [Checkpoint]: Splitzkrieg logo in footer with mix-blend-multiply on cream background.
 
 ### Pending Todos
 
-None yet.
+- Data backfill: historic team names per season (teamNameOverride on teamRosters)
+- Data backfill: schedule/matchDate data for older seasons
+- Data backfill: high game/series dates on personal records (once matchDate data exists)
+- Remove reference photo IMG_2527.jpg from public/ (was used for ribbon design reference)
 
 ### Blockers/Concerns
 
 - matchResults, playoffResults, seasonChampions tables are empty. Phase 4 (TEAM-03 head-to-head) and Phase 6 (CHMP-01/02/03) must handle empty states. Data population plan needed before those phases.
 - Recharts 3.7.0 + React 19 compatibility VERIFIED. Works in Phase 2 bowler profile charts.
 - Vercel function region should be set to minimize latency to Azure SQL in North Central US.
+- Vercel deployment not yet connected — needs setup before Phase 3 or soon after.
 
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 02-03-PLAN.md (chart and game log) -- Phase 2 complete, awaiting human verification
-Resume file: .planning/phases/02-bowler-profiles/02-03-SUMMARY.md
+Stopped at: Phase 2 approved, all work committed and pushed. Ready for Phase 3 (Search and Home Page).
+Resume file: None — clean handoff to Phase 3
