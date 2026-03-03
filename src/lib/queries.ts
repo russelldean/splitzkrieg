@@ -497,12 +497,14 @@ export interface SeasonSnapshot {
   seasonID: number;
   displayName: string;
   romanNumeral: string;
-  totalNights: number;
+  weekNumber: number;
   totalGames: number;
   totalBowlers: number;
   topAverage: { bowlerName: string; slug: string; average: number } | null;
   highGame: { bowlerName: string; slug: string; score: number } | null;
   highSeries: { bowlerName: string; slug: string; score: number } | null;
+  bowlerOfTheWeek: { bowlerName: string; slug: string; score: number } | null;
+  teamOfTheWeek: { teamName: string; teamSlug: string; score: number } | null;
 }
 
 /**
@@ -534,12 +536,12 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
     const statsResult = await db.request()
       .input('seasonID', season.seasonID)
       .query<{
-        totalNights: number;
+        weekNumber: number;
         totalGames: number;
         totalBowlers: number;
       }>(`
         SELECT
-          COUNT(sc.scoreID) AS totalNights,
+          MAX(sc.week) AS weekNumber,
           COUNT(sc.scoreID) * 3 AS totalGames,
           COUNT(DISTINCT sc.bowlerID) AS totalBowlers
         FROM scores sc
@@ -601,16 +603,62 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
         ORDER BY sc.scratchSeries DESC
       `);
 
+    // Step 6: Bowler of the Week (highest handicap series in latest week)
+    const botwResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ bowlerName: string; slug: string; score: number }>(`
+        SELECT TOP 1
+          b.bowlerName,
+          b.slug,
+          sc.handSeries AS score
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+          AND sc.week = (
+            SELECT MAX(sc2.week) FROM scores sc2
+            WHERE sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+          )
+        ORDER BY sc.handSeries DESC
+      `);
+
+    // Step 7: Team of the Week (highest total handicap series in latest week)
+    const totwResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ teamName: string; teamSlug: string; totalHandSeries: number }>(`
+        SELECT TOP 1
+          t.teamName,
+          t.slug AS teamSlug,
+          SUM(sc.handSeries) AS totalHandSeries
+        FROM scores sc
+        JOIN teams t ON sc.teamID = t.teamID
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+          AND sc.teamID IS NOT NULL
+          AND sc.week = (
+            SELECT MAX(sc2.week) FROM scores sc2
+            WHERE sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+          )
+        GROUP BY sc.teamID, t.teamName, t.slug
+        ORDER BY totalHandSeries DESC
+      `);
+    const totwRow = totwResult.recordset[0];
+    const teamOfTheWeek: SeasonSnapshot['teamOfTheWeek'] = totwRow
+      ? { teamName: totwRow.teamName, teamSlug: totwRow.teamSlug, score: totwRow.totalHandSeries }
+      : null;
+
     return {
       seasonID: season.seasonID,
       displayName: season.displayName,
       romanNumeral: season.romanNumeral,
-      totalNights: stats?.totalNights ?? 0,
+      weekNumber: stats?.weekNumber ?? 0,
       totalGames: stats?.totalGames ?? 0,
       totalBowlers: stats?.totalBowlers ?? 0,
       topAverage: topAvgResult.recordset[0] ?? null,
       highGame: highGameResult.recordset[0] ?? null,
       highSeries: highSeriesResult.recordset[0] ?? null,
+      bowlerOfTheWeek: botwResult.recordset[0] ?? null,
+      teamOfTheWeek,
     };
   } catch (err) {
     console.warn('getCurrentSeasonSnapshot: DB unavailable', err);

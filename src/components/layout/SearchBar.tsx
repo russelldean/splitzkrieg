@@ -2,13 +2,21 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Fuse from 'fuse.js';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { SearchEntry } from '@/lib/search-index';
+
+const browseCategories = [
+  { label: 'Bowlers', href: '/bowlers', description: 'Browse all bowlers' },
+  { label: 'Teams', href: '/teams', description: 'View team rosters' },
+  { label: 'Seasons', href: '/seasons', description: 'Explore 35+ seasons' },
+  { label: 'Leaderboards', href: '/leaderboards', description: 'All-time records' },
+];
 
 export function SearchBar() {
   const [query, setQuery] = useState('');
   const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,9 +47,8 @@ export function SearchBar() {
     return fuse.search(query, { limit: 8 });
   }, [fuse, query]);
 
-  // Open dropdown when there are results
+  // Reset selection on results change
   useEffect(() => {
-    setIsOpen(results.length > 0);
     setSelectedIndex(-1);
   }, [results]);
 
@@ -49,7 +56,7 @@ export function SearchBar() {
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+        setIsFocused(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -60,42 +67,44 @@ export function SearchBar() {
     (entry: SearchEntry) => {
       router.push(`/bowler/${entry.slug}`);
       setQuery('');
-      setIsOpen(false);
+      setIsFocused(false);
     },
     [router]
   );
 
+  const hasResults = results.length > 0;
+  const isSearching = query.length >= 2;
+  const showBrowse = isFocused && !isSearching;
+  const showResults = isFocused && isSearching && hasResults;
+  const showNoResults = isFocused && isSearching && !hasResults;
+  const isDropdownOpen = showBrowse || showResults || showNoResults;
+
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!isOpen || results.length === 0) {
-      if (e.key === 'Escape') {
-        setQuery('');
-        setIsOpen(false);
-        inputRef.current?.blur();
-      }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setQuery('');
+      setIsFocused(false);
+      inputRef.current?.blur();
       return;
     }
 
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < results.length) {
-          navigateToResult(results[selectedIndex].item);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setQuery('');
-        setIsOpen(false);
-        inputRef.current?.blur();
-        break;
+    if (showResults && results.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < results.length) {
+            navigateToResult(results[selectedIndex].item);
+          }
+          break;
+      }
     }
   }
 
@@ -109,20 +118,46 @@ export function SearchBar() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        onFocus={() => {
-          if (results.length > 0) setIsOpen(true);
-        }}
+        onFocus={() => setIsFocused(true)}
         placeholder="Search bowlers..."
         className="w-full bg-white border border-navy/20 rounded-lg px-4 py-2 text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors"
         role="combobox"
-        aria-expanded={isOpen}
+        aria-expanded={isDropdownOpen}
         aria-autocomplete="list"
         aria-controls={listboxId}
         aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
         aria-label="Search bowlers"
       />
 
-      {isOpen && results.length > 0 && (
+      {/* Browse categories when focused with no query */}
+      {showBrowse && (
+        <div
+          id={listboxId}
+          className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-navy/10 z-50 overflow-hidden"
+        >
+          <div className="px-3 py-1.5 border-b border-navy/5">
+            <span className="text-xs font-body text-navy/40 uppercase tracking-wider">Browse</span>
+          </div>
+          {browseCategories.map((cat) => (
+            <Link
+              key={cat.href}
+              href={cat.href}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                router.push(cat.href);
+                setIsFocused(false);
+              }}
+              className="flex items-center justify-between px-4 py-2.5 hover:bg-cream-dark transition-colors"
+            >
+              <span className="font-body text-sm font-medium text-navy">{cat.label}</span>
+              <span className="font-body text-xs text-navy/40">{cat.description}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Search results */}
+      {showResults && (
         <ul
           id={listboxId}
           role="listbox"
@@ -139,7 +174,6 @@ export function SearchBar() {
               }`}
               onMouseEnter={() => setSelectedIndex(index)}
               onMouseDown={(e) => {
-                // Use mousedown instead of click to fire before blur
                 e.preventDefault();
                 navigateToResult(result.item);
               }}
@@ -151,6 +185,15 @@ export function SearchBar() {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* No results */}
+      {showNoResults && (
+        <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-navy/10 z-50 px-4 py-2.5">
+          <span className="font-body text-sm text-navy/50">
+            No bowlers found for &ldquo;{query}&rdquo;
+          </span>
+        </div>
       )}
     </div>
   );

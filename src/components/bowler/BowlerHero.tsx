@@ -2,7 +2,7 @@ import type { BowlerCareerSummary } from '@/lib/queries';
 import { ShareButton } from '@/components/bowler/ShareButton';
 import { TeamBreakdown, type TeamStat } from '@/components/bowler/TeamBreakdown';
 import { BowlerOfTheWeekRibbon } from '@/components/bowler/BowlerOfTheWeekRibbon';
-import { strikeX } from '@/components/ui/StrikeX';
+
 
 interface Props {
   careerSummary: BowlerCareerSummary | null;
@@ -22,7 +22,7 @@ export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUr
         <div className="flex items-center gap-3">
           {isBowlerOfTheWeek && <BowlerOfTheWeekRibbon />}
           <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-navy">
-            {strikeX(name)}
+            {name}
           </h1>
         </div>
         <div className="shrink-0 pt-2">

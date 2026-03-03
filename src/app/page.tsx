@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { getNextBowlingNight, getRecentMilestones, getCurrentSeasonSnapshot } from '@/lib/queries';
-import { DiscoverySearch } from '@/components/home/DiscoverySearch';
 import { CountdownClock } from '@/components/home/CountdownClock';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
@@ -27,45 +26,20 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        {/* Gradient background for hero area */}
-        <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />
-
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-8 sm:pb-12">
-          <div className="flex flex-col items-center text-center gap-3">
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-navy uppercase tracking-widest">
-              SPLITZKRIEG
-            </h1>
-            <p className="font-body text-base sm:text-lg text-navy/60 max-w-md">
-              Stats, records, and 18 years of league history
-            </p>
-          </div>
-
-          {/* Discovery Search */}
-          <div className="mt-8 sm:mt-10">
-            <DiscoverySearch />
-          </div>
-        </div>
-      </section>
-
       {/* Milestone Ticker */}
       <MilestoneTicker milestones={milestones} />
 
-      {/* Content Grid */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Countdown Clock */}
-          <CountdownClock targetDate={nextBowlingNight} />
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />
 
-          {/* Season Snapshot */}
-          <SeasonSnapshot snapshot={seasonSnapshot} />
-        </div>
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
+          <p className="text-center font-body text-base sm:text-lg text-navy/60 max-w-md mx-auto">
+            Stats, records, and {new Date().getFullYear() - 2007} years of league history
+          </p>
 
-        {/* Quick Navigation */}
-        <div className="mt-8 sm:mt-10">
-          <h2 className="font-heading text-xl text-navy mb-4">Explore</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Explore Cards — above the fold */}
+          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {quickLinks.map((link) => (
               <Link
                 key={link.href}
@@ -81,6 +55,17 @@ export default async function Home() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Content Grid */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Countdown Clock */}
+          <CountdownClock targetDate={nextBowlingNight} />
+
+          {/* Season Snapshot */}
+          <SeasonSnapshot snapshot={seasonSnapshot} />
         </div>
       </section>
     </div>

@@ -6,7 +6,7 @@ const secondaryLinks = [
   { href: '/rules', label: 'Rules' },
   { href: '/resources', label: 'Resources' },
   { href: '/blog', label: 'Blog' },
-  { href: '/join', label: 'Join' },
+  { href: '/join', label: 'How to Join' },
 ];
 
 export function Footer() {
@@ -28,37 +28,37 @@ export function Footer() {
 
         {/* Branding */}
         <div className="flex flex-col items-center gap-6 pt-4 border-t border-navy/10">
-          <div className="flex items-center justify-center gap-8 sm:gap-12">
+          <div className="grid grid-cols-3 items-center justify-items-center gap-4 sm:gap-8 max-w-md mx-auto">
             <Image
               src="/59524_441728757459_7049293_n.jpg"
               alt="Splitzkrieg classic logo"
               width={60}
               height={146}
-              className="h-20 w-auto opacity-50"
+              className="h-16 sm:h-20 w-auto opacity-50"
             />
             <Image
               src="/splitzkrieg logo.png"
               alt="Splitzkrieg Bowling League"
               width={200}
               height={72}
-              className="h-20 w-auto mix-blend-multiply opacity-60"
+              className="h-16 sm:h-20 w-auto mix-blend-multiply opacity-60"
             />
             <Image
               src="/Splitzkrieg Bowling Buddy logo.png"
               alt="Splitzkrieg Bowling Buddy"
               width={160}
               height={141}
-              className="h-20 w-auto mix-blend-multiply opacity-50"
+              className="h-16 sm:h-20 w-auto mix-blend-multiply opacity-50"
             />
           </div>
           <div className="flex items-center gap-4">
             <span className="font-body text-navy/40 text-sm">
-              Village Lanes &middot; Durham, NC &middot; Since 2007
+              Durham, NC &middot; Since 2007
             </span>
             <a
               href="#"
               aria-label="Splitzkrieg on Instagram"
-              className="text-navy/40 hover:text-navy/60 transition-colors"
+              className="text-navy/60 hover:text-red transition-colors"
             >
               <svg
                 className="w-5 h-5"

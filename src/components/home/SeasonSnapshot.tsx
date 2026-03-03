@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { strikeX } from '@/components/ui/StrikeX';
 import type { SeasonSnapshot as SeasonSnapshotType } from '@/lib/queries';
 
 interface SeasonSnapshotProps {
@@ -42,19 +43,40 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 p-6 min-h-[180px]">
-      <h3 className="font-heading text-lg text-navy mb-4">
-        Season {snapshot.romanNumeral}
+      <h3 className="font-heading text-lg text-navy mb-1">
+        Season {strikeX(snapshot.romanNumeral)}
       </h3>
+      <p className="text-xs font-body text-navy/40 mb-4">
+        Week {snapshot.weekNumber}
+      </p>
 
       {/* Aggregate stats */}
       <div className="flex justify-around mb-4 pb-4 border-b border-navy/5">
         <StatValue label="Bowlers" value={snapshot.totalBowlers} />
         <StatValue label="Games" value={snapshot.totalGames.toLocaleString()} />
-        <StatValue label="Nights" value={snapshot.totalNights} />
       </div>
 
       {/* Top performers */}
       <div className="space-y-0.5">
+        {snapshot.bowlerOfTheWeek && (
+          <LeaderRow
+            label="Bowler of the Week"
+            name={snapshot.bowlerOfTheWeek.bowlerName}
+            slug={snapshot.bowlerOfTheWeek.slug}
+            value={String(snapshot.bowlerOfTheWeek.score)}
+          />
+        )}
+        {snapshot.teamOfTheWeek && (
+          <div className="flex items-center justify-between py-1.5">
+            <span className="text-xs font-body text-navy/50 uppercase tracking-wider">Team of the Week</span>
+            <div className="text-right">
+              <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm font-medium text-navy hover:text-red transition-colors">
+                {snapshot.teamOfTheWeek.teamName}
+              </Link>
+              <span className="text-sm text-navy/60 ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
+            </div>
+          </div>
+        )}
         {snapshot.topAverage && (
           <LeaderRow
             label="Top Avg"

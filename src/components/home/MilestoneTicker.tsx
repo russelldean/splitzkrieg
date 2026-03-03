@@ -28,8 +28,14 @@ function MilestoneIcon({ type }: { type: 'achieved' | 'approaching' }) {
   );
 }
 
+const placeholderMilestones: Milestone[] = [
+  { bowlerID: 0, bowlerName: 'League Record', slug: 'leaderboards', type: 'achieved', milestone: 'seasons played', threshold: 35, current: 35 },
+  { bowlerID: 0, bowlerName: '619 Bowlers', slug: 'bowlers', type: 'achieved', milestone: 'have rolled with us', threshold: 619, current: 619 },
+  { bowlerID: 0, bowlerName: 'Since 2007', slug: 'seasons', type: 'achieved', milestone: 'years of league history', threshold: new Date().getFullYear() - 2007, current: new Date().getFullYear() - 2007 },
+];
+
 export function MilestoneTicker({ milestones }: MilestoneTickerProps) {
-  if (milestones.length === 0) return null;
+  const items = milestones.length > 0 ? milestones : placeholderMilestones;
 
   return (
     <div className="w-full border-y border-navy/10 bg-white/50 overflow-hidden">
@@ -38,7 +44,7 @@ export function MilestoneTicker({ milestones }: MilestoneTickerProps) {
         style={{ width: 'max-content' }}
       >
         {/* Render twice for seamless loop */}
-        {[...milestones, ...milestones].map((m, i) => (
+        {[...items, ...items].map((m, i) => (
           <span key={`${m.bowlerID}-${m.type}-${m.threshold}-${i}`} className="inline-flex items-center gap-2 text-sm font-body">
             <MilestoneIcon type={m.type} />
             <Link

@@ -15,15 +15,12 @@ export default function TeamsPage() {
         </h1>
         <div className="font-body text-navy/70 space-y-4 text-lg leading-relaxed">
           <p>
-            Yes, we have teams. Yes, they have names like &ldquo;Gutter
-            Sluts&rdquo; and &ldquo;Pin Pals.&rdquo; No, this page is not ready
-            yet.
+            Yes, we have teams. No, this page is not ready yet.
           </p>
           <p>
-            But it will be. And when it is, you&rsquo;ll see every roster, every
-            rivalry, every time someone jumped ship to a better team.
+            But it will be, and you&rsquo;ll be able to see all the glory of
+            your team in one place.
           </p>
-          <p className="text-navy/40">Check back soon.</p>
         </div>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link

@@ -15,13 +15,9 @@ export default function SeasonsPage() {
         </h1>
         <div className="font-body text-navy/70 space-y-4 text-lg leading-relaxed">
           <p>
-            35+ seasons. Thousands of games. Countless arguments about
-            handicaps.
-          </p>
-          <p>
-            This page will have it all &mdash; standings, weekly results, season
-            leaderboards, the works. We&rsquo;re not quite there yet, but winter
-            is the best season, and the Season page is coming soon.
+            35+ seasons filled with the thrill of victory and the agony of
+            defeat, but you have to trust me on that because this page
+            isn&rsquo;t ready yet.
           </p>
         </div>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

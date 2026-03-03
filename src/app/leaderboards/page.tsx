@@ -15,13 +15,11 @@ export default function LeaderboardsPage() {
         </h1>
         <div className="font-body text-navy/70 space-y-4 text-lg leading-relaxed">
           <p>
-            Who has the highest career average? Who&rsquo;s bowled the most 200+
-            games? Who holds the all-time high series?
+            Who has the highest career average? Who is going to make the
+            playoffs this year? What team had the best night ever?
           </p>
           <p>
-            These answers exist. They&rsquo;re just not on this page yet. But
-            they will be &mdash; filterable, sortable, and guaranteed to start
-            arguments.
+            These answers exist, but they are not on this page yet.
           </p>
         </div>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
