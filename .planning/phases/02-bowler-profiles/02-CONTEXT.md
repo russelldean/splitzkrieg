@@ -30,8 +30,8 @@ The centerpiece page — a bowler visits their profile and sees their complete c
 - Season names are clickable links to /season/[slug] (even before Phase 4 season pages exist)
 
 ### Personal Records Panel
-- 2x2 stat cards grid layout inside a card container
-- Shows: High Game, High Series, 200+ count, 600+ count
+- 5 stat cards in a responsive grid layout inside a card container
+- Shows: High Game, High Series, Turkeys, 200+ count, 600+ count
 - Score color coding: 200+ green, 250+ gold, 300 (perfect game) gets special treatment (red accent or badge)
 
 ### Average Progression Chart
