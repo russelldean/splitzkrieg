@@ -17,16 +17,16 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Bowler Profiles
 
-- [ ] **BWLR-01**: User can view bowler profile with career summary header (name, seasons active, career average, total games, teams played for)
-- [ ] **BWLR-02**: Profile shows season-by-season stats table with career totals row
-- [ ] **BWLR-03**: Profile shows personal records panel (high game, high series, 200+ count, 600+ count, turkeys)
+- [x] **BWLR-01**: User can view bowler profile with career summary header (name, seasons active, career average, total games, teams played for)
+- [x] **BWLR-02**: Profile shows season-by-season stats table with career totals row
+- [x] **BWLR-03**: Profile shows personal records panel (high game, high series, 200+ count, 600+ count, turkeys)
 - [ ] **BWLR-04**: Profile shows average progression line chart across seasons
 - [ ] **BWLR-05**: Profile shows game log with week-by-week scores expandable per season
 - [ ] **BWLR-07**: Profile shows milestone tracker (approaching milestones)
 - [ ] **BWLR-08**: Profile shows leaderboard context ("Ranked Nth in...") for top bowlers
 - [ ] **BWLR-10**: Profile shows career timeline (teams played for, chronological)
 - [x] **BWLR-11**: Color-coded performance in all score tables (200+ green, 250+ gold)
-- [ ] **BWLR-12**: Shareable URL with OG meta tags (splitzkrieg.org/bowler/russ-smith)
+- [x] **BWLR-12**: Shareable URL with OG meta tags (splitzkrieg.org/bowler/russ-smith)
 - [ ] **BWLR-15**: Achievement badges on profile (100 career games, first 200+ game, first 600+ series, etc.)
 
 ### Search
@@ -85,7 +85,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Cross-Cutting
 
-- [ ] **XCUT-01**: Cross-linking everywhere (every name and team is a clickable link)
+- [x] **XCUT-01**: Cross-linking everywhere (every name and team is a clickable link)
 - [x] **XCUT-02**: Mobile-responsive layout (tables scroll/reflow, charts resize)
 - [x] **XCUT-03**: Graceful handling of missing data (empty tables, sparse historical records)
 
@@ -145,16 +145,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-03 | Phase 1 | Complete |
 | INFRA-04 | Phase 1 | Pending |
 | INFRA-05 | Phase 1 | Complete |
-| BWLR-01 | Phase 2 | Pending |
-| BWLR-02 | Phase 2 | Pending |
-| BWLR-03 | Phase 2 | Pending |
+| BWLR-01 | Phase 2 | Complete |
+| BWLR-02 | Phase 2 | Complete |
+| BWLR-03 | Phase 2 | Complete |
 | BWLR-04 | Phase 2 | Pending |
 | BWLR-05 | Phase 2 | Pending |
 | BWLR-07 | Phase 5 | Pending |
 | BWLR-08 | Phase 5 | Pending |
 | BWLR-10 | Phase 5 | Pending |
 | BWLR-11 | Phase 2 | Complete |
-| BWLR-12 | Phase 2 | Pending |
+| BWLR-12 | Phase 2 | Complete |
 | SRCH-01 | Phase 3 | Pending |
 | SRCH-02 | Phase 3 | Pending |
 | TEAM-01 | Phase 4 | Pending |
@@ -184,7 +184,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HOME-05 | Phase 3 | Pending |
 | ADMN-01 | Phase 7 | Pending |
 | ADMN-02 | Phase 7 | Pending |
-| XCUT-01 | Phase 2 | Pending |
+| XCUT-01 | Phase 2 | Complete |
 | XCUT-02 | Phase 1 | Complete |
 | XCUT-03 | Phase 1 | Complete |
 

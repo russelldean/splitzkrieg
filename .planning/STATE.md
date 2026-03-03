@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 2 of 7 (Bowler Profiles)
-Plan: 2 of 3 in current phase (plan 1 complete)
-Status: 02-01 data layer complete -- ready for 02-02 (hero header, records panel)
-Last activity: 2026-03-02 -- 02-01 query layer and score utility complete
+Plan: 3 of 3 in current phase (plans 1-2 complete)
+Status: 02-02 static components complete -- ready for 02-03 (chart and game log)
+Last activity: 2026-03-02 -- 02-02 hero header, records panel, season table complete
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: ~3 min
-- Total execution time: ~11 min
+- Total execution time: ~13 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Foundation | 3 | ~9 min | ~3 min |
-| 2. Bowler Profiles | 1 | ~2 min | ~2 min |
+| 2. Bowler Profiles | 2 | ~4 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01, 01-03, 01-02, 01-01
+- Last 5 plans: 02-02, 02-01, 01-03, 01-02, 01-01
 - Trend: Consistent ~2-3 min per plan
 
 *Updated after each plan completion*
@@ -58,6 +58,9 @@ Recent decisions affecting current work:
 - [02-01]: Installed vitest as test runner -- no prior test infrastructure existed in the project.
 - [02-01]: getBowlerSeasonStats queries scores table directly (not view) to include teamSlug for cross-links.
 - [02-01]: getBowlerCareerSummary wrapped in React.cache for metadata+page deduplication.
+- [02-02]: ShareButton is the only client component -- all other bowler profile components are server components for static rendering.
+- [02-02]: StatPill shows em-dash for null/zero values to avoid displaying misleading data.
+- [02-02]: SeasonStatsTable computes career totals from seasons array rather than a separate query.
 
 ### Pending Todos
 
@@ -72,5 +75,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 02-01-PLAN.md (data layer) -- ready for 02-02
-Resume file: .planning/phases/02-bowler-profiles/02-01-SUMMARY.md
+Stopped at: Completed 02-02-PLAN.md (static components) -- ready for 02-03
+Resume file: .planning/phases/02-bowler-profiles/02-02-SUMMARY.md

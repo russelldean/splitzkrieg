@@ -53,7 +53,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md -- Data layer: query functions (career, season, game log) and scoreColorClass utility
-- [ ] 02-02-PLAN.md -- TBD
+- [x] 02-02-PLAN.md -- Static components: BowlerHero, PersonalRecordsPanel, SeasonStatsTable, OG metadata
 - [ ] 02-03-PLAN.md -- TBD
 
 ### Phase 3: Search and Home Page
@@ -146,7 +146,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-02 |
-| 2. Bowler Profiles | 1/3 | In progress | - |
+| 2. Bowler Profiles | 2/3 | In progress | - |
 | 3. Search and Home Page | 0/3 | Not started | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
 | 5. Leaderboards and Profile Depth | 0/3 | Not started | - |
