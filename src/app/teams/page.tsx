@@ -18,8 +18,8 @@ export default function TeamsPage() {
             Yes, we have teams. No, this page is not ready yet.
           </p>
           <p>
-            But it will be, and you&rsquo;ll be able to see all the glory of
-            your team in one place.
+            This page is pincomplete. It&rsquo;s sparely here.
+            It&rsquo;s gutter desolation.
           </p>
         </div>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -15,11 +15,11 @@ export default function LeaderboardsPage() {
         </h1>
         <div className="font-body text-navy/70 space-y-4 text-lg leading-relaxed">
           <p>
-            Who has the highest career average? Who is going to make the
-            playoffs this year? What team had the best night ever?
+            Who has the highest career average? What team had the best night
+            ever? Who is the best person in a general all-encompassing sense?
           </p>
           <p>
-            These answers exist, but they are not on this page yet.
+            These answers exist, but they are not on this page as of yet.
           </p>
         </div>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
