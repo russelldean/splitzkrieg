@@ -65,9 +65,10 @@ export function SearchBar() {
 
   const navigateToResult = useCallback(
     (entry: SearchEntry) => {
-      router.push(`/bowler/${entry.slug}`);
+      inputRef.current?.blur();
       setQuery('');
       setIsFocused(false);
+      router.push(`/bowler/${entry.slug}`);
     },
     [router]
   );
@@ -120,7 +121,7 @@ export function SearchBar() {
         onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
         placeholder="Search bowlers..."
-        className="w-full bg-white border border-navy/20 rounded-lg px-4 py-2 text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors"
+        className="w-full bg-white border border-navy/20 rounded-lg px-4 py-2 text-base sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors"
         role="combobox"
         aria-expanded={isDropdownOpen}
         aria-autocomplete="list"
@@ -144,8 +145,9 @@ export function SearchBar() {
               href={cat.href}
               onMouseDown={(e) => {
                 e.preventDefault();
-                router.push(cat.href);
+                inputRef.current?.blur();
                 setIsFocused(false);
+                router.push(cat.href);
               }}
               className="block px-4 py-2.5 hover:bg-cream-dark transition-colors"
             >
