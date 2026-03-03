@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Static generation, build-time data pipeline, design system, and project structure
 - [x] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
-- [ ] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot
+- [x] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot (completed 2026-03-03)
 - [ ] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons)
 - [ ] **Phase 5: Leaderboards and Profile Depth** - All-time leaderboards and enriched bowler profile features
 - [ ] **Phase 6: Champions, Content, and Community** - Historical recognition, blog system, and league info pages
@@ -147,7 +147,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-02 |
 | 2. Bowler Profiles | 3/3 | Complete | 2026-03-02 |
-| 3. Search and Home Page | 2/3 | In Progress | - |
+| 3. Search and Home Page | 3/3 | Complete   | 2026-03-03 |
 | 4. Teams and Seasons | 0/3 | Not started | - |
 | 5. Leaderboards and Profile Depth | 0/3 | Not started | - |
 | 6. Champions, Content, and Community | 0/3 | Not started | - |

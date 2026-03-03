@@ -41,6 +41,8 @@ See: .planning/PROJECT.md
 - **[Phase 03]** Bowler directory uses multi-column grid with letter anchor quick-nav for efficient browsing
 - **[Phase 03]** Placeholder pages use league-voice personality text, not generic "Coming Soon"
 - **[Phase 03]** Resource links with placeholder URLs render as disabled cards with "Link coming soon"
+- **[Phase 03]** DiscoverySearch uses state machine (IDLE/BROWSING/SEARCHING) for clean two-mode search logic
+- **[Phase 03]** Milestone ticker placed between hero and content grid as full-width visual separator
 
 ## Pending Todos
 

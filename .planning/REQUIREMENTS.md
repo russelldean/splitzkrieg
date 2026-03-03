@@ -32,7 +32,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Search
 
 - [x] **SRCH-01**: User can search for bowlers from prominent search bar on home page
-- [ ] **SRCH-02**: Search includes autocomplete with fuzzy matching and name variant handling
+- [x] **SRCH-02**: Search includes autocomplete with fuzzy matching and name variant handling
 
 ### Teams
 
@@ -73,7 +73,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Home Page
 
 - [x] **HOME-01**: Home page with league branding and Metrograph-inspired design
-- [ ] **HOME-02**: Prominent bowler search bar front and center
+- [x] **HOME-02**: Prominent bowler search bar front and center
 - [x] **HOME-03**: Current season snapshot (standings, recent results)
 - [x] **HOME-04**: Countdown clock to next bowling night
 - [x] **HOME-05**: Quick stats ticker (total bowlers, total games, league since 2007)
@@ -156,7 +156,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BWLR-11 | Phase 2 | Complete |
 | BWLR-12 | Phase 2 | Complete |
 | SRCH-01 | Phase 3 | Complete |
-| SRCH-02 | Phase 3 | Pending |
+| SRCH-02 | Phase 3 | Complete |
 | TEAM-01 | Phase 4 | Pending |
 | TEAM-02 | Phase 4 | Pending |
 | TEAM-03 | Phase 4 | Pending |
@@ -178,7 +178,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONT-02 | Phase 6 | Pending |
 | CONT-03 | Phase 6 | Pending |
 | HOME-01 | Phase 3 | Complete |
-| HOME-02 | Phase 3 | Pending |
+| HOME-02 | Phase 3 | Complete |
 | HOME-03 | Phase 3 | Complete |
 | HOME-04 | Phase 3 | Complete |
 | HOME-05 | Phase 3 | Complete |
