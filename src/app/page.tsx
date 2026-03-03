@@ -41,7 +41,7 @@ export default async function Home() {
               alt="Splitzkrieg Bowling League"
               width={400}
               height={144}
-              className="h-32 sm:h-44 w-auto mix-blend-multiply bg-cream rounded-lg"
+              className="h-32 sm:h-44 w-auto mix-blend-multiply"
               priority
             />
             <p className="font-body text-sm sm:text-base text-navy/50 -mt-4 sm:-mt-6">
