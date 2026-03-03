@@ -5,8 +5,8 @@
  * dynamicParams = false ensures unknown slugs return 404 immediately --
  * the DB is never queried at runtime.
  *
- * Phase 2: Hero header, personal records, season stats table, OG metadata.
- * Chart and game log accordion added in Plan 02-03.
+ * Phase 2: Complete bowler profile with all five sections:
+ * Hero header, personal records, average progression chart, season stats table, game log.
  */
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -20,6 +20,8 @@ import {
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
+import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
+import { GameLog } from '@/components/bowler/GameLog';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -70,7 +72,7 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
@@ -83,13 +85,13 @@ export default async function BowlerPage({
       <div className="mt-8 space-y-8">
         <PersonalRecordsPanel careerSummary={careerSummary} />
 
-        {/* Chart placeholder -- AverageProgressionChart added in Plan 02-03 */}
-        {/* {seasonStats.length >= 3 && <AverageProgressionChart seasons={seasonStats} />} */}
+        {seasonStats.length >= 3 && (
+          <AverageProgressionChart seasons={seasonStats} />
+        )}
 
         <SeasonStatsTable seasons={seasonStats} />
 
-        {/* Game log placeholder -- GameLog added in Plan 02-03 */}
-        {/* <GameLog gameLog={gameLog} /> */}
+        <GameLog gameLog={gameLog} />
       </div>
     </main>
   );

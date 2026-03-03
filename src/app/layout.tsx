@@ -19,7 +19,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Splitzkrieg Bowling League",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.org'),
+  title: {
+    template: '%s | Splitzkrieg',
+    default: 'Splitzkrieg Bowling League',
+  },
   description: "Stats, records, and history for the Splitzkrieg Bowling League. Since 2007.",
 };
 
