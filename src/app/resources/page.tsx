@@ -27,7 +27,7 @@ const resources: ResourceCategory[] = [
         description: "This season's scores and standings",
       },
       {
-        label: 'Master Database (Google Sheets)',
+        label: 'Master Database',
         href: 'https://docs.google.com/spreadsheets/d/1DJUexHWdj3QPLzQtM2wXC5UvHZ97gbDYNmlFUsI3BUI/edit?usp=sharing',
         description: 'Complete league stats and history',
       },
@@ -35,6 +35,11 @@ const resources: ResourceCategory[] = [
         label: 'Playoff History',
         href: 'https://docs.google.com/spreadsheets/d/1RDfMPWXcs5GSVlDeMEKezHjO5XiOQBUGRrVi5h4Xcpw/edit?usp=sharing',
         description: 'Playoff winners and results by season',
+      },
+      {
+        label: 'Lineup Submission Form',
+        href: 'https://docs.google.com/forms/d/e/1FAIpQLSdsL0IXbCB97O0VlbFNKY1XdCl8502VsxXt3j-oIYFBJRBgSw/viewform',
+        description: 'Commissioners: submit weekly lineups here',
       },
       {
         label: 'League Calendar',
