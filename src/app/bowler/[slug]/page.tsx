@@ -22,6 +22,7 @@ import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
 import { GameLog } from '@/components/bowler/GameLog';
+import type { TeamStat } from '@/components/bowler/TeamBreakdown';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -78,9 +79,30 @@ export default async function BowlerPage({
     getBowlerGameLog(bowler.bowlerID),
   ]);
 
+  // Derive team breakdown from season stats
+  const teamMap = new Map<string, { teamName: string; teamSlug: string | null; nights: number }>();
+  for (const s of seasonStats) {
+    const key = s.teamSlug ?? s.teamName ?? 'Unknown';
+    const existing = teamMap.get(key);
+    if (existing) {
+      existing.nights += s.nightsBowled;
+    } else {
+      teamMap.set(key, { teamName: s.teamName ?? 'Unknown', teamSlug: s.teamSlug, nights: s.nightsBowled });
+    }
+  }
+  const totalNights = seasonStats.reduce((sum, s) => sum + s.nightsBowled, 0);
+  const teams: TeamStat[] = Array.from(teamMap.values())
+    .sort((a, b) => b.nights - a.nights)
+    .map(t => ({
+      teamName: t.teamName,
+      teamSlug: t.teamSlug,
+      nights: t.nights,
+      pct: totalNights > 0 ? Math.round((t.nights / totalNights) * 100) : 0,
+    }));
+
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <BowlerHero careerSummary={careerSummary} shareUrl={shareUrl} />
+      <BowlerHero careerSummary={careerSummary} shareUrl={shareUrl} teams={teams} />
 
       <div className="mt-8 space-y-8">
         <PersonalRecordsPanel careerSummary={careerSummary} />

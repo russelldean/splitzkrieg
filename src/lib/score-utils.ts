@@ -15,3 +15,21 @@ export function scoreColorClass(score: number | null): string {
   if (score >= 200) return 'text-green-600';
   return '';
 }
+
+/**
+ * Returns Tailwind class string for a bowling series (3-game total).
+ * Separate scale from individual games since series max is 900.
+ *
+ * 700+      -> text-red-600 font-bold    (elite series)
+ * 650-699   -> text-amber-500 font-semibold (gold)
+ * 600-649   -> text-green-600            (green)
+ * < 600     -> ''                        (no color)
+ * null      -> ''                        (no data)
+ */
+export function seriesColorClass(score: number | null): string {
+  if (score === null) return '';
+  if (score >= 700) return 'text-red-600 font-bold';
+  if (score >= 650) return 'text-amber-500 font-semibold';
+  if (score >= 600) return 'text-green-600';
+  return '';
+}

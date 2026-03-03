@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { GameLogWeek } from '@/lib/queries';
-import { scoreColorClass } from '@/lib/score-utils';
+import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 type GameLogSeason = {
@@ -124,7 +124,7 @@ export function GameLog({ gameLog }: Props) {
                         <td className={`px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game3)}`}>
                           {week.game3 ?? '\u2014'}
                         </td>
-                        <td className={`px-4 py-2 text-right tabular-nums font-semibold ${scoreColorClass(week.scratchSeries)}`}>
+                        <td className={`px-4 py-2 text-right tabular-nums font-semibold ${seriesColorClass(week.scratchSeries)}`}>
                           {week.scratchSeries ?? '\u2014'}
                         </td>
                       </tr>

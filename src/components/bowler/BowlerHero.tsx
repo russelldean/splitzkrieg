@@ -1,12 +1,14 @@
 import type { BowlerCareerSummary } from '@/lib/queries';
 import { ShareButton } from '@/components/bowler/ShareButton';
+import { TeamBreakdown, type TeamStat } from '@/components/bowler/TeamBreakdown';
 
 interface Props {
   careerSummary: BowlerCareerSummary | null;
   shareUrl: string;
+  teams: TeamStat[];
 }
 
-export function BowlerHero({ careerSummary, shareUrl }: Props) {
+export function BowlerHero({ careerSummary, shareUrl, teams }: Props) {
   const name = careerSummary?.bowlerName ?? 'Unknown Bowler';
 
   return (
@@ -20,17 +22,14 @@ export function BowlerHero({ careerSummary, shareUrl }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-6">
+      <div className="flex flex-wrap items-start gap-2 mt-6">
         <StatPill label="Career Avg" value={careerSummary?.careerAverage?.toFixed(1) ?? null} />
         <StatPill label="Total Games" value={careerSummary?.totalGamesBowled ?? null} />
         <StatPill
           label="Seasons Active"
           value={careerSummary?.seasonsPlayed ?? null}
         />
-        <StatPill
-          label="Teams Played For"
-          value={careerSummary?.teamsPlayedFor ?? null}
-        />
+        <TeamBreakdown teams={teams} />
       </div>
     </section>
   );

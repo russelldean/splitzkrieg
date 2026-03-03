@@ -1,5 +1,5 @@
 import type { BowlerCareerSummary } from '@/lib/queries';
-import { scoreColorClass } from '@/lib/score-utils';
+import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface Props {
@@ -31,12 +31,12 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
           <RecordCard
             label="High Series"
             value={careerSummary.highSeries}
-            colorClass={scoreColorClass(careerSummary.highSeries)}
+            colorClass={seriesColorClass(careerSummary.highSeries)}
           />
-          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
+          <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
         </div>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
+          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
           <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
         </div>
       </div>

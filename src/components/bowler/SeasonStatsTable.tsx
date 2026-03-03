@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { BowlerSeasonStats } from '@/lib/queries';
-import { scoreColorClass } from '@/lib/score-utils';
+import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface Props {
@@ -83,7 +83,7 @@ export function SeasonStatsTable({ seasons }: Props) {
                 <td className={`px-4 py-3 text-right ${scoreColorClass(season.highGame)}`}>
                   {season.highGame ?? '\u2014'}
                 </td>
-                <td className={`px-4 py-3 text-right ${scoreColorClass(season.highSeries)}`}>
+                <td className={`px-4 py-3 text-right ${seriesColorClass(season.highSeries)}`}>
                   {season.highSeries ?? '\u2014'}
                 </td>
                 <td className="px-4 py-3 text-right">{season.games200Plus}</td>
@@ -102,7 +102,7 @@ export function SeasonStatsTable({ seasons }: Props) {
               <td className={`px-4 py-3 text-right ${scoreColorClass(careerHighGame || null)}`}>
                 {careerHighGame || '\u2014'}
               </td>
-              <td className={`px-4 py-3 text-right ${scoreColorClass(careerHighSeries || null)}`}>
+              <td className={`px-4 py-3 text-right ${seriesColorClass(careerHighSeries || null)}`}>
                 {careerHighSeries || '\u2014'}
               </td>
               <td className="px-4 py-3 text-right">{totals.games200Plus}</td>
