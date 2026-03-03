@@ -32,6 +32,11 @@ const resources: ResourceCategory[] = [
         description: 'Complete league stats and history',
       },
       {
+        label: 'Playoff History',
+        href: 'https://docs.google.com/spreadsheets/d/1RDfMPWXcs5GSVlDeMEKezHjO5XiOQBUGRrVi5h4Xcpw/edit?usp=sharing',
+        description: 'Playoff winners and results by season',
+      },
+      {
         label: 'League Calendar',
         href: 'https://calendar.google.com/calendar/u/0?cid=MzIzNDU0ZjVlYzM4MzljMGI3MmI4MTczYmFlZGNlMGExNzY3MzMzODM5NTJjNzQ0YjVkMmZmOTZlYWUzMjE2YUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t',
         description: 'Bowling nights and league events',
