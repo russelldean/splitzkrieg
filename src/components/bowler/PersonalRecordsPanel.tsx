@@ -75,7 +75,7 @@ function RecordCard({
   // Show X (bowling strike symbol) for zero counts
   const isStrike = value === 0;
   const display = value === null ? '\u2014' : isStrike ? 'X' : value;
-  const strikeClass = isStrike ? 'text-red-600/30' : '';
+  const strikeClass = isStrike ? 'text-red-600/50 font-bold' : '';
 
   return (
     <div className="flex flex-col gap-1">

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { GameLogWeek } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { strikeX } from '@/components/ui/StrikeX';
 
 type GameLogSeason = {
   seasonID: number;
@@ -77,7 +78,7 @@ export function GameLog({ gameLog }: Props) {
               onClick={() => toggleSeason(season.seasonID)}
               className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
             >
-              <span className="font-heading text-lg text-navy">{season.displayName}</span>
+              <span className="font-heading text-lg text-navy">{strikeX(season.displayName)}</span>
               <span className="text-navy/40 text-sm">
                 {season.weeks.length} nights {openSeasons.has(season.seasonID) ? '\u25B2' : '\u25BC'}
               </span>
@@ -109,10 +110,10 @@ export function GameLog({ gameLog }: Props) {
                         <td className="px-4 py-2">
                           {week.opponentSlug ? (
                             <Link href={`/team/${week.opponentSlug}`} className="text-navy hover:text-red-600 underline-offset-2 hover:underline">
-                              {week.opponentName}
+                              {strikeX(week.opponentName ?? '')}
                             </Link>
                           ) : (
-                            <span className="text-navy/40">{week.opponentName ?? '\u2014'}</span>
+                            <span className="text-navy/40">{week.opponentName ? strikeX(week.opponentName) : '\u2014'}</span>
                           )}
                         </td>
                         <td className={`px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game1)}`}>

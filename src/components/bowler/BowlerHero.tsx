@@ -1,6 +1,7 @@
 import type { BowlerCareerSummary } from '@/lib/queries';
 import { ShareButton } from '@/components/bowler/ShareButton';
 import { TeamBreakdown, type TeamStat } from '@/components/bowler/TeamBreakdown';
+import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   careerSummary: BowlerCareerSummary | null;
@@ -16,7 +17,7 @@ export function BowlerHero({ careerSummary, currentAvg, shareUrl, teams }: Props
     <section className="relative pb-8 border-b border-red-600/20">
       <div className="flex items-start justify-between gap-4">
         <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-navy">
-          {name}
+          {strikeX(name)}
         </h1>
         <div className="shrink-0 pt-2">
           <ShareButton url={shareUrl} />

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { BowlerSeasonStats } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   seasons: BowlerSeasonStats[];
@@ -61,7 +62,7 @@ export function SeasonStatsTable({ seasons }: Props) {
                     href={`/season/${season.romanNumeral}`}
                     className="text-navy hover:text-red-600 transition-colors"
                   >
-                    {season.displayName}
+                    {strikeX(season.displayName)}
                   </Link>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
@@ -70,10 +71,10 @@ export function SeasonStatsTable({ seasons }: Props) {
                       href={`/team/${season.teamSlug}`}
                       className="text-navy hover:text-red-600 transition-colors"
                     >
-                      {season.teamName}
+                      {strikeX(season.teamName ?? '')}
                     </Link>
                   ) : (
-                    <span className="text-navy/50">{season.teamName ?? '\u2014'}</span>
+                    <span className="text-navy/50">{season.teamName ? strikeX(season.teamName) : '\u2014'}</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">{season.gamesBowled}</td>
