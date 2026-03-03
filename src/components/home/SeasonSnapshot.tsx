@@ -54,6 +54,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
       <div className="flex justify-around mb-4 pb-4 border-b border-navy/5">
         <StatValue label="Bowlers" value={snapshot.totalBowlers} />
         <StatValue label="Games" value={snapshot.totalGames.toLocaleString()} />
+        <StatValue label="League Avg" value={snapshot.leagueAverage.toFixed(1)} />
       </div>
 
       {/* Top performers */}
@@ -77,12 +78,28 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
             </div>
           </div>
         )}
-        {snapshot.topAverage && (
+        {snapshot.topMaleAvg && (
           <LeaderRow
-            label="Top Avg"
-            name={snapshot.topAverage.bowlerName}
-            slug={snapshot.topAverage.slug}
-            value={snapshot.topAverage.average.toFixed(1)}
+            label="Top Male Avg"
+            name={snapshot.topMaleAvg.bowlerName}
+            slug={snapshot.topMaleAvg.slug}
+            value={snapshot.topMaleAvg.average.toFixed(1)}
+          />
+        )}
+        {snapshot.topFemaleAvg && (
+          <LeaderRow
+            label="Top Female Avg"
+            name={snapshot.topFemaleAvg.bowlerName}
+            slug={snapshot.topFemaleAvg.slug}
+            value={snapshot.topFemaleAvg.average.toFixed(1)}
+          />
+        )}
+        {snapshot.topHcpAvg && (
+          <LeaderRow
+            label="Top Hcp Avg"
+            name={snapshot.topHcpAvg.bowlerName}
+            slug={snapshot.topHcpAvg.slug}
+            value={snapshot.topHcpAvg.average.toFixed(1)}
           />
         )}
         {snapshot.highGame && (

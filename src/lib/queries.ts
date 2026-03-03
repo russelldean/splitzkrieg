@@ -500,7 +500,10 @@ export interface SeasonSnapshot {
   weekNumber: number;
   totalGames: number;
   totalBowlers: number;
-  topAverage: { bowlerName: string; slug: string; average: number } | null;
+  leagueAverage: number;
+  topMaleAvg: { bowlerName: string; slug: string; average: number } | null;
+  topFemaleAvg: { bowlerName: string; slug: string; average: number } | null;
+  topHcpAvg: { bowlerName: string; slug: string; average: number } | null;
   highGame: { bowlerName: string; slug: string; score: number } | null;
   highSeries: { bowlerName: string; slug: string; score: number } | null;
   bowlerOfTheWeek: { bowlerName: string; slug: string; score: number } | null;
@@ -539,11 +542,13 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
         weekNumber: number;
         totalGames: number;
         totalBowlers: number;
+        leagueAverage: number;
       }>(`
         SELECT
           MAX(sc.week) AS weekNumber,
           COUNT(sc.scoreID) * 3 AS totalGames,
-          COUNT(DISTINCT sc.bowlerID) AS totalBowlers
+          COUNT(DISTINCT sc.bowlerID) AS totalBowlers,
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage
         FROM scores sc
         WHERE sc.seasonID = @seasonID
           AND sc.isPenalty = 0
@@ -551,18 +556,44 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
 
     const stats = statsResult.recordset[0];
 
-    // Step 3: Top average (minimum 3 nights bowled)
-    const topAvgResult = await db.request()
+    // Step 3: Top averages by gender + handicap (minimum 3 nights bowled)
+    const topMaleAvgResult = await db.request()
       .input('seasonID', season.seasonID)
       .query<{ bowlerName: string; slug: string; average: number }>(`
         SELECT TOP 1
-          b.bowlerName,
-          b.slug,
+          b.bowlerName, b.slug,
           CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
-        WHERE sc.seasonID = @seasonID
-          AND sc.isPenalty = 0
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0 AND b.gender = 'M'
+        GROUP BY sc.bowlerID, b.bowlerName, b.slug
+        HAVING COUNT(sc.scoreID) >= 3
+        ORDER BY average DESC
+      `);
+
+    const topFemaleAvgResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ bowlerName: string; slug: string; average: number }>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0 AND b.gender = 'F'
+        GROUP BY sc.bowlerID, b.bowlerName, b.slug
+        HAVING COUNT(sc.scoreID) >= 3
+        ORDER BY average DESC
+      `);
+
+    const topHcpAvgResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ bowlerName: string; slug: string; average: number }>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
         GROUP BY sc.bowlerID, b.bowlerName, b.slug
         HAVING COUNT(sc.scoreID) >= 3
         ORDER BY average DESC
@@ -654,7 +685,10 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       weekNumber: stats?.weekNumber ?? 0,
       totalGames: stats?.totalGames ?? 0,
       totalBowlers: stats?.totalBowlers ?? 0,
-      topAverage: topAvgResult.recordset[0] ?? null,
+      leagueAverage: stats?.leagueAverage ?? 0,
+      topMaleAvg: topMaleAvgResult.recordset[0] ?? null,
+      topFemaleAvg: topFemaleAvgResult.recordset[0] ?? null,
+      topHcpAvg: topHcpAvgResult.recordset[0] ?? null,
       highGame: highGameResult.recordset[0] ?? null,
       highSeries: highSeriesResult.recordset[0] ?? null,
       bowlerOfTheWeek: botwResult.recordset[0] ?? null,
