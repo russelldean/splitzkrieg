@@ -25,8 +25,16 @@ export function AverageProgressionChart({ seasons }: Props) {
 
   if (chartData.length < 3) return null;
 
-  const maxAvg = Math.max(...chartData.map(d => d.average as number));
+  const averages = chartData.map(d => d.average as number);
+  const maxAvg = Math.max(...averages);
+  const minAvg = Math.min(...averages);
   const careerHighPoint = chartData.find(d => d.average === maxAvg);
+
+  // Tight Y-axis domain with padding so the line fills most of the chart height
+  const range = maxAvg - minAvg;
+  const padding = Math.max(range * 0.15, 5); // at least 5 pins of breathing room
+  const yMin = Math.floor((minAvg - padding) / 5) * 5; // round down to nearest 5
+  const yMax = Math.ceil((maxAvg + padding) / 5) * 5;  // round up to nearest 5
 
   return (
     <div className="bg-white rounded-lg border border-navy/10 p-6">
@@ -40,7 +48,7 @@ export function AverageProgressionChart({ seasons }: Props) {
             axisLine={{ stroke: '#1B2A4A', opacity: 0.1 }}
           />
           <YAxis
-            domain={['auto', 'auto']}
+            domain={[yMin, yMax]}
             tick={{ fontSize: 11, fill: '#1B2A4A', opacity: 0.6 }}
             tickLine={false}
             axisLine={false}
