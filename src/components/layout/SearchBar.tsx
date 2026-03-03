@@ -9,8 +9,6 @@ import type { SearchEntry } from '@/lib/search-index';
 const browseCategories = [
   { label: 'Bowlers', href: '/bowlers', description: 'Browse all bowlers' },
   { label: 'Teams', href: '/teams', description: 'View team rosters' },
-  { label: 'Seasons', href: '/seasons', description: 'Explore 35+ seasons' },
-  { label: 'Leaderboards', href: '/leaderboards', description: 'All-time records' },
 ];
 
 export function SearchBar() {
