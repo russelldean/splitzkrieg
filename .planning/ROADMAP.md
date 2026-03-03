@@ -69,9 +69,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 03-01-PLAN.md -- Data layer: query functions (next bowling night, milestones, season snapshot, bowler directory)
+- [x] 03-01-PLAN.md -- Data layer: query functions (next bowling night, milestones, season snapshot, bowler directory)
 - [ ] 03-02-PLAN.md -- Home page rebuild: DiscoverySearch, CountdownClock, MilestoneTicker, SeasonSnapshot, hero section
-- [ ] 03-03-PLAN.md -- Bowler directory, placeholder pages (teams/seasons/leaderboards), resources page, footer updates
+- [x] 03-03-PLAN.md -- Bowler directory, placeholder pages (teams/seasons/leaderboards), resources page, footer updates
 
 ### Phase 4: Teams and Seasons
 **Goal**: Users can browse team profiles and season pages, completing the three-entity reference graph where every bowler, team, and season links to every other
@@ -147,7 +147,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-02 |
 | 2. Bowler Profiles | 3/3 | Complete | 2026-03-02 |
-| 3. Search and Home Page | 0/3 | Not started | - |
+| 3. Search and Home Page | 2/3 | In Progress | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
 | 5. Leaderboards and Profile Depth | 0/3 | Not started | - |
 | 6. Champions, Content, and Community | 0/3 | Not started | - |
