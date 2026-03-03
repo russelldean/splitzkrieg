@@ -52,9 +52,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [x] 02-01-PLAN.md -- Data layer: query functions (career, season, game log) and scoreColorClass utility
+- [ ] 02-02-PLAN.md -- TBD
+- [ ] 02-03-PLAN.md -- TBD
 
 ### Phase 3: Search and Home Page
 **Goal**: Bowlers can find any bowler by name from the home page and see a current-season snapshot of the league
@@ -146,7 +146,7 @@ Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-02 |
-| 2. Bowler Profiles | 0/3 | Not started | - |
+| 2. Bowler Profiles | 1/3 | In progress | - |
 | 3. Search and Home Page | 0/3 | Not started | - |
 | 4. Teams and Seasons | 0/3 | Not started | - |
 | 5. Leaderboards and Profile Depth | 0/3 | Not started | - |

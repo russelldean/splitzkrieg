@@ -25,7 +25,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **BWLR-07**: Profile shows milestone tracker (approaching milestones)
 - [ ] **BWLR-08**: Profile shows leaderboard context ("Ranked Nth in...") for top bowlers
 - [ ] **BWLR-10**: Profile shows career timeline (teams played for, chronological)
-- [ ] **BWLR-11**: Color-coded performance in all score tables (200+ green, 250+ gold)
+- [x] **BWLR-11**: Color-coded performance in all score tables (200+ green, 250+ gold)
 - [ ] **BWLR-12**: Shareable URL with OG meta tags (splitzkrieg.org/bowler/russ-smith)
 - [ ] **BWLR-15**: Achievement badges on profile (100 career games, first 200+ game, first 600+ series, etc.)
 
@@ -153,7 +153,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BWLR-07 | Phase 5 | Pending |
 | BWLR-08 | Phase 5 | Pending |
 | BWLR-10 | Phase 5 | Pending |
-| BWLR-11 | Phase 2 | Pending |
+| BWLR-11 | Phase 2 | Complete |
 | BWLR-12 | Phase 2 | Pending |
 | SRCH-01 | Phase 3 | Pending |
 | SRCH-02 | Phase 3 | Pending |

@@ -5,33 +5,34 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Bowlers can look themselves up and explore their stats -- career averages, personal records, season-by-season history. The bowler profile page must be amazing.
-**Current focus:** Phase 1: Foundation
+**Current focus:** Phase 2: Bowler Profiles
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation) -- COMPLETE
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 1 complete -- ready for Phase 2 planning
-Last activity: 2026-03-02 -- 01-03 search index complete; Phase 1 Foundation done
+Phase: 2 of 7 (Bowler Profiles)
+Plan: 2 of 3 in current phase (plan 1 complete)
+Status: 02-01 data layer complete -- ready for 02-02 (hero header, records panel)
+Last activity: 2026-03-02 -- 02-01 query layer and score utility complete
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: ~3 min
-- Total execution time: ~9 min
+- Total execution time: ~11 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Foundation | 3 | ~9 min | ~3 min |
+| 2. Bowler Profiles | 1 | ~2 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03, 01-02, 01-01
-- Trend: Phase 1 complete
+- Last 5 plans: 02-01, 01-03, 01-02, 01-01
+- Trend: Consistent ~2-3 min per plan
 
 *Updated after each plan completion*
 
@@ -46,14 +47,17 @@ Recent decisions affecting current work:
 - [Roadmap]: XCUT requirements distributed across phases (XCUT-02/03 in Phase 1, XCUT-01 in Phase 2) rather than a separate phase.
 - [Roadmap]: Champions/playoffs features (Phase 6) designed for graceful empty states since seasonChampions/playoffResults/matchResults tables are empty.
 - [01-02]: connectTimeout (not connectionTimeout) is the correct mssql v9 config property for the 120s Azure SQL cold start timeout.
-- [01-02]: Slug format is LOWER(REPLACE(firstName,' ','-'))+'-'+LOWER(REPLACE(lastName,' ','-')) — consistent across generateStaticParams and query lookups.
-- [01-02]: dynamicParams=false on bowler route — unknown slugs get immediate 404, DB never queried at runtime.
-- [01-02]: Force-commit .env.local.example despite .env* gitignore — example template files must be tracked.
-- [01-01]: DM_Serif_Display requires weight: '400' — it is NOT a variable font (Inter is, needs no weight).
-- [01-01]: @theme inline (not @theme) — Tailwind utilities resolve to values, not CSS variable references.
-- [01-01]: Server/client split in layout — Header/Footer are server components, MobileNav/SearchBar are 'use client'.
+- [01-02]: Slug format is LOWER(REPLACE(firstName,' ','-'))+'-'+LOWER(REPLACE(lastName,' ','-')) -- consistent across generateStaticParams and query lookups.
+- [01-02]: dynamicParams=false on bowler route -- unknown slugs get immediate 404, DB never queried at runtime.
+- [01-02]: Force-commit .env.local.example despite .env* gitignore -- example template files must be tracked.
+- [01-01]: DM_Serif_Display requires weight: '400' -- it is NOT a variable font (Inter is, needs no weight).
+- [01-01]: @theme inline (not @theme) -- Tailwind utilities resolve to values, not CSS variable references.
+- [01-01]: Server/client split in layout -- Header/Footer are server components, MobileNav/SearchBar are 'use client'.
 - [01-03]: Used bowlers.slug column directly for search index instead of generating from firstName/lastName -- ensures consistency with pre-rendered bowler pages.
 - [01-03]: Static route handler with force-static generates search JSON at build time -- pattern for any future build-time data endpoints.
+- [02-01]: Installed vitest as test runner -- no prior test infrastructure existed in the project.
+- [02-01]: getBowlerSeasonStats queries scores table directly (not view) to include teamSlug for cross-links.
+- [02-01]: getBowlerCareerSummary wrapped in React.cache for metadata+page deduplication.
 
 ### Pending Todos
 
@@ -68,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 01-03-PLAN.md (search index) -- Phase 1 Foundation complete
-Resume file: .planning/phases/01-foundation/01-03-SUMMARY.md
+Stopped at: Completed 02-01-PLAN.md (data layer) -- ready for 02-02
+Resume file: .planning/phases/02-bowler-profiles/02-01-SUMMARY.md
