@@ -431,3 +431,189 @@ export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]>
     return [];
   }
 });
+
+export interface Milestone {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  type: 'achieved' | 'approaching';
+  milestone: string;
+  current: number;
+  threshold: number;
+}
+
+/**
+ * Returns recently achieved and approaching career game milestones.
+ * Used by the milestone ticker on the home page.
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Returns [] if DB unavailable.
+ */
+export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<Milestone>(`
+      WITH CareerGames AS (
+        SELECT
+          sc.bowlerID,
+          b.bowlerName,
+          b.slug,
+          COUNT(sc.scoreID) * 3 AS totalGames
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.isPenalty = 0
+        GROUP BY sc.bowlerID, b.bowlerName, b.slug
+      )
+      SELECT TOP 10 bowlerID, bowlerName, slug, type, milestone, current, threshold
+      FROM (
+        SELECT bowlerID, bowlerName, slug,
+          'achieved' AS type,
+          CAST(threshold AS VARCHAR) + ' career games' AS milestone,
+          totalGames AS current,
+          threshold
+        FROM CareerGames
+        CROSS JOIN (VALUES (50),(100),(150),(200),(250),(300),(400),(500)) AS T(threshold)
+        WHERE totalGames BETWEEN threshold AND threshold + 9
+        UNION ALL
+        SELECT bowlerID, bowlerName, slug,
+          'approaching' AS type,
+          CAST(threshold AS VARCHAR) + ' career games' AS milestone,
+          totalGames AS current,
+          threshold
+        FROM CareerGames
+        CROSS JOIN (VALUES (50),(100),(150),(200),(250),(300),(400),(500)) AS T(threshold)
+        WHERE totalGames BETWEEN threshold - 5 AND threshold - 1
+      ) combined
+      ORDER BY type, threshold DESC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getRecentMilestones: DB unavailable', err);
+    return [];
+  }
+});
+
+export interface SeasonSnapshot {
+  seasonID: number;
+  displayName: string;
+  romanNumeral: string;
+  totalNights: number;
+  totalGames: number;
+  totalBowlers: number;
+  topAverage: { bowlerName: string; slug: string; average: number } | null;
+  highGame: { bowlerName: string; slug: string; score: number } | null;
+  highSeries: { bowlerName: string; slug: string; score: number } | null;
+}
+
+/**
+ * Returns a snapshot of the current (most recent) season for the home page.
+ * Includes top average, high game, high series, and aggregate stats.
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Returns null if DB unavailable.
+ */
+export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+
+    // Step 1: Find the most recent season
+    const seasonResult = await db.request().query<{
+      seasonID: number;
+      displayName: string;
+      romanNumeral: string;
+    }>(`
+      SELECT TOP 1 seasonID, displayName, romanNumeral
+      FROM seasons
+      ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+    `);
+
+    const season = seasonResult.recordset[0];
+    if (!season) return null;
+
+    // Step 2: Get aggregate stats for this season
+    const statsResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{
+        totalNights: number;
+        totalGames: number;
+        totalBowlers: number;
+      }>(`
+        SELECT
+          COUNT(sc.scoreID) AS totalNights,
+          COUNT(sc.scoreID) * 3 AS totalGames,
+          COUNT(DISTINCT sc.bowlerID) AS totalBowlers
+        FROM scores sc
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+      `);
+
+    const stats = statsResult.recordset[0];
+
+    // Step 3: Top average (minimum 3 nights bowled)
+    const topAvgResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ bowlerName: string; slug: string; average: number }>(`
+        SELECT TOP 1
+          b.bowlerName,
+          b.slug,
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+        GROUP BY sc.bowlerID, b.bowlerName, b.slug
+        HAVING COUNT(sc.scoreID) >= 3
+        ORDER BY average DESC
+      `);
+
+    // Step 4: High game
+    const highGameResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ bowlerName: string; slug: string; score: number }>(`
+        SELECT TOP 1
+          b.bowlerName,
+          b.slug,
+          g.score
+        FROM (
+          SELECT bowlerID, game1 AS score FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+          UNION ALL
+          SELECT bowlerID, game2 FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+          UNION ALL
+          SELECT bowlerID, game3 FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+        ) g
+        JOIN bowlers b ON g.bowlerID = b.bowlerID
+        WHERE g.score IS NOT NULL
+        ORDER BY g.score DESC
+      `);
+
+    // Step 5: High series
+    const highSeriesResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ bowlerName: string; slug: string; score: number }>(`
+        SELECT TOP 1
+          b.bowlerName,
+          b.slug,
+          sc.scratchSeries AS score
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+        ORDER BY sc.scratchSeries DESC
+      `);
+
+    return {
+      seasonID: season.seasonID,
+      displayName: season.displayName,
+      romanNumeral: season.romanNumeral,
+      totalNights: stats?.totalNights ?? 0,
+      totalGames: stats?.totalGames ?? 0,
+      totalBowlers: stats?.totalBowlers ?? 0,
+      topAverage: topAvgResult.recordset[0] ?? null,
+      highGame: highGameResult.recordset[0] ?? null,
+      highSeries: highSeriesResult.recordset[0] ?? null,
+    };
+  } catch (err) {
+    console.warn('getCurrentSeasonSnapshot: DB unavailable', err);
+    return null;
+  }
+});
