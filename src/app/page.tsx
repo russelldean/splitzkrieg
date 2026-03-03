@@ -57,7 +57,7 @@ export default async function Home() {
                 key={link.href}
                 href={link.href}
                 className={`group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all ${
-                  i === quickLinks.length - 1 ? 'col-span-2 sm:col-span-1 mx-auto sm:mx-0 max-w-[calc(50%-0.375rem)] sm:max-w-none' : ''
+                  i === quickLinks.length - 1 ? 'col-span-2 sm:col-span-1 text-center sm:text-left' : ''
                 }`}
               >
                 <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
@@ -73,7 +73,7 @@ export default async function Home() {
       </section>
 
       {/* Content Grid */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-4 sm:pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Countdown Clock */}
           <CountdownClock targetDate={nextBowlingNight} />
