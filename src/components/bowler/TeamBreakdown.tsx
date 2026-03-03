@@ -19,6 +19,8 @@ export function TeamBreakdown({ teams }: Props) {
 
   if (teams.length === 0) return null;
 
+  const isLifer = teams.length === 1;
+
   return (
     <div className="relative">
       <button
@@ -45,6 +47,9 @@ export function TeamBreakdown({ teams }: Props) {
                     </Link>
                   ) : (
                     <span className="text-sm text-navy/60 truncate block">{strikeX(team.teamName)}</span>
+                  )}
+                  {isLifer && (
+                    <span className="text-[11px] italic text-navy/30">forever</span>
                   )}
                 </div>
                 <div
