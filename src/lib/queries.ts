@@ -369,3 +369,65 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
     return null;
   }
 });
+
+/* ───────────────────────────────────────────────────────────
+ * Phase 3: Home Page and Directory Queries
+ * ─────────────────────────────────────────────────────────── */
+
+/**
+ * Returns the next scheduled bowling night as an ISO date string.
+ * Used by the countdown clock on the home page.
+ * Returns null if no future dates exist or DB is unavailable.
+ */
+export async function getNextBowlingNight(): Promise<string | null> {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db.request().query<{ matchDate: Date }>(`
+      SELECT TOP 1 matchDate
+      FROM schedule
+      WHERE matchDate >= CAST(GETDATE() AS DATE)
+      ORDER BY matchDate ASC
+    `);
+    return result.recordset[0]?.matchDate?.toISOString() ?? null;
+  } catch (err) {
+    console.warn('getNextBowlingNight: DB unavailable', err);
+    return null;
+  }
+}
+
+export interface DirectoryBowler {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  seasonsActive: number;
+  isActive: boolean | null;
+}
+
+/**
+ * Returns all bowlers with season counts for the /bowlers directory page.
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Returns [] if DB unavailable.
+ */
+export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<DirectoryBowler>(`
+      SELECT
+        b.bowlerID,
+        b.bowlerName,
+        b.slug,
+        b.isActive,
+        COUNT(DISTINCT r.seasonID) AS seasonsActive
+      FROM bowlers b
+      LEFT JOIN teamRosters r ON r.bowlerID = b.bowlerID
+      GROUP BY b.bowlerID, b.bowlerName, b.slug, b.isActive
+      ORDER BY b.bowlerName
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllBowlersDirectory: DB unavailable', err);
+    return [];
+  }
+});
