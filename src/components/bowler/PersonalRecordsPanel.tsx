@@ -35,6 +35,15 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
       <h2 className="font-heading text-2xl text-navy mb-4">Personal Records</h2>
       <div className="bg-white rounded-lg border border-navy/10 p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6">
+          <RecordCard label="First Night" value={formatFirstNight(careerSummary)} />
+          <RecordCard
+            label="Total Pins"
+            value={careerSummary.totalPins?.toLocaleString() ?? null}
+          />
+          <RecordCard
+            label="Career Avg"
+            value={careerSummary.careerAverage?.toFixed(1) ?? null}
+          />
           <RecordCard
             label="High Game"
             value={careerSummary.highGame}
@@ -45,18 +54,9 @@ export function PersonalRecordsPanel({ careerSummary }: Props) {
             value={careerSummary.highSeries}
             colorClass={seriesColorClass(careerSummary.highSeries)}
           />
-          <RecordCard
-            label="Career Avg"
-            value={careerSummary.careerAverage?.toFixed(1) ?? null}
-          />
-          <RecordCard
-            label="Total Pins"
-            value={careerSummary.totalPins?.toLocaleString() ?? null}
-          />
+          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
           <RecordCard label="200+ Games" value={careerSummary.games200Plus} />
           <RecordCard label="600+ Series" value={careerSummary.series600Plus} />
-          <RecordCard label="Turkeys" value={careerSummary.totalTurkeys} />
-          <RecordCard label="First Night" value={formatFirstNight(careerSummary)} />
         </div>
       </div>
     </section>
