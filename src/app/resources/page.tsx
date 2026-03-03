@@ -22,24 +22,19 @@ const resources: ResourceCategory[] = [
     category: 'League Documents',
     links: [
       {
+        label: 'Current Season Spreadsheet',
+        href: 'https://docs.google.com/spreadsheets/d/1esTQm815YXB5F9TDOf43V9Pw3_AJ0wZi-MYoE4f2PSg/edit?usp=sharing',
+        description: "This season's scores and standings",
+      },
+      {
         label: 'Master Database (Google Sheets)',
-        href: '#',
+        href: 'https://docs.google.com/spreadsheets/d/1DJUexHWdj3QPLzQtM2wXC5UvHZ97gbDYNmlFUsI3BUI/edit?usp=sharing',
         description: 'Complete league stats and history',
       },
       {
-        label: 'Current Season Database',
-        href: '#',
-        description: "This season's scores and standings",
-      },
-    ],
-  },
-  {
-    category: 'Forms & Submissions',
-    links: [
-      {
-        label: 'Lineup Submission Form',
-        href: '#',
-        description: 'Submit your lineup for the next bowling night',
+        label: 'League Calendar',
+        href: 'https://calendar.google.com/calendar/u/0?cid=MzIzNDU0ZjVlYzM4MzljMGI3MmI4MTczYmFlZGNlMGExNzY3MzMzODM5NTJjNzQ0YjVkMmZmOTZlYWUzMjE2YUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t',
+        description: 'Bowling nights and league events',
       },
     ],
   },
@@ -58,8 +53,13 @@ const resources: ResourceCategory[] = [
     links: [
       {
         label: 'Instagram',
-        href: '#',
+        href: 'https://www.instagram.com/splitzkriegbowlingleague/',
         description: 'Follow the league on Instagram',
+      },
+      {
+        label: 'Facebook Group',
+        href: 'https://www.facebook.com/groups/27865497820',
+        description: 'Join the conversation',
       },
     ],
   },

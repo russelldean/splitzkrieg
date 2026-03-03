@@ -19,6 +19,9 @@ export default function SeasonsPage() {
             defeat, but you have to trust me on that because this page
             isn&rsquo;t ready yet.
           </p>
+          <p>
+            Also, Winter is the best season.
+          </p>
         </div>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
