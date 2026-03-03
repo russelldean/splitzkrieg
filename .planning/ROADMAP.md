@@ -83,12 +83,13 @@ Plans:
   3. User visits /season/xxxv and sees final standings with points breakdown, division alignment, and season leaderboards (top averages, high games)
   4. Season page shows weekly results archive with scores linked to bowler profiles
   5. Schedule display works for current and past seasons
-**Plans**: TBD
+**Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — Data layer: all team and season query functions + TypeScript interfaces
+- [ ] 04-02-PLAN.md — Team profile page (/team/[slug]) with all sections + teams directory (/teams)
+- [ ] 04-03-PLAN.md — Season page (/season/[slug]) with standings, leaderboards, full stats + seasons directory (/seasons)
+- [ ] 04-04-PLAN.md — Weekly results box scores, standings race chart, team timeline visualization
 
 ### Phase 5: Leaderboards and Profile Depth
 **Goal**: Users can browse all-time leaderboards with filters and bowler profiles gain depth with milestones, rankings context, and career timelines
