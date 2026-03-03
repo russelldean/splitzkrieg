@@ -46,15 +46,18 @@ export function TeamBreakdown({ teams }: Props) {
                     <span className="text-sm text-navy/60 truncate block">{team.teamName}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div
+                  className="flex items-center gap-2 shrink-0"
+                  title={`${team.nights} night${team.nights === 1 ? '' : 's'}`}
+                >
                   <div className="w-16 h-1.5 bg-navy/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-navy/30 rounded-full"
-                      style={{ width: `${team.pct}%` }}
+                      style={{ width: `${Math.max(team.pct, team.nights > 0 ? 3 : 0)}%` }}
                     />
                   </div>
                   <span className="text-xs text-navy/40 tabular-nums w-8 text-right">
-                    {team.pct}%
+                    {team.pct === 0 && team.nights > 0 ? '<1' : team.pct}%
                   </span>
                 </div>
               </li>
