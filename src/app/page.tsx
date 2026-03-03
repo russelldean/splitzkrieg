@@ -34,8 +34,8 @@ export default async function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-4 sm:pb-5">
-          <div className="flex flex-col items-center text-center gap-1">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 sm:-mt-1 pb-3 sm:pb-4">
+          <div className="flex flex-col items-center text-center">
             <Image
               src="/splitzkrieg logo.png"
               alt="Splitzkrieg Bowling League"
@@ -44,7 +44,7 @@ export default async function Home() {
               className="h-32 sm:h-44 w-auto mix-blend-multiply"
               priority
             />
-            <p className="font-body text-sm sm:text-base text-navy/50">
+            <p className="font-body text-sm sm:text-base text-navy/50 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>
@@ -70,7 +70,7 @@ export default async function Home() {
       </section>
 
       {/* Content Grid */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Countdown Clock */}
           <CountdownClock targetDate={nextBowlingNight} />

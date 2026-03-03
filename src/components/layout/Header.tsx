@@ -58,9 +58,14 @@ export function Header() {
           <div className="flex-shrink-0">
             <Link
               href="/"
-              className="font-heading text-navy uppercase tracking-widest text-lg font-normal hover:text-red transition-colors"
+              className="hover:text-red transition-colors"
             >
-              SPLITZKRIEG
+              <span className="font-heading text-navy uppercase tracking-widest text-lg font-normal block leading-none">
+                SPLITZKRIEG
+              </span>
+              <span className="font-body text-[10px] text-navy/40 tracking-wider uppercase leading-none mt-0.5 block">
+                Bowling League &middot; Est. 2007
+              </span>
             </Link>
           </div>
 
