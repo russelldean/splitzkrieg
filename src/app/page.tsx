@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getNextBowlingNight, getRecentMilestones, getCurrentSeasonSnapshot } from '@/lib/queries';
 import { CountdownClock } from '@/components/home/CountdownClock';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
@@ -33,10 +34,20 @@ export default async function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
-          <p className="text-center font-body text-base sm:text-lg text-navy/60 max-w-md mx-auto">
-            Stats, records, and {new Date().getFullYear() - 2007} years of league history
-          </p>
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-4 sm:pb-5">
+          <div className="flex flex-col items-center text-center gap-1">
+            <Image
+              src="/splitzkrieg logo.png"
+              alt="Splitzkrieg Bowling League"
+              width={400}
+              height={144}
+              className="h-32 sm:h-44 w-auto mix-blend-multiply"
+              priority
+            />
+            <p className="font-body text-sm sm:text-base text-navy/50">
+              Stats, records, and {new Date().getFullYear() - 2007} years of league history
+            </p>
+          </div>
 
           {/* Explore Cards — above the fold */}
           <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
