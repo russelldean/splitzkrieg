@@ -26,3 +26,18 @@ body {
 .heading {
   @apply font-heading;
 }
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@utility animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @utility animate-ticker {
+    animation: none;
+  }
+}
