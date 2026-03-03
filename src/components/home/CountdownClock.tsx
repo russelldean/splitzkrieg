@@ -42,7 +42,7 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
   if (!mounted) {
     return (
       <div
-        className="bg-white rounded-xl border border-navy/10 p-6 flex flex-col items-center justify-center min-h-[180px]"
+        className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[120px] sm:min-h-[180px]"
         suppressHydrationWarning
       />
     );
@@ -51,7 +51,7 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
   // No scheduled date
   if (!targetDate) {
     return (
-      <div className="bg-white rounded-xl border border-navy/10 p-6 flex flex-col items-center justify-center text-center min-h-[180px]">
+      <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[120px] sm:min-h-[180px]">
         <p className="font-body text-navy/60 text-sm max-w-[220px] leading-relaxed">
           Next bowling night? Your guess is as good as ours. Check back once someone figures out the schedule.
         </p>
@@ -62,7 +62,7 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
   // It's bowling night!
   if (countdown?.isPast) {
     return (
-      <div className="bg-white rounded-xl border border-navy/10 p-6 flex flex-col items-center justify-center text-center min-h-[180px]" suppressHydrationWarning>
+      <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[120px] sm:min-h-[180px]" suppressHydrationWarning>
         <div className="text-3xl sm:text-4xl mb-2" role="img" aria-label="bowling">🎳</div>
         <p className="font-heading text-xl sm:text-2xl text-navy">It&rsquo;s bowling night!</p>
         <p className="font-body text-sm text-navy/40 mt-1">Lace up those shoes.</p>
@@ -71,8 +71,8 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 p-6 flex flex-col items-center justify-center min-h-[180px]" suppressHydrationWarning>
-      <div className="flex items-baseline gap-4 sm:gap-6">
+    <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[120px] sm:min-h-[180px]" suppressHydrationWarning>
+      <div className="flex items-baseline gap-4 sm:gap-4 sm:p-6">
         <TimeUnit value={countdown?.days ?? 0} label={(countdown?.days ?? 0) === 1 ? 'day' : 'days'} />
         <Separator />
         <TimeUnit value={countdown?.hours ?? 0} label={(countdown?.hours ?? 0) === 1 ? 'hr' : 'hrs'} />
