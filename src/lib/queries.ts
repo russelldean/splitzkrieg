@@ -140,49 +140,49 @@ export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<Bo
           ) AS firstMatchDate,
           COALESCE(
             (
-              SELECT CAST(SUM(pins) * 1.0 / NULLIF(COUNT(*), 0) AS DECIMAL(5,1))
+              SELECT CAST(AVG(g.pins * 1.0) AS DECIMAL(5,1))
               FROM (
-                SELECT TOP 27 score AS pins
+                SELECT TOP 27 g2.pins
                 FROM (
-                  SELECT s2.game1 AS score, s2.seasonID, s2.week, 1 AS GameNum
-                  FROM scores s2 WHERE s2.bowlerID = @bowlerID AND s2.game1 > 0 AND s2.game1 IS NOT NULL
+                  SELECT s2.game1 AS pins, sn2.year,
+                         CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END AS periodOrd,
+                         s2.week, 1 AS GameNum
+                  FROM scores s2
+                  JOIN seasons sn2 ON s2.seasonID = sn2.seasonID
+                  WHERE s2.bowlerID = @bowlerID AND s2.isPenalty = 0
+                    AND s2.game1 > 0 AND s2.game1 IS NOT NULL
                   UNION ALL
-                  SELECT s2.game2, s2.seasonID, s2.week, 2
-                  FROM scores s2 WHERE s2.bowlerID = @bowlerID AND s2.game2 > 0 AND s2.game2 IS NOT NULL
+                  SELECT s2.game2, sn2.year,
+                         CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END,
+                         s2.week, 2
+                  FROM scores s2
+                  JOIN seasons sn2 ON s2.seasonID = sn2.seasonID
+                  WHERE s2.bowlerID = @bowlerID AND s2.isPenalty = 0
+                    AND s2.game2 > 0 AND s2.game2 IS NOT NULL
                   UNION ALL
-                  SELECT s2.game3, s2.seasonID, s2.week, 3
-                  FROM scores s2 WHERE s2.bowlerID = @bowlerID AND s2.game3 > 0 AND s2.game3 IS NOT NULL
-                ) games
-                JOIN seasons sn ON games.seasonID = sn.seasonID
-                ORDER BY sn.year DESC,
-                         CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC,
-                         games.week DESC,
-                         games.GameNum DESC
-              ) recent
+                  SELECT s2.game3, sn2.year,
+                         CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END,
+                         s2.week, 3
+                  FROM scores s2
+                  JOIN seasons sn2 ON s2.seasonID = sn2.seasonID
+                  WHERE s2.bowlerID = @bowlerID AND s2.isPenalty = 0
+                    AND s2.game3 > 0 AND s2.game3 IS NOT NULL
+                ) g2
+                ORDER BY g2.year DESC, g2.periodOrd DESC, g2.week DESC, g2.GameNum DESC
+              ) g
             ),
             (SELECT b2.establishedAvg FROM bowlers b2 WHERE b2.bowlerID = @bowlerID)
           ) AS rollingAvg,
           (
-            SELECT CAST(SUM(pins) * 1.0 / NULLIF(COUNT(*), 0) AS DECIMAL(5,1))
-            FROM (
-              SELECT score AS pins
-              FROM (
-                SELECT s3.game1 AS score, s3.seasonID, s3.week, 1 AS GameNum
-                FROM scores s3 WHERE s3.bowlerID = @bowlerID AND s3.game1 > 0 AND s3.game1 IS NOT NULL
-                UNION ALL
-                SELECT s3.game2, s3.seasonID, s3.week, 2
-                FROM scores s3 WHERE s3.bowlerID = @bowlerID AND s3.game2 > 0 AND s3.game2 IS NOT NULL
-                UNION ALL
-                SELECT s3.game3, s3.seasonID, s3.week, 3
-                FROM scores s3 WHERE s3.bowlerID = @bowlerID AND s3.game3 > 0 AND s3.game3 IS NOT NULL
-              ) allGames
-              JOIN seasons sn2 ON allGames.seasonID = sn2.seasonID
-              ORDER BY sn2.year DESC,
-                       CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC,
-                       allGames.week DESC,
-                       allGames.GameNum DESC
-              OFFSET 3 ROWS FETCH NEXT 27 ROWS ONLY
-            ) prevRecent
+            SELECT TOP 1 s3.incomingAvg
+            FROM scores s3
+            JOIN seasons sn3 ON s3.seasonID = sn3.seasonID
+            WHERE s3.bowlerID = @bowlerID
+              AND s3.isPenalty = 0
+              AND s3.incomingAvg IS NOT NULL
+            ORDER BY sn3.year DESC,
+                     CASE sn3.period WHEN 'Fall' THEN 2 ELSE 1 END DESC,
+                     s3.week DESC
           ) AS prevRollingAvg
         FROM vw_BowlerCareerSummary v
         WHERE v.bowlerID = @bowlerID
@@ -232,7 +232,7 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
           sn.displayName,
           sn.year,
           sn.period,
-          t.teamName,
+          COALESCE(tnh.teamName, t.teamName)                   AS teamName,
           t.slug                                               AS teamSlug,
           COUNT(sc.scoreID)                                    AS nightsBowled,
           COUNT(sc.scoreID) * 3                                AS gamesBowled,
@@ -258,11 +258,14 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
         FROM scores sc
         JOIN seasons sn ON sc.seasonID = sn.seasonID
         LEFT JOIN teams t ON sc.teamID = t.teamID
+        LEFT JOIN teamNameHistory tnh
+          ON  tnh.seasonID = sc.seasonID
+          AND tnh.teamID   = sc.teamID
         WHERE sc.bowlerID = @bowlerID
           AND sc.isPenalty = 0
         GROUP BY
           sc.seasonID, sn.romanNumeral, sn.displayName,
-          sn.year, sn.period, t.teamName, t.slug
+          sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.slug
         ORDER BY
           sn.year DESC,
           CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
@@ -286,6 +289,7 @@ export interface GameLogWeek {
   game3: number | null;
   scratchSeries: number | null;
   turkeys: number;
+  incomingAvg: number | null;
 }
 
 /**
@@ -307,13 +311,14 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
           sn.displayName,
           sc.week,
           sch.matchDate,
-          opp.teamName  AS opponentName,
+          COALESCE(oppHist.teamName, opp.teamName) AS opponentName,
           opp.slug      AS opponentSlug,
           sc.game1,
           sc.game2,
           sc.game3,
           sc.scratchSeries,
-          ISNULL(sc.turkeys, 0) AS turkeys
+          ISNULL(sc.turkeys, 0) AS turkeys,
+          sc.incomingAvg
         FROM scores sc
         JOIN seasons sn ON sc.seasonID = sn.seasonID
         LEFT JOIN schedule sch
@@ -322,6 +327,12 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
           AND (sch.team1ID = sc.teamID OR sch.team2ID = sc.teamID)
         LEFT JOIN teams opp
           ON  opp.teamID = CASE
+                WHEN sch.team1ID = sc.teamID THEN sch.team2ID
+                ELSE sch.team1ID
+              END
+        LEFT JOIN teamNameHistory oppHist
+          ON  oppHist.seasonID = sc.seasonID
+          AND oppHist.teamID   = CASE
                 WHEN sch.team1ID = sc.teamID THEN sch.team2ID
                 ELSE sch.team1ID
               END
@@ -338,6 +349,68 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
     return [];
   }
 }
+
+export interface RollingAvgPoint {
+  seasonID: number;
+  displayName: string;
+  week: number;
+  rollingAvg: number;
+}
+
+/**
+ * Returns the per-week rolling average history for the progression chart.
+ * Reads directly from scores.incomingAvg (backfilled), no computation needed.
+ * Ordered chronologically (oldest to newest).
+ * Returns [] if DB unavailable or no data.
+ */
+export async function getBowlerRollingAvgHistory(bowlerID: number): Promise<RollingAvgPoint[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('bowlerID', bowlerID)
+      .query<RollingAvgPoint>(`
+        SELECT
+          sc.seasonID,
+          sn.displayName,
+          sc.week,
+          sc.incomingAvg AS rollingAvg
+        FROM scores sc
+        JOIN seasons sn ON sc.seasonID = sn.seasonID
+        WHERE sc.bowlerID = @bowlerID
+          AND sc.isPenalty = 0
+          AND sc.incomingAvg IS NOT NULL
+        ORDER BY
+          sn.year ASC,
+          CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC,
+          sc.week ASC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getBowlerRollingAvgHistory: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns the seasonID of the current (most recent) season.
+ * Cached across all bowler page builds.
+ */
+export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db.request().query<{ seasonID: number }>(`
+      SELECT TOP 1 seasonID FROM seasons
+      ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+    `);
+    return result.recordset[0]?.seasonID ?? null;
+  } catch (err) {
+    console.warn('getCurrentSeasonID: DB unavailable', err);
+    return null;
+  }
+});
 
 /**
  * Returns the bowlerID of the Bowler of the Week — the bowler with the highest
@@ -697,5 +770,369 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
   } catch (err) {
     console.warn('getCurrentSeasonSnapshot: DB unavailable', err);
     return null;
+  }
+});
+
+/* ───────────────────────────────────────────────────────────
+ * Phase 4: Team Queries
+ * ─────────────────────────────────────────────────────────── */
+
+export interface TeamSlug {
+  slug: string;
+}
+
+export interface Team {
+  teamID: number;
+  teamName: string;
+  slug: string;
+}
+
+export interface TeamRosterMember {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  gamesBowled: number;
+  seasonAverage: number | null;
+}
+
+export interface TeamSeasonRow {
+  seasonID: number;
+  seasonName: string;
+  seasonSlug: string;
+  romanNumeral: string;
+  teamNameAtTime: string;
+  totalGames: number;
+  totalPins: number;
+  teamAverage: number | null;
+  rosterSize: number;
+  hasScheduleData: boolean;
+}
+
+export interface TeamSeasonBowler {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  gamesBowled: number;
+  totalPins: number;
+  average: number | null;
+}
+
+export interface AllTimeRosterMember {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  totalGames: number;
+  totalPins: number;
+  average: number | null;
+  seasonsWithTeam: number;
+}
+
+export interface FranchiseNameEntry {
+  id: number;
+  seasonID: number;
+  teamName: string;
+}
+
+export interface DirectoryTeam {
+  teamID: number;
+  teamName: string;
+  slug: string;
+  rosterCount: number;
+  seasonsActive: number;
+  totalGames: number;
+  totalPins: number;
+  isActive: boolean;
+}
+
+/**
+ * Returns all team slugs for generateStaticParams.
+ * Returns empty array if DB credentials are not configured.
+ */
+export async function getAllTeamSlugs(): Promise<TeamSlug[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<TeamSlug>(`
+      SELECT slug FROM teams WHERE slug IS NOT NULL ORDER BY teamName
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllTeamSlugs: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns a single team record by slug.
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Returns null if DB unavailable.
+ */
+export const getTeamBySlug = cache(async (slug: string): Promise<Team | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('slug', slug)
+      .query<Team>(`
+        SELECT teamID, teamName, slug
+        FROM teams
+        WHERE slug = @slug
+      `);
+    return result.recordset[0] ?? null;
+  } catch (err) {
+    console.warn('getTeamBySlug: DB unavailable', err);
+    return null;
+  }
+});
+
+/**
+ * Returns the current roster for a team (bowlers who bowled in the current season).
+ * Each member includes games bowled and season average.
+ * Sorted by games bowled DESC.
+ * Returns [] if DB unavailable.
+ */
+export async function getTeamCurrentRoster(teamID: number): Promise<TeamRosterMember[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .query<TeamRosterMember>(`
+        SELECT
+          b.bowlerID,
+          b.bowlerName,
+          b.slug,
+          COUNT(sc.scoreID) * 3 AS gamesBowled,
+          CAST(
+            SUM(sc.scratchSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1)) AS seasonAverage
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.teamID = @teamID
+          AND sc.isPenalty = 0
+          AND sc.seasonID = (
+            SELECT TOP 1 seasonID FROM seasons
+            ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+          )
+        GROUP BY b.bowlerID, b.bowlerName, b.slug
+        ORDER BY gamesBowled DESC, seasonAverage DESC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamCurrentRoster: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns season-by-season stats for a team.
+ * One row per season the team participated in, ordered newest first.
+ * Includes team name at time from teamNameHistory, falling back to current name.
+ * Returns [] if DB unavailable.
+ */
+export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonRow[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .query<TeamSeasonRow>(`
+        SELECT
+          sc.seasonID,
+          sn.displayName                                     AS seasonName,
+          LOWER(REPLACE(sn.displayName, ' ', '-'))           AS seasonSlug,
+          sn.romanNumeral,
+          COALESCE(tnh.teamName, t.teamName)                 AS teamNameAtTime,
+          COUNT(sc.scoreID) * 3                              AS totalGames,
+          SUM(sc.scratchSeries)                              AS totalPins,
+          CAST(
+            SUM(sc.scratchSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1))                                   AS teamAverage,
+          COUNT(DISTINCT sc.bowlerID)                        AS rosterSize,
+          CAST(CASE WHEN EXISTS (
+            SELECT 1 FROM schedule sch WHERE sch.seasonID = sc.seasonID
+          ) THEN 1 ELSE 0 END AS BIT)                       AS hasScheduleData
+        FROM scores sc
+        JOIN seasons sn ON sc.seasonID = sn.seasonID
+        JOIN teams t ON t.teamID = @teamID
+        LEFT JOIN teamNameHistory tnh
+          ON  tnh.seasonID = sc.seasonID
+          AND tnh.teamID   = @teamID
+        WHERE sc.teamID = @teamID
+          AND sc.isPenalty = 0
+        GROUP BY
+          sc.seasonID, sn.displayName, sn.romanNumeral,
+          sn.year, sn.period,
+          COALESCE(tnh.teamName, t.teamName)
+        ORDER BY
+          sn.year DESC,
+          CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamSeasonByseason: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns individual bowler stats for a specific team+season combination.
+ * Used when expanding a season row in the team page.
+ * Sorted by games bowled DESC.
+ * Returns [] if DB unavailable.
+ */
+export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Promise<TeamSeasonBowler[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .input('seasonID', seasonID)
+      .query<TeamSeasonBowler>(`
+        SELECT
+          b.bowlerID,
+          b.bowlerName,
+          b.slug,
+          COUNT(sc.scoreID) * 3 AS gamesBowled,
+          SUM(sc.scratchSeries) AS totalPins,
+          CAST(
+            SUM(sc.scratchSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1)) AS average
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.teamID = @teamID
+          AND sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+        GROUP BY b.bowlerID, b.bowlerName, b.slug
+        ORDER BY gamesBowled DESC, average DESC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamSeasonBowlers: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns the all-time roster for a team — every bowler who ever bowled for this team.
+ * Sorted by total games DESC (loyalty metric).
+ * Returns [] if DB unavailable.
+ */
+export async function getTeamAllTimeRoster(teamID: number): Promise<AllTimeRosterMember[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .query<AllTimeRosterMember>(`
+        SELECT
+          b.bowlerID,
+          b.bowlerName,
+          b.slug,
+          COUNT(sc.scoreID) * 3 AS totalGames,
+          SUM(sc.scratchSeries) AS totalPins,
+          CAST(
+            SUM(sc.scratchSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1)) AS average,
+          COUNT(DISTINCT sc.seasonID) AS seasonsWithTeam
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.teamID = @teamID
+          AND sc.isPenalty = 0
+        GROUP BY b.bowlerID, b.bowlerName, b.slug
+        ORDER BY totalGames DESC, average DESC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamAllTimeRoster: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns the franchise name history for a team.
+ * Shows all names this team has used across seasons, ordered chronologically.
+ * Returns [] if DB unavailable.
+ */
+export async function getTeamFranchiseHistory(teamID: number): Promise<FranchiseNameEntry[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .query<FranchiseNameEntry>(`
+        SELECT
+          tnh.id,
+          tnh.seasonID,
+          tnh.teamName
+        FROM teamNameHistory tnh
+        JOIN seasons sn ON tnh.seasonID = sn.seasonID
+        WHERE tnh.teamID = @teamID
+        ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamFranchiseHistory: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns all teams with aggregate stats for the /teams directory.
+ * Active teams (with scores in current season) listed first, then by name.
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Returns [] if DB unavailable.
+ */
+export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<DirectoryTeam>(`
+      SELECT
+        t.teamID,
+        t.teamName,
+        t.slug,
+        COUNT(DISTINCT sc.bowlerID)  AS rosterCount,
+        COUNT(DISTINCT sc.seasonID)  AS seasonsActive,
+        COUNT(sc.scoreID) * 3        AS totalGames,
+        SUM(sc.scratchSeries)        AS totalPins,
+        CAST(CASE WHEN EXISTS (
+          SELECT 1 FROM scores sc2
+          WHERE sc2.teamID = t.teamID
+            AND sc2.isPenalty = 0
+            AND sc2.seasonID = (
+              SELECT TOP 1 seasonID FROM seasons
+              ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+            )
+        ) THEN 1 ELSE 0 END AS BIT) AS isActive
+      FROM teams t
+      LEFT JOIN scores sc ON sc.teamID = t.teamID AND sc.isPenalty = 0
+      GROUP BY t.teamID, t.teamName, t.slug
+      ORDER BY
+        CASE WHEN EXISTS (
+          SELECT 1 FROM scores sc2
+          WHERE sc2.teamID = t.teamID
+            AND sc2.isPenalty = 0
+            AND sc2.seasonID = (
+              SELECT TOP 1 seasonID FROM seasons
+              ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+            )
+        ) THEN 0 ELSE 1 END,
+        t.teamName ASC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllTeamsDirectory: DB unavailable', err);
+    return [];
   }
 });
