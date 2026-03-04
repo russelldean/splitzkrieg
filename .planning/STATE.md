@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03-search-and-home-page
-current_plan: 3 of 3
-status: Phase Complete
-last_updated: "2026-03-03T15:42:50Z"
+current_phase: 04-teams-and-seasons
+current_plan: 1 of 4
+status: In Progress
+last_updated: "2026-03-04T23:56:03Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 13
+  completed_plans: 10
 ---
 
 # Session State
@@ -22,9 +22,9 @@ See: .planning/PROJECT.md
 ## Position
 
 **Milestone:** v1.0 milestone
-**Current phase:** 03-search-and-home-page
-**Current plan:** 3 of 3
-**Status:** Phase Complete
+**Current phase:** 04-teams-and-seasons
+**Current plan:** 1 of 4
+**Status:** In Progress
 
 ## Session Log
 
@@ -34,6 +34,7 @@ See: .planning/PROJECT.md
 - 2026-03-03: Completed 03-01-PLAN.md (home page data layer queries)
 - 2026-03-03: Completed 03-02-PLAN.md (home page hub with discovery search, countdown, milestones, season snapshot)
 - 2026-03-03: Completed 03-03-PLAN.md (secondary routes, bowler directory, footer)
+- 2026-03-04: Completed 04-01-PLAN.md (team and season data layer queries)
 
 ## Decisions
 
@@ -43,6 +44,9 @@ See: .planning/PROJECT.md
 - **[Phase 03]** Resource links with placeholder URLs render as disabled cards with "Link coming soon"
 - **[Phase 03]** DiscoverySearch uses state machine (IDLE/BROWSING/SEARCHING) for clean two-mode search logic
 - **[Phase 03]** Milestone ticker placed between hero and content grid as full-width visual separator
+- **[Phase 04]** Adapted FranchiseNameEntry to actual DB schema (id, seasonID, teamName) vs plan's assumed (teamNameHistoryId, teamName, startDate, endDate)
+- **[Phase 04]** Used switch/case in getSeasonLeaderboard for readable category-specific SQL generation
+- **[Phase 04]** getSeasonHeroStats as dedicated lightweight query rather than deriving from getSeasonFullStats
 
 ## Pending Todos
 

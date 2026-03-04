@@ -36,18 +36,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Teams
 
-- [ ] **TEAM-01**: User can view team profile with current roster linked to bowler profiles
-- [ ] **TEAM-02**: Team page shows team history (all-time record, past rosters by season)
-- [ ] **TEAM-03**: Team page shows head-to-head record vs every other team
-- [ ] **TEAM-04**: Shareable team URL (splitzkrieg.org/team/gutter-sluts)
+- [x] **TEAM-01**: User can view team profile with current roster linked to bowler profiles
+- [x] **TEAM-02**: Team page shows team history (all-time record, past rosters by season)
+- [x] **TEAM-03**: Team page shows head-to-head record vs every other team
+- [x] **TEAM-04**: Shareable team URL (splitzkrieg.org/team/gutter-sluts)
 
 ### Seasons
 
-- [ ] **SEASN-01**: User can view season page with final standings and points breakdown
-- [ ] **SEASN-02**: Season page shows division alignment
+- [x] **SEASN-01**: User can view season page with final standings and points breakdown
+- [x] **SEASN-02**: Season page shows division alignment
 - [ ] **SEASN-03**: Season page shows weekly results archive
-- [ ] **SEASN-04**: Season page shows season leaderboards (top averages, high games, high series)
-- [ ] **SEASN-05**: Schedule display for current and past seasons
+- [x] **SEASN-04**: Season page shows season leaderboards (top averages, high games, high series)
+- [x] **SEASN-05**: Schedule display for current and past seasons
 
 ### Leaderboards
 
@@ -157,15 +157,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BWLR-12 | Phase 2 | Complete |
 | SRCH-01 | Phase 3 | Complete |
 | SRCH-02 | Phase 3 | Complete |
-| TEAM-01 | Phase 4 | Pending |
-| TEAM-02 | Phase 4 | Pending |
-| TEAM-03 | Phase 4 | Pending |
-| TEAM-04 | Phase 4 | Pending |
-| SEASN-01 | Phase 4 | Pending |
-| SEASN-02 | Phase 4 | Pending |
+| TEAM-01 | Phase 4 | Complete |
+| TEAM-02 | Phase 4 | Complete |
+| TEAM-03 | Phase 4 | Complete |
+| TEAM-04 | Phase 4 | Complete |
+| SEASN-01 | Phase 4 | Complete |
+| SEASN-02 | Phase 4 | Complete |
 | SEASN-03 | Phase 4 | Pending |
-| SEASN-04 | Phase 4 | Pending |
-| SEASN-05 | Phase 4 | Pending |
+| SEASN-04 | Phase 4 | Complete |
+| SEASN-05 | Phase 4 | Complete |
 | LEAD-01 | Phase 5 | Pending |
 | LEAD-02 | Phase 5 | Pending |
 | LEAD-03 | Phase 5 | Pending |
