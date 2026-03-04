@@ -1136,3 +1136,658 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
     return [];
   }
 });
+
+/* ───────────────────────────────────────────────────────────
+ * Phase 4: Season Queries
+ * ─────────────────────────────────────────────────────────── */
+
+export interface SeasonSlug {
+  slug: string;
+  displayName: string;
+}
+
+export interface Season {
+  seasonID: number;
+  displayName: string;
+  romanNumeral: string;
+  year: number;
+  period: string;
+  slug: string;
+}
+
+export interface StandingsRow {
+  teamID: number;
+  teamName: string;
+  teamSlug: string;
+  divisionName: string | null;
+  rosterSize: number;
+  totalGames: number;
+  totalPins: number;
+  teamScratchAvg: number | null;
+  teamHcpAvg: number | null;
+  weeksPlayed: number;
+}
+
+export interface SeasonLeaderEntry {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  teamName: string | null;
+  teamSlug: string | null;
+  value: number;
+  rank: number;
+}
+
+export interface SeasonFullStatsRow {
+  bowlerID: number;
+  bowlerName: string;
+  slug: string;
+  gender: string | null;
+  teamName: string | null;
+  teamSlug: string | null;
+  gamesBowled: number;
+  totalPins: number;
+  scratchAvg: number | null;
+  hcpAvg: number | null;
+  highGame: number | null;
+  highSeries: number | null;
+  games200Plus: number;
+  series600Plus: number;
+  turkeys: number;
+}
+
+export interface SeasonScheduleWeek {
+  week: number;
+  matchDate: string | null;
+  homeTeamID: number;
+  homeTeamName: string;
+  homeTeamSlug: string;
+  awayTeamID: number;
+  awayTeamName: string;
+  awayTeamSlug: string;
+}
+
+export interface DirectorySeason {
+  seasonID: number;
+  displayName: string;
+  romanNumeral: string;
+  slug: string;
+  year: number;
+  period: string;
+  teamCount: number;
+  bowlerCount: number;
+  champion: string | null;
+}
+
+export interface SeasonRecords {
+  highScratchGame: { bowlerName: string; slug: string; value: number } | null;
+  highScratchSeries: { bowlerName: string; slug: string; value: number } | null;
+  highHcpSeries: { bowlerName: string; slug: string; value: number } | null;
+  mostTurkeys: { bowlerName: string; slug: string; value: number } | null;
+  most200Games: { bowlerName: string; slug: string; value: number } | null;
+}
+
+export interface SeasonHeroStats {
+  leagueAverage: number | null;
+  totalGames: number;
+  totalBowlers: number;
+  topAverage: { bowlerName: string; slug: string; value: number } | null;
+  highGame: { bowlerName: string; slug: string; value: number } | null;
+  highSeries: { bowlerName: string; slug: string; value: number } | null;
+}
+
+/**
+ * Returns all season slugs for generateStaticParams.
+ * Slug computed from displayName: LOWER(REPLACE(displayName, ' ', '-')).
+ * Returns [] if DB unavailable.
+ */
+export async function getAllSeasonSlugs(): Promise<SeasonSlug[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<SeasonSlug>(`
+      SELECT
+        LOWER(REPLACE(displayName, ' ', '-')) AS slug,
+        displayName
+      FROM seasons
+      ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllSeasonSlugs: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns a single season record by slug (computed from displayName).
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Returns null if DB unavailable.
+ */
+export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('slug', slug)
+      .query<Season>(`
+        SELECT
+          seasonID,
+          displayName,
+          romanNumeral,
+          year,
+          period,
+          LOWER(REPLACE(displayName, ' ', '-')) AS slug
+        FROM seasons
+        WHERE LOWER(REPLACE(displayName, ' ', '-')) = @slug
+      `);
+    return result.recordset[0] ?? null;
+  } catch (err) {
+    console.warn('getSeasonBySlug: DB unavailable', err);
+    return null;
+  }
+});
+
+/**
+ * Returns team standings for a season.
+ * Groups scores by team, LEFT JOINs seasonDivisions for division grouping.
+ * Ordered by division then total pins DESC.
+ * Returns [] if DB unavailable.
+ */
+export async function getSeasonStandings(seasonID: number): Promise<StandingsRow[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<StandingsRow>(`
+        SELECT
+          t.teamID,
+          COALESCE(tnh.teamName, t.teamName) AS teamName,
+          t.slug                              AS teamSlug,
+          sd.divisionName,
+          COUNT(DISTINCT sc.bowlerID)         AS rosterSize,
+          COUNT(sc.scoreID) * 3               AS totalGames,
+          SUM(sc.scratchSeries)               AS totalPins,
+          CAST(
+            SUM(sc.scratchSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1))                    AS teamScratchAvg,
+          CAST(
+            SUM(sc.handSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1))                    AS teamHcpAvg,
+          MAX(sc.week)                        AS weeksPlayed
+        FROM scores sc
+        JOIN teams t ON sc.teamID = t.teamID
+        LEFT JOIN seasonDivisions sd
+          ON  sd.seasonID = sc.seasonID
+          AND sd.teamID   = sc.teamID
+        LEFT JOIN teamNameHistory tnh
+          ON  tnh.seasonID = sc.seasonID
+          AND tnh.teamID   = sc.teamID
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+          AND sc.teamID IS NOT NULL
+        GROUP BY
+          t.teamID, COALESCE(tnh.teamName, t.teamName), t.slug,
+          sd.divisionName
+        ORDER BY sd.divisionName, totalPins DESC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonStandings: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns top 10 bowlers for a given leaderboard category in a season.
+ * Gender filtering: pass 'M', 'F', or null (all bowlers).
+ * Categories: avg, highGame, highSeries, totalPins, games200, series600, turkeys.
+ * Returns [] if DB unavailable.
+ */
+export async function getSeasonLeaderboard(
+  seasonID: number,
+  gender: 'M' | 'F' | null,
+  category: 'avg' | 'highGame' | 'highSeries' | 'totalPins' | 'games200' | 'series600' | 'turkeys'
+): Promise<SeasonLeaderEntry[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+
+    const genderFilter = gender !== null
+      ? 'AND b.gender = @gender'
+      : '';
+
+    let selectExpr: string;
+    let havingClause = '';
+    let orderDir = 'DESC';
+
+    switch (category) {
+      case 'avg':
+        selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+        havingClause = 'HAVING COUNT(sc.scoreID) >= 3'; // minimum 9 games (3 nights)
+        break;
+      case 'highGame':
+        selectExpr = `MAX(
+          CASE
+            WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
+            WHEN sc.game2 >= sc.game3 THEN sc.game2
+            ELSE sc.game3
+          END
+        )`;
+        break;
+      case 'highSeries':
+        selectExpr = `MAX(sc.scratchSeries)`;
+        break;
+      case 'totalPins':
+        selectExpr = `SUM(sc.scratchSeries)`;
+        break;
+      case 'games200':
+        selectExpr = `SUM(
+          CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
+          CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
+          CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
+        )`;
+        break;
+      case 'series600':
+        selectExpr = `SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END)`;
+        break;
+      case 'turkeys':
+        selectExpr = `SUM(ISNULL(sc.turkeys, 0))`;
+        break;
+    }
+
+    const sql = `
+      SELECT TOP 10
+        b.bowlerID,
+        b.bowlerName,
+        b.slug,
+        COALESCE(tnh.teamName, t.teamName) AS teamName,
+        t.slug AS teamSlug,
+        ${selectExpr} AS value,
+        ROW_NUMBER() OVER (ORDER BY ${selectExpr} ${orderDir}) AS rank
+      FROM scores sc
+      JOIN bowlers b ON sc.bowlerID = b.bowlerID
+      LEFT JOIN teams t ON sc.teamID = t.teamID
+      LEFT JOIN teamNameHistory tnh
+        ON  tnh.seasonID = sc.seasonID
+        AND tnh.teamID   = sc.teamID
+      WHERE sc.seasonID = @seasonID
+        AND sc.isPenalty = 0
+        ${genderFilter}
+      GROUP BY
+        b.bowlerID, b.bowlerName, b.slug,
+        COALESCE(tnh.teamName, t.teamName), t.slug
+      ${havingClause}
+      ORDER BY value ${orderDir}
+    `;
+
+    const request = db.request().input('seasonID', seasonID);
+    if (gender !== null) {
+      request.input('gender', gender);
+    }
+    const result = await request.query<SeasonLeaderEntry>(sql);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonLeaderboard: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns full stats for every bowler in a season.
+ * Includes gender for client-side splitting (Men's / Women's / All).
+ * Ordered by scratch average DESC.
+ * Returns [] if DB unavailable.
+ */
+export async function getSeasonFullStats(seasonID: number): Promise<SeasonFullStatsRow[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<SeasonFullStatsRow>(`
+        SELECT
+          b.bowlerID,
+          b.bowlerName,
+          b.slug,
+          b.gender,
+          COALESCE(tnh.teamName, t.teamName)                   AS teamName,
+          t.slug                                               AS teamSlug,
+          COUNT(sc.scoreID) * 3                                AS gamesBowled,
+          SUM(sc.scratchSeries)                                AS totalPins,
+          CAST(
+            SUM(sc.scratchSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1))                                     AS scratchAvg,
+          CAST(
+            SUM(sc.handSeries) * 1.0 /
+            NULLIF(COUNT(sc.scoreID) * 3, 0)
+          AS DECIMAL(5,1))                                     AS hcpAvg,
+          MAX(
+            CASE
+              WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
+              WHEN sc.game2 >= sc.game3 THEN sc.game2
+              ELSE sc.game3
+            END
+          )                                                    AS highGame,
+          MAX(sc.scratchSeries)                                AS highSeries,
+          SUM(
+            CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
+            CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
+            CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
+          )                                                    AS games200Plus,
+          SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
+          SUM(ISNULL(sc.turkeys, 0))                           AS turkeys
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        LEFT JOIN teams t ON sc.teamID = t.teamID
+        LEFT JOIN teamNameHistory tnh
+          ON  tnh.seasonID = sc.seasonID
+          AND tnh.teamID   = sc.teamID
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+        GROUP BY
+          b.bowlerID, b.bowlerName, b.slug, b.gender,
+          COALESCE(tnh.teamName, t.teamName), t.slug
+        ORDER BY scratchAvg DESC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonFullStats: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns all schedule entries for a season.
+ * Joins with teams for home/away names and slugs.
+ * Uses team name history for historical team names.
+ * Ordered by week ASC.
+ * Returns [] if DB unavailable.
+ */
+export async function getSeasonSchedule(seasonID: number): Promise<SeasonScheduleWeek[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<SeasonScheduleWeek>(`
+        SELECT
+          sch.week,
+          sch.matchDate,
+          sch.team1ID                                          AS homeTeamID,
+          COALESCE(tnh1.teamName, t1.teamName)                 AS homeTeamName,
+          t1.slug                                              AS homeTeamSlug,
+          sch.team2ID                                          AS awayTeamID,
+          COALESCE(tnh2.teamName, t2.teamName)                 AS awayTeamName,
+          t2.slug                                              AS awayTeamSlug
+        FROM schedule sch
+        JOIN teams t1 ON sch.team1ID = t1.teamID
+        JOIN teams t2 ON sch.team2ID = t2.teamID
+        LEFT JOIN teamNameHistory tnh1
+          ON  tnh1.seasonID = sch.seasonID
+          AND tnh1.teamID   = sch.team1ID
+        LEFT JOIN teamNameHistory tnh2
+          ON  tnh2.seasonID = sch.seasonID
+          AND tnh2.teamID   = sch.team2ID
+        WHERE sch.seasonID = @seasonID
+        ORDER BY sch.week ASC, sch.matchNumber ASC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonSchedule: DB unavailable', err);
+    return [];
+  }
+}
+
+/**
+ * Returns individual season records (high scratch game, high series, etc.).
+ * Each record is the TOP 1 bowler for that stat.
+ * Returns object with null fields if DB unavailable.
+ */
+export async function getSeasonRecords(seasonID: number): Promise<SeasonRecords> {
+  const empty: SeasonRecords = {
+    highScratchGame: null,
+    highScratchSeries: null,
+    highHcpSeries: null,
+    mostTurkeys: null,
+    most200Games: null,
+  };
+  if (!process.env.AZURE_SQL_SERVER) return empty;
+  try {
+    const db = await getDb();
+
+    type RecordRow = { bowlerName: string; slug: string; value: number };
+
+    // High scratch game
+    const highGameResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<RecordRow>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          g.score AS value
+        FROM (
+          SELECT bowlerID, game1 AS score FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+          UNION ALL
+          SELECT bowlerID, game2 FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+          UNION ALL
+          SELECT bowlerID, game3 FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+        ) g
+        JOIN bowlers b ON g.bowlerID = b.bowlerID
+        WHERE g.score IS NOT NULL
+        ORDER BY g.score DESC
+      `);
+
+    // High scratch series
+    const highSeriesResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<RecordRow>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          sc.scratchSeries AS value
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        ORDER BY sc.scratchSeries DESC
+      `);
+
+    // High handicap series
+    const highHcpSeriesResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<RecordRow>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          sc.handSeries AS value
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        ORDER BY sc.handSeries DESC
+      `);
+
+    // Most turkeys
+    const turkeyResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<RecordRow>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          SUM(ISNULL(sc.turkeys, 0)) AS value
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        GROUP BY b.bowlerID, b.bowlerName, b.slug
+        ORDER BY value DESC
+      `);
+
+    // Most 200 games
+    const games200Result = await db.request()
+      .input('seasonID', seasonID)
+      .query<RecordRow>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          SUM(
+            CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
+            CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
+            CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
+          ) AS value
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        GROUP BY b.bowlerID, b.bowlerName, b.slug
+        ORDER BY value DESC
+      `);
+
+    return {
+      highScratchGame: highGameResult.recordset[0] ?? null,
+      highScratchSeries: highSeriesResult.recordset[0] ?? null,
+      highHcpSeries: highHcpSeriesResult.recordset[0] ?? null,
+      mostTurkeys: turkeyResult.recordset[0] ?? null,
+      most200Games: games200Result.recordset[0] ?? null,
+    };
+  } catch (err) {
+    console.warn('getSeasonRecords: DB unavailable', err);
+    return empty;
+  }
+}
+
+/**
+ * Returns all seasons with summary stats for the /seasons directory.
+ * Includes team count, bowler count, and champion (null until seasonChampions populated).
+ * Wrapped in React.cache (used by both generateMetadata and page component).
+ * Ordered newest first.
+ * Returns [] if DB unavailable.
+ */
+export const getAllSeasonsDirectory = cache(async (): Promise<DirectorySeason[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<DirectorySeason>(`
+      SELECT
+        sn.seasonID,
+        sn.displayName,
+        sn.romanNumeral,
+        LOWER(REPLACE(sn.displayName, ' ', '-'))   AS slug,
+        sn.year,
+        sn.period,
+        COUNT(DISTINCT sc.teamID)                  AS teamCount,
+        COUNT(DISTINCT sc.bowlerID)                AS bowlerCount,
+        champ.winnerTeamName                       AS champion
+      FROM seasons sn
+      LEFT JOIN scores sc
+        ON  sc.seasonID = sn.seasonID
+        AND sc.isPenalty = 0
+      LEFT JOIN (
+        SELECT sc2.seasonID, t.teamName AS winnerTeamName
+        FROM seasonChampions sc2
+        JOIN teams t ON sc2.winnerTeamID = t.teamID
+        WHERE sc2.championshipType = 'Team'
+      ) champ ON champ.seasonID = sn.seasonID
+      GROUP BY
+        sn.seasonID, sn.displayName, sn.romanNumeral,
+        sn.year, sn.period, champ.winnerTeamName
+      ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllSeasonsDirectory: DB unavailable', err);
+    return [];
+  }
+});
+
+/**
+ * Returns aggregate hero stats for a season — lightweight query for the hero section.
+ * Includes league average, total games/bowlers, and top stat holders.
+ * Returns null if DB unavailable.
+ */
+export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroStats | null> {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+
+    // Aggregate stats
+    const statsResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<{
+        leagueAverage: number | null;
+        totalGames: number;
+        totalBowlers: number;
+      }>(`
+        SELECT
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage,
+          COUNT(sc.scoreID) * 3           AS totalGames,
+          COUNT(DISTINCT sc.bowlerID)     AS totalBowlers
+        FROM scores sc
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+      `);
+
+    const stats = statsResult.recordset[0];
+
+    type StatHolder = { bowlerName: string; slug: string; value: number };
+
+    // Top average (minimum 3 nights)
+    const topAvgResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<StatHolder>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS value
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        GROUP BY sc.bowlerID, b.bowlerName, b.slug
+        HAVING COUNT(sc.scoreID) >= 3
+        ORDER BY value DESC
+      `);
+
+    // High game
+    const highGameResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<StatHolder>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          g.score AS value
+        FROM (
+          SELECT bowlerID, game1 AS score FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+          UNION ALL
+          SELECT bowlerID, game2 FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+          UNION ALL
+          SELECT bowlerID, game3 FROM scores WHERE seasonID = @seasonID AND isPenalty = 0
+        ) g
+        JOIN bowlers b ON g.bowlerID = b.bowlerID
+        WHERE g.score IS NOT NULL
+        ORDER BY g.score DESC
+      `);
+
+    // High series
+    const highSeriesResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<StatHolder>(`
+        SELECT TOP 1
+          b.bowlerName, b.slug,
+          sc.scratchSeries AS value
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        ORDER BY sc.scratchSeries DESC
+      `);
+
+    return {
+      leagueAverage: stats?.leagueAverage ?? null,
+      totalGames: stats?.totalGames ?? 0,
+      totalBowlers: stats?.totalBowlers ?? 0,
+      topAverage: topAvgResult.recordset[0] ?? null,
+      highGame: highGameResult.recordset[0] ?? null,
+      highSeries: highSeriesResult.recordset[0] ?? null,
+    };
+  } catch (err) {
+    console.warn('getSeasonHeroStats: DB unavailable', err);
+    return null;
+  }
+}
