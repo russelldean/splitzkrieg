@@ -16,12 +16,15 @@ import {
   getSeasonRecords,
   getSeasonLeaderboard,
   getSeasonHeroStats,
+  getSeasonWeeklyScores,
+  getSeasonSchedule,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
 import { FullStatsTable } from '@/components/season/FullStatsTable';
+import { WeeklyResults } from '@/components/season/WeeklyResults';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -93,11 +96,13 @@ export default async function SeasonPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/season/${slug}`;
 
   // Parallel build-time data fetching
-  const [standings, fullStats, records, heroStats, ...leaderboards] = await Promise.all([
+  const [standings, fullStats, records, heroStats, weeklyScores, schedule, ...leaderboards] = await Promise.all([
     getSeasonStandings(season.seasonID),
     getSeasonFullStats(season.seasonID),
     getSeasonRecords(season.seasonID),
     getSeasonHeroStats(season.seasonID),
+    getSeasonWeeklyScores(season.seasonID),
+    getSeasonSchedule(season.seasonID),
     // Men's scratch leaderboards
     getSeasonLeaderboard(season.seasonID, 'M', 'avg'),
     getSeasonLeaderboard(season.seasonID, 'M', 'highGame'),
@@ -121,9 +126,17 @@ export default async function SeasonPage({
 
   const hasDivisions = standings.some((row) => row.divisionName !== null);
 
-  // Check if this is an archival season (no schedule data available)
-  // Schedule data exists for seasons XXVI onwards (seasonID >= 26 roughly, but use year heuristic)
-  const isArchival = season.year < 2019;
+  // Schedule data exists for seasons XXVI onwards -- use schedule array to determine
+  const hasScheduleData = schedule.length > 0;
+
+  // Determine total weeks from max week in scores or schedule
+  const maxScoreWeek = weeklyScores.length > 0
+    ? Math.max(...weeklyScores.map(s => s.week))
+    : 0;
+  const maxScheduleWeek = schedule.length > 0
+    ? Math.max(...schedule.map(s => s.week))
+    : 0;
+  const totalWeeks = Math.max(maxScoreWeek, maxScheduleWeek);
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
@@ -151,8 +164,13 @@ export default async function SeasonPage({
 
         <FullStatsTable stats={fullStats} />
 
-        {/* Weekly results placeholder -- built in Plan 04 */}
-        {isArchival && (
+        {hasScheduleData ? (
+          <WeeklyResults
+            weeklyScores={weeklyScores}
+            schedule={schedule}
+            totalWeeks={totalWeeks}
+          />
+        ) : (
           <div className="bg-navy/[0.02] rounded-lg px-6 py-4">
             <p className="font-body text-sm text-navy/50 italic">
               This is an archival season page. Weekly results are available from Season XXVI onwards.

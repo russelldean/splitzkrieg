@@ -1864,3 +1864,121 @@ export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroSt
     return null;
   }
 }
+
+/* ───────────────────────────────────────────────────────────
+ * Phase 4 Plan 04: Weekly Match Scores & Team Presence
+ * ─────────────────────────────────────────────────────────── */
+
+export interface WeeklyMatchScore {
+  week: number;
+  matchDate: string | null;
+  teamID: number;
+  teamName: string;
+  teamSlug: string;
+  bowlerID: number;
+  bowlerName: string;
+  bowlerSlug: string;
+  game1: number | null;
+  game2: number | null;
+  game3: number | null;
+  scratchSeries: number | null;
+  handSeries: number | null;
+  incomingAvg: number | null;
+  incomingHcp: number | null;
+}
+
+/**
+ * Returns all individual bowler scores for all weeks in a season.
+ * Joins scores with bowlers, teams, and LEFT JOINs schedule for matchDate.
+ * Uses team name history for historical team names.
+ * Filters out penalty rows. Ordered by week ASC, teamID, bowlerName.
+ * Returns [] if DB unavailable.
+ */
+export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMatchScore[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<WeeklyMatchScore>(`
+        SELECT
+          sc.week,
+          sch.matchDate,
+          sc.teamID,
+          COALESCE(tnh.teamName, t.teamName)  AS teamName,
+          t.slug                               AS teamSlug,
+          sc.bowlerID,
+          b.bowlerName,
+          b.slug                               AS bowlerSlug,
+          sc.game1,
+          sc.game2,
+          sc.game3,
+          sc.scratchSeries,
+          sc.handSeries,
+          sc.incomingAvg,
+          sc.incomingHcp
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        JOIN teams t ON sc.teamID = t.teamID
+        LEFT JOIN teamNameHistory tnh
+          ON  tnh.seasonID = sc.seasonID
+          AND tnh.teamID   = sc.teamID
+        LEFT JOIN (
+          SELECT DISTINCT seasonID, week, matchDate
+          FROM schedule
+        ) sch
+          ON  sch.seasonID = sc.seasonID
+          AND sch.week     = sc.week
+        WHERE sc.seasonID = @seasonID
+          AND sc.isPenalty = 0
+        ORDER BY sc.week ASC, sc.teamID ASC, b.bowlerName ASC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonWeeklyScores: DB unavailable', err);
+    return [];
+  }
+}
+
+export interface TeamSeasonPresence {
+  teamID: number;
+  teamName: string;
+  slug: string;
+  seasonID: number;
+  seasonSlug: string;
+  romanNumeral: string;
+}
+
+/**
+ * Returns which teams were active in which seasons.
+ * For team timeline grid on /teams page.
+ * Returns [] if DB unavailable.
+ */
+export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .query<TeamSeasonPresence>(`
+        SELECT DISTINCT
+          t.teamID,
+          t.teamName,
+          t.slug,
+          s.seasonID,
+          LOWER(REPLACE(s.displayName, ' ', '-')) AS seasonSlug,
+          s.romanNumeral
+        FROM scores sc
+        JOIN teams t ON sc.teamID = t.teamID
+        JOIN seasons s ON sc.seasonID = s.seasonID
+        WHERE sc.isPenalty = 0
+          AND sc.teamID IS NOT NULL
+        ORDER BY t.teamName, s.seasonID
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamSeasonPresence: DB unavailable', err);
+    return [];
+  }
+}
