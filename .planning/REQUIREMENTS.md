@@ -45,7 +45,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **SEASN-01**: User can view season page with final standings and points breakdown
 - [x] **SEASN-02**: Season page shows division alignment
-- [ ] **SEASN-03**: Season page shows weekly results archive
+- [x] **SEASN-03**: Season page shows weekly results archive
 - [x] **SEASN-04**: Season page shows season leaderboards (top averages, high games, high series)
 - [x] **SEASN-05**: Schedule display for current and past seasons
 
@@ -163,7 +163,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEAM-04 | Phase 4 | Complete |
 | SEASN-01 | Phase 4 | Complete |
 | SEASN-02 | Phase 4 | Complete |
-| SEASN-03 | Phase 4 | Pending |
+| SEASN-03 | Phase 4 | Complete |
 | SEASN-04 | Phase 4 | Complete |
 | SEASN-05 | Phase 4 | Complete |
 | LEAD-01 | Phase 5 | Pending |

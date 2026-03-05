@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 04-teams-and-seasons
 current_plan: 4 of 4
-status: In Progress
-last_updated: "2026-03-05T01:03:25Z"
+status: Complete
+last_updated: "2026-03-05T02:06:10Z"
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 4
+  total_plans: 14
+  completed_plans: 14
 ---
 
 # Session State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md
 **Milestone:** v1.0 milestone
 **Current phase:** 04-teams-and-seasons
 **Current plan:** 4 of 4
-**Status:** In Progress
+**Status:** Complete
 
 ## Session Log
 
@@ -37,6 +37,7 @@ See: .planning/PROJECT.md
 - 2026-03-04: Completed 04-01-PLAN.md (team and season data layer queries)
 - 2026-03-04: Completed 04-02-PLAN.md (team profile pages and teams directory)
 - 2026-03-04: Completed 04-03-PLAN.md (season pages with standings, leaderboards, full stats)
+- 2026-03-05: Completed 04-04-PLAN.md (weekly results, race chart, timeline, 13-item feedback overhaul)
 
 ## Decisions
 
@@ -56,6 +57,12 @@ See: .planning/PROJECT.md
 - **[Phase 04]** Tabbed leaderboards (Men's/Women's/Handicap) instead of stacked sections
 - **[Phase 04]** Handicap eligibility: top 8 men's + top 8 women's scratch avg excluded from handicap leaderboard
 - **[Phase 04]** Countdown clock uses Intl.DateTimeFormat for Eastern timezone awareness
+- **[Phase 04]** strikeX reserved for hero headings only -- removed from all lists, tables, charts, timelines
+- **[Phase 04]** Race chart defaults all lines muted, click to highlight (not hover -- better for mobile)
+- **[Phase 04]** Handicap leaderboard shows full mixed-gender list until 10 eligible bowlers shown
+- **[Phase 04]** Playoff highlighting: green dot + subtle row shading, top 2/div or top 8 overall
+- **[Phase 04]** Established date uses teamNameHistory for full franchise trail
+- **[Phase 04]** Season records at bottom of page, not duplicated in leaderboards section
 
 ## Pending Todos
 
