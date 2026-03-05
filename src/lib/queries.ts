@@ -1970,6 +1970,63 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
   }
 }
 
+export interface RaceChartRow {
+  week: number;
+  teamID: number;
+  teamName: string;
+  totalPts: number;
+}
+
+/**
+ * Get cumulative total points (wins + XP) per team per week for standings race chart.
+ */
+export async function getStandingsRaceData(seasonID: number): Promise<RaceChartRow[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().input('seasonID', seasonID).query<RaceChartRow>(`
+      WITH weeklyPts AS (
+        SELECT sch.week,
+               sch.team1ID AS teamID,
+               mr.team1GamePts + mr.team1BonusPts AS pts
+        FROM matchResults mr
+        JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+        WHERE sch.seasonID = @seasonID
+        UNION ALL
+        SELECT sch.week,
+               sch.team2ID AS teamID,
+               mr.team2GamePts + mr.team2BonusPts AS pts
+        FROM matchResults mr
+        JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+        WHERE sch.seasonID = @seasonID
+      ),
+      cumulative AS (
+        SELECT
+          w1.teamID,
+          w1.week,
+          SUM(w2.pts) AS totalPts
+        FROM (SELECT DISTINCT teamID, week FROM weeklyPts) w1
+        JOIN weeklyPts w2 ON w2.teamID = w1.teamID AND w2.week <= w1.week
+        GROUP BY w1.teamID, w1.week
+      )
+      SELECT
+        c.week,
+        c.teamID,
+        COALESCE(tnh.teamName, t.teamName) AS teamName,
+        c.totalPts
+      FROM cumulative c
+      JOIN teams t ON c.teamID = t.teamID
+      LEFT JOIN teamNameHistory tnh
+        ON tnh.seasonID = @seasonID AND tnh.teamID = c.teamID
+      ORDER BY c.week, c.totalPts DESC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getStandingsRaceData: DB unavailable', err);
+    return [];
+  }
+}
+
 export interface TeamSeasonPresence {
   teamID: number;
   teamName: string;

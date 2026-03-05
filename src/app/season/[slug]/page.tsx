@@ -18,6 +18,7 @@ import {
   getSeasonHeroStats,
   getSeasonWeeklyScores,
   getSeasonSchedule,
+  getStandingsRaceData,
   getMinGamesForWeek,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
@@ -130,13 +131,14 @@ export default async function SeasonPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/season/${slug}`;
 
   // Fetch base data first to compute current week for min games
-  const [standings, fullStats, records, heroStats, weeklyScores, schedule] = await Promise.all([
+  const [standings, fullStats, records, heroStats, weeklyScores, schedule, raceData] = await Promise.all([
     getSeasonStandings(season.seasonID),
     getSeasonFullStats(season.seasonID),
     getSeasonRecords(season.seasonID),
     getSeasonHeroStats(season.seasonID),
     getSeasonWeeklyScores(season.seasonID),
     getSeasonSchedule(season.seasonID),
+    getStandingsRaceData(season.seasonID),
   ]);
 
   // Compute current week and minimum games for leaderboard eligibility
@@ -189,11 +191,23 @@ export default async function SeasonPage({
     <main className="container mx-auto px-4 py-8 max-w-5xl">
       <SeasonHero season={season} heroStats={heroStats} shareUrl={shareUrl} />
 
+      {/* Section jump links */}
+      {hasScheduleData && (
+        <nav className="mt-6 flex flex-wrap gap-2 text-xs font-body">
+          {standings.length > 0 && <a href="#standings" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Standings</a>}
+          {raceData.length > 0 && <a href="#race" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Race Chart</a>}
+          <a href="#leaderboards" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Leaderboards</a>
+          <a href="#stats" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Full Stats</a>
+          <a href="#weekly" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Weekly Results</a>
+          {records && <a href="#records" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Records</a>}
+        </nav>
+      )}
+
       <div className="mt-8 space-y-12">
         <Standings standings={standings} hasDivisions={hasDivisions} />
 
-        {hasScheduleData && weeklyScores.length > 0 && (
-          <StandingsRaceChart weeklyScores={weeklyScores} standings={standings} />
+        {hasScheduleData && raceData.length > 0 && (
+          <StandingsRaceChart raceData={raceData} standings={standings} />
         )}
 
         <SeasonLeaderboards
@@ -213,6 +227,7 @@ export default async function SeasonPage({
           mensScratchPlayoffIDs={mensScratchPlayoffIDs}
           womensScratchPlayoffIDs={womensScratchPlayoffIDs}
           hcpEligibleIDs={hcpEligibleIDs}
+          minGames={minGames}
         />
 
         <FullStatsTable stats={fullStats} />

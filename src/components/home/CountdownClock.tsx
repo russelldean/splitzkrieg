@@ -7,37 +7,54 @@ interface CountdownClockProps {
 }
 
 /**
- * Bowling starts at 7:15 PM EST (Eastern Standard Time) on Monday nights.
- * The target date from the DB is UTC midnight — we convert to 7:15 PM ET.
- * EST = UTC-5, EDT = UTC-4. We target 7:15 PM US/Eastern by computing
- * the UTC equivalent using Intl to detect whether DST is active.
+ * Bowling starts at 7:15 PM EST on Monday nights.
+ * EST = UTC-5, EDT = UTC-4.
  */
 function getTargetTime(dateStr: string): number {
   const d = new Date(dateStr);
-  // Set to 7:15 PM UTC as a starting point
   d.setUTCHours(19, 15, 0, 0);
 
-  // Determine the UTC offset for Eastern time on this date.
-  // We create a formatter that outputs the offset, then parse it.
-  // EST = UTC-5 (19:15 ET = 00:15+1 UTC), EDT = UTC-4 (19:15 ET = 23:15 UTC)
   try {
     const eastern = new Intl.DateTimeFormat('en-US', {
       timeZone: 'America/New_York',
       hour: 'numeric',
       hour12: false,
     });
-    // Get what hour it would be in ET at our target UTC time
     const etHour = parseInt(eastern.format(d), 10);
-    // The difference tells us the offset: if UTC 19:15 shows as 14 in ET, offset is -5
     const offsetHours = etHour - 19;
-    // We want 19:15 ET, so shift UTC by -offset
     d.setUTCHours(19 - offsetHours, 15, 0, 0);
   } catch {
-    // Fallback: assume EST (UTC-5) if Intl not available
-    d.setUTCHours(24, 15, 0, 0); // 19:15 + 5 = 00:15 next day UTC
+    d.setUTCHours(24, 15, 0, 0);
   }
 
   return d.getTime();
+}
+
+/**
+ * Check if it's currently league night (Monday 7:15 PM - 10:45 PM Eastern).
+ */
+function isLeagueNightNow(): boolean {
+  try {
+    const now = new Date();
+    const eastern = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      weekday: 'long',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    });
+    const parts = eastern.formatToParts(now);
+    const weekday = parts.find(p => p.type === 'weekday')?.value;
+    const hour = parseInt(parts.find(p => p.type === 'hour')?.value ?? '0', 10);
+    const minute = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0', 10);
+
+    if (weekday !== 'Monday') return false;
+    const timeInMinutes = hour * 60 + minute;
+    // 7:15 PM = 19:15 = 1155min, 10:45 PM = 22:45 = 1365min
+    return timeInMinutes >= 1155 && timeInMinutes <= 1365;
+  } catch {
+    return false;
+  }
 }
 
 function computeCountdown(targetMs: number) {
@@ -53,19 +70,22 @@ function computeCountdown(targetMs: number) {
 export function CountdownClock({ targetDate }: CountdownClockProps) {
   const [mounted, setMounted] = useState(false);
   const [countdown, setCountdown] = useState<ReturnType<typeof computeCountdown> | null>(null);
+  const [hotFun, setHotFun] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (!targetDate) return;
 
     const targetMs = getTargetTime(targetDate);
-    const update = () => setCountdown(computeCountdown(targetMs));
+    const update = () => {
+      setCountdown(computeCountdown(targetMs));
+      setHotFun(isLeagueNightNow());
+    };
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  // Pre-hydration placeholder
   if (!mounted) {
     return (
       <div
@@ -75,7 +95,6 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
     );
   }
 
-  // No scheduled date
   if (!targetDate) {
     return (
       <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[120px] sm:min-h-[180px]">
@@ -86,7 +105,21 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
     );
   }
 
-  // It's bowling night!
+  // HOT FUN mode: Monday 7:15-10:45 PM Eastern
+  if (hotFun) {
+    return (
+      <div className="bg-red-600 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[120px] sm:min-h-[180px]" suppressHydrationWarning>
+        <div className="animate-pulse">
+          <p className="font-heading text-3xl sm:text-5xl text-cream tracking-wider">
+            HOT FUN
+          </p>
+        </div>
+        <p className="font-body text-sm text-cream/60 mt-2">League is in session</p>
+      </div>
+    );
+  }
+
+  // Past target but not HOT FUN time
   if (countdown?.isPast) {
     return (
       <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[120px] sm:min-h-[180px]" suppressHydrationWarning>

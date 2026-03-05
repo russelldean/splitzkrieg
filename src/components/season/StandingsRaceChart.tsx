@@ -6,12 +6,18 @@ import {
   Line,
   XAxis,
   YAxis,
-  Tooltip,
 } from 'recharts';
-import type { WeeklyMatchScore, StandingsRow } from '@/lib/queries';
+import type { StandingsRow } from '@/lib/queries';
+
+interface RaceChartData {
+  week: number;
+  teamID: number;
+  teamName: string;
+  totalPts: number;
+}
 
 interface Props {
-  weeklyScores: WeeklyMatchScore[];
+  raceData: RaceChartData[];
   standings: StandingsRow[];
 }
 
@@ -39,86 +45,58 @@ const TEAM_COLORS = [
   '#B794F4', // violet
 ];
 
-const MUTED_COLOR = '#D1D5DB'; // gray-300
+const MUTED_COLOR = '#9CA3AF'; // gray-400 -- more visible than gray-300
 
-export function StandingsRaceChart({ weeklyScores, standings }: Props) {
+export function StandingsRaceChart({ raceData, standings }: Props) {
   const [activeTeam, setActiveTeam] = useState<string | null>(null);
 
   const { chartData, teamNames, teamCount, teamColorMap } = useMemo(() => {
-    if (weeklyScores.length === 0 || standings.length === 0) {
+    if (raceData.length === 0 || standings.length === 0) {
       return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>() };
     }
 
-    const weeks = Array.from(new Set(weeklyScores.map(s => s.week))).sort((a, b) => a - b);
-    if (weeks.length < 3) {
-      return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>() };
-    }
-
-    const teamIDsFromStandings = standings.map(s => s.teamID);
     const teamNameMap = new Map(standings.map(s => [s.teamID, s.teamName]));
+    const teamIDs = standings.map(s => s.teamID);
 
-    // Group scores by week and team, sum scratch series
-    const weekTeamPins = new Map<number, Map<number, number>>();
-    for (const score of weeklyScores) {
-      if (!weekTeamPins.has(score.week)) weekTeamPins.set(score.week, new Map());
-      const teamMap = weekTeamPins.get(score.week)!;
-      teamMap.set(score.teamID, (teamMap.get(score.teamID) ?? 0) + (score.scratchSeries ?? 0));
-    }
-
-    // Compute cumulative pins and ranks per week
-    const cumPins = new Map<number, number>();
-    for (const teamID of teamIDsFromStandings) {
-      cumPins.set(teamID, 0);
+    // Group by week
+    const weeks = Array.from(new Set(raceData.map(r => r.week))).sort((a, b) => a - b);
+    if (weeks.length < 2) {
+      return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>() };
     }
 
     const data: Record<string, number | string>[] = [];
 
     for (const week of weeks) {
-      const weekPins = weekTeamPins.get(week);
-      if (!weekPins) continue;
-
-      for (const teamID of teamIDsFromStandings) {
-        const weekTotal = weekPins.get(teamID) ?? 0;
-        cumPins.set(teamID, (cumPins.get(teamID) ?? 0) + weekTotal);
-      }
-
-      const teamsWithPins = teamIDsFromStandings
-        .filter(id => (cumPins.get(id) ?? 0) > 0)
-        .map(id => ({ teamID: id, pins: cumPins.get(id) ?? 0 }))
-        .sort((a, b) => b.pins - a.pins);
-
-      const rankMap = new Map<number, number>();
-      teamsWithPins.forEach((t, i) => rankMap.set(t.teamID, i + 1));
+      const weekRows = raceData.filter(r => r.week === week);
+      // Sort by totalPts DESC to compute ranks
+      const sorted = [...weekRows].sort((a, b) => b.totalPts - a.totalPts);
 
       const point: Record<string, number | string> = { week: `Wk ${week}` };
-      for (const teamID of teamIDsFromStandings) {
-        const name = teamNameMap.get(teamID) ?? `Team ${teamID}`;
-        const rank = rankMap.get(teamID);
-        if (rank !== undefined) {
-          point[name] = rank;
-        }
-      }
+      sorted.forEach((row, i) => {
+        const name = teamNameMap.get(row.teamID) ?? `Team ${row.teamID}`;
+        point[name] = i + 1; // rank
+      });
       data.push(point);
     }
 
-    const names = teamIDsFromStandings.map(id => teamNameMap.get(id) ?? `Team ${id}`);
+    const names = teamIDs.map(id => teamNameMap.get(id) ?? `Team ${id}`);
     const colorMap = new Map<string, string>();
     names.forEach((name, i) => colorMap.set(name, TEAM_COLORS[i % TEAM_COLORS.length]));
 
     return { chartData: data, teamNames: names, teamCount: names.length, teamColorMap: colorMap };
-  }, [weeklyScores, standings]);
+  }, [raceData, standings]);
 
   const handleTeamClick = useCallback((teamName: string) => {
     setActiveTeam(prev => prev === teamName ? null : teamName);
   }, []);
 
-  if (chartData.length < 3) return null;
+  if (chartData.length < 2) return null;
 
   return (
-    <section>
+    <section id="race">
       <h2 className="font-heading text-2xl text-navy mb-2">Standings Race</h2>
       <p className="font-body text-sm text-navy/50 mb-4">
-        Team rank positions by cumulative pins over the season. Click a team to highlight.
+        Team rank positions by total points over the season. Click a team to highlight.
       </p>
       <div className="bg-white rounded-lg border border-navy/10 p-4">
         <ResponsiveContainer width="100%" height={Math.max(300, teamCount * 20 + 100)}>
@@ -144,20 +122,11 @@ export function StandingsRaceChart({ weeklyScores, standings }: Props) {
                 style: { fontSize: 11, fill: '#1B2A4A', opacity: 0.4 },
               }}
             />
-            <Tooltip
-              contentStyle={{
-                background: '#FFFBF2',
-                border: '1px solid rgba(27,42,74,0.1)',
-                borderRadius: '6px',
-                fontSize: '12px',
-              }}
-              formatter={(value?: number, name?: string) => [value != null ? `#${value}` : '', name ?? '']}
-            />
             {teamNames.map((name) => {
               const isSelected = activeTeam === name;
               const color = isSelected ? (teamColorMap.get(name) ?? MUTED_COLOR) : MUTED_COLOR;
-              const width = isSelected ? 3 : 1;
-              const opacity = isSelected ? 1 : (activeTeam === null ? 0.3 : 0.12);
+              const width = isSelected ? 3 : 1.5;
+              const opacity = isSelected ? 1 : (activeTeam === null ? 0.45 : 0.15);
               return (
                 <Line
                   key={name}
@@ -167,7 +136,7 @@ export function StandingsRaceChart({ weeklyScores, standings }: Props) {
                   strokeWidth={width}
                   strokeOpacity={opacity}
                   dot={false}
-                  activeDot={activeTeam === name || activeTeam === null ? { r: 4 } : false}
+                  activeDot={false}
                   connectNulls
                 />
               );

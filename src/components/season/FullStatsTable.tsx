@@ -97,7 +97,7 @@ export function FullStatsTable({ stats }: Props) {
 
   if (stats.length === 0) {
     return (
-      <section>
+      <section id="stats">
         <h2 className="font-heading text-2xl text-navy mb-4">Full Stats</h2>
         <p className="font-body text-navy/50">No stats data available.</p>
       </section>

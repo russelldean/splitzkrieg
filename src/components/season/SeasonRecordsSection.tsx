@@ -42,7 +42,7 @@ export function SeasonRecordsSection({ records }: Props) {
   if (!hasAnyRecords) return null;
 
   return (
-    <section>
+    <section id="records">
       <h2 className="font-heading text-2xl text-navy mb-4">Season Records</h2>
       <div className="bg-navy/[0.02] rounded-lg px-4 py-2">
         <RecordRow label="High Scratch Game" record={records.highScratchGame} />

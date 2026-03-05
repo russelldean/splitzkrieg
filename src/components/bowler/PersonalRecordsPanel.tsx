@@ -45,10 +45,6 @@ export function PersonalRecordsPanel({ careerSummary, delta }: Props) {
           <RecordCard
             label="Career Avg"
             value={careerSummary.careerAverage?.toFixed(1) ?? null}
-            delta={delta?.avgChange != null
-              ? `${delta.avgChange >= 0 ? '+' : ''}${delta.avgChange.toFixed(1)}`
-              : undefined}
-            deltaVariant={delta?.avgChange != null && delta.avgChange < 0 ? 'negative' : 'positive'}
           />
           <RecordCard
             label="Turkeys"

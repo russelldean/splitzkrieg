@@ -16,7 +16,9 @@ import {
   getBowlerCareerSummary,
   getBowlerSeasonStats,
   getBowlerGameLog,
+  getBowlerRollingAvgHistory,
   getBowlerOfTheWeek,
+  getCurrentSeasonID,
 } from '@/lib/queries';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
@@ -76,11 +78,13 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, botwID] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
+    getBowlerRollingAvgHistory(bowler.bowlerID),
     getBowlerOfTheWeek(),
+    getCurrentSeasonID(),
   ]);
 
   const isBowlerOfTheWeek = botwID === bowler.bowlerID;
@@ -118,9 +122,8 @@ export default async function BowlerPage({
   const latestSeasonLog = gameLog.filter(w => latestSeason && w.seasonID === latestSeason.seasonID);
   const lastWeek = latestSeasonLog.length > 0 ? latestSeasonLog[latestSeasonLog.length - 1] : null;
 
-  // Only show for bowlers active in the most recent season
-  // Check if latest season is the current one (most recent year in the data)
-  const isCurrentSeason = latestSeason && seasonStats.length > 0;
+  // Only show deltas for bowlers active in the current season
+  const isCurrentSeason = latestSeason != null && latestSeason.seasonID === currentSeasonID;
 
   let weekDelta: WeekDelta | null = null;
   if (isCurrentSeason && lastWeek && careerSummary) {
@@ -133,13 +136,9 @@ export default async function BowlerPage({
     const week200 = games.filter(g => g >= 200).length;
     const weekSeries600 = weekSeries >= 600 ? 1 : 0;
 
-    // Compute what career avg was before this week
-    const prevTotalPins = (careerSummary.totalPins ?? 0) - weekPins;
-    const prevTotalGames = (careerSummary.totalGamesBowled ?? 0) - games.length;
-    const prevAvg = prevTotalGames > 0 ? prevTotalPins / prevTotalGames : null;
-    const currentCareerAvg = careerSummary.careerAverage ?? null;
-    const avgChange = currentCareerAvg !== null && prevAvg !== null
-      ? currentCareerAvg - prevAvg
+    // Rolling avg change: current rolling avg (includes this week) minus incomingAvg (before this week)
+    const avgChange = careerSummary.rollingAvg != null && lastWeek.incomingAvg != null
+      ? careerSummary.rollingAvg - lastWeek.incomingAvg
       : null;
 
     weekDelta = {
@@ -174,8 +173,8 @@ export default async function BowlerPage({
 
         <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} />
 
-        {seasonStats.length >= 3 && (
-          <AverageProgressionChart seasons={[...seasonStats].reverse()} />
+        {rollingAvgHistory.length >= 6 && (
+          <AverageProgressionChart history={rollingAvgHistory} />
         )}
 
         <SeasonStatsTable seasons={seasonStats} />

@@ -13,12 +13,10 @@ interface Props {
   mensScratch: LeaderboardCategory[];
   womensScratch: LeaderboardCategory[];
   handicap: LeaderboardCategory[];
-  /** Top 8 men's scratch avg bowlerIDs -- these make scratch playoffs */
   mensScratchPlayoffIDs: Set<number>;
-  /** Top 8 women's scratch avg bowlerIDs -- these make scratch playoffs */
   womensScratchPlayoffIDs: Set<number>;
-  /** BowlerIDs eligible for handicap playoffs (NOT in top 8 men's/women's scratch) */
   hcpEligibleIDs: Set<number>;
+  minGames?: number;
 }
 
 type TabKey = 'mens' | 'womens' | 'handicap';
@@ -68,13 +66,10 @@ function LeaderboardTable({
               <tr
                 key={`${entry.bowlerID}-${i}`}
                 className={`border-b border-navy/5 hover:bg-navy/[0.02] transition-colors ${
-                  isHighlighted ? 'bg-amber-50/60' : ''
+                  isHighlighted ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
                 }`}
               >
                 <td className="px-4 py-2 text-navy/40 tabular-nums">
-                  {isHighlighted && (
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1" />
-                  )}
                   {i + 1}
                 </td>
                 <td className={`px-4 py-2 ${isHighlighted ? 'font-bold' : 'font-medium'}`}>
@@ -111,9 +106,9 @@ function LeaderboardTable({
           })}
         </tbody>
       </table>
-      {highlightLabel && (
-        <p className="text-xs font-body text-navy/40 mt-1 px-4">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 align-middle" />
+      {showHighlight && highlightLabel && (
+        <p className="text-xs font-body text-navy/40 mt-1 px-4 flex items-center gap-1.5">
+          <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
           {highlightLabel}
         </p>
       )}
@@ -128,6 +123,7 @@ export function SeasonLeaderboards({
   mensScratchPlayoffIDs,
   womensScratchPlayoffIDs,
   hcpEligibleIDs,
+  minGames,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>('mens');
 
@@ -137,7 +133,6 @@ export function SeasonLeaderboards({
     handicap,
   };
 
-  // Which IDs to highlight per tab
   const highlightMap: Record<TabKey, { ids: Set<number>; label: string }> = {
     mens: { ids: mensScratchPlayoffIDs, label: 'Playoff position (top 8)' },
     womens: { ids: womensScratchPlayoffIDs, label: 'Playoff position (top 8)' },
@@ -149,8 +144,13 @@ export function SeasonLeaderboards({
   const highlight = highlightMap[activeTab];
 
   return (
-    <section>
-      <h2 className="font-heading text-2xl text-navy mb-4">Leaderboards</h2>
+    <section id="leaderboards">
+      <h2 className="font-heading text-2xl text-navy mb-1">Leaderboards</h2>
+      {minGames && (
+        <p className="font-body text-xs text-navy/40 mb-4">
+          Minimum {minGames} games bowled to qualify for average rankings
+        </p>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6">

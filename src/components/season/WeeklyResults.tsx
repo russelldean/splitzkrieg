@@ -168,7 +168,7 @@ export function WeeklyResults({ weeklyScores, schedule, totalWeeks }: Props) {
   }
 
   return (
-    <section>
+    <section id="weekly">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h2 className="font-heading text-2xl text-navy">Weekly Results</h2>
