@@ -16,11 +16,14 @@ import {
   getTeamBySlug,
   getTeamCurrentRoster,
   getTeamSeasonByseason,
+  getTeamSeasonBowlers,
   getTeamAllTimeRoster,
   getTeamFranchiseHistory,
+  type TeamSeasonBowler,
 } from '@/lib/queries';
 import { TeamHero } from '@/components/team/TeamHero';
 import { CurrentRoster } from '@/components/team/CurrentRoster';
+import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
 import { AllTimeRoster } from '@/components/team/AllTimeRoster';
 import { HeadToHead } from '@/components/team/HeadToHead';
 
@@ -73,6 +76,14 @@ export default async function TeamPage({
     getTeamFranchiseHistory(team.teamID),
   ]);
 
+  // Pre-fetch bowler data for all seasons (static build handles the load)
+  const bowlersBySeason: Record<number, TeamSeasonBowler[]> = {};
+  await Promise.all(
+    teamSeasons.map(async (s) => {
+      bowlersBySeason[s.seasonID] = await getTeamSeasonBowlers(team.teamID, s.seasonID);
+    })
+  );
+
   // Derive counts for hero
   const rosterCount = currentRoster.length;
   const seasonsActive = teamSeasons.length;
@@ -90,8 +101,10 @@ export default async function TeamPage({
       <div className="mt-8 space-y-8">
         <CurrentRoster roster={currentRoster} />
 
-        {/* Season-by-Season accordion added in Task 2 */}
-        <div id="season-by-season" />
+        <TeamSeasonByseason
+          seasons={teamSeasons}
+          bowlersBySeason={bowlersBySeason}
+        />
 
         <AllTimeRoster roster={allTimeRoster} />
 
