@@ -537,12 +537,12 @@ export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
         WHERE sc.isPenalty = 0
         GROUP BY sc.bowlerID, b.bowlerName, b.slug
       )
-      SELECT TOP 10 bowlerID, bowlerName, slug, type, milestone, current, threshold
+      SELECT TOP 10 bowlerID, bowlerName, slug, type, milestone, [current], threshold
       FROM (
         SELECT bowlerID, bowlerName, slug,
           'achieved' AS type,
           CAST(threshold AS VARCHAR) + ' career games' AS milestone,
-          totalGames AS current,
+          totalGames AS [current],
           threshold
         FROM CareerGames
         CROSS JOIN (VALUES (50),(100),(150),(200),(250),(300),(400),(500)) AS T(threshold)
@@ -551,7 +551,7 @@ export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
         SELECT bowlerID, bowlerName, slug,
           'approaching' AS type,
           CAST(threshold AS VARCHAR) + ' career games' AS milestone,
-          totalGames AS current,
+          totalGames AS [current],
           threshold
         FROM CareerGames
         CROSS JOIN (VALUES (50),(100),(150),(200),(250),(300),(400),(500)) AS T(threshold)
@@ -1195,6 +1195,7 @@ export interface StandingsRow {
   wins: number;
   xp: number;
   totalPts: number;
+  lastWeekPts: number | null;
   teamScratchAvg: number | null;
   scratchAvgRank: number;
   teamHcpAvg: number | null;
@@ -1354,19 +1355,18 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
           GROUP BY sc.teamID
         ),
         teamPtsUnpivot AS (
-          -- Unpivot matchResults: each row has team1 and team2 data
-          -- team1GamePts/team2GamePts are game points (each game win = 2pts)
-          -- team1BonusPts/team2BonusPts are XP bonus points (0-3)
           SELECT sch.team1ID AS teamID,
                  mr.team1GamePts AS gamePts,
-                 mr.team1BonusPts AS bonusPts
+                 mr.team1BonusPts AS bonusPts,
+                 sch.week
           FROM matchResults mr
           JOIN schedule sch ON mr.scheduleID = sch.scheduleID
           WHERE sch.seasonID = @seasonID
           UNION ALL
           SELECT sch.team2ID AS teamID,
                  mr.team2GamePts AS gamePts,
-                 mr.team2BonusPts AS bonusPts
+                 mr.team2BonusPts AS bonusPts,
+                 sch.week
           FROM matchResults mr
           JOIN schedule sch ON mr.scheduleID = sch.scheduleID
           WHERE sch.seasonID = @seasonID
@@ -1378,6 +1378,18 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
             SUM(bonusPts) AS xp
           FROM teamPtsUnpivot
           GROUP BY teamID
+        ),
+        maxWeek AS (
+          SELECT MAX(week) AS lastWeek FROM teamPtsUnpivot
+        ),
+        lastWeekPts AS (
+          SELECT
+            tp.teamID,
+            SUM(tp.gamePts) + SUM(tp.bonusPts) AS pts
+          FROM teamPtsUnpivot tp
+          CROSS JOIN maxWeek mw
+          WHERE tp.week = mw.lastWeek
+          GROUP BY tp.teamID
         )
         SELECT
           t.teamID,
@@ -1387,6 +1399,7 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
           ISNULL(wx.wins, 0)                      AS wins,
           ISNULL(wx.xp, 0)                        AS xp,
           ISNULL(wx.wins, 0) + ISNULL(wx.xp, 0)  AS totalPts,
+          lw.pts                                   AS lastWeekPts,
           ta.teamScratchAvg,
           CAST(RANK() OVER (ORDER BY ta.teamScratchAvg DESC) AS INT) AS scratchAvgRank,
           ta.teamHcpAvg,
@@ -1394,6 +1407,7 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
         FROM teamAvgs ta
         JOIN teams t ON ta.teamID = t.teamID
         LEFT JOIN teamWinsXP wx ON wx.teamID = ta.teamID
+        LEFT JOIN lastWeekPts lw ON lw.teamID = ta.teamID
         LEFT JOIN seasonDivisions sd
           ON  sd.seasonID = @seasonID
           AND sd.teamID   = ta.teamID
