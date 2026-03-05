@@ -202,6 +202,7 @@ export interface BowlerSeasonStats {
   period: string;
   teamName: string | null;
   teamSlug: string | null;
+  seasonSlug: string;
   nightsBowled: number;
   gamesBowled: number;
   totalPins: number;
@@ -234,6 +235,7 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
           sn.period,
           COALESCE(tnh.teamName, t.teamName)                   AS teamName,
           t.slug                                               AS teamSlug,
+          LOWER(REPLACE(sn.displayName, ' ', '-'))             AS seasonSlug,
           COUNT(sc.scoreID)                                    AS nightsBowled,
           COUNT(sc.scoreID) * 3                                AS gamesBowled,
           SUM(sc.scratchSeries)                                AS totalPins,
@@ -265,7 +267,8 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
           AND sc.isPenalty = 0
         GROUP BY
           sc.seasonID, sn.romanNumeral, sn.displayName,
-          sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.slug
+          sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.slug,
+          LOWER(REPLACE(sn.displayName, ' ', '-'))
         ORDER BY
           sn.year DESC,
           CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC

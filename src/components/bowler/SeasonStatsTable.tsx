@@ -58,7 +58,7 @@ export function SeasonStatsTable({ seasons }: Props) {
               <tr key={`${season.seasonID}-${season.teamSlug ?? 'no-team'}`} className="hover:bg-navy/[0.02]">
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Link
-                    href={`/season/${season.romanNumeral}`}
+                    href={`/season/${season.seasonSlug}`}
                     className="text-navy hover:text-red-600 transition-colors"
                   >
                     {season.displayName}

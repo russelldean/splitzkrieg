@@ -71,9 +71,9 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
                   className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-heading text-lg text-navy">
+                    <Link href={`/season/${season.seasonSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                       {season.seasonName}
-                    </span>
+                    </Link>
                     {season.teamNameAtTime !== season.seasonName && (
                       <span className="text-sm text-navy/40 font-body">
                         as {season.teamNameAtTime}
