@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { getAllTeamsDirectory } from '@/lib/queries';
+import { getAllTeamsDirectory, getTeamSeasonPresence, getCurrentSeasonID } from '@/lib/queries';
 import { TeamCard } from '@/components/team/TeamCard';
+import { TeamTimeline } from '@/components/team/TeamTimeline';
 
 export const metadata: Metadata = {
   title: 'Teams | Splitzkrieg',
@@ -8,7 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamsPage() {
-  const teams = await getAllTeamsDirectory();
+  const [teams, presenceData, currentSeasonID] = await Promise.all([
+    getAllTeamsDirectory(),
+    getTeamSeasonPresence(),
+    getCurrentSeasonID(),
+  ]);
 
   const activeTeams = teams.filter(t => t.isActive);
   const historicalTeams = teams.filter(t => !t.isActive);
@@ -43,6 +48,13 @@ export default async function TeamsPage() {
         <p className="font-body text-navy/50 text-center py-12">
           No teams found. Check back when the season starts.
         </p>
+      )}
+
+      {presenceData.length > 0 && (
+        <TeamTimeline
+          presenceData={presenceData}
+          currentSeasonID={currentSeasonID ?? undefined}
+        />
       )}
     </main>
   );

@@ -25,6 +25,7 @@ import { Standings } from '@/components/season/Standings';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
 import { FullStatsTable } from '@/components/season/FullStatsTable';
 import { WeeklyResults } from '@/components/season/WeeklyResults';
+import { StandingsRaceChart } from '@/components/season/StandingsRaceChart';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -144,6 +145,10 @@ export default async function SeasonPage({
 
       <div className="mt-8 space-y-12">
         <Standings standings={standings} hasDivisions={hasDivisions} />
+
+        {hasScheduleData && weeklyScores.length > 0 && (
+          <StandingsRaceChart weeklyScores={weeklyScores} standings={standings} />
+        )}
 
         <SeasonLeaderboards
           mensScratch={[
