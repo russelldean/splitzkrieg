@@ -1142,9 +1142,9 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
         ) THEN 1 ELSE 0 END AS BIT) AS isActive,
         (
           SELECT TOP 1 sn.displayName
-          FROM scores sc3
-          JOIN seasons sn ON sc3.seasonID = sn.seasonID
-          WHERE sc3.teamID = t.teamID AND sc3.isPenalty = 0
+          FROM teamNameHistory tnh3
+          JOIN seasons sn ON tnh3.seasonID = sn.seasonID
+          WHERE tnh3.teamID = t.teamID
           ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
         ) AS establishedSeason
       FROM teams t
