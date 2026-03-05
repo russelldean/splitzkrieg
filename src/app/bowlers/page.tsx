@@ -1,12 +1,13 @@
 import { getAllBowlersDirectory, type DirectoryBowler } from '@/lib/queries';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { BackToTop } from '@/components/ui/BackToTop';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Bowlers',
   description:
-    'Browse all Splitzkrieg Bowling League bowlers. Find any bowler from 18 years of league history.',
+    `Browse all Splitzkrieg Bowling League bowlers. Find any bowler from ${new Date().getFullYear() - 2007} years of league history.`,
 };
 
 function groupByLetter(bowlers: DirectoryBowler[]) {
@@ -46,7 +47,7 @@ export default async function BowlersPage() {
             All Bowlers
           </h1>
           <p className="font-body text-navy/50 mt-2">
-            {bowlers.length} bowlers across 18 years of Splitzkrieg history
+            {bowlers.length} bowlers across {new Date().getFullYear() - 2007} years of Splitzkrieg history
           </p>
         </div>
 
@@ -94,6 +95,8 @@ export default async function BowlersPage() {
             </section>
           ))}
         </div>
+
+        <BackToTop />
       </div>
     </div>
   );

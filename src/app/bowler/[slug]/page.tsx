@@ -164,6 +164,7 @@ export default async function BowlerPage({
         shareUrl={shareUrl}
         teams={teams}
         isBowlerOfTheWeek={isBowlerOfTheWeek}
+        currentTeam={latestSeason ? { name: latestSeason.teamName ?? 'Unknown', slug: latestSeason.teamSlug } : null}
       />
 
       <div className="mt-8 space-y-8">

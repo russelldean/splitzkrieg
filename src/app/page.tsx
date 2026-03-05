@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 const quickLinks = [
-  { label: 'Browse Bowlers', href: '/bowlers', description: '619 bowlers across 35+ seasons' },
+  { label: 'Browse Bowlers', href: '/bowlers', description: 'Every bowler since 2007' },
   { label: 'View Teams', href: '/teams', description: 'Current and historical rosters' },
   { label: 'Seasons', href: '/seasons', description: 'Every season since 2007' },
   { label: 'Leaderboards', href: '/leaderboards', description: 'All-time records and rankings' },
