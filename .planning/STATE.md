@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 04-teams-and-seasons
-current_plan: 1 of 4
+current_plan: 2 of 4
 status: In Progress
-last_updated: "2026-03-04T23:56:03Z"
+last_updated: "2026-03-05T01:00:23Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 12
 ---
 
 # Session State
@@ -23,7 +23,7 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.0 milestone
 **Current phase:** 04-teams-and-seasons
-**Current plan:** 1 of 4
+**Current plan:** 2 of 4
 **Status:** In Progress
 
 ## Session Log
@@ -35,6 +35,7 @@ See: .planning/PROJECT.md
 - 2026-03-03: Completed 03-02-PLAN.md (home page hub with discovery search, countdown, milestones, season snapshot)
 - 2026-03-03: Completed 03-03-PLAN.md (secondary routes, bowler directory, footer)
 - 2026-03-04: Completed 04-01-PLAN.md (team and season data layer queries)
+- 2026-03-04: Completed 04-02-PLAN.md (team profile pages and teams directory)
 
 ## Decisions
 
@@ -47,6 +48,9 @@ See: .planning/PROJECT.md
 - **[Phase 04]** Adapted FranchiseNameEntry to actual DB schema (id, seasonID, teamName) vs plan's assumed (teamNameHistoryId, teamName, startDate, endDate)
 - **[Phase 04]** Used switch/case in getSeasonLeaderboard for readable category-specific SQL generation
 - **[Phase 04]** getSeasonHeroStats as dedicated lightweight query rather than deriving from getSeasonFullStats
+- **[Phase 04]** strikeX styling reserved for team/season names only, never applied to people's names
+- **[Phase 04]** Ghost Team detected by name match and given emoji treatment instead of stats on directory cards
+- **[Phase 04]** No captain data in DB schema -- feature skipped
 
 ## Pending Todos
 
