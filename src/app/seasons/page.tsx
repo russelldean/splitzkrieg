@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getAllSeasonsDirectory } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 
 export const metadata: Metadata = {
   title: 'Seasons | Splitzkrieg',
@@ -34,7 +33,7 @@ export default async function SeasonsPage() {
                   {season.period} {season.year}
                 </span>
                 <span className="font-body text-sm text-navy/40">
-                  Season {strikeX(season.romanNumeral)}
+                  Season {season.romanNumeral}
                 </span>
               </div>
               <div className="flex items-baseline gap-3 shrink-0 text-sm font-body text-navy/50">

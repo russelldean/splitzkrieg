@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { SeasonFullStatsRow } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   stats: SeasonFullStatsRow[];
@@ -27,9 +26,9 @@ type SortDirection = 'asc' | 'desc';
 type GenderTab = 'M' | 'F' | 'all';
 
 const TABS: { key: GenderTab; label: string }[] = [
-  { key: 'M', label: "Men's Scratch" },
-  { key: 'F', label: "Women's Scratch" },
   { key: 'all', label: 'All Bowlers' },
+  { key: 'M', label: "Men" },
+  { key: 'F', label: "Women" },
 ];
 
 const COLUMNS: { key: SortColumn; label: string; align: 'left' | 'right' }[] = [
@@ -55,7 +54,7 @@ function SortArrow({ direction }: { direction: SortDirection }) {
 }
 
 export function FullStatsTable({ stats }: Props) {
-  const [genderTab, setGenderTab] = useState<GenderTab>('M');
+  const [genderTab, setGenderTab] = useState<GenderTab>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('scratchAvg');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -151,7 +150,7 @@ export function FullStatsTable({ stats }: Props) {
             <tbody>
               {sorted.map((row, i) => (
                 <tr
-                  key={row.bowlerID}
+                  key={`${row.bowlerID}-${row.teamSlug ?? 'no-team'}`}
                   className="border-b border-navy/5 hover:bg-navy/[0.02] transition-colors"
                 >
                   <td className="px-3 py-2 text-navy/40 tabular-nums">{i + 1}</td>
@@ -169,7 +168,7 @@ export function FullStatsTable({ stats }: Props) {
                         href={`/team/${row.teamSlug}`}
                         className="hover:text-red-600 transition-colors"
                       >
-                        {row.teamName ? strikeX(row.teamName) : '\u2014'}
+                        {row.teamName ?? '\u2014'}
                       </Link>
                     ) : (
                       <span>{row.teamName ?? '\u2014'}</span>

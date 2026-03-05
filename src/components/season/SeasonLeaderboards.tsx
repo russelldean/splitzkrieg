@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { SeasonLeaderEntry, SeasonRecords } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface LeaderboardCategory {
   title: string;
@@ -66,7 +65,7 @@ function LeaderboardTable({ entries }: { entries: SeasonLeaderEntry[] }) {
                     href={`/team/${entry.teamSlug}`}
                     className="hover:text-red-600 transition-colors"
                   >
-                    {entry.teamName ? strikeX(entry.teamName) : '\u2014'}
+                    {entry.teamName ?? '\u2014'}
                   </Link>
                 ) : (
                   <span>{entry.teamName ?? '\u2014'}</span>

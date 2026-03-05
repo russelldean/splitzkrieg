@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { TeamSeasonRow, TeamSeasonBowler } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface Props {
@@ -63,7 +62,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
             <div key={season.seasonID}>
               {showOldSeasonNote && (
                 <div className="px-4 py-3 mb-1 bg-navy/[0.02] border border-navy/10 rounded-lg text-sm font-body text-navy/50 italic">
-                  Team records before Season XXVI are still in the file cabinets. Bowler stats shown below are from the scoring archives.
+                  Detailed team records before Season XXVI are coming soon. Individual bowler stats are shown below.
                 </div>
               )}
               <div className="border border-navy/10 rounded-lg overflow-hidden">
@@ -73,11 +72,11 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-heading text-lg text-navy">
-                      {strikeX(season.seasonName)}
+                      {season.seasonName}
                     </span>
                     {season.teamNameAtTime !== season.seasonName && (
                       <span className="text-sm text-navy/40 font-body">
-                        as {strikeX(season.teamNameAtTime)}
+                        as {season.teamNameAtTime}
                       </span>
                     )}
                   </div>

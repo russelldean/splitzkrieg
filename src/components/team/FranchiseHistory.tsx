@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import type { FranchiseNameEntry } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   names: FranchiseNameEntry[];
@@ -37,7 +36,7 @@ export function FranchiseHistory({ names }: Props) {
           <ul className="space-y-1.5">
             {uniqueNames.map((name, i) => (
               <li key={i} className="text-sm font-body text-navy">
-                {strikeX(name)}
+                {name}
               </li>
             ))}
           </ul>

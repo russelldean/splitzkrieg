@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
-import { strikeX } from '@/components/ui/StrikeX';
 import type { GameLogWeek } from '@/lib/queries';
 
 export interface WeekDelta {
@@ -71,12 +70,12 @@ export function LastWeekHighlight({ week, delta }: Props) {
                   href={`/team/${week.opponentSlug}`}
                   className="text-navy hover:text-red-600 underline-offset-2 hover:underline"
                 >
-                  {strikeX(week.opponentName ?? '')}
+                  {week.opponentName ?? ''}
                 </Link>
               </span>
             ) : week.opponentName ? (
               <span className="text-sm text-navy/60 font-body">
-                vs {strikeX(week.opponentName)}
+                vs {week.opponentName}
               </span>
             ) : null}
           </div>

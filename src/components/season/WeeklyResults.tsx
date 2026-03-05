@@ -3,7 +3,6 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { WeeklyMatchScore, SeasonScheduleWeek } from '@/lib/queries';
 import { scoreColorClass } from '@/lib/score-utils';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   weeklyScores: WeeklyMatchScore[];
@@ -71,7 +70,7 @@ function TeamBoxScore({
         href={`/team/${teamSlug}`}
         className="font-heading text-sm text-navy hover:text-red-600 transition-colors"
       >
-        {strikeX(teamName)}
+        {teamName}
       </Link>
       <table className="w-full text-sm font-body mt-1">
         <thead>
@@ -228,11 +227,11 @@ export function WeeklyResults({ weeklyScores, schedule, totalWeeks }: Props) {
                         <div key={idx} className="border border-navy/5 rounded-lg p-3">
                           <div className="flex items-center gap-2 mb-2 text-sm font-heading text-navy/60">
                             <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600">
-                              {strikeX(matchup.homeTeamName)}
+                              {matchup.homeTeamName}
                             </Link>
                             <span className="text-navy/30">vs</span>
                             <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600">
-                              {strikeX(matchup.awayTeamName)}
+                              {matchup.awayTeamName}
                             </Link>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -273,11 +272,11 @@ export function WeeklyResults({ weeklyScores, schedule, totalWeeks }: Props) {
                       {matchups.map((matchup, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-sm font-body text-navy/50">
                           <Link href={`/team/${matchup.homeTeamSlug}`} className="text-navy hover:text-red-600">
-                            {strikeX(matchup.homeTeamName)}
+                            {matchup.homeTeamName}
                           </Link>
                           <span className="text-navy/30">vs</span>
                           <Link href={`/team/${matchup.awayTeamSlug}`} className="text-navy hover:text-red-600">
-                            {strikeX(matchup.awayTeamName)}
+                            {matchup.awayTeamName}
                           </Link>
                         </div>
                       ))}

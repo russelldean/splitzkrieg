@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import type { AllTimeRosterMember } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   roster: AllTimeRosterMember[];
@@ -55,7 +54,7 @@ export function AllTimeRoster({ roster }: Props) {
                     {member.seasonsWithTeam}
                   </td>
                   <td className="px-4 py-2 text-right text-navy/50 text-xs hidden sm:table-cell whitespace-nowrap">
-                    {tenure ? strikeX(tenure) : '\u2014'}
+                    {tenure ?? '\u2014'}
                   </td>
                 </tr>
               );

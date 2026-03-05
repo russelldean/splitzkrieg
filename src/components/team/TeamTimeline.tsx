@@ -2,7 +2,6 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import type { TeamSeasonPresence } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   presenceData: TeamSeasonPresence[];
@@ -75,7 +74,7 @@ export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
                     className="hover:text-red-600 transition-colors"
                     title={`Season ${s.roman}`}
                   >
-                    {strikeX(s.roman)}
+                    {s.roman}
                   </Link>
                 </th>
               ))}
@@ -92,7 +91,7 @@ export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
                     href={`/team/${team.slug}`}
                     className="text-navy hover:text-red-600 transition-colors text-sm"
                   >
-                    {strikeX(team.teamName)}
+                    {team.teamName}
                   </Link>
                 </td>
                 {seasons.map(s => {

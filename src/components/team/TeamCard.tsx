@@ -48,7 +48,7 @@ export function TeamCard({ team }: Props) {
           {team.establishedSeason && (
             <span>
               <span className="text-navy/40">Est. </span>
-              <span className="tabular-nums">{strikeX(team.establishedSeason)}</span>
+              <span className="tabular-nums">{team.establishedSeason}</span>
             </span>
           )}
         </div>

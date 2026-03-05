@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { TeamRosterMember } from '@/lib/queries';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   roster: TeamRosterMember[];
@@ -38,7 +37,7 @@ export function CurrentRoster({ roster }: Props) {
               </Link>
               {member.firstSeason && (
                 <span className="text-xs font-body text-navy/40">
-                  since {strikeX(member.firstSeason)}
+                  since {member.firstSeason}
                 </span>
               )}
             </div>

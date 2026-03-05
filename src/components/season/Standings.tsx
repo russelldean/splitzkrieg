@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import type { StandingsRow } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
 
 interface Props {
   standings: StandingsRow[];
@@ -34,7 +33,7 @@ function StandingsTable({ rows, startRank }: { rows: StandingsRow[]; startRank: 
                   href={`/team/${row.teamSlug}`}
                   className="text-navy hover:text-red-600 transition-colors"
                 >
-                  {strikeX(row.teamName)}
+                  {row.teamName}
                 </Link>
               </td>
               <td className="px-4 py-3 text-right tabular-nums font-semibold text-navy">

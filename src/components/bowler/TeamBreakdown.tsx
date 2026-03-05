@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { strikeX } from '@/components/ui/StrikeX';
 
 export interface TeamStat {
   teamName: string;
@@ -43,10 +42,10 @@ export function TeamBreakdown({ teams }: Props) {
                       href={`/team/${team.teamSlug}`}
                       className="text-sm text-navy hover:text-red-600 transition-colors truncate block"
                     >
-                      {strikeX(team.teamName)}
+                      {team.teamName}
                     </Link>
                   ) : (
-                    <span className="text-sm text-navy/60 truncate block">{strikeX(team.teamName)}</span>
+                    <span className="text-sm text-navy/60 truncate block">{team.teamName}</span>
                   )}
                   {isLifer && (
                     <span className="text-[11px] italic text-navy/30">forever</span>
