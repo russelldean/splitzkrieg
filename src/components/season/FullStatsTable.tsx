@@ -160,7 +160,7 @@ export function FullStatsTable({ stats }: Props) {
                       href={`/bowler/${row.slug}`}
                       className="text-navy hover:text-red-600 transition-colors"
                     >
-                      {strikeX(row.bowlerName)}
+                      {row.bowlerName}
                     </Link>
                   </td>
                   <td className="px-3 py-2 text-navy/60 whitespace-nowrap">

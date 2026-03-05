@@ -116,7 +116,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
                                 href={`/bowler/${bowler.slug}`}
                                 className="text-navy hover:text-red-600 transition-colors"
                               >
-                                {strikeX(bowler.bowlerName)}
+                                {bowler.bowlerName}
                               </Link>
                             </td>
                             <td className="px-4 py-2 text-right tabular-nums text-navy">

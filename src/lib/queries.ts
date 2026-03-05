@@ -793,6 +793,7 @@ export interface TeamRosterMember {
   slug: string;
   gamesBowled: number;
   seasonAverage: number | null;
+  firstSeason: string | null;
 }
 
 export interface TeamSeasonRow {
@@ -825,6 +826,8 @@ export interface AllTimeRosterMember {
   totalPins: number;
   average: number | null;
   seasonsWithTeam: number;
+  firstSeason: string | null;
+  lastSeason: string | null;
 }
 
 export interface FranchiseNameEntry {
@@ -842,6 +845,7 @@ export interface DirectoryTeam {
   totalGames: number;
   totalPins: number;
   isActive: boolean;
+  establishedSeason: string | null;
 }
 
 /**
@@ -908,7 +912,14 @@ export async function getTeamCurrentRoster(teamID: number): Promise<TeamRosterMe
           CAST(
             SUM(sc.scratchSeries) * 1.0 /
             NULLIF(COUNT(sc.scoreID) * 3, 0)
-          AS DECIMAL(5,1)) AS seasonAverage
+          AS DECIMAL(5,1)) AS seasonAverage,
+          (
+            SELECT TOP 1 sn.displayName
+            FROM scores sc2
+            JOIN seasons sn ON sc2.seasonID = sn.seasonID
+            WHERE sc2.bowlerID = b.bowlerID AND sc2.teamID = @teamID AND sc2.isPenalty = 0
+            ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
+          ) AS firstSeason
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         WHERE sc.teamID = @teamID
@@ -1043,7 +1054,21 @@ export async function getTeamAllTimeRoster(teamID: number): Promise<AllTimeRoste
             SUM(sc.scratchSeries) * 1.0 /
             NULLIF(COUNT(sc.scoreID) * 3, 0)
           AS DECIMAL(5,1)) AS average,
-          COUNT(DISTINCT sc.seasonID) AS seasonsWithTeam
+          COUNT(DISTINCT sc.seasonID) AS seasonsWithTeam,
+          (
+            SELECT TOP 1 sn.displayName
+            FROM scores sc2
+            JOIN seasons sn ON sc2.seasonID = sn.seasonID
+            WHERE sc2.bowlerID = b.bowlerID AND sc2.teamID = @teamID AND sc2.isPenalty = 0
+            ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
+          ) AS firstSeason,
+          (
+            SELECT TOP 1 sn.displayName
+            FROM scores sc2
+            JOIN seasons sn ON sc2.seasonID = sn.seasonID
+            WHERE sc2.bowlerID = b.bowlerID AND sc2.teamID = @teamID AND sc2.isPenalty = 0
+            ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+          ) AS lastSeason
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         WHERE sc.teamID = @teamID
@@ -1114,7 +1139,14 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
               SELECT TOP 1 seasonID FROM seasons
               ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
             )
-        ) THEN 1 ELSE 0 END AS BIT) AS isActive
+        ) THEN 1 ELSE 0 END AS BIT) AS isActive,
+        (
+          SELECT TOP 1 sn.displayName
+          FROM scores sc3
+          JOIN seasons sn ON sc3.seasonID = sn.seasonID
+          WHERE sc3.teamID = t.teamID AND sc3.isPenalty = 0
+          ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
+        ) AS establishedSeason
       FROM teams t
       LEFT JOIN scores sc ON sc.teamID = t.teamID AND sc.isPenalty = 0
       GROUP BY t.teamID, t.teamName, t.slug
@@ -1160,12 +1192,13 @@ export interface StandingsRow {
   teamName: string;
   teamSlug: string;
   divisionName: string | null;
-  rosterSize: number;
-  totalGames: number;
-  totalPins: number;
+  wins: number;
+  xp: number;
+  totalPts: number;
   teamScratchAvg: number | null;
+  scratchAvgRank: number;
   teamHcpAvg: number | null;
-  weeksPlayed: number;
+  hcpAvgRank: number;
 }
 
 export interface SeasonLeaderEntry {
@@ -1291,8 +1324,8 @@ export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null
 
 /**
  * Returns team standings for a season.
- * Groups scores by team, LEFT JOINs seasonDivisions for division grouping.
- * Ordered by division then total pins DESC.
+ * Aggregates wins and XP from matchResults, computes scratch/hcp avg from scores,
+ * ranks teams by avg, and orders by totalPts DESC.
  * Returns [] if DB unavailable.
  */
 export async function getSeasonStandings(seasonID: number): Promise<StandingsRow[]> {
@@ -1303,38 +1336,71 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
       .request()
       .input('seasonID', seasonID)
       .query<StandingsRow>(`
+        WITH teamAvgs AS (
+          SELECT
+            sc.teamID,
+            CAST(
+              SUM(sc.scratchSeries) * 1.0 /
+              NULLIF(COUNT(sc.scoreID) * 3, 0)
+            AS DECIMAL(5,1))                     AS teamScratchAvg,
+            CAST(
+              SUM(sc.handSeries) * 1.0 /
+              NULLIF(COUNT(sc.scoreID) * 3, 0)
+            AS DECIMAL(5,1))                     AS teamHcpAvg
+          FROM scores sc
+          WHERE sc.seasonID = @seasonID
+            AND sc.isPenalty = 0
+            AND sc.teamID IS NOT NULL
+          GROUP BY sc.teamID
+        ),
+        teamPtsUnpivot AS (
+          -- Unpivot matchResults: each row has team1 and team2 data
+          -- team1GamePts/team2GamePts are game points (each game win = 2pts)
+          -- team1BonusPts/team2BonusPts are XP bonus points (0-3)
+          SELECT sch.team1ID AS teamID,
+                 mr.team1GamePts AS gamePts,
+                 mr.team1BonusPts AS bonusPts
+          FROM matchResults mr
+          JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+          WHERE sch.seasonID = @seasonID
+          UNION ALL
+          SELECT sch.team2ID AS teamID,
+                 mr.team2GamePts AS gamePts,
+                 mr.team2BonusPts AS bonusPts
+          FROM matchResults mr
+          JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+          WHERE sch.seasonID = @seasonID
+        ),
+        teamWinsXP AS (
+          SELECT
+            teamID,
+            SUM(gamePts)  AS wins,
+            SUM(bonusPts) AS xp
+          FROM teamPtsUnpivot
+          GROUP BY teamID
+        )
         SELECT
           t.teamID,
-          COALESCE(tnh.teamName, t.teamName) AS teamName,
-          t.slug                              AS teamSlug,
+          COALESCE(tnh.teamName, t.teamName)     AS teamName,
+          t.slug                                  AS teamSlug,
           sd.divisionName,
-          COUNT(DISTINCT sc.bowlerID)         AS rosterSize,
-          COUNT(sc.scoreID) * 3               AS totalGames,
-          SUM(sc.scratchSeries)               AS totalPins,
-          CAST(
-            SUM(sc.scratchSeries) * 1.0 /
-            NULLIF(COUNT(sc.scoreID) * 3, 0)
-          AS DECIMAL(5,1))                    AS teamScratchAvg,
-          CAST(
-            SUM(sc.handSeries) * 1.0 /
-            NULLIF(COUNT(sc.scoreID) * 3, 0)
-          AS DECIMAL(5,1))                    AS teamHcpAvg,
-          MAX(sc.week)                        AS weeksPlayed
-        FROM scores sc
-        JOIN teams t ON sc.teamID = t.teamID
+          ISNULL(wx.wins, 0)                      AS wins,
+          ISNULL(wx.xp, 0)                        AS xp,
+          ISNULL(wx.wins, 0) + ISNULL(wx.xp, 0)  AS totalPts,
+          ta.teamScratchAvg,
+          CAST(RANK() OVER (ORDER BY ta.teamScratchAvg DESC) AS INT) AS scratchAvgRank,
+          ta.teamHcpAvg,
+          CAST(RANK() OVER (ORDER BY ta.teamHcpAvg DESC) AS INT)     AS hcpAvgRank
+        FROM teamAvgs ta
+        JOIN teams t ON ta.teamID = t.teamID
+        LEFT JOIN teamWinsXP wx ON wx.teamID = ta.teamID
         LEFT JOIN seasonDivisions sd
-          ON  sd.seasonID = sc.seasonID
-          AND sd.teamID   = sc.teamID
+          ON  sd.seasonID = @seasonID
+          AND sd.teamID   = ta.teamID
         LEFT JOIN teamNameHistory tnh
-          ON  tnh.seasonID = sc.seasonID
-          AND tnh.teamID   = sc.teamID
-        WHERE sc.seasonID = @seasonID
-          AND sc.isPenalty = 0
-          AND sc.teamID IS NOT NULL
-        GROUP BY
-          t.teamID, COALESCE(tnh.teamName, t.teamName), t.slug,
-          sd.divisionName
-        ORDER BY sd.divisionName, totalPins DESC
+          ON  tnh.seasonID = @seasonID
+          AND tnh.teamID   = ta.teamID
+        ORDER BY sd.divisionName, totalPts DESC, wins DESC, ta.teamScratchAvg DESC
       `);
     return result.recordset;
   } catch (err) {

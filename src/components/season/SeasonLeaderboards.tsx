@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import type { SeasonLeaderEntry, SeasonRecords } from '@/lib/queries';
 import { strikeX } from '@/components/ui/StrikeX';
@@ -13,6 +16,14 @@ interface Props {
   handicap: LeaderboardCategory[];
   records: SeasonRecords;
 }
+
+type TabKey = 'mens' | 'womens' | 'handicap';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'mens', label: "Men's" },
+  { key: 'womens', label: "Women's" },
+  { key: 'handicap', label: 'Handicap' },
+];
 
 function LeaderboardTable({ entries }: { entries: SeasonLeaderEntry[] }) {
   if (entries.length === 0) {
@@ -46,7 +57,7 @@ function LeaderboardTable({ entries }: { entries: SeasonLeaderEntry[] }) {
                   href={`/bowler/${entry.slug}`}
                   className="text-navy hover:text-red-600 transition-colors"
                 >
-                  {strikeX(entry.bowlerName)}
+                  {entry.bowlerName}
                 </Link>
               </td>
               <td className="px-4 py-2 text-navy/60">
@@ -92,7 +103,7 @@ function RecordRow({
           href={`/bowler/${record.slug}`}
           className="text-navy hover:text-red-600 transition-colors font-medium"
         >
-          {strikeX(record.bowlerName)}
+          {record.bowlerName}
         </Link>
         <span className="ml-2 tabular-nums font-semibold text-navy">
           {record.value.toLocaleString()}
@@ -102,35 +113,7 @@ function RecordRow({
   );
 }
 
-function CategorySection({ title, categories }: { title: string; categories: LeaderboardCategory[] }) {
-  const allEmpty = categories.every(c => c.entries.length === 0);
-  if (allEmpty) {
-    return (
-      <div>
-        <h3 className="font-heading text-lg text-navy/70 mb-3">{title}</h3>
-        <p className="font-body text-sm text-navy/40 italic">No data for this category.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <h3 className="font-heading text-lg text-navy/70 mb-4">{title}</h3>
-      <div className="space-y-6">
-        {categories.map((cat) => (
-          <div key={cat.title}>
-            <h4 className="font-body text-sm font-semibold text-navy/50 uppercase tracking-wider mb-2">
-              {cat.title}
-            </h4>
-            <LeaderboardTable entries={cat.entries} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function SeasonLeaderboards({ mensScratch, womensScratch, handicap, records }: Props) {
+function RecordsSection({ records }: { records: SeasonRecords }) {
   const hasAnyRecords =
     records.highScratchGame ||
     records.highScratchSeries ||
@@ -138,27 +121,73 @@ export function SeasonLeaderboards({ mensScratch, womensScratch, handicap, recor
     records.mostTurkeys ||
     records.most200Games;
 
+  if (!hasAnyRecords) return null;
+
+  return (
+    <div className="mt-6">
+      <h3 className="font-heading text-lg text-navy/70 mb-4">Season Records</h3>
+      <div className="bg-navy/[0.02] rounded-lg px-4 py-2">
+        <RecordRow label="High Scratch Game" record={records.highScratchGame} />
+        <RecordRow label="High Scratch Series" record={records.highScratchSeries} />
+        <RecordRow label="High HCP Series" record={records.highHcpSeries} />
+        <RecordRow label="Most Turkeys" record={records.mostTurkeys} />
+        <RecordRow label="Most 200+ Games" record={records.most200Games} />
+      </div>
+    </div>
+  );
+}
+
+export function SeasonLeaderboards({ mensScratch, womensScratch, handicap, records }: Props) {
+  const [activeTab, setActiveTab] = useState<TabKey>('mens');
+
+  const tabContent: Record<TabKey, LeaderboardCategory[]> = {
+    mens: mensScratch,
+    womens: womensScratch,
+    handicap,
+  };
+
+  const categories = tabContent[activeTab];
+  const allEmpty = categories.every(c => c.entries.length === 0);
+
   return (
     <section>
-      <h2 className="font-heading text-2xl text-navy mb-6">Leaderboards</h2>
-      <div className="space-y-10">
-        <CategorySection title="Men's Scratch" categories={mensScratch} />
-        <CategorySection title="Women's Scratch" categories={womensScratch} />
-        <CategorySection title="Handicap" categories={handicap} />
+      <h2 className="font-heading text-2xl text-navy mb-4">Leaderboards</h2>
 
-        {hasAnyRecords && (
-          <div>
-            <h3 className="font-heading text-lg text-navy/70 mb-4">Season Records</h3>
-            <div className="bg-navy/[0.02] rounded-lg px-4 py-2">
-              <RecordRow label="High Scratch Game" record={records.highScratchGame} />
-              <RecordRow label="High Scratch Series" record={records.highScratchSeries} />
-              <RecordRow label="High HCP Series" record={records.highHcpSeries} />
-              <RecordRow label="Most Turkeys" record={records.mostTurkeys} />
-              <RecordRow label="Most 200+ Games" record={records.most200Games} />
-            </div>
-          </div>
-        )}
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 text-sm font-body rounded-t transition-colors ${
+              activeTab === tab.key
+                ? 'bg-navy text-cream font-semibold'
+                : 'bg-navy/5 text-navy/60 hover:bg-navy/10'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {/* Tab content */}
+      {allEmpty ? (
+        <p className="font-body text-sm text-navy/40 italic">No data for this category.</p>
+      ) : (
+        <div className="space-y-6">
+          {categories.map((cat) => (
+            <div key={cat.title}>
+              <h4 className="font-body text-sm font-semibold text-navy/50 uppercase tracking-wider mb-2">
+                {cat.title}
+              </h4>
+              <LeaderboardTable entries={cat.entries} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Season Records (always visible, below tabs) */}
+      <RecordsSection records={records} />
     </section>
   );
 }

@@ -29,12 +29,19 @@ export function CurrentRoster({ roster }: Props) {
             key={member.bowlerID}
             className="flex items-center justify-between px-4 py-3 bg-white border border-navy/10 rounded-lg"
           >
-            <Link
-              href={`/bowler/${member.slug}`}
-              className="text-navy hover:text-red-600 transition-colors font-body"
-            >
-              {strikeX(member.bowlerName)}
-            </Link>
+            <div className="flex flex-col">
+              <Link
+                href={`/bowler/${member.slug}`}
+                className="text-navy hover:text-red-600 transition-colors font-body"
+              >
+                {member.bowlerName}
+              </Link>
+              {member.firstSeason && (
+                <span className="text-xs font-body text-navy/40">
+                  since {strikeX(member.firstSeason)}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-4 text-sm font-body text-navy/60">
               <span>
                 <span className="text-navy/40">Avg </span>
