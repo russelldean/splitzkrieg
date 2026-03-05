@@ -6,10 +6,37 @@ interface CountdownClockProps {
   targetDate: string | null;
 }
 
-/** Bowling starts at 7:15 PM — set the target to that time on the target date */
+/**
+ * Bowling starts at 7:15 PM EST (Eastern Standard Time) on Monday nights.
+ * The target date from the DB is UTC midnight — we convert to 7:15 PM ET.
+ * EST = UTC-5, EDT = UTC-4. We target 7:15 PM US/Eastern by computing
+ * the UTC equivalent using Intl to detect whether DST is active.
+ */
 function getTargetTime(dateStr: string): number {
   const d = new Date(dateStr);
-  d.setHours(19, 15, 0, 0);
+  // Set to 7:15 PM UTC as a starting point
+  d.setUTCHours(19, 15, 0, 0);
+
+  // Determine the UTC offset for Eastern time on this date.
+  // We create a formatter that outputs the offset, then parse it.
+  // EST = UTC-5 (19:15 ET = 00:15+1 UTC), EDT = UTC-4 (19:15 ET = 23:15 UTC)
+  try {
+    const eastern = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric',
+      hour12: false,
+    });
+    // Get what hour it would be in ET at our target UTC time
+    const etHour = parseInt(eastern.format(d), 10);
+    // The difference tells us the offset: if UTC 19:15 shows as 14 in ET, offset is -5
+    const offsetHours = etHour - 19;
+    // We want 19:15 ET, so shift UTC by -offset
+    d.setUTCHours(19 - offsetHours, 15, 0, 0);
+  } catch {
+    // Fallback: assume EST (UTC-5) if Intl not available
+    d.setUTCHours(24, 15, 0, 0); // 19:15 + 5 = 00:15 next day UTC
+  }
+
   return d.getTime();
 }
 

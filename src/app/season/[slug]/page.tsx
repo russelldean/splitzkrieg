@@ -17,6 +17,7 @@ import {
   getSeasonLeaderboard,
   getSeasonHeroStats,
 } from '@/lib/queries';
+import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
@@ -59,6 +60,27 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Handicap eligibility: bowlers who are in the top 8 of men's scratch avg
+ * OR top 8 of women's scratch avg are NOT eligible for handicap playoffs.
+ * Filter them out of handicap leaderboards.
+ */
+function filterHcpEligible(
+  hcpEntries: SeasonLeaderEntry[],
+  mensAvg: SeasonLeaderEntry[],
+  womensAvg: SeasonLeaderEntry[]
+): SeasonLeaderEntry[] {
+  const ineligibleIds = new Set<number>();
+  // Top 8 men's scratch avg
+  mensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
+  // Top 8 women's scratch avg
+  womensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
+
+  return hcpEntries
+    .filter((e) => !ineligibleIds.has(e.bowlerID))
+    .slice(0, 10);
+}
+
 export default async function SeasonPage({
   params,
 }: {
@@ -84,16 +106,18 @@ export default async function SeasonPage({
     getSeasonLeaderboard(season.seasonID, 'F', 'avg'),
     getSeasonLeaderboard(season.seasonID, 'F', 'highGame'),
     getSeasonLeaderboard(season.seasonID, 'F', 'highSeries'),
-    // Handicap leaderboards (all genders)
+    // Handicap leaderboards (all genders -- filtered below for eligibility)
     getSeasonLeaderboard(season.seasonID, null, 'hcpAvg'),
-    getSeasonLeaderboard(season.seasonID, null, 'hcpHighSeries'),
   ]);
 
   const [
     mensAvg, mensHighGame, mensHighSeries,
     womensAvg, womensHighGame, womensHighSeries,
-    hcpAvg, hcpHighSeries,
+    hcpAvgRaw,
   ] = leaderboards;
+
+  // Filter handicap leaders: exclude top 8 men's + top 8 women's scratch avg
+  const hcpAvg = filterHcpEligible(hcpAvgRaw, mensAvg, womensAvg);
 
   const hasDivisions = standings.some((row) => row.divisionName !== null);
 
@@ -121,7 +145,6 @@ export default async function SeasonPage({
           ]}
           handicap={[
             { title: 'Top 10 Average (HCP)', entries: hcpAvg },
-            { title: 'Top 10 High Series (HCP)', entries: hcpHighSeries },
           ]}
           records={records}
         />

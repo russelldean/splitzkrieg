@@ -15,12 +15,11 @@ function StandingsTable({ rows, startRank }: { rows: StandingsRow[]; startRank: 
           <tr className="border-b border-navy/10 text-navy/50 text-xs uppercase tracking-wider">
             <th className="px-4 py-2 text-left w-12">#</th>
             <th className="px-4 py-2 text-left">Team</th>
-            <th className="px-4 py-2 text-right">Roster</th>
-            <th className="px-4 py-2 text-right">Games</th>
-            <th className="px-4 py-2 text-right">Pins</th>
+            <th className="px-4 py-2 text-right">Total Pts</th>
+            <th className="px-4 py-2 text-right">Wins</th>
+            <th className="px-4 py-2 text-right">XP</th>
             <th className="px-4 py-2 text-right">Scratch Avg</th>
             <th className="px-4 py-2 text-right">HCP Avg</th>
-            <th className="px-4 py-2 text-right">Weeks</th>
           </tr>
         </thead>
         <tbody>
@@ -38,18 +37,19 @@ function StandingsTable({ rows, startRank }: { rows: StandingsRow[]; startRank: 
                   {strikeX(row.teamName)}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-right tabular-nums text-navy/70">{row.rosterSize}</td>
-              <td className="px-4 py-3 text-right tabular-nums text-navy/70">{row.totalGames}</td>
-              <td className="px-4 py-3 text-right tabular-nums text-navy/70">
-                {row.totalPins?.toLocaleString() ?? '\u2014'}
+              <td className="px-4 py-3 text-right tabular-nums font-semibold text-navy">
+                {row.totalPts}
               </td>
+              <td className="px-4 py-3 text-right tabular-nums text-navy/70">{row.wins}</td>
+              <td className="px-4 py-3 text-right tabular-nums text-navy/70">{row.xp}</td>
               <td className="px-4 py-3 text-right tabular-nums text-navy/70">
                 {row.teamScratchAvg?.toFixed(1) ?? '\u2014'}
+                <span className="text-navy/30 text-xs ml-1">({row.scratchAvgRank})</span>
               </td>
               <td className="px-4 py-3 text-right tabular-nums text-navy/70">
                 {row.teamHcpAvg?.toFixed(1) ?? '\u2014'}
+                <span className="text-navy/30 text-xs ml-1">({row.hcpAvgRank})</span>
               </td>
-              <td className="px-4 py-3 text-right tabular-nums text-navy/70">{row.weeksPlayed}</td>
             </tr>
           ))}
         </tbody>
@@ -73,9 +73,6 @@ export function Standings({ standings, hasDivisions }: Props) {
       <section>
         <h2 className="font-heading text-2xl text-navy mb-4">Standings</h2>
         <StandingsTable rows={standings} startRank={1} />
-        <p className="font-body text-xs text-navy/40 mt-3 italic">
-          Win/loss records and points coming soon.
-        </p>
       </section>
     );
   }
@@ -99,9 +96,6 @@ export function Standings({ standings, hasDivisions }: Props) {
           </div>
         ))}
       </div>
-      <p className="font-body text-xs text-navy/40 mt-3 italic">
-        Win/loss records and points coming soon.
-      </p>
     </section>
   );
 }
