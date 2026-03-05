@@ -19,6 +19,7 @@ import {
   getTeamSeasonBowlers,
   getTeamAllTimeRoster,
   getTeamFranchiseHistory,
+  getTeamCurrentStanding,
   type TeamSeasonBowler,
 } from '@/lib/queries';
 import { TeamHero } from '@/components/team/TeamHero';
@@ -69,11 +70,12 @@ export default async function TeamPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/team/${slug}`;
 
   // Parallel build-time data fetching
-  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory] = await Promise.all([
+  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding] = await Promise.all([
     getTeamCurrentRoster(team.teamID),
     getTeamSeasonByseason(team.teamID),
     getTeamAllTimeRoster(team.teamID),
     getTeamFranchiseHistory(team.teamID),
+    getTeamCurrentStanding(team.teamID),
   ]);
 
   // Pre-fetch bowler data for all seasons (static build handles the load)
@@ -96,6 +98,7 @@ export default async function TeamPage({
         seasonsActive={seasonsActive}
         franchiseNames={franchiseHistory}
         shareUrl={shareUrl}
+        currentStanding={currentStanding}
       />
 
       <div className="mt-8 space-y-8">

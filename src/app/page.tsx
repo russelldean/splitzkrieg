@@ -50,6 +50,28 @@ export default async function Home() {
             </p>
           </div>
 
+          {/* This Week's Results CTA */}
+          {seasonSnapshot && (
+            <Link
+              href={`/season/${seasonSnapshot.slug}#weekly`}
+              className="block mt-6 sm:mt-8 bg-navy rounded-xl px-6 py-4 hover:bg-navy/90 transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-heading text-lg sm:text-xl text-white group-hover:text-red-300 transition-colors">
+                    This Week&apos;s Results
+                  </div>
+                  <div className="font-body text-sm text-white/50 mt-0.5">
+                    Season {seasonSnapshot.romanNumeral} · Week {seasonSnapshot.weekNumber}
+                  </div>
+                </div>
+                <svg className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
+            </Link>
+          )}
+
           {/* Explore Cards — above the fold */}
           <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {quickLinks.map((link, i) => (

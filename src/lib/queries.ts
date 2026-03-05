@@ -573,6 +573,7 @@ export interface SeasonSnapshot {
   seasonID: number;
   displayName: string;
   romanNumeral: string;
+  slug: string;
   weekNumber: number;
   totalGames: number;
   totalBowlers: number;
@@ -758,6 +759,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       seasonID: season.seasonID,
       displayName: season.displayName,
       romanNumeral: season.romanNumeral,
+      slug: season.displayName.toLowerCase().replace(/ /g, '-'),
       weekNumber: stats?.weekNumber ?? 0,
       totalGames: stats?.totalGames ?? 0,
       totalBowlers: stats?.totalBowlers ?? 0,
@@ -849,6 +851,98 @@ export interface DirectoryTeam {
   totalPins: number;
   isActive: boolean;
   establishedSeason: string | null;
+}
+
+export interface TeamCurrentStanding {
+  seasonSlug: string;
+  seasonRoman: string;
+  wins: number;
+  xp: number;
+  totalPts: number;
+  divisionRank: number;
+  divisionSize: number;
+  divisionName: string | null;
+}
+
+/**
+ * Returns a team's current season standing (wins, XP, total pts, division rank).
+ * Uses matchResults + schedule + seasonDivisions for the most recent season.
+ * Falls back to overall rank if no division data exists.
+ * Returns null if no match results exist for this team.
+ */
+export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurrentStanding | null> {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .query<TeamCurrentStanding>(`
+        WITH currentSeason AS (
+          SELECT TOP 1 seasonID, romanNumeral,
+            LOWER(REPLACE(displayName, ' ', '-')) AS seasonSlug
+          FROM seasons
+          ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+        ),
+        teamPts AS (
+          SELECT sch.team1ID AS teamID,
+                 SUM(mr.team1GamePts) AS gamePts,
+                 SUM(mr.team1BonusPts) AS xp
+          FROM matchResults mr
+          JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+          JOIN currentSeason cs ON sch.seasonID = cs.seasonID
+          GROUP BY sch.team1ID
+          UNION ALL
+          SELECT sch.team2ID AS teamID,
+                 SUM(mr.team2GamePts) AS gamePts,
+                 SUM(mr.team2BonusPts) AS xp
+          FROM matchResults mr
+          JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+          JOIN currentSeason cs ON sch.seasonID = cs.seasonID
+          GROUP BY sch.team2ID
+        ),
+        standings AS (
+          SELECT
+            tp.teamID,
+            CAST(SUM(tp.gamePts) AS DECIMAL(5,1)) / 2 AS wins,
+            SUM(tp.xp) AS xp,
+            SUM(tp.gamePts) + SUM(tp.xp) AS totalPts,
+            sd.divisionName
+          FROM teamPts tp
+          CROSS JOIN currentSeason cs
+          LEFT JOIN seasonDivisions sd
+            ON sd.seasonID = cs.seasonID AND sd.teamID = tp.teamID
+          GROUP BY tp.teamID, sd.divisionName
+        ),
+        ranked AS (
+          SELECT *,
+            ROW_NUMBER() OVER (
+              PARTITION BY COALESCE(divisionName, '__all__')
+              ORDER BY totalPts DESC
+            ) AS divisionRank,
+            COUNT(*) OVER (
+              PARTITION BY COALESCE(divisionName, '__all__')
+            ) AS divisionSize
+          FROM standings
+        )
+        SELECT
+          cs.seasonSlug,
+          cs.romanNumeral AS seasonRoman,
+          r.wins,
+          r.xp,
+          r.totalPts,
+          r.divisionRank,
+          r.divisionSize,
+          r.divisionName
+        FROM ranked r
+        CROSS JOIN currentSeason cs
+        WHERE r.teamID = @teamID
+      `);
+    return result.recordset[0] ?? null;
+  } catch (err) {
+    console.warn('getTeamCurrentStanding: DB unavailable', err);
+    return null;
+  }
 }
 
 /**
@@ -1914,6 +2008,7 @@ export interface WeeklyMatchScore {
   handSeries: number | null;
   incomingAvg: number | null;
   incomingHcp: number | null;
+  turkeys: number;
 }
 
 /**
@@ -1946,7 +2041,8 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
           sc.scratchSeries,
           sc.handSeries,
           sc.incomingAvg,
-          sc.incomingHcp
+          sc.incomingHcp,
+          ISNULL(sc.turkeys, 0) AS turkeys
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         JOIN teams t ON sc.teamID = t.teamID
@@ -1966,6 +2062,65 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
     return result.recordset;
   } catch (err) {
     console.warn('getSeasonWeeklyScores: DB unavailable', err);
+    return [];
+  }
+}
+
+export interface WeeklyMatchupResult {
+  week: number;
+  homeTeamID: number;
+  awayTeamID: number;
+  team1Game1: number | null;
+  team1Game2: number | null;
+  team1Game3: number | null;
+  team1Series: number | null;
+  team2Game1: number | null;
+  team2Game2: number | null;
+  team2Game3: number | null;
+  team2Series: number | null;
+  team1GamePts: number | null;
+  team2GamePts: number | null;
+  team1BonusPts: number | null;
+  team2BonusPts: number | null;
+}
+
+/**
+ * Returns per-matchup results for a season: hcp game totals, game pts, bonus pts.
+ * Used by WeeklyResults to show win/loss and points per matchup.
+ * Returns [] if DB unavailable.
+ */
+export async function getSeasonMatchResults(seasonID: number): Promise<WeeklyMatchupResult[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<WeeklyMatchupResult>(`
+        SELECT
+          sch.week,
+          sch.team1ID AS homeTeamID,
+          sch.team2ID AS awayTeamID,
+          mr.team1Game1,
+          mr.team1Game2,
+          mr.team1Game3,
+          mr.team1Series,
+          mr.team2Game1,
+          mr.team2Game2,
+          mr.team2Game3,
+          mr.team2Series,
+          mr.team1GamePts,
+          mr.team2GamePts,
+          mr.team1BonusPts,
+          mr.team2BonusPts
+        FROM matchResults mr
+        JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+        WHERE sch.seasonID = @seasonID
+        ORDER BY sch.week ASC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonMatchResults: DB unavailable', err);
     return [];
   }
 }

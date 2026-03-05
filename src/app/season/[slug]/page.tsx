@@ -20,6 +20,7 @@ import {
   getSeasonSchedule,
   getStandingsRaceData,
   getMinGamesForWeek,
+  getSeasonMatchResults,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonHero } from '@/components/season/SeasonHero';
@@ -131,7 +132,7 @@ export default async function SeasonPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/season/${slug}`;
 
   // Fetch base data first to compute current week for min games
-  const [standings, fullStats, records, heroStats, weeklyScores, schedule, raceData] = await Promise.all([
+  const [standings, fullStats, records, heroStats, weeklyScores, schedule, raceData, matchResults] = await Promise.all([
     getSeasonStandings(season.seasonID),
     getSeasonFullStats(season.seasonID),
     getSeasonRecords(season.seasonID),
@@ -139,6 +140,7 @@ export default async function SeasonPage({
     getSeasonWeeklyScores(season.seasonID),
     getSeasonSchedule(season.seasonID),
     getStandingsRaceData(season.seasonID),
+    getSeasonMatchResults(season.seasonID),
   ]);
 
   // Compute current week and minimum games for leaderboard eligibility
@@ -236,6 +238,7 @@ export default async function SeasonPage({
           <WeeklyResults
             weeklyScores={weeklyScores}
             schedule={schedule}
+            matchResults={matchResults}
             totalWeeks={totalWeeks}
           />
         ) : (

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { DirectoryTeam } from '@/lib/queries';
-import { strikeX } from '@/components/ui/StrikeX';
+
 
 interface Props {
   team: DirectoryTeam;
@@ -14,16 +14,16 @@ export function TeamCard({ team }: Props) {
   return (
     <Link
       href={`/team/${team.slug}`}
-      className="block bg-white border border-navy/10 rounded-lg p-5 hover:shadow-md hover:border-navy/20 transition-all"
+      className="group block bg-white border border-navy/10 rounded-lg p-5 hover:shadow-md hover:border-navy/20 transition-all"
     >
-      <h3 className="font-heading text-lg text-navy mb-2">
+      <h3 className="font-heading text-lg text-navy group-hover:text-red-600 transition-colors mb-2">
         {isGhost ? (
           <span>
             <span className="mr-1.5" aria-hidden="true">{'👻'}</span>
             {team.teamName}
           </span>
         ) : (
-          strikeX(team.teamName)
+          team.teamName
         )}
       </h3>
 
