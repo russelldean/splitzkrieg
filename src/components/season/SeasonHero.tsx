@@ -36,8 +36,8 @@ function StatHolderPill({
       className="inline-flex items-center gap-1.5 px-3 py-1 bg-navy/5 rounded-full text-sm font-body text-navy hover:bg-navy/10 transition-colors"
     >
       <span className="text-navy/50">{label}</span>
-      <span className="font-semibold">{value}</span>
-      <span className="text-navy/40">{bowlerName}</span>
+      <span className="font-bold text-navy">{value}</span>
+      <span className="font-semibold text-navy/70">{bowlerName}</span>
     </Link>
   );
 }
