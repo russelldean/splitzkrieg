@@ -154,10 +154,10 @@ export function StandingsRaceChart({ weeklyScores, standings }: Props) {
               formatter={(value?: number, name?: string) => [value != null ? `#${value}` : '', name ?? '']}
             />
             {teamNames.map((name) => {
-              const isActive = activeTeam === null || activeTeam === name;
-              const color = isActive ? (teamColorMap.get(name) ?? MUTED_COLOR) : MUTED_COLOR;
-              const width = activeTeam === name ? 3 : activeTeam === null ? 1.5 : 1;
-              const opacity = activeTeam === null ? 0.35 : (activeTeam === name ? 1 : 0.15);
+              const isSelected = activeTeam === name;
+              const color = isSelected ? (teamColorMap.get(name) ?? MUTED_COLOR) : MUTED_COLOR;
+              const width = isSelected ? 3 : 1;
+              const opacity = isSelected ? 1 : (activeTeam === null ? 0.3 : 0.12);
               return (
                 <Line
                   key={name}
@@ -192,14 +192,14 @@ export function StandingsRaceChart({ weeklyScores, standings }: Props) {
                       : 'opacity-30 hover:opacity-60'
                 }`}
                 style={{
-                  color: isActive || activeTeam === null ? color : '#9CA3AF',
+                  color: isActive ? color : '#6B7280',
                   borderColor: isActive ? color : 'transparent',
                   ...(isActive ? { ringColor: color } : {}),
                 }}
               >
                 <span
                   className="inline-block w-2 h-2 rounded-full shrink-0"
-                  style={{ background: isActive || activeTeam === null ? color : '#D1D5DB' }}
+                  style={{ background: isActive ? color : '#D1D5DB' }}
                 />
                 {name}
               </button>

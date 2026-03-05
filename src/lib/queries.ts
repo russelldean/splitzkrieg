@@ -1432,10 +1432,20 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
  * Categories: avg, highGame, highSeries, totalPins, games200, series600, turkeys.
  * Returns [] if DB unavailable.
  */
+/**
+ * Minimum games required for leaderboard eligibility based on current week.
+ * Week 1-2: 3 games, Wk 3-4: 6, Wk 5-6: 9, Wk 7: 12, Wk 8: 15, Wk 9: 18
+ */
+export function getMinGamesForWeek(week: number): number {
+  const minByWeek = [3, 3, 6, 6, 9, 9, 12, 15, 18];
+  return minByWeek[Math.min(week - 1, minByWeek.length - 1)] ?? 3;
+}
+
 export async function getSeasonLeaderboard(
   seasonID: number,
   gender: 'M' | 'F' | null,
-  category: 'avg' | 'highGame' | 'highSeries' | 'totalPins' | 'games200' | 'series600' | 'turkeys' | 'hcpAvg' | 'hcpHighSeries'
+  category: 'avg' | 'highGame' | 'highSeries' | 'totalPins' | 'games200' | 'series600' | 'turkeys' | 'hcpAvg' | 'hcpHighSeries',
+  minGames?: number
 ): Promise<SeasonLeaderEntry[]> {
   if (!process.env.AZURE_SQL_SERVER) return [];
   try {
@@ -1449,10 +1459,12 @@ export async function getSeasonLeaderboard(
     let havingClause = '';
     let orderDir = 'DESC';
 
+    const minNights = minGames ? Math.ceil(minGames / 3) : 3;
+
     switch (category) {
       case 'avg':
         selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
-        havingClause = 'HAVING COUNT(sc.scoreID) >= 3'; // minimum 9 games (3 nights)
+        havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
         break;
       case 'highGame':
         selectExpr = `MAX(
@@ -1484,7 +1496,7 @@ export async function getSeasonLeaderboard(
         break;
       case 'hcpAvg':
         selectExpr = `CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
-        havingClause = 'HAVING COUNT(sc.scoreID) >= 3'; // minimum 9 games (3 nights)
+        havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
         break;
       case 'hcpHighSeries':
         selectExpr = `MAX(sc.handSeries)`;

@@ -33,10 +33,14 @@ function LeaderboardTable({
   entries,
   highlightIDs,
   highlightLabel,
+  showHighlight = true,
+  isAverage = false,
 }: {
   entries: SeasonLeaderEntry[];
   highlightIDs?: Set<number>;
   highlightLabel?: string;
+  showHighlight?: boolean;
+  isAverage?: boolean;
 }) {
   if (entries.length === 0) {
     return (
@@ -59,17 +63,17 @@ function LeaderboardTable({
         </thead>
         <tbody>
           {entries.map((entry, i) => {
-            const isHighlighted = highlightIDs?.has(entry.bowlerID) ?? false;
+            const isHighlighted = showHighlight && (highlightIDs?.has(entry.bowlerID) ?? false);
             return (
               <tr
                 key={`${entry.bowlerID}-${i}`}
                 className={`border-b border-navy/5 hover:bg-navy/[0.02] transition-colors ${
-                  isHighlighted ? 'bg-green-50/50' : ''
+                  isHighlighted ? 'bg-amber-50/60' : ''
                 }`}
               >
                 <td className="px-4 py-2 text-navy/40 tabular-nums">
                   {isHighlighted && (
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1" />
                   )}
                   {i + 1}
                 </td>
@@ -95,9 +99,11 @@ function LeaderboardTable({
                 </td>
                 <td className="px-4 py-2 text-right tabular-nums font-semibold text-navy">
                   {typeof entry.value === 'number'
-                    ? Number.isInteger(entry.value)
-                      ? entry.value.toLocaleString()
-                      : entry.value.toFixed(1)
+                    ? isAverage
+                      ? entry.value.toFixed(1)
+                      : Number.isInteger(entry.value)
+                        ? entry.value.toLocaleString()
+                        : entry.value.toFixed(1)
                     : '\u2014'}
                 </td>
               </tr>
@@ -107,7 +113,7 @@ function LeaderboardTable({
       </table>
       {highlightLabel && (
         <p className="text-xs font-body text-navy/40 mt-1 px-4">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1 align-middle" />
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 align-middle" />
           {highlightLabel}
         </p>
       )}
@@ -168,18 +174,23 @@ export function SeasonLeaderboards({
         <p className="font-body text-sm text-navy/40 italic">No data for this category.</p>
       ) : (
         <div className="space-y-6">
-          {categories.map((cat) => (
-            <div key={cat.title}>
-              <h4 className="font-body text-sm font-semibold text-navy/50 uppercase tracking-wider mb-2">
-                {cat.title}
-              </h4>
-              <LeaderboardTable
-                entries={cat.entries}
-                highlightIDs={highlight.ids}
-                highlightLabel={highlight.label}
-              />
-            </div>
-          ))}
+          {categories.map((cat) => {
+            const isAvgCategory = /average/i.test(cat.title) || /avg/i.test(cat.title);
+            return (
+              <div key={cat.title}>
+                <h4 className="font-body text-sm font-semibold text-navy/50 uppercase tracking-wider mb-2">
+                  {cat.title}
+                </h4>
+                <LeaderboardTable
+                  entries={cat.entries}
+                  highlightIDs={highlight.ids}
+                  highlightLabel={highlight.label}
+                  showHighlight={isAvgCategory || activeTab === 'handicap'}
+                  isAverage={isAvgCategory}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </section>

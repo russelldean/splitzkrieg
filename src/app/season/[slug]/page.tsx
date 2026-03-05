@@ -18,6 +18,7 @@ import {
   getSeasonHeroStats,
   getSeasonWeeklyScores,
   getSeasonSchedule,
+  getMinGamesForWeek,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonHero } from '@/components/season/SeasonHero';
@@ -74,7 +75,8 @@ export async function generateMetadata({
 function buildHcpLeaderboard(
   fullStats: import('@/lib/queries').SeasonFullStatsRow[],
   mensAvg: SeasonLeaderEntry[],
-  womensAvg: SeasonLeaderEntry[]
+  womensAvg: SeasonLeaderEntry[],
+  minGames: number = 9
 ): { entries: SeasonLeaderEntry[]; eligibleIDs: Set<number> } {
   const ineligibleIds = new Set<number>();
   mensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
@@ -82,7 +84,7 @@ function buildHcpLeaderboard(
 
   // Build leaderboard entries from fullStats, sorted by hcpAvg DESC
   const hcpRows = fullStats
-    .filter((s) => s.hcpAvg != null && s.gamesBowled >= 9) // minimum 3 nights
+    .filter((s) => s.hcpAvg != null && s.gamesBowled >= minGames)
     .sort((a, b) => (b.hcpAvg ?? 0) - (a.hcpAvg ?? 0))
     .map((s, i) => ({
       bowlerID: s.bowlerID,
@@ -127,20 +129,29 @@ export default async function SeasonPage({
 
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/season/${slug}`;
 
-  // Parallel build-time data fetching
-  const [standings, fullStats, records, heroStats, weeklyScores, schedule, ...leaderboards] = await Promise.all([
+  // Fetch base data first to compute current week for min games
+  const [standings, fullStats, records, heroStats, weeklyScores, schedule] = await Promise.all([
     getSeasonStandings(season.seasonID),
     getSeasonFullStats(season.seasonID),
     getSeasonRecords(season.seasonID),
     getSeasonHeroStats(season.seasonID),
     getSeasonWeeklyScores(season.seasonID),
     getSeasonSchedule(season.seasonID),
+  ]);
+
+  // Compute current week and minimum games for leaderboard eligibility
+  const currentWeek = weeklyScores.length > 0
+    ? Math.max(...weeklyScores.map(s => s.week))
+    : 1;
+  const minGames = getMinGamesForWeek(currentWeek);
+
+  const leaderboards = await Promise.all([
     // Men's scratch leaderboards
-    getSeasonLeaderboard(season.seasonID, 'M', 'avg'),
+    getSeasonLeaderboard(season.seasonID, 'M', 'avg', minGames),
     getSeasonLeaderboard(season.seasonID, 'M', 'highGame'),
     getSeasonLeaderboard(season.seasonID, 'M', 'highSeries'),
     // Women's scratch leaderboards
-    getSeasonLeaderboard(season.seasonID, 'F', 'avg'),
+    getSeasonLeaderboard(season.seasonID, 'F', 'avg', minGames),
     getSeasonLeaderboard(season.seasonID, 'F', 'highGame'),
     getSeasonLeaderboard(season.seasonID, 'F', 'highSeries'),
   ]);
@@ -153,7 +164,7 @@ export default async function SeasonPage({
   // Build handicap leaderboard from fullStats -- shows all bowlers ranked by hcpAvg
   // with eligible bowlers (not in top 8 scratch) highlighted
   const { entries: hcpEntries, eligibleIDs: hcpEligibleIDs } = buildHcpLeaderboard(
-    fullStats, mensAvg, womensAvg
+    fullStats, mensAvg, womensAvg, minGames
   );
 
   // Scratch playoff IDs: top 8 men's and women's scratch avg make playoffs

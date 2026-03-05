@@ -86,12 +86,12 @@ function StandingsTable({
               <tr
                 key={row.teamID}
                 className={`border-b border-navy/5 hover:bg-navy/[0.02] transition-colors ${
-                  inPlayoffs ? 'bg-green-50/50' : ''
+                  inPlayoffs ? 'bg-amber-50/60' : ''
                 }`}
               >
                 <td className="px-4 py-3 text-navy/40 tabular-nums">
                   {inPlayoffs && (
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5" title="Playoff position" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" title="Playoff position" />
                   )}
                   {startRank + i}
                 </td>
@@ -105,7 +105,7 @@ function StandingsTable({
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums font-semibold text-navy">
                   {row.totalPts}
-                  {row.lastWeekPts != null && row.lastWeekPts > 0 && (
+                  {row.lastWeekPts != null && (
                     <span className="text-xs font-normal text-navy/40 ml-1">
                       (+{row.lastWeekPts})
                     </span>
@@ -148,7 +148,7 @@ export function Standings({ standings, hasDivisions }: Props) {
         <h2 className="font-heading text-2xl text-navy mb-4">Standings</h2>
         <StandingsTable rows={standings} startRank={1} playoffTeamIDs={playoffTeamIDs} />
         <p className="text-xs font-body text-navy/40 mt-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1 align-middle" />
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 align-middle" />
           Playoff position (top 8)
         </p>
       </section>
@@ -175,7 +175,7 @@ export function Standings({ standings, hasDivisions }: Props) {
         ))}
       </div>
       <p className="text-xs font-body text-navy/40 mt-2">
-        <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1 align-middle" />
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 align-middle" />
         Playoff position (top 2 per division)
       </p>
     </section>
