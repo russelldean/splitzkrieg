@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 04-teams-and-seasons
-current_plan: 2 of 4
+current_plan: 4 of 4
 status: In Progress
-last_updated: "2026-03-05T01:00:23Z"
+last_updated: "2026-03-05T01:03:25Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Session State
@@ -23,7 +23,7 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.0 milestone
 **Current phase:** 04-teams-and-seasons
-**Current plan:** 2 of 4
+**Current plan:** 4 of 4
 **Status:** In Progress
 
 ## Session Log
@@ -36,6 +36,7 @@ See: .planning/PROJECT.md
 - 2026-03-03: Completed 03-03-PLAN.md (secondary routes, bowler directory, footer)
 - 2026-03-04: Completed 04-01-PLAN.md (team and season data layer queries)
 - 2026-03-04: Completed 04-02-PLAN.md (team profile pages and teams directory)
+- 2026-03-04: Completed 04-03-PLAN.md (season pages with standings, leaderboards, full stats)
 
 ## Decisions
 
@@ -51,6 +52,10 @@ See: .planning/PROJECT.md
 - **[Phase 04]** strikeX styling reserved for team/season names only, never applied to people's names
 - **[Phase 04]** Ghost Team detected by name match and given emoji treatment instead of stats on directory cards
 - **[Phase 04]** No captain data in DB schema -- feature skipped
+- **[Phase 04]** Standings ordered by Total Pts (Wins + XP from matchResults) instead of total pins
+- **[Phase 04]** Tabbed leaderboards (Men's/Women's/Handicap) instead of stacked sections
+- **[Phase 04]** Handicap eligibility: top 8 men's + top 8 women's scratch avg excluded from handicap leaderboard
+- **[Phase 04]** Countdown clock uses Intl.DateTimeFormat for Eastern timezone awareness
 
 ## Pending Todos
 
