@@ -1352,7 +1352,7 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
 export async function getSeasonLeaderboard(
   seasonID: number,
   gender: 'M' | 'F' | null,
-  category: 'avg' | 'highGame' | 'highSeries' | 'totalPins' | 'games200' | 'series600' | 'turkeys'
+  category: 'avg' | 'highGame' | 'highSeries' | 'totalPins' | 'games200' | 'series600' | 'turkeys' | 'hcpAvg' | 'hcpHighSeries'
 ): Promise<SeasonLeaderEntry[]> {
   if (!process.env.AZURE_SQL_SERVER) return [];
   try {
@@ -1398,6 +1398,13 @@ export async function getSeasonLeaderboard(
         break;
       case 'turkeys':
         selectExpr = `SUM(ISNULL(sc.turkeys, 0))`;
+        break;
+      case 'hcpAvg':
+        selectExpr = `CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+        havingClause = 'HAVING COUNT(sc.scoreID) >= 3'; // minimum 9 games (3 nights)
+        break;
+      case 'hcpHighSeries':
+        selectExpr = `MAX(sc.handSeries)`;
         break;
     }
 
