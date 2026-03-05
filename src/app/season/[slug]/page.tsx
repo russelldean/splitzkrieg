@@ -23,6 +23,7 @@ import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
+import { SeasonRecordsSection } from '@/components/season/SeasonRecordsSection';
 import { FullStatsTable } from '@/components/season/FullStatsTable';
 import { WeeklyResults } from '@/components/season/WeeklyResults';
 import { StandingsRaceChart } from '@/components/season/StandingsRaceChart';
@@ -65,24 +66,54 @@ export async function generateMetadata({
 }
 
 /**
- * Handicap eligibility: bowlers who are in the top 8 of men's scratch avg
- * OR top 8 of women's scratch avg are NOT eligible for handicap playoffs.
- * Filter them out of handicap leaderboards.
+ * Build the full handicap leaderboard from fullStats.
+ * All bowlers ranked by hcpAvg. Those NOT in the top 8 of men's/women's
+ * scratch avg are handicap-eligible. We show enough bowlers to display
+ * at least 10 eligible ones.
  */
-function filterHcpEligible(
-  hcpEntries: SeasonLeaderEntry[],
+function buildHcpLeaderboard(
+  fullStats: import('@/lib/queries').SeasonFullStatsRow[],
   mensAvg: SeasonLeaderEntry[],
   womensAvg: SeasonLeaderEntry[]
-): SeasonLeaderEntry[] {
+): { entries: SeasonLeaderEntry[]; eligibleIDs: Set<number> } {
   const ineligibleIds = new Set<number>();
-  // Top 8 men's scratch avg
   mensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
-  // Top 8 women's scratch avg
   womensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
 
-  return hcpEntries
-    .filter((e) => !ineligibleIds.has(e.bowlerID))
-    .slice(0, 10);
+  // Build leaderboard entries from fullStats, sorted by hcpAvg DESC
+  const hcpRows = fullStats
+    .filter((s) => s.hcpAvg != null && s.gamesBowled >= 9) // minimum 3 nights
+    .sort((a, b) => (b.hcpAvg ?? 0) - (a.hcpAvg ?? 0))
+    .map((s, i) => ({
+      bowlerID: s.bowlerID,
+      bowlerName: s.bowlerName,
+      slug: s.slug,
+      teamName: s.teamName,
+      teamSlug: s.teamSlug,
+      value: s.hcpAvg!,
+      rank: i + 1,
+    }));
+
+  // Find how many rows needed to show 10 eligible bowlers
+  let eligibleCount = 0;
+  let cutoff = hcpRows.length;
+  for (let i = 0; i < hcpRows.length; i++) {
+    if (!ineligibleIds.has(hcpRows[i].bowlerID)) {
+      eligibleCount++;
+      if (eligibleCount >= 10) {
+        cutoff = i + 1;
+        break;
+      }
+    }
+  }
+
+  const eligibleIDs = new Set<number>(
+    hcpRows
+      .filter((e) => !ineligibleIds.has(e.bowlerID))
+      .map((e) => e.bowlerID)
+  );
+
+  return { entries: hcpRows.slice(0, cutoff), eligibleIDs };
 }
 
 export default async function SeasonPage({
@@ -112,18 +143,22 @@ export default async function SeasonPage({
     getSeasonLeaderboard(season.seasonID, 'F', 'avg'),
     getSeasonLeaderboard(season.seasonID, 'F', 'highGame'),
     getSeasonLeaderboard(season.seasonID, 'F', 'highSeries'),
-    // Handicap leaderboards (all genders -- filtered below for eligibility)
-    getSeasonLeaderboard(season.seasonID, null, 'hcpAvg'),
   ]);
 
   const [
     mensAvg, mensHighGame, mensHighSeries,
     womensAvg, womensHighGame, womensHighSeries,
-    hcpAvgRaw,
   ] = leaderboards;
 
-  // Filter handicap leaders: exclude top 8 men's + top 8 women's scratch avg
-  const hcpAvg = filterHcpEligible(hcpAvgRaw, mensAvg, womensAvg);
+  // Build handicap leaderboard from fullStats -- shows all bowlers ranked by hcpAvg
+  // with eligible bowlers (not in top 8 scratch) highlighted
+  const { entries: hcpEntries, eligibleIDs: hcpEligibleIDs } = buildHcpLeaderboard(
+    fullStats, mensAvg, womensAvg
+  );
+
+  // Scratch playoff IDs: top 8 men's and women's scratch avg make playoffs
+  const mensScratchPlayoffIDs = new Set(mensAvg.slice(0, 8).map(e => e.bowlerID));
+  const womensScratchPlayoffIDs = new Set(womensAvg.slice(0, 8).map(e => e.bowlerID));
 
   const hasDivisions = standings.some((row) => row.divisionName !== null);
 
@@ -162,9 +197,11 @@ export default async function SeasonPage({
             { title: 'Top 10 High Series', entries: womensHighSeries },
           ]}
           handicap={[
-            { title: 'Top 10 Average (HCP)', entries: hcpAvg },
+            { title: 'Handicap Average', entries: hcpEntries },
           ]}
-          records={records}
+          mensScratchPlayoffIDs={mensScratchPlayoffIDs}
+          womensScratchPlayoffIDs={womensScratchPlayoffIDs}
+          hcpEligibleIDs={hcpEligibleIDs}
         />
 
         <FullStatsTable stats={fullStats} />
@@ -182,6 +219,8 @@ export default async function SeasonPage({
             </p>
           </div>
         )}
+
+        <SeasonRecordsSection records={records} />
       </div>
     </main>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { SeasonLeaderEntry, SeasonRecords } from '@/lib/queries';
+import type { SeasonLeaderEntry } from '@/lib/queries';
 
 interface LeaderboardCategory {
   title: string;
@@ -13,7 +13,12 @@ interface Props {
   mensScratch: LeaderboardCategory[];
   womensScratch: LeaderboardCategory[];
   handicap: LeaderboardCategory[];
-  records: SeasonRecords;
+  /** Top 8 men's scratch avg bowlerIDs -- these make scratch playoffs */
+  mensScratchPlayoffIDs: Set<number>;
+  /** Top 8 women's scratch avg bowlerIDs -- these make scratch playoffs */
+  womensScratchPlayoffIDs: Set<number>;
+  /** BowlerIDs eligible for handicap playoffs (NOT in top 8 men's/women's scratch) */
+  hcpEligibleIDs: Set<number>;
 }
 
 type TabKey = 'mens' | 'womens' | 'handicap';
@@ -24,7 +29,15 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'handicap', label: 'Handicap' },
 ];
 
-function LeaderboardTable({ entries }: { entries: SeasonLeaderEntry[] }) {
+function LeaderboardTable({
+  entries,
+  highlightIDs,
+  highlightLabel,
+}: {
+  entries: SeasonLeaderEntry[];
+  highlightIDs?: Set<number>;
+  highlightLabel?: string;
+}) {
   if (entries.length === 0) {
     return (
       <p className="font-body text-sm text-navy/40 italic py-2">
@@ -45,98 +58,71 @@ function LeaderboardTable({ entries }: { entries: SeasonLeaderEntry[] }) {
           </tr>
         </thead>
         <tbody>
-          {entries.map((entry, i) => (
-            <tr
-              key={`${entry.bowlerID}-${i}`}
-              className="border-b border-navy/5 hover:bg-navy/[0.02] transition-colors"
-            >
-              <td className="px-4 py-2 text-navy/40 tabular-nums">{i + 1}</td>
-              <td className="px-4 py-2 font-medium">
-                <Link
-                  href={`/bowler/${entry.slug}`}
-                  className="text-navy hover:text-red-600 transition-colors"
-                >
-                  {entry.bowlerName}
-                </Link>
-              </td>
-              <td className="px-4 py-2 text-navy/60">
-                {entry.teamSlug ? (
+          {entries.map((entry, i) => {
+            const isHighlighted = highlightIDs?.has(entry.bowlerID) ?? false;
+            return (
+              <tr
+                key={`${entry.bowlerID}-${i}`}
+                className={`border-b border-navy/5 hover:bg-navy/[0.02] transition-colors ${
+                  isHighlighted ? 'bg-green-50/50' : ''
+                }`}
+              >
+                <td className="px-4 py-2 text-navy/40 tabular-nums">
+                  {isHighlighted && (
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1" />
+                  )}
+                  {i + 1}
+                </td>
+                <td className={`px-4 py-2 ${isHighlighted ? 'font-bold' : 'font-medium'}`}>
                   <Link
-                    href={`/team/${entry.teamSlug}`}
-                    className="hover:text-red-600 transition-colors"
+                    href={`/bowler/${entry.slug}`}
+                    className="text-navy hover:text-red-600 transition-colors"
                   >
-                    {entry.teamName ?? '\u2014'}
+                    {entry.bowlerName}
                   </Link>
-                ) : (
-                  <span>{entry.teamName ?? '\u2014'}</span>
-                )}
-              </td>
-              <td className="px-4 py-2 text-right tabular-nums font-semibold text-navy">
-                {typeof entry.value === 'number'
-                  ? Number.isInteger(entry.value)
-                    ? entry.value.toLocaleString()
-                    : entry.value.toFixed(1)
-                  : '\u2014'}
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td className="px-4 py-2 text-navy/60">
+                  {entry.teamSlug ? (
+                    <Link
+                      href={`/team/${entry.teamSlug}`}
+                      className="hover:text-red-600 transition-colors"
+                    >
+                      {entry.teamName ?? '\u2014'}
+                    </Link>
+                  ) : (
+                    <span>{entry.teamName ?? '\u2014'}</span>
+                  )}
+                </td>
+                <td className="px-4 py-2 text-right tabular-nums font-semibold text-navy">
+                  {typeof entry.value === 'number'
+                    ? Number.isInteger(entry.value)
+                      ? entry.value.toLocaleString()
+                      : entry.value.toFixed(1)
+                    : '\u2014'}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+      {highlightLabel && (
+        <p className="text-xs font-body text-navy/40 mt-1 px-4">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1 align-middle" />
+          {highlightLabel}
+        </p>
+      )}
     </div>
   );
 }
 
-function RecordRow({
-  label,
-  record,
-}: {
-  label: string;
-  record: { bowlerName: string; slug: string; value: number } | null;
-}) {
-  if (!record) return null;
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-navy/5">
-      <span className="font-body text-sm text-navy/60">{label}</span>
-      <span className="font-body text-sm">
-        <Link
-          href={`/bowler/${record.slug}`}
-          className="text-navy hover:text-red-600 transition-colors font-medium"
-        >
-          {record.bowlerName}
-        </Link>
-        <span className="ml-2 tabular-nums font-semibold text-navy">
-          {record.value.toLocaleString()}
-        </span>
-      </span>
-    </div>
-  );
-}
-
-function RecordsSection({ records }: { records: SeasonRecords }) {
-  const hasAnyRecords =
-    records.highScratchGame ||
-    records.highScratchSeries ||
-    records.highHcpSeries ||
-    records.mostTurkeys ||
-    records.most200Games;
-
-  if (!hasAnyRecords) return null;
-
-  return (
-    <div className="mt-6">
-      <h3 className="font-heading text-lg text-navy/70 mb-4">Season Records</h3>
-      <div className="bg-navy/[0.02] rounded-lg px-4 py-2">
-        <RecordRow label="High Scratch Game" record={records.highScratchGame} />
-        <RecordRow label="High Scratch Series" record={records.highScratchSeries} />
-        <RecordRow label="High HCP Series" record={records.highHcpSeries} />
-        <RecordRow label="Most Turkeys" record={records.mostTurkeys} />
-        <RecordRow label="Most 200+ Games" record={records.most200Games} />
-      </div>
-    </div>
-  );
-}
-
-export function SeasonLeaderboards({ mensScratch, womensScratch, handicap, records }: Props) {
+export function SeasonLeaderboards({
+  mensScratch,
+  womensScratch,
+  handicap,
+  mensScratchPlayoffIDs,
+  womensScratchPlayoffIDs,
+  hcpEligibleIDs,
+}: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>('mens');
 
   const tabContent: Record<TabKey, LeaderboardCategory[]> = {
@@ -145,8 +131,16 @@ export function SeasonLeaderboards({ mensScratch, womensScratch, handicap, recor
     handicap,
   };
 
+  // Which IDs to highlight per tab
+  const highlightMap: Record<TabKey, { ids: Set<number>; label: string }> = {
+    mens: { ids: mensScratchPlayoffIDs, label: 'Playoff position (top 8)' },
+    womens: { ids: womensScratchPlayoffIDs, label: 'Playoff position (top 8)' },
+    handicap: { ids: hcpEligibleIDs, label: 'Handicap playoff eligible (not in top 8 men\'s or women\'s scratch)' },
+  };
+
   const categories = tabContent[activeTab];
   const allEmpty = categories.every(c => c.entries.length === 0);
+  const highlight = highlightMap[activeTab];
 
   return (
     <section>
@@ -179,14 +173,15 @@ export function SeasonLeaderboards({ mensScratch, womensScratch, handicap, recor
               <h4 className="font-body text-sm font-semibold text-navy/50 uppercase tracking-wider mb-2">
                 {cat.title}
               </h4>
-              <LeaderboardTable entries={cat.entries} />
+              <LeaderboardTable
+                entries={cat.entries}
+                highlightIDs={highlight.ids}
+                highlightLabel={highlight.label}
+              />
             </div>
           ))}
         </div>
       )}
-
-      {/* Season Records (always visible, below tabs) */}
-      <RecordsSection records={records} />
     </section>
   );
 }
