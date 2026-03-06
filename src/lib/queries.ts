@@ -137,6 +137,12 @@ export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<Bo
               AND (sch.team1ID = sc2.teamID OR sch.team2ID = sc2.teamID)
             WHERE sc2.bowlerID = @bowlerID
               AND sc2.isPenalty = 0
+              AND sc2.seasonID = (
+                SELECT TOP 1 s0.seasonID
+                FROM scores s0
+                WHERE s0.bowlerID = @bowlerID AND s0.isPenalty = 0
+                ORDER BY s0.seasonID ASC
+              )
           ) AS firstMatchDate,
           COALESCE(
             (
