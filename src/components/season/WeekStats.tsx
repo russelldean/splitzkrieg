@@ -142,7 +142,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
 
   return (
     <section className="mt-8 pt-6 border-t border-navy/10">
-      <h2 className="font-heading text-2xl text-navy mb-4">Week Stats</h2>
+      <h2 className="font-heading text-2xl text-navy mb-4">Weekly Highlights</h2>
 
       {/* Bowler & Team of the Week */}
       {(bowlerOfWeek || teamOfWeek) && (

@@ -197,9 +197,6 @@ export default async function WeekPage({
         week={weekNum}
       />
 
-      {/* Week Stats */}
-      <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
-
       {/* Detailed match results — collapsed by default */}
       <div className="mt-6">
         <CollapsibleSection title="Full Match Details">
@@ -212,6 +209,9 @@ export default async function WeekPage({
           />
         </CollapsibleSection>
       </div>
+
+      {/* Weekly Highlights */}
+      <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
 
       {/* Cross-links */}
       <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">
