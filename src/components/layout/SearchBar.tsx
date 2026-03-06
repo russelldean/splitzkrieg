@@ -105,22 +105,33 @@ export function SearchBar() {
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <input
-        ref={inputRef}
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onFocus={() => setIsFocused(true)}
-        placeholder="Search bowlers..."
-        className="w-full bg-white border border-navy/20 rounded-lg px-4 py-2 text-base sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors"
-        role="combobox"
-        aria-expanded={isDropdownOpen}
-        aria-autocomplete="list"
-        aria-controls={listboxId}
-        aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
-        aria-label="Search bowlers"
-      />
+      <div className="relative">
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/30 pointer-events-none"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+        <input
+          ref={inputRef}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          placeholder="Find a bowler..."
+          className="w-full bg-white border border-navy/20 rounded-lg pl-9 pr-4 py-2 text-base sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors animate-search-glow"
+          role="combobox"
+          aria-expanded={isDropdownOpen}
+          aria-autocomplete="list"
+          aria-controls={listboxId}
+          aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
+          aria-label="Search bowlers"
+        />
+      </div>
 
       {/* Search results */}
       {showResults && (

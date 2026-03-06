@@ -57,7 +57,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
         <StatValue label="League Avg" value={snapshot.leagueAverage.toFixed(1)} />
       </div>
 
-      {/* Top performers */}
+      {/* Weekly highlights */}
       <div className="space-y-0.5">
         {snapshot.bowlerOfTheWeek && (
           <LeaderRow
@@ -78,46 +78,16 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
             </div>
           </div>
         )}
-        {snapshot.topMaleAvg && (
-          <LeaderRow
-            label="Top Male Avg"
-            name={snapshot.topMaleAvg.bowlerName}
-            slug={snapshot.topMaleAvg.slug}
-            value={snapshot.topMaleAvg.average.toFixed(1)}
-          />
-        )}
-        {snapshot.topFemaleAvg && (
-          <LeaderRow
-            label="Top Female Avg"
-            name={snapshot.topFemaleAvg.bowlerName}
-            slug={snapshot.topFemaleAvg.slug}
-            value={snapshot.topFemaleAvg.average.toFixed(1)}
-          />
-        )}
-        {snapshot.topHcpAvg && (
-          <LeaderRow
-            label="Top Hcp Avg"
-            name={snapshot.topHcpAvg.bowlerName}
-            slug={snapshot.topHcpAvg.slug}
-            value={snapshot.topHcpAvg.average.toFixed(1)}
-          />
-        )}
-        {snapshot.highGame && (
-          <LeaderRow
-            label="High Game"
-            name={snapshot.highGame.bowlerName}
-            slug={snapshot.highGame.slug}
-            value={String(snapshot.highGame.score)}
-          />
-        )}
-        {snapshot.highSeries && (
-          <LeaderRow
-            label="High Series"
-            name={snapshot.highSeries.bowlerName}
-            slug={snapshot.highSeries.slug}
-            value={String(snapshot.highSeries.score)}
-          />
-        )}
+      </div>
+
+      {/* Link to full leaderboards */}
+      <div className="mt-3 pt-3 border-t border-navy/5">
+        <Link
+          href="/stats"
+          className="text-xs font-body text-navy/40 hover:text-red-600 transition-colors"
+        >
+          Full season leaderboards &rarr;
+        </Link>
       </div>
     </div>
   );

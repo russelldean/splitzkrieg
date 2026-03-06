@@ -354,6 +354,8 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
   );
 
   const [openWeeks, setOpenWeeks] = useState<Set<number>>(() => {
+    // Single-week view (totalWeeks === 0): start fully expanded
+    if (totalWeeks === 0) return new Set(allWeeks);
     const playedWeeks = Array.from(weeksWithScores).sort((a, b) => b - a);
     return new Set(playedWeeks.length > 0 ? [playedWeeks[0]] : []);
   });

@@ -1,43 +1,5 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Leaderboards',
-  description: 'All-time Splitzkrieg Bowling League leaderboards and records.',
-};
+import { redirect } from 'next/navigation';
 
 export default function LeaderboardsPage() {
-  return (
-    <div className="min-h-screen bg-cream">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-        <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-6">
-          Leaderboards
-        </h1>
-        <div className="font-body text-navy/70 space-y-4 text-lg leading-relaxed">
-          <p>
-            Who has the highest career average? What team had the best night
-            ever? Who is the best person in a general all-encompassing sense?
-          </p>
-          <p>
-            These answers exist, but they are not on this page as of yet.
-          </p>
-        </div>
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            href="/"
-            className="font-body text-sm text-navy/60 hover:text-navy transition-colors"
-          >
-            Back to Home
-          </Link>
-          <span className="hidden sm:inline text-navy/20">&middot;</span>
-          <Link
-            href="/bowlers"
-            className="font-body text-sm text-navy/60 hover:text-navy transition-colors"
-          >
-            Browse All Bowlers
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  redirect('/stats');
 }

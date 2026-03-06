@@ -19,8 +19,14 @@ function groupByLetter(bowlers: DirectoryBowler[]) {
   }, {});
 }
 
-export default async function BowlersPage() {
-  const bowlers = await getAllBowlersDirectory();
+export default async function BowlersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter } = await searchParams;
+  const allBowlers = await getAllBowlersDirectory();
+  const bowlers = filter === 'current' ? allBowlers.filter(b => b.isActive) : allBowlers;
 
   if (bowlers.length === 0) {
     return (
@@ -44,11 +50,26 @@ export default async function BowlersPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="font-heading text-3xl sm:text-4xl text-navy">
-            All Bowlers
+            {filter === 'current' ? 'Current Bowlers' : 'All Bowlers'}
           </h1>
           <p className="font-body text-navy/50 mt-2">
-            {bowlers.length} bowlers across {new Date().getFullYear() - 2007} years of Splitzkrieg history
+            {bowlers.length} bowlers{filter !== 'current' && <> across {new Date().getFullYear() - 2007} years of Splitzkrieg history</>}
           </p>
+          <div className="flex gap-3 mt-2">
+            <Link
+              href="/bowlers?filter=current"
+              className={`text-sm font-body transition-colors ${filter === 'current' ? 'text-navy font-semibold' : 'text-navy/40 hover:text-red-600'}`}
+            >
+              Current
+            </Link>
+            <span className="text-navy/20">|</span>
+            <Link
+              href="/bowlers"
+              className={`text-sm font-body transition-colors ${filter !== 'current' ? 'text-navy font-semibold' : 'text-navy/40 hover:text-red-600'}`}
+            >
+              All Bowlers
+            </Link>
+          </div>
         </div>
 
         {/* Alphabet Quick Nav */}

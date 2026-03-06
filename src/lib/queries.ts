@@ -2223,3 +2223,115 @@ export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
     return [];
   }
 }
+
+/**
+ * Returns an ordered list of all seasons (newest first) with slug info.
+ * Used for season prev/next navigation and week index.
+ */
+export interface SeasonNav {
+  seasonID: number;
+  slug: string;
+  romanNumeral: string;
+  displayName: string;
+  year: number;
+  period: string;
+}
+
+export const getAllSeasonNavList = cache(async (): Promise<SeasonNav[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<SeasonNav>(`
+      SELECT
+        seasonID,
+        LOWER(REPLACE(displayName, ' ', '-')) AS slug,
+        romanNumeral,
+        displayName,
+        year,
+        period
+      FROM seasons
+      ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllSeasonNavList: DB unavailable', err);
+    return [];
+  }
+});
+
+/**
+ * Returns week summary info for all weeks in a season.
+ * Used for compact week list on season pages and week index.
+ */
+export interface WeekSummary {
+  week: number;
+  matchDate: string | null;
+  matchCount: number;
+  highGame: number | null;
+  highGameBowler: string | null;
+  highGameSlug: string | null;
+  highSeries: number | null;
+  highSeriesBowler: string | null;
+  highSeriesSlug: string | null;
+}
+
+export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSummary[]> {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<WeekSummary>(`
+        WITH weekStats AS (
+          SELECT
+            sc.week,
+            MIN(sch.matchDate) AS matchDate,
+            COUNT(DISTINCT sch.scheduleID) AS matchCount,
+            MAX(CASE WHEN sc.game1 >= ISNULL(sc.game2, 0) AND sc.game1 >= ISNULL(sc.game3, 0) THEN sc.game1
+                     WHEN sc.game2 >= ISNULL(sc.game1, 0) AND sc.game2 >= ISNULL(sc.game3, 0) THEN sc.game2
+                     ELSE sc.game3 END) AS highGame,
+            MAX(sc.scratchSeries) AS highSeries
+          FROM scores sc
+          LEFT JOIN schedule sch ON sch.seasonID = sc.seasonID AND sch.week = sc.week
+          WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+          GROUP BY sc.week
+        ),
+        highGameBowler AS (
+          SELECT sc.week, b.bowlerName, b.slug,
+            ROW_NUMBER() OVER (PARTITION BY sc.week ORDER BY
+              CASE WHEN sc.game1 >= ISNULL(sc.game2, 0) AND sc.game1 >= ISNULL(sc.game3, 0) THEN sc.game1
+                   WHEN sc.game2 >= ISNULL(sc.game1, 0) AND sc.game2 >= ISNULL(sc.game3, 0) THEN sc.game2
+                   ELSE sc.game3 END DESC) AS rn
+          FROM scores sc
+          JOIN bowlers b ON sc.bowlerID = b.bowlerID
+          WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        ),
+        highSeriesBowler AS (
+          SELECT sc.week, b.bowlerName, b.slug,
+            ROW_NUMBER() OVER (PARTITION BY sc.week ORDER BY sc.scratchSeries DESC) AS rn
+          FROM scores sc
+          JOIN bowlers b ON sc.bowlerID = b.bowlerID
+          WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        )
+        SELECT
+          ws.week,
+          ws.matchDate,
+          ws.matchCount,
+          ws.highGame,
+          hg.bowlerName AS highGameBowler,
+          hg.slug AS highGameSlug,
+          ws.highSeries,
+          hs.bowlerName AS highSeriesBowler,
+          hs.slug AS highSeriesSlug
+        FROM weekStats ws
+        LEFT JOIN highGameBowler hg ON hg.week = ws.week AND hg.rn = 1
+        LEFT JOIN highSeriesBowler hs ON hs.week = ws.week AND hs.rn = 1
+        ORDER BY ws.week DESC
+      `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getSeasonWeekSummaries: DB unavailable', err);
+    return [];
+  }
+}

@@ -1,9 +1,17 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getNextBowlingNight, getRecentMilestones, getCurrentSeasonSnapshot } from '@/lib/queries';
-import { CountdownClock } from '@/components/home/CountdownClock';
+import {
+  getRecentMilestones,
+  getCurrentSeasonSnapshot,
+  getSeasonBySlug,
+  getSeasonStandings,
+  getSeasonSchedule,
+  getSeasonMatchResults,
+} from '@/lib/queries';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
+import { MiniStandings } from '@/components/home/MiniStandings';
+import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -11,19 +19,46 @@ export const metadata = {
 };
 
 const quickLinks = [
-  { label: 'Browse Bowlers', href: '/bowlers', description: 'Every bowler since 2007' },
-  { label: 'View Teams', href: '/teams', description: 'Current and historical rosters' },
+  { label: 'League Nights', href: '/week', description: 'Weekly matchups and scores' },
   { label: 'Seasons', href: '/seasons', description: 'Every season since 2007' },
-  { label: 'Leaderboards', href: '/leaderboards', description: 'All-time records and rankings' },
+  { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings' },
+  { label: 'Bowlers', href: '/bowlers', description: 'Every bowler since 2007' },
+  { label: 'Teams', href: '/teams', description: 'Current and historical rosters' },
   { label: 'Resources', href: '/resources', description: 'League links and forms' },
 ];
 
 export default async function Home() {
-  const [nextBowlingNight, milestones, seasonSnapshot] = await Promise.all([
-    getNextBowlingNight(),
+  const [milestones, seasonSnapshot] = await Promise.all([
     getRecentMilestones(),
     getCurrentSeasonSnapshot(),
   ]);
+
+  // Fetch standings + schedule for current season
+  let standings: Awaited<ReturnType<typeof getSeasonStandings>> = [];
+  let weekSchedule: Awaited<ReturnType<typeof getSeasonSchedule>> = [];
+
+  let nextWeekNumber = 0;
+
+  if (seasonSnapshot) {
+    const season = await getSeasonBySlug(seasonSnapshot.slug);
+    if (season) {
+      const [allStandings, allSchedule, allMatchResults] = await Promise.all([
+        getSeasonStandings(season.seasonID),
+        getSeasonSchedule(season.seasonID),
+        getSeasonMatchResults(season.seasonID),
+      ]);
+      standings = allStandings;
+
+      // Find the next unplayed week (first scheduled week with no match results)
+      const playedWeeks = new Set(allMatchResults.map(r => r.week));
+      const scheduledWeeks = [...new Set(allSchedule.map(s => s.week))].sort((a, b) => a - b);
+      nextWeekNumber = scheduledWeeks.find(w => !playedWeeks.has(w)) ?? 0;
+
+      if (nextWeekNumber > 0) {
+        weekSchedule = allSchedule.filter(s => s.week === nextWeekNumber);
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-cream">
@@ -53,7 +88,7 @@ export default async function Home() {
           {/* This Week's Results CTA */}
           {seasonSnapshot && (
             <Link
-              href={`/season/${seasonSnapshot.slug}#weekly`}
+              href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
               className="block mt-6 sm:mt-8 bg-navy rounded-xl px-6 py-4 hover:bg-navy/90 transition-colors group"
             >
               <div className="flex items-center justify-between">
@@ -72,24 +107,38 @@ export default async function Home() {
             </Link>
           )}
 
-          {/* Explore Cards — above the fold */}
-          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {quickLinks.map((link, i) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all ${
-                  i === quickLinks.length - 1 ? 'col-span-2 sm:col-span-1 text-center sm:text-left' : ''
-                }`}
-              >
-                <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
-                  {link.label}
-                </div>
-                <div className="font-body text-xs text-navy/40 mt-1 leading-relaxed">
-                  {link.description}
-                </div>
-              </Link>
-            ))}
+          {/* Explore Cards */}
+          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {quickLinks.map((link) =>
+              link.href === '/stats' ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group relative rounded-xl p-4 overflow-hidden bg-gradient-to-br from-navy via-navy/90 to-red/80 hover:shadow-lg hover:shadow-red/20 transition-all hover:scale-[1.03]"
+                >
+                  <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] animate-shimmer" />
+                  <div className="relative font-body text-sm font-semibold text-white group-hover:text-red-200 transition-colors">
+                    {link.label}
+                  </div>
+                  <div className="relative font-body text-xs text-white/50 mt-1 leading-relaxed">
+                    {link.description}
+                  </div>
+                </Link>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all"
+                >
+                  <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
+                    {link.label}
+                  </div>
+                  <div className="font-body text-xs text-navy/40 mt-1 leading-relaxed">
+                    {link.description}
+                  </div>
+                </Link>
+              )
+            )}
           </div>
         </div>
       </section>
@@ -97,11 +146,30 @@ export default async function Home() {
       {/* Content Grid */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-4 sm:pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Countdown Clock */}
-          <CountdownClock targetDate={nextBowlingNight} />
+          {/* Mini Standings */}
+          <div>
+            {seasonSnapshot && (
+              <MiniStandings
+                standings={standings}
+                seasonSlug={seasonSnapshot.slug}
+                romanNumeral={seasonSnapshot.romanNumeral}
+              />
+            )}
+          </div>
 
-          {/* Season Snapshot */}
-          <SeasonSnapshot snapshot={seasonSnapshot} />
+          {/* Right column: This Week's Matchups + Season Snapshot */}
+          <div className="space-y-6">
+            {seasonSnapshot && weekSchedule.length > 0 && nextWeekNumber > 0 && (
+              <ThisWeekMatchups
+                matchups={weekSchedule}
+                matchResults={[]}
+                seasonSlug={seasonSnapshot.slug}
+                weekNumber={nextWeekNumber}
+                romanNumeral={seasonSnapshot.romanNumeral}
+              />
+            )}
+            <SeasonSnapshot snapshot={seasonSnapshot} />
+          </div>
         </div>
       </section>
     </div>
