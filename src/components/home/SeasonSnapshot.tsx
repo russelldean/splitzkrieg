@@ -53,8 +53,16 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
       {/* Aggregate stats */}
       <div className="flex justify-around mb-4 pb-4 border-b border-navy/5">
         <StatValue label="Bowlers" value={snapshot.totalBowlers} />
-        <StatValue label="Games" value={snapshot.totalGames.toLocaleString()} />
-        <StatValue label="League Avg" value={snapshot.leagueAverage.toFixed(1)} />
+        {snapshot.expectedLeagueAverage > 0
+          ? <StatValue label="League Avg / Expected" value={`${snapshot.leagueAverage.toFixed(1)} / ${snapshot.expectedLeagueAverage.toFixed(1)}`} />
+          : <StatValue label="League Avg" value={snapshot.leagueAverage.toFixed(1)} />
+        }
+        {snapshot.expectedLeagueAverage > 0 && (() => {
+          const delta = snapshot.leagueAverage - snapshot.expectedLeagueAverage;
+          const sign = delta >= 0 ? '+' : '';
+          const label = delta >= 0 ? 'Above Expected' : 'Below Expected';
+          return <StatValue label={label} value={`${sign}${delta.toFixed(1)}`} />;
+        })()}
       </div>
 
       {/* Weekly highlights */}

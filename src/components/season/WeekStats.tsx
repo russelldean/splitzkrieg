@@ -7,6 +7,31 @@ interface Props {
   matchResults: WeeklyMatchupResult[];
 }
 
+interface TopResult<T> {
+  items: T[];
+  tiedCount: number;
+  tiedValue: number;
+}
+
+/**
+ * Return top N items from a pre-sorted array, expanding ties at the cutoff.
+ * If expanding would exceed maxShow, truncate and return tied count instead.
+ */
+function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => number, maxShow = 7): TopResult<T> {
+  if (sorted.length <= n) return { items: sorted, tiedCount: 0, tiedValue: 0 };
+  const cutoffValue = getValue(sorted[n - 1]);
+  let end = n;
+  while (end < sorted.length && getValue(sorted[end]) === cutoffValue) end++;
+  if (end <= maxShow) {
+    return { items: sorted.slice(0, end), tiedCount: 0, tiedValue: 0 };
+  }
+  // Too many ties — show items above the tie value, then "X tied with Y"
+  let aboveTie = 0;
+  while (aboveTie < sorted.length && getValue(sorted[aboveTie]) > cutoffValue) aboveTie++;
+  const tiedCount = end - aboveTie;
+  return { items: sorted.slice(0, aboveTie), tiedCount, tiedValue: cutoffValue };
+}
+
 /** Compute all the weekly report stats shown at the bottom of the PDF report. */
 export function WeekStats({ weekScores, matchResults }: Props) {
   if (weekScores.length === 0) return null;
@@ -39,31 +64,31 @@ export function WeekStats({ weekScores, matchResults }: Props) {
   // --- Individual stats ---
   const bowlers = weekScores.filter(s => s.scratchSeries != null);
 
-  // High Handicap Series (top 5)
-  const topHcpSeries = [...bowlers]
-    .sort((a, b) => (b.handSeries ?? 0) - (a.handSeries ?? 0))
-    .slice(0, 5);
+  // High Handicap Series (top 5, expanding ties)
+  const sortedHcpSeries = [...bowlers].sort((a, b) => (b.handSeries ?? 0) - (a.handSeries ?? 0));
+  const topHcpSeries = topWithTies(sortedHcpSeries, 5, b => b.handSeries ?? 0);
 
-  // High Scratch Game (top 5 individual games)
+  // High Scratch Game (top 5 individual games, expanding ties)
   const allGames: { bowlerName: string; bowlerSlug: string; teamName: string; score: number }[] = [];
   for (const b of bowlers) {
     if (b.game1 != null) allGames.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: b.game1 });
     if (b.game2 != null) allGames.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: b.game2 });
     if (b.game3 != null) allGames.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: b.game3 });
   }
-  const topScratchGame = allGames.sort((a, b) => b.score - a.score).slice(0, 5);
+  allGames.sort((a, b) => b.score - a.score);
+  const topScratchGame = topWithTies(allGames, 5, g => g.score);
 
-  // High Men's Scratch Series (top 5)
-  const topMenScratch = [...bowlers]
+  // High Men's Scratch Series (top 5, expanding ties)
+  const sortedMenScratch = [...bowlers]
     .filter(b => b.gender === 'M')
-    .sort((a, b) => (b.scratchSeries ?? 0) - (a.scratchSeries ?? 0))
-    .slice(0, 5);
+    .sort((a, b) => (b.scratchSeries ?? 0) - (a.scratchSeries ?? 0));
+  const topMenScratch = topWithTies(sortedMenScratch, 5, b => b.scratchSeries ?? 0);
 
-  // High Women's Scratch Series (top 5)
-  const topWomenScratch = [...bowlers]
+  // High Women's Scratch Series (top 5, expanding ties)
+  const sortedWomenScratch = [...bowlers]
     .filter(b => b.gender === 'F')
-    .sort((a, b) => (b.scratchSeries ?? 0) - (a.scratchSeries ?? 0))
-    .slice(0, 5);
+    .sort((a, b) => (b.scratchSeries ?? 0) - (a.scratchSeries ?? 0));
+  const topWomenScratch = topWithTies(sortedWomenScratch, 5, b => b.scratchSeries ?? 0);
 
   // --- Turkeys ---
   const turkeyList = bowlers
@@ -129,16 +154,114 @@ export function WeekStats({ weekScores, matchResults }: Props) {
     .map(([id, t]) => ({ id, ...t, pinsOver: t.hcpSeries - t.expectedHcpSeries }))
     .sort((a, b) => b.hcpSeries - a.hcpSeries)[0] ?? null;
 
-  // --- League avg for the week ---
-  const totalGames = bowlers.reduce((sum, b) => {
-    let count = 0;
-    if (b.game1 != null) count++;
-    if (b.game2 != null) count++;
-    if (b.game3 != null) count++;
-    return sum + count;
-  }, 0);
-  const totalPins = bowlers.reduce((sum, b) => sum + (b.scratchSeries ?? 0), 0);
-  const weekAvg = totalGames > 0 ? (totalPins / totalGames).toFixed(1) : null;
+  // --- PIN: Personal Impact Number ---
+  // For each bowler, replace their hcp games with penalty (199), recalculate
+  // head-to-head game results and XP tiers, measure point delta for their team.
+  const PENALTY_HCP_GAME = 199;
+  const pinScores: { name: string; slug: string; team: string; pin: number }[] = [];
+  if (matchResults.length > 0) {
+    // Build team hcp game totals from matchResults
+    const teamGameTotals = new Map<number, { g1: number; g2: number; g3: number; series: number }>();
+    for (const mr of matchResults) {
+      if (mr.team1Game1 != null) {
+        teamGameTotals.set(mr.homeTeamID, {
+          g1: mr.team1Game1, g2: mr.team1Game2 ?? 0, g3: mr.team1Game3 ?? 0, series: mr.team1Series ?? 0,
+        });
+      }
+      if (mr.team2Game1 != null) {
+        teamGameTotals.set(mr.awayTeamID, {
+          g1: mr.team2Game1, g2: mr.team2Game2 ?? 0, g3: mr.team2Game3 ?? 0, series: mr.team2Series ?? 0,
+        });
+      }
+    }
+
+    // Find opponent for each team
+    const opponentMap = new Map<number, number>();
+    for (const mr of matchResults) {
+      opponentMap.set(mr.homeTeamID, mr.awayTeamID);
+      opponentMap.set(mr.awayTeamID, mr.homeTeamID);
+    }
+
+    // Game points helper (2 per win, 1 per tie)
+    function calcGamePts(t1: { g1: number; g2: number; g3: number }, t2: { g1: number; g2: number; g3: number }) {
+      let p1 = 0, p2 = 0;
+      for (const [a, b] of [[t1.g1, t2.g1], [t1.g2, t2.g2], [t1.g3, t2.g3]] as [number, number][]) {
+        if (a > b) p1 += 2;
+        else if (b > a) p2 += 2;
+        else { p1 += 1; p2 += 1; }
+      }
+      return { p1, p2 };
+    }
+
+    // XP from rank
+    function getXP(rank: number) { return rank < 5 ? 3 : rank < 10 ? 2 : rank < 15 ? 1 : 0; }
+
+    // Actual XP for each team
+    const actualSeriesRanked = [...teamGameTotals.entries()].sort((a, b) => b[1].series - a[1].series);
+    const actualXP = new Map<number, number>();
+    actualSeriesRanked.forEach(([id], i) => actualXP.set(id, getXP(i)));
+
+    // Actual total points per team
+    const actualPoints = new Map<number, number>();
+    for (const [tid] of teamGameTotals) actualPoints.set(tid, actualXP.get(tid) ?? 0);
+    for (const mr of matchResults) {
+      const t1 = teamGameTotals.get(mr.homeTeamID);
+      const t2 = teamGameTotals.get(mr.awayTeamID);
+      if (!t1 || !t2) continue;
+      const pts = calcGamePts(t1, t2);
+      actualPoints.set(mr.homeTeamID, (actualPoints.get(mr.homeTeamID) ?? 0) + pts.p1);
+      actualPoints.set(mr.awayTeamID, (actualPoints.get(mr.awayTeamID) ?? 0) + pts.p2);
+    }
+
+    // For each bowler with hcp data, compute PIN
+    for (const b of bowlers) {
+      if (b.incomingHcp == null || b.game1 == null || b.game2 == null || b.game3 == null) continue;
+      const teamGames = teamGameTotals.get(b.teamID);
+      const oppID = opponentMap.get(b.teamID);
+      if (!teamGames || oppID == null) continue;
+      const oppGames = teamGameTotals.get(oppID);
+      if (!oppGames) continue;
+
+      // Bowler's hcp game contributions
+      const bHcp1 = b.game1 + b.incomingHcp;
+      const bHcp2 = b.game2 + b.incomingHcp;
+      const bHcp3 = b.game3 + b.incomingHcp;
+
+      // Hypothetical team games with penalty replacement
+      const hypTeam = {
+        g1: teamGames.g1 - bHcp1 + PENALTY_HCP_GAME,
+        g2: teamGames.g2 - bHcp2 + PENALTY_HCP_GAME,
+        g3: teamGames.g3 - bHcp3 + PENALTY_HCP_GAME,
+        series: 0,
+      };
+      hypTeam.series = hypTeam.g1 + hypTeam.g2 + hypTeam.g3;
+
+      // Recalculate XP with hypothetical series
+      const hypSeriesMap = new Map(actualSeriesRanked.map(([id, t]) => [id, t.series]));
+      hypSeriesMap.set(b.teamID, hypTeam.series);
+      const hypRanked = [...hypSeriesMap.entries()].sort((a, b) => b[1] - a[1]);
+      const hypXP = new Map<number, number>();
+      hypRanked.forEach(([id], i) => hypXP.set(id, getXP(i)));
+
+      // Recalculate total points for all teams
+      const hypPoints = new Map<number, number>();
+      for (const [tid] of teamGameTotals) hypPoints.set(tid, hypXP.get(tid) ?? 0);
+      for (const mr of matchResults) {
+        const t1g = mr.homeTeamID === b.teamID ? hypTeam : teamGameTotals.get(mr.homeTeamID)!;
+        const t2g = mr.awayTeamID === b.teamID ? hypTeam : teamGameTotals.get(mr.awayTeamID)!;
+        const pts = calcGamePts(t1g, t2g);
+        hypPoints.set(mr.homeTeamID, (hypPoints.get(mr.homeTeamID) ?? 0) + pts.p1);
+        hypPoints.set(mr.awayTeamID, (hypPoints.get(mr.awayTeamID) ?? 0) + pts.p2);
+      }
+
+      const pin = (actualPoints.get(b.teamID) ?? 0) - (hypPoints.get(b.teamID) ?? 0);
+      pinScores.push({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, pin });
+    }
+    pinScores.sort((a, b) => b.pin - a.pin);
+  }
+  const positivePIN = pinScores.filter(p => p.pin > 0);
+  const topPIN = topWithTies(positivePIN, 5, p => p.pin);
+
 
   return (
     <section className="mt-8 pt-6 border-t border-navy/10">
@@ -226,13 +349,6 @@ export function WeekStats({ weekScores, matchResults }: Props) {
         </div>
       )}
 
-      {/* League average */}
-      {weekAvg && (
-        <p className="text-sm font-body text-navy/50 mb-4">
-          League Average: <span className="text-navy font-semibold">{weekAvg}</span>
-        </p>
-      )}
-
       {/* XP Rankings */}
       {xpTiers.length > 0 && (
         <div className="mb-6">
@@ -255,32 +371,41 @@ export function WeekStats({ weekScores, matchResults }: Props) {
         </div>
       )}
 
-      {/* High Team Scratch Series */}
-      {topTeamScratch.length > 0 && (
-        <div className="mb-6">
-          <h3 className="font-heading text-lg text-navy mb-2">High Team Scratch Series</h3>
-          <div className="border border-navy/10 rounded-lg p-3 max-w-sm">
-            {topTeamScratch.map(team => (
-              <div key={team.id} className="flex justify-between text-sm font-body py-0.5">
-                <Link href={`/team/${team.teamSlug}`} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
-                  {team.teamName}
-                </Link>
-                <span className="tabular-nums text-navy/60 shrink-0">{team.scratchSeries}</span>
-              </div>
-            ))}
+      {/* High Team Scratch Series + PIN */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        {topTeamScratch.length > 0 && (
+          <div className="border border-navy/10 rounded-lg p-3">
+            <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">High Team Scratch Series</h3>
+            {(() => {
+              const topScratch = topTeamScratch[0].scratchSeries;
+              return topTeamScratch.map((team) => {
+                const isTop = team.scratchSeries === topScratch;
+                return (
+                  <div key={team.id} className="flex justify-between text-sm font-body py-0.5">
+                    <Link href={`/team/${team.teamSlug}`} className={`text-navy hover:text-red-600 transition-colors truncate mr-2 ${isTop ? 'font-bold' : ''}`}>
+                      {team.teamName}
+                    </Link>
+                    <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{team.scratchSeries}</span>
+                  </div>
+                );
+              });
+            })()}
           </div>
-        </div>
-      )}
+        )}
+        {topPIN.items.length > 0 && (
+          <PINList items={topPIN.items} tiedCount={topPIN.tiedCount} tiedValue={topPIN.tiedValue} />
+        )}
+      </div>
 
       {/* Individual Leaders — 2x2 grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <LeaderList title="High Handicap Series" items={topHcpSeries.map(b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.handSeries ?? 0 }))} />
-        <LeaderList title="High Scratch Game" items={topScratchGame.map(g => ({ name: g.bowlerName, slug: g.bowlerSlug, team: g.teamName, value: g.score }))} />
-        {topMenScratch.length > 0 && (
-          <LeaderList title="High Men's Scratch Series" items={topMenScratch.map(b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.scratchSeries ?? 0 }))} />
+        <LeaderList title="High Handicap Series" result={topHcpSeries} getItem={b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.handSeries ?? 0 })} />
+        <LeaderList title="High Scratch Game" result={topScratchGame} getItem={g => ({ name: g.bowlerName, slug: g.bowlerSlug, team: g.teamName, value: g.score })} />
+        {topMenScratch.items.length > 0 && (
+          <LeaderList title="High Men's Scratch Series" result={topMenScratch} getItem={b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.scratchSeries ?? 0 })} />
         )}
-        {topWomenScratch.length > 0 && (
-          <LeaderList title="High Women's Scratch Series" items={topWomenScratch.map(b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.scratchSeries ?? 0 }))} />
+        {topWomenScratch.items.length > 0 && (
+          <LeaderList title="High Women's Scratch Series" result={topWomenScratch} getItem={b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.scratchSeries ?? 0 })} />
         )}
       </div>
 
@@ -294,7 +419,11 @@ export function WeekStats({ weekScores, matchResults }: Props) {
                 <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
                   {b.bowlerName}
                 </Link>
-                <span className="tabular-nums text-navy/60 shrink-0">{b.turkeys}</span>
+                <span className="shrink-0" title={`${b.turkeys} turkey${b.turkeys > 1 ? 's' : ''}`}>
+                  {Array.from({ length: b.turkeys }, (_, i) => (
+                    <span key={i} className="text-base">🦃</span>
+                  ))}
+                </span>
               </div>
             ))}
           </div>
@@ -316,22 +445,78 @@ export function WeekStats({ weekScores, matchResults }: Props) {
   );
 }
 
-function LeaderList({ title, items }: { title: string; items: { name: string; slug: string; team?: string; value: number }[] }) {
-  if (items.length === 0) return null;
+function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug: string; team: string; pin: number }[]; tiedCount: number; tiedValue: number }) {
+  return (
+    <div className="border border-navy/10 rounded-lg p-3">
+      <details className="mb-1.5">
+        <summary className="font-heading text-sm text-navy/60 uppercase tracking-wider cursor-pointer list-none inline-flex items-center gap-1">
+          PIN <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-navy/10 text-navy/50 text-[10px] font-bold leading-none">?</span>
+        </summary>
+        <p className="text-xs font-body text-navy/40 mt-1">Personal Impact Number — how many points your team would have lost if you didn't show up.</p>
+      </details>
+      {(() => {
+        const topPin = items[0].pin;
+        return items.map((item, i) => {
+          const isTop = item.pin === topPin;
+          return (
+            <div key={`${item.slug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+              <span className="truncate mr-2">
+                <Link href={`/bowler/${item.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
+                  {item.name}
+                </Link>
+                <span className="text-navy/40 text-xs ml-1">({item.team})</span>
+              </span>
+              <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>+{item.pin}</span>
+            </div>
+          );
+        });
+      })()}
+      {tiedCount > 0 && (
+        <div className="text-sm font-body text-navy/40 italic py-0.5">
+          {tiedCount} tied with +{tiedValue}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TiedNote({ count, value, prefix }: { count: number; value: number; prefix?: string }) {
+  if (count === 0) return null;
+  return (
+    <div className="text-sm font-body text-navy/40 italic py-0.5">
+      {count} tied with {prefix}{value}
+    </div>
+  );
+}
+
+function LeaderList<T>({ title, result, getItem }: {
+  title: string;
+  result: TopResult<T>;
+  getItem: (item: T) => { name: string; slug: string; team?: string; value: number };
+}) {
+  if (result.items.length === 0) return null;
   return (
     <div className="border border-navy/10 rounded-lg p-3">
       <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">{title}</h3>
-      {items.map((item, i) => (
-        <div key={`${item.slug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
-          <span className="truncate mr-2">
-            <Link href={`/bowler/${item.slug}`} className="text-navy hover:text-red-600 transition-colors">
-              {item.name}
-            </Link>
-            {item.team && <span className="text-navy/40 text-xs ml-1">({item.team})</span>}
-          </span>
-          <span className="tabular-nums text-navy/60 shrink-0">{item.value}</span>
-        </div>
-      ))}
+      {(() => {
+        const topValue = getItem(result.items[0]).value;
+        return result.items.map((raw, i) => {
+          const item = getItem(raw);
+          const isTop = item.value === topValue;
+          return (
+            <div key={`${item.slug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+              <span className="truncate mr-2">
+                <Link href={`/bowler/${item.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
+                  {item.name}
+                </Link>
+                {item.team && <span className="text-navy/40 text-xs ml-1">({item.team})</span>}
+              </span>
+              <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{item.value}</span>
+            </div>
+          );
+        });
+      })()}
+      <TiedNote count={result.tiedCount} value={result.tiedValue} />
     </div>
   );
 }

@@ -586,9 +586,9 @@ export interface SeasonSnapshot {
   romanNumeral: string;
   slug: string;
   weekNumber: number;
-  totalGames: number;
   totalBowlers: number;
   leagueAverage: number;
+  expectedLeagueAverage: number;
   topMaleAvg: { bowlerName: string; slug: string; average: number } | null;
   topFemaleAvg: { bowlerName: string; slug: string; average: number } | null;
   topHcpAvg: { bowlerName: string; slug: string; average: number } | null;
@@ -628,15 +628,15 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       .input('seasonID', season.seasonID)
       .query<{
         weekNumber: number;
-        totalGames: number;
         totalBowlers: number;
         leagueAverage: number;
+        expectedLeagueAverage: number;
       }>(`
         SELECT
           MAX(sc.week) AS weekNumber,
-          COUNT(sc.scoreID) * 3 AS totalGames,
           COUNT(DISTINCT sc.bowlerID) AS totalBowlers,
-          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage,
+          CAST(AVG(CAST(sc.incomingAvg AS DECIMAL(5,1))) AS DECIMAL(5,1)) AS expectedLeagueAverage
         FROM scores sc
         WHERE sc.seasonID = @seasonID
           AND sc.isPenalty = 0
@@ -777,9 +777,9 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       romanNumeral: season.romanNumeral,
       slug: season.displayName.toLowerCase().replace(/ /g, '-'),
       weekNumber: stats?.weekNumber ?? 0,
-      totalGames: stats?.totalGames ?? 0,
       totalBowlers: stats?.totalBowlers ?? 0,
       leagueAverage: stats?.leagueAverage ?? 0,
+      expectedLeagueAverage: stats?.expectedLeagueAverage ?? 0,
       topMaleAvg: topMaleAvgResult.recordset[0] ?? null,
       topFemaleAvg: topFemaleAvgResult.recordset[0] ?? null,
       topHcpAvg: topHcpAvgResult.recordset[0] ?? null,
@@ -2309,6 +2309,11 @@ export interface WeekSummary {
   highSeries: number | null;
   highSeriesBowler: string | null;
   highSeriesSlug: string | null;
+  leagueAvg: number | null;
+  expectedAvg: number | null;
+  botwName: string | null;
+  botwSlug: string | null;
+  botwPinsOver: number | null;
 }
 
 export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSummary[]> {
@@ -2327,7 +2332,9 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
             MAX(CASE WHEN sc.game1 >= ISNULL(sc.game2, 0) AND sc.game1 >= ISNULL(sc.game3, 0) THEN sc.game1
                      WHEN sc.game2 >= ISNULL(sc.game1, 0) AND sc.game2 >= ISNULL(sc.game3, 0) THEN sc.game2
                      ELSE sc.game3 END) AS highGame,
-            MAX(sc.scratchSeries) AS highSeries
+            MAX(sc.scratchSeries) AS highSeries,
+            CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAvg,
+            CAST(AVG(CAST(sc.incomingAvg AS DECIMAL(5,1))) AS DECIMAL(5,1)) AS expectedAvg
           FROM scores sc
           LEFT JOIN schedule sch ON sch.seasonID = sc.seasonID AND sch.week = sc.week
           WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
@@ -2349,6 +2356,20 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
           FROM scores sc
           JOIN bowlers b ON sc.bowlerID = b.bowlerID
           WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        ),
+        botwCTE AS (
+          SELECT sc.week, b.bowlerName, b.slug,
+            sc.scratchSeries - 3 * sc.incomingAvg AS pinsOver,
+            ROW_NUMBER() OVER (PARTITION BY sc.week ORDER BY sc.scratchSeries - 3 * sc.incomingAvg DESC) AS rn
+          FROM scores sc
+          JOIN bowlers b ON sc.bowlerID = b.bowlerID
+          WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+            AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
+            AND EXISTS (
+              SELECT 1 FROM scores sc3
+              WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
+                AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
+            )
         )
         SELECT
           ws.week,
@@ -2359,10 +2380,16 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
           hg.slug AS highGameSlug,
           ws.highSeries,
           hs.bowlerName AS highSeriesBowler,
-          hs.slug AS highSeriesSlug
+          hs.slug AS highSeriesSlug,
+          ws.leagueAvg,
+          ws.expectedAvg,
+          bw.bowlerName AS botwName,
+          bw.slug AS botwSlug,
+          bw.pinsOver AS botwPinsOver
         FROM weekStats ws
         LEFT JOIN highGameBowler hg ON hg.week = ws.week AND hg.rn = 1
         LEFT JOIN highSeriesBowler hs ON hs.week = ws.week AND hs.rn = 1
+        LEFT JOIN botwCTE bw ON bw.week = ws.week AND bw.rn = 1
         ORDER BY ws.week DESC
       `);
     return result.recordset;

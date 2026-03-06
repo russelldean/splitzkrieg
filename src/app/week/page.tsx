@@ -68,10 +68,28 @@ export default async function WeeksIndexPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-4 text-xs font-body text-navy/50">
-                        {week.highGame && (
+                        {week.leagueAvg != null && week.expectedAvg != null && (() => {
+                          const delta = week.leagueAvg - week.expectedAvg;
+                          const sign = delta >= 0 ? '+' : '';
+                          const colorClass = delta >= 0 ? 'text-green-600' : 'text-red-600';
+                          return (
+                            <span className="hidden sm:inline">
+                              <span className="text-navy/40">Avg </span>
+                              <span className="tabular-nums font-semibold text-navy/70">{week.leagueAvg}</span>
+                              <span className="text-navy/30"> / </span>
+                              <span className="text-navy/40">Expected </span>
+                              <span className="tabular-nums text-navy/50">{week.expectedAvg}</span>
+                              <span className={`tabular-nums font-semibold ml-1.5 ${colorClass}`}>{sign}{delta.toFixed(1)}</span>
+                            </span>
+                          );
+                        })()}
+                        {week.botwName && (
                           <span className="hidden sm:inline">
-                            <span className="text-navy/40">High Game </span>
-                            <span className="tabular-nums font-semibold text-navy/70">{week.highGame}</span>
+                            <span className="text-navy/40">Bowler of the Week </span>
+                            <span className="font-semibold text-navy/70">{week.botwName}</span>
+                            {week.botwPinsOver != null && (
+                              <span className="tabular-nums text-navy/40 ml-1">+{week.botwPinsOver}</span>
+                            )}
                           </span>
                         )}
                         <svg className="w-4 h-4 text-navy/30 group-hover:text-red-600 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
