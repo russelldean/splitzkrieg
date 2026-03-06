@@ -15,7 +15,9 @@ import {
   getAllSeasonNavList,
 } from '@/lib/queries';
 import { WeeklyResults } from '@/components/season/WeeklyResults';
+import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekStats } from '@/components/season/WeekStats';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 
 export const dynamicParams = false;
 
@@ -187,16 +189,29 @@ export default async function WeekPage({
         </div>
       </div>
 
-      {/* Reuse the existing WeeklyResults component for a single week */}
-      <WeeklyResults
-        weeklyScores={weekScores}
+      {/* Match summary scoreboard */}
+      <WeekMatchSummary
+        weekScores={weekScores}
         schedule={weekSchedule}
         matchResults={weekMatchResults}
-        totalWeeks={0}
+        week={weekNum}
       />
 
       {/* Week Stats */}
       <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
+
+      {/* Detailed match results — collapsed by default */}
+      <div className="mt-6">
+        <CollapsibleSection title="Full Match Details">
+          <WeeklyResults
+            weeklyScores={weekScores}
+            schedule={weekSchedule}
+            matchResults={weekMatchResults}
+            totalWeeks={0}
+            detailOnly
+          />
+        </CollapsibleSection>
+      </div>
 
       {/* Cross-links */}
       <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">

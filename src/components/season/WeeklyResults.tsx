@@ -2,6 +2,8 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
+import { organizeByWeek, indexMatchResults, getMatchups, findMatchMVP } from '@/lib/week-utils';
+
 /** Color class for a game score relative to the bowler's incoming average. */
 function avgColorClass(score: number | null, avg: number | null): string {
   if (score === null || avg === null) return '';
@@ -13,33 +15,10 @@ interface Props {
   schedule: SeasonScheduleWeek[];
   matchResults: WeeklyMatchupResult[];
   totalWeeks: number;
+  /** When true, skip outer heading/accordion and summary table (for embedding in a collapsible wrapper). */
+  detailOnly?: boolean;
 }
 
-/** Group scores by week, then by team within each week. */
-function organizeByWeek(scores: WeeklyMatchScore[]) {
-  const weekMap = new Map<number, Map<number, WeeklyMatchScore[]>>();
-  for (const row of scores) {
-    if (!weekMap.has(row.week)) weekMap.set(row.week, new Map());
-    const teamMap = weekMap.get(row.week)!;
-    if (!teamMap.has(row.teamID)) teamMap.set(row.teamID, []);
-    teamMap.get(row.teamID)!.push(row);
-  }
-  return weekMap;
-}
-
-/** Index match results by "week-homeTeamID-awayTeamID" for fast lookup. */
-function indexMatchResults(results: WeeklyMatchupResult[]) {
-  const map = new Map<string, WeeklyMatchupResult>();
-  for (const r of results) {
-    map.set(`${r.week}-${r.homeTeamID}-${r.awayTeamID}`, r);
-  }
-  return map;
-}
-
-/** Get matchups from schedule for a given week. */
-function getMatchups(schedule: SeasonScheduleWeek[], week: number) {
-  return schedule.filter(s => s.week === week);
-}
 
 /** Get the date for a given week from scores or schedule. */
 function getWeekDate(
@@ -70,21 +49,6 @@ function teamTurkeyTotal(bowlers: WeeklyMatchScore[]): number {
   return bowlers.reduce((sum, b) => sum + (b.turkeys ?? 0), 0);
 }
 
-/** Find bowler with highest handicap series across both teams in a matchup. */
-function findMatchMVP(
-  homeBowlers: WeeklyMatchScore[],
-  awayBowlers: WeeklyMatchScore[]
-): number | null {
-  let bestID: number | null = null;
-  let bestSeries = -1;
-  for (const b of [...homeBowlers, ...awayBowlers]) {
-    if (b.handSeries != null && b.handSeries > bestSeries) {
-      bestSeries = b.handSeries;
-      bestID = b.bowlerID;
-    }
-  }
-  return bestID;
-}
 
 /** Weekly scoreboard: one row per matchup with total pts + bowler of the match. */
 function WeeklySummaryTable({
@@ -338,7 +302,7 @@ function TeamBoxScore({
   );
 }
 
-export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks }: Props) {
+export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks, detailOnly }: Props) {
   const weekData = useMemo(() => organizeByWeek(weeklyScores), [weeklyScores]);
   const mrIndex = useMemo(() => indexMatchResults(matchResults), [matchResults]);
 
@@ -378,6 +342,72 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
     });
   }
 
+  // --- Detail-only mode: just render box scores for each week, no chrome ---
+  if (detailOnly) {
+    return (
+      <div className="space-y-4">
+        {allWeeks.map(week => {
+          const hasScores = weeksWithScores.has(week);
+          const matchups = getMatchups(schedule, week);
+          const teamScores = weekData.get(week);
+          if (!hasScores) return null;
+
+          if (matchups.length > 0) {
+            return matchups.map((matchup, idx) => {
+              const homeBowlers = teamScores?.get(matchup.homeTeamID) ?? [];
+              const awayBowlers = teamScores?.get(matchup.awayTeamID) ?? [];
+              const mvpID = findMatchMVP(homeBowlers, awayBowlers);
+              const mr = mrIndex.get(`${week}-${matchup.homeTeamID}-${matchup.awayTeamID}`);
+              return (
+                <div key={`${week}-${idx}`} className="border border-navy/5 rounded-lg p-3">
+                  {mr ? (
+                    <MatchupSummary
+                      mr={mr}
+                      homeTeamName={matchup.homeTeamName}
+                      awayTeamName={matchup.awayTeamName}
+                      homeTeamSlug={matchup.homeTeamSlug}
+                      awayTeamSlug={matchup.awayTeamSlug}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mb-2 text-sm font-heading text-navy/60">
+                      <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600">
+                        {matchup.homeTeamName}
+                      </Link>
+                      <span className="text-navy/30">vs</span>
+                      <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600">
+                        {matchup.awayTeamName}
+                      </Link>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {homeBowlers.length > 0 && (
+                      <TeamBoxScore teamName={matchup.homeTeamName} teamSlug={matchup.homeTeamSlug} bowlers={homeBowlers} mvpBowlerID={mvpID} />
+                    )}
+                    {awayBowlers.length > 0 && (
+                      <TeamBoxScore teamName={matchup.awayTeamName} teamSlug={matchup.awayTeamSlug} bowlers={awayBowlers} mvpBowlerID={mvpID} />
+                    )}
+                  </div>
+                </div>
+              );
+            });
+          } else if (teamScores) {
+            return (
+              <div key={week} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Array.from(teamScores.entries()).map(([teamID, bowlers]) => (
+                  <div key={teamID} className="border border-navy/5 rounded-lg p-3">
+                    <TeamBoxScore teamName={bowlers[0].teamName} teamSlug={bowlers[0].teamSlug} bowlers={bowlers} />
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
+  }
+
+  // --- Full mode: heading, accordion, summary tables ---
   return (
     <section id="weekly">
       <div className="flex items-center justify-between mb-2">
