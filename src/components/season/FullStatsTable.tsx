@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { SeasonFullStatsRow } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 
 interface Props {
   stats: SeasonFullStatsRow[];
+  minGames: number;
 }
 
 type SortColumn =
@@ -53,10 +54,57 @@ function SortArrow({ direction }: { direction: SortDirection }) {
   );
 }
 
-export function FullStatsTable({ stats }: Props) {
+export function FullStatsTable({ stats, minGames }: Props) {
   const [genderTab, setGenderTab] = useState<GenderTab>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('scratchAvg');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [checkScroll]);
+
+  // Compute ranks for eligible bowlers
+  const scratchRankByGender = useMemo(() => {
+    const rankMap = new Map<string, number>(); // key: `${gender}-${bowlerID}`
+    for (const g of ['M', 'F'] as const) {
+      const eligible = stats
+        .filter(s => s.gender === g && s.scratchAvg != null && s.gamesBowled >= minGames)
+        .sort((a, b) => (b.scratchAvg ?? 0) - (a.scratchAvg ?? 0));
+      eligible.forEach((s, i) => rankMap.set(`${g}-${s.bowlerID}`, i + 1));
+    }
+    return rankMap;
+  }, [stats, minGames]);
+
+  const hcpRanks = useMemo(() => {
+    const rankMap = new Map<number, number>();
+    const eligible = stats
+      .filter(s => s.hcpAvg != null && s.gamesBowled >= minGames)
+      .sort((a, b) => (b.hcpAvg ?? 0) - (a.hcpAvg ?? 0));
+    eligible.forEach((s, i) => rankMap.set(s.bowlerID, i + 1));
+    return rankMap;
+  }, [stats, minGames]);
+
+  // Re-check scroll when tab changes
+  useEffect(() => {
+    // Small delay to let DOM update after tab switch
+    requestAnimationFrame(checkScroll);
+  }, [genderTab, checkScroll]);
 
   const filtered = useMemo(() => {
     if (genderTab === 'all') return stats;
@@ -128,7 +176,8 @@ export function FullStatsTable({ stats }: Props) {
       {filtered.length === 0 ? (
         <p className="font-body text-navy/50 py-4">No bowlers in this category.</p>
       ) : (
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="relative">
+        <div ref={scrollRef} className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full text-sm font-body">
             <thead>
               <tr className="border-b border-navy/10 text-navy/50 text-xs uppercase tracking-wider">
@@ -180,11 +229,25 @@ export function FullStatsTable({ stats }: Props) {
                   <td className="px-3 py-2 text-right tabular-nums text-navy/70">
                     {row.totalPins.toLocaleString()}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums text-navy/70">
-                    {row.scratchAvg?.toFixed(1) ?? '\u2014'}
+                  <td className="px-3 py-2 text-navy/70 whitespace-nowrap">
+                    <span className="flex items-center justify-end gap-1">
+                      <span className="tabular-nums">{row.scratchAvg?.toFixed(1) ?? '\u2014'}</span>
+                      <span className="text-navy/50 text-xs w-6 text-left tabular-nums">
+                        {row.gender && scratchRankByGender.has(`${row.gender}-${row.bowlerID}`)
+                          ? `(${scratchRankByGender.get(`${row.gender}-${row.bowlerID}`)})`
+                          : ''}
+                      </span>
+                    </span>
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums text-navy/70">
-                    {row.hcpAvg?.toFixed(1) ?? '\u2014'}
+                  <td className="px-3 py-2 text-navy/70 whitespace-nowrap">
+                    <span className="flex items-center justify-end gap-1">
+                      <span className="tabular-nums">{row.hcpAvg?.toFixed(1) ?? '\u2014'}</span>
+                      <span className="text-navy/50 text-xs w-6 text-left tabular-nums">
+                        {hcpRanks.has(row.bowlerID)
+                          ? `(${hcpRanks.get(row.bowlerID)})`
+                          : ''}
+                      </span>
+                    </span>
                   </td>
                   <td className={`px-3 py-2 text-right tabular-nums ${scoreColorClass(row.highGame)}`}>
                     {row.highGame ?? '\u2014'}
@@ -205,6 +268,10 @@ export function FullStatsTable({ stats }: Props) {
               ))}
             </tbody>
           </table>
+        </div>
+        {canScrollRight && (
+          <div className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-white to-transparent sm:from-transparent" />
+        )}
         </div>
       )}
     </section>

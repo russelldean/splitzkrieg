@@ -78,7 +78,7 @@ export function HeaderCountdown({ targetDate }: Props) {
   if (hotFun) {
     return (
       <span className="font-heading text-[10px] text-red-600 tracking-wider uppercase animate-pulse" suppressHydrationWarning>
-        HOT FUN — League in session
+        HOT FUN - League in session
       </span>
     );
   }

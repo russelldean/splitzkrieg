@@ -11,7 +11,7 @@ export function BowlerOfTheWeekRibbon() {
       role="img"
       aria-label="Bowler of the Week"
     >
-      <title>Bowler of the Week — Highest Handicap Series</title>
+      <title>Bowler of the Week - Highest Handicap Series</title>
       {/* Tail ribbons — behind rosette */}
       <path d="M12 28 L12 58 L16 54 L20 58 L20 28 Z" fill="#4BB8E8" />
       <path d="M20 28 L20 58 L24 54 L28 58 L28 28 Z" fill="#4BB8E8" />

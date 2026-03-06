@@ -15,7 +15,8 @@ interface Props {
   handicap: LeaderboardCategory[];
   mensScratchPlayoffIDs: Set<number>;
   womensScratchPlayoffIDs: Set<number>;
-  hcpEligibleIDs: Set<number>;
+  hcpPlayoffIDs: Set<number>;
+  hcpIneligibleIDs: Set<number>;
   minGames?: number;
 }
 
@@ -33,12 +34,16 @@ function LeaderboardTable({
   highlightLabel,
   showHighlight = true,
   isAverage = false,
+  ineligibleIDs,
+  ineligibleLabel,
 }: {
   entries: SeasonLeaderEntry[];
   highlightIDs?: Set<number>;
   highlightLabel?: string;
   showHighlight?: boolean;
   isAverage?: boolean;
+  ineligibleIDs?: Set<number>;
+  ineligibleLabel?: string;
 }) {
   if (entries.length === 0) {
     return (
@@ -62,12 +67,13 @@ function LeaderboardTable({
         <tbody>
           {entries.map((entry, i) => {
             const isHighlighted = showHighlight && (highlightIDs?.has(entry.bowlerID) ?? false);
+            const isIneligible = ineligibleIDs?.has(entry.bowlerID) ?? false;
             return (
               <tr
                 key={`${entry.bowlerID}-${i}`}
                 className={`border-b border-navy/5 hover:bg-navy/[0.02] transition-colors ${
                   isHighlighted ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
-                }`}
+                } ${isIneligible ? 'opacity-40' : ''}`}
               >
                 <td className="px-4 py-2 text-navy/40 tabular-nums">
                   {i + 1}
@@ -106,11 +112,21 @@ function LeaderboardTable({
           })}
         </tbody>
       </table>
-      {showHighlight && highlightLabel && (
-        <p className="text-xs font-body text-navy/40 mt-1 px-4 flex items-center gap-1.5">
-          <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
-          {highlightLabel}
-        </p>
+      {(showHighlight && highlightLabel || ineligibleLabel) && (
+        <div className="mt-1 px-4 space-y-0.5">
+          {showHighlight && highlightLabel && (
+            <p className="text-xs font-body text-navy/40 flex items-center gap-1.5">
+              <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
+              {highlightLabel}
+            </p>
+          )}
+          {ineligibleLabel && (
+            <p className="text-xs font-body text-navy/40 flex items-center gap-1.5">
+              <span className="inline-block w-3 h-2 bg-navy/5 rounded-sm opacity-40" />
+              {ineligibleLabel}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
@@ -122,7 +138,8 @@ export function SeasonLeaderboards({
   handicap,
   mensScratchPlayoffIDs,
   womensScratchPlayoffIDs,
-  hcpEligibleIDs,
+  hcpPlayoffIDs,
+  hcpIneligibleIDs,
   minGames,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>('mens');
@@ -136,12 +153,19 @@ export function SeasonLeaderboards({
   const highlightMap: Record<TabKey, { ids: Set<number>; label: string }> = {
     mens: { ids: mensScratchPlayoffIDs, label: 'Playoff position (top 8)' },
     womens: { ids: womensScratchPlayoffIDs, label: 'Playoff position (top 8)' },
-    handicap: { ids: hcpEligibleIDs, label: 'Handicap playoff eligible (not in top 8 men\'s or women\'s scratch)' },
+    handicap: { ids: hcpPlayoffIDs, label: 'Playoff position (top 8)' },
+  };
+
+  const ineligibleMap: Record<TabKey, { ids: Set<number>; label: string } | null> = {
+    mens: null,
+    womens: null,
+    handicap: { ids: hcpIneligibleIDs, label: 'Bowlers in scratch playoffs ineligible for handicap playoffs' },
   };
 
   const categories = tabContent[activeTab];
   const allEmpty = categories.every(c => c.entries.length === 0);
   const highlight = highlightMap[activeTab];
+  const ineligible = ineligibleMap[activeTab];
 
   return (
     <section id="leaderboards">
@@ -187,6 +211,8 @@ export function SeasonLeaderboards({
                   highlightLabel={highlight.label}
                   showHighlight={isAvgCategory || activeTab === 'handicap'}
                   isAverage={isAvgCategory}
+                  ineligibleIDs={ineligible?.ids}
+                  ineligibleLabel={ineligible?.label}
                 />
               </div>
             );

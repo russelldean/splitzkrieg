@@ -806,6 +806,9 @@ export interface Team {
   teamID: number;
   teamName: string;
   slug: string;
+  captainBowlerID: number | null;
+  captainName: string | null;
+  captainSlug: string | null;
 }
 
 export interface TeamRosterMember {
@@ -867,6 +870,7 @@ export interface DirectoryTeam {
   totalPins: number;
   isActive: boolean;
   establishedSeason: string | null;
+  championships: number;
 }
 
 export interface TeamCurrentStanding {
@@ -992,9 +996,13 @@ export const getTeamBySlug = cache(async (slug: string): Promise<Team | null> =>
       .request()
       .input('slug', slug)
       .query<Team>(`
-        SELECT teamID, teamName, slug
-        FROM teams
-        WHERE slug = @slug
+        SELECT t.teamID, t.teamName, t.slug,
+               t.captainBowlerID,
+               b.bowlerName AS captainName,
+               b.slug AS captainSlug
+        FROM teams t
+        LEFT JOIN bowlers b ON t.captainBowlerID = b.bowlerID
+        WHERE t.slug = @slug
       `);
     return result.recordset[0] ?? null;
   } catch (err) {
@@ -1259,7 +1267,13 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
           JOIN seasons sn ON tnh3.seasonID = sn.seasonID
           WHERE tnh3.teamID = t.teamID
           ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
-        ) AS establishedSeason
+        ) AS establishedSeason,
+        (
+          SELECT COUNT(*)
+          FROM seasonChampions ch
+          WHERE ch.winnerTeamID = t.teamID
+            AND ch.championshipType = 'Team'
+        ) AS championships
       FROM teams t
       LEFT JOIN scores sc ON sc.teamID = t.teamID AND sc.isPenalty = 0
       GROUP BY t.teamID, t.teamName, t.slug
@@ -1381,6 +1395,7 @@ export interface SeasonHeroStats {
   topAverage: { bowlerName: string; slug: string; value: number } | null;
   highGame: { bowlerName: string; slug: string; value: number } | null;
   highSeries: { bowlerName: string; slug: string; value: number } | null;
+  champion: string | null;
 }
 
 /**
@@ -1535,6 +1550,32 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
     return [];
   }
 }
+
+/**
+ * Returns the set of teamIDs that appeared in the playoffs for a given season.
+ * Uses playoffResults table. Returns null if no playoff data exists.
+ */
+export const getPlayoffTeamIDs = cache(async (seasonID: number): Promise<Set<number> | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<{ teamID: number }>(`
+        SELECT DISTINCT teamID FROM (
+          SELECT team1ID AS teamID FROM playoffResults WHERE seasonID = @seasonID
+          UNION
+          SELECT team2ID AS teamID FROM playoffResults WHERE seasonID = @seasonID
+        ) t
+      `);
+    if (result.recordset.length === 0) return null;
+    return new Set(result.recordset.map(r => r.teamID));
+  } catch (err) {
+    console.warn('getPlayoffTeamIDs: DB unavailable', err);
+    return null;
+  }
+});
 
 /**
  * Returns top 10 bowlers for a given leaderboard category in a season.
@@ -1990,6 +2031,16 @@ export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroSt
         ORDER BY sc.scratchSeries DESC
       `);
 
+    // Champion
+    const champResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<{ teamName: string }>(`
+        SELECT t.teamName
+        FROM seasonChampions sc
+        JOIN teams t ON sc.winnerTeamID = t.teamID
+        WHERE sc.seasonID = @seasonID AND sc.championshipType = 'Team'
+      `);
+
     return {
       leagueAverage: stats?.leagueAverage ?? null,
       totalGames: stats?.totalGames ?? 0,
@@ -1997,12 +2048,135 @@ export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroSt
       topAverage: topAvgResult.recordset[0] ?? null,
       highGame: highGameResult.recordset[0] ?? null,
       highSeries: highSeriesResult.recordset[0] ?? null,
+      champion: champResult.recordset[0]?.teamName ?? null,
     };
   } catch (err) {
     console.warn('getSeasonHeroStats: DB unavailable', err);
     return null;
   }
 }
+
+export interface PlayoffMatchup {
+  winnerName: string;
+  winnerSlug: string;
+  winnerSeed: number | null;
+  loserName: string;
+  loserSlug: string;
+  loserSeed: number | null;
+}
+
+export interface SeasonPlayoffBracket {
+  final: PlayoffMatchup;
+  semi1: PlayoffMatchup | null;
+  semi2: PlayoffMatchup | null;
+}
+
+/**
+ * Returns the playoff bracket for a single season.
+ * Semi matchups include winner/loser when we have pairing data (seasons 27-34).
+ * Returns null if no playoff data exists for this season.
+ */
+export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<SeasonPlayoffBracket | null> => {
+  if (!process.env.AZURE_SQL_SERVER) return null;
+  try {
+    const db = await getDb();
+
+    // Standings CTE for seed numbers
+    const seedsCTE = `
+      WITH teamPtsUnpivot AS (
+        SELECT sch.team1ID AS teamID, mr.team1GamePts AS gamePts, mr.team1BonusPts AS bonusPts
+        FROM matchResults mr
+        JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+        WHERE sch.seasonID = @seasonID
+        UNION ALL
+        SELECT sch.team2ID AS teamID, mr.team2GamePts AS gamePts, mr.team2BonusPts AS bonusPts
+        FROM matchResults mr
+        JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+        WHERE sch.seasonID = @seasonID
+      ),
+      seeds AS (
+        SELECT teamID,
+               ROW_NUMBER() OVER (ORDER BY SUM(gamePts) + SUM(bonusPts) DESC) AS seed
+        FROM teamPtsUnpivot
+        GROUP BY teamID
+      )`;
+
+    // Final
+    const finalResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<{
+        champName: string; champSlug: string; champSeed: number | null;
+        ruName: string; ruSlug: string; ruSeed: number | null;
+      }>(`
+        ${seedsCTE}
+        SELECT
+          COALESCE(hc.teamName, tc.teamName) AS champName, tc.slug AS champSlug, sc.seed AS champSeed,
+          COALESCE(hr.teamName, tr.teamName) AS ruName, tr.slug AS ruSlug, sr.seed AS ruSeed
+        FROM playoffResults pr
+        JOIN teams tc ON pr.team1ID = tc.teamID
+        JOIN teams tr ON pr.team2ID = tr.teamID
+        LEFT JOIN teamNameHistory hc ON hc.seasonID = pr.seasonID AND hc.teamID = pr.team1ID
+        LEFT JOIN teamNameHistory hr ON hr.seasonID = pr.seasonID AND hr.teamID = pr.team2ID
+        LEFT JOIN seeds sc ON sc.teamID = pr.team1ID
+        LEFT JOIN seeds sr ON sr.teamID = pr.team2ID
+        WHERE pr.seasonID = @seasonID AND pr.playoffType = 'Team' AND pr.round = 'final'
+      `);
+    if (finalResult.recordset.length === 0) return null;
+    const f = finalResult.recordset[0];
+
+    // Semifinals
+    const semiResult = await db.request()
+      .input('seasonID', seasonID)
+      .query<{
+        loserName: string; loserSlug: string; loserSeed: number | null;
+        winnerName: string | null; winnerSlug: string | null; winnerSeed: number | null;
+      }>(`
+        ${seedsCTE}
+        SELECT
+          COALESCE(hl.teamName, tl.teamName) AS loserName, tl.slug AS loserSlug, sl.seed AS loserSeed,
+          COALESCE(hw.teamName, tw.teamName) AS winnerName, tw.slug AS winnerSlug, sw.seed AS winnerSeed
+        FROM playoffResults pr
+        JOIN teams tl ON pr.team1ID = tl.teamID
+        LEFT JOIN teams tw ON pr.winnerTeamID = tw.teamID
+        LEFT JOIN teamNameHistory hl ON hl.seasonID = pr.seasonID AND hl.teamID = pr.team1ID
+        LEFT JOIN teamNameHistory hw ON hw.seasonID = pr.seasonID AND hw.teamID = pr.winnerTeamID
+        LEFT JOIN seeds sl ON sl.teamID = pr.team1ID
+        LEFT JOIN seeds sw ON sw.teamID = pr.winnerTeamID
+        WHERE pr.seasonID = @seasonID AND pr.playoffType = 'Team' AND pr.round = 'semifinal'
+        ORDER BY pr.playoffID
+      `);
+
+    const semis = semiResult.recordset;
+
+    function buildMatchup(
+      wName: string, wSlug: string, wSeed: number | null,
+      lName: string, lSlug: string, lSeed: number | null,
+    ): PlayoffMatchup {
+      return { winnerName: wName, winnerSlug: wSlug, winnerSeed: wSeed, loserName: lName, loserSlug: lSlug, loserSeed: lSeed };
+    }
+
+    return {
+      final: buildMatchup(f.champName, f.champSlug, f.champSeed, f.ruName, f.ruSlug, f.ruSeed),
+      semi1: semis[0]?.winnerName ? buildMatchup(
+        semis[0].winnerName, semis[0].winnerSlug!, semis[0].winnerSeed,
+        semis[0].loserName, semis[0].loserSlug, semis[0].loserSeed,
+      ) : (semis[0] ? buildMatchup(
+        '', '', null,
+        semis[0].loserName, semis[0].loserSlug, semis[0].loserSeed,
+      ) : null),
+      semi2: semis[1]?.winnerName ? buildMatchup(
+        semis[1].winnerName, semis[1].winnerSlug!, semis[1].winnerSeed,
+        semis[1].loserName, semis[1].loserSlug, semis[1].loserSeed,
+      ) : (semis[1] ? buildMatchup(
+        '', '', null,
+        semis[1].loserName, semis[1].loserSlug, semis[1].loserSeed,
+      ) : null),
+    };
+  } catch (err) {
+    console.warn('getSeasonPlayoffBracket: DB unavailable', err);
+    return null;
+  }
+});
 
 /* ───────────────────────────────────────────────────────────
  * Phase 4 Plan 04: Weekly Match Scores & Team Presence
@@ -2260,6 +2434,40 @@ export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
   }
 }
 
+export interface TeamPlayoffFinish {
+  teamID: number;
+  seasonID: number;
+  finish: 'champion' | 'runner-up' | 'semifinalist';
+}
+
+/**
+ * Returns all team playoff finishes for timeline shading.
+ * Returns [] if DB unavailable.
+ */
+export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<TeamPlayoffFinish>(`
+      SELECT team1ID AS teamID, seasonID, 'champion' AS finish
+      FROM playoffResults
+      WHERE playoffType = 'Team' AND round = 'final'
+      UNION ALL
+      SELECT team2ID AS teamID, seasonID, 'runner-up' AS finish
+      FROM playoffResults
+      WHERE playoffType = 'Team' AND round = 'final'
+      UNION ALL
+      SELECT team1ID AS teamID, seasonID, 'semifinalist' AS finish
+      FROM playoffResults
+      WHERE playoffType = 'Team' AND round = 'semifinal'
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getTeamPlayoffFinishes: DB unavailable', err);
+    return [];
+  }
+});
+
 /**
  * Returns an ordered list of all seasons (newest first) with slug info.
  * Used for season prev/next navigation and week index.
@@ -2398,3 +2606,78 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
     return [];
   }
 }
+
+/* ─────────────────────────────────────────────────────────
+ * Playoff / Championship History
+ * ───────────────────────────────────────────────────────── */
+
+export interface PlayoffSeason {
+  seasonID: number;
+  romanNumeral: string;
+  displayName: string;
+  championTeamID: number;
+  championName: string;
+  championHistoricName: string | null;
+  runnerUpTeamID: number;
+  runnerUpName: string;
+  runnerUpHistoricName: string | null;
+  semi1TeamID: number | null;
+  semi1Name: string | null;
+  semi1HistoricName: string | null;
+  semi2TeamID: number | null;
+  semi2Name: string | null;
+  semi2HistoricName: string | null;
+}
+
+export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => {
+  if (!process.env.AZURE_SQL_SERVER) return [];
+  try {
+    const db = await getDb();
+    const result = await db.request().query<PlayoffSeason>(`
+      WITH finals AS (
+        SELECT seasonID, team1ID AS championTeamID, team2ID AS runnerUpTeamID
+        FROM playoffResults
+        WHERE playoffType = 'Team' AND round = 'final'
+      ),
+      semis AS (
+        SELECT seasonID, team1ID AS semiTeamID,
+               ROW_NUMBER() OVER (PARTITION BY seasonID ORDER BY playoffID) AS rn
+        FROM playoffResults
+        WHERE playoffType = 'Team' AND round = 'semifinal'
+      )
+      SELECT
+        s.seasonID,
+        s.romanNumeral,
+        s.displayName,
+        f.championTeamID,
+        tc.teamName             AS championName,
+        thc.teamName            AS championHistoricName,
+        f.runnerUpTeamID,
+        tr.teamName             AS runnerUpName,
+        thr.teamName            AS runnerUpHistoricName,
+        s1.semiTeamID           AS semi1TeamID,
+        ts1.teamName            AS semi1Name,
+        ths1.teamName           AS semi1HistoricName,
+        s2.semiTeamID           AS semi2TeamID,
+        ts2.teamName            AS semi2Name,
+        ths2.teamName           AS semi2HistoricName
+      FROM seasons s
+      JOIN finals f ON f.seasonID = s.seasonID
+      JOIN teams tc ON f.championTeamID = tc.teamID
+      JOIN teams tr ON f.runnerUpTeamID = tr.teamID
+      LEFT JOIN semis s1 ON s1.seasonID = s.seasonID AND s1.rn = 1
+      LEFT JOIN teams ts1 ON s1.semiTeamID = ts1.teamID
+      LEFT JOIN semis s2 ON s2.seasonID = s.seasonID AND s2.rn = 2
+      LEFT JOIN teams ts2 ON s2.semiTeamID = ts2.teamID
+      LEFT JOIN teamNameHistory thc ON thc.seasonID = s.seasonID AND thc.teamID = f.championTeamID
+      LEFT JOIN teamNameHistory thr ON thr.seasonID = s.seasonID AND thr.teamID = f.runnerUpTeamID
+      LEFT JOIN teamNameHistory ths1 ON ths1.seasonID = s.seasonID AND ths1.teamID = s1.semiTeamID
+      LEFT JOIN teamNameHistory ths2 ON ths2.seasonID = s.seasonID AND ths2.teamID = s2.semiTeamID
+      ORDER BY s.seasonID DESC
+    `);
+    return result.recordset;
+  } catch (err) {
+    console.warn('getAllPlayoffHistory: DB unavailable', err);
+    return [];
+  }
+});

@@ -99,9 +99,9 @@ function WeeklySummaryTable({
                   </Link>
                 </td>
                 <td className="text-center tabular-nums py-1.5">
-                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '—'}</span>
+                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
                   <span className="text-navy/30 mx-1">–</span>
-                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '—'}</span>
+                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
                 </td>
                 <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                   <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
@@ -114,7 +114,7 @@ function WeeklySummaryTable({
                       {mvpBowler.bowlerName}
                       <span className="text-navy/40 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>
-                  ) : '—'}
+                  ) : '-'}
                 </td>
               </tr>
             );
@@ -164,12 +164,12 @@ function MatchupSummary({
                 {homeTeamName}
               </Link>
             </td>
-            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team1Game1, mr.team2Game1)}`}>{mr.team1Game1 ?? '—'}</td>
-            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team1Game2, mr.team2Game2)}`}>{mr.team1Game2 ?? '—'}</td>
-            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team1Game3, mr.team2Game3)}`}>{mr.team1Game3 ?? '—'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team1Series ?? '—'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team1GamePts != null ? mr.team1GamePts / 2 : '—'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team1BonusPts ?? '—'}</td>
+            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team1Game1, mr.team2Game1)}`}>{mr.team1Game1 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team1Game2, mr.team2Game2)}`}>{mr.team1Game2 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team1Game3, mr.team2Game3)}`}>{mr.team1Game3 ?? '-'}</td>
+            <td className="text-right tabular-nums py-0.5">{mr.team1Series ?? '-'}</td>
+            <td className="text-right tabular-nums py-0.5">{mr.team1GamePts != null ? mr.team1GamePts / 2 : '-'}</td>
+            <td className="text-right tabular-nums py-0.5">{mr.team1BonusPts ?? '-'}</td>
             <td className="text-right tabular-nums py-0.5 font-semibold">{t1Total}</td>
           </tr>
           <tr className="text-navy">
@@ -178,12 +178,12 @@ function MatchupSummary({
                 {awayTeamName}
               </Link>
             </td>
-            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team2Game1, mr.team1Game1)}`}>{mr.team2Game1 ?? '—'}</td>
-            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team2Game2, mr.team1Game2)}`}>{mr.team2Game2 ?? '—'}</td>
-            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team2Game3, mr.team1Game3)}`}>{mr.team2Game3 ?? '—'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team2Series ?? '—'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team2GamePts != null ? mr.team2GamePts / 2 : '—'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team2BonusPts ?? '—'}</td>
+            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team2Game1, mr.team1Game1)}`}>{mr.team2Game1 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team2Game2, mr.team1Game2)}`}>{mr.team2Game2 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 ${gameWinClass(mr.team2Game3, mr.team1Game3)}`}>{mr.team2Game3 ?? '-'}</td>
+            <td className="text-right tabular-nums py-0.5">{mr.team2Series ?? '-'}</td>
+            <td className="text-right tabular-nums py-0.5">{mr.team2GamePts != null ? mr.team2GamePts / 2 : '-'}</td>
+            <td className="text-right tabular-nums py-0.5">{mr.team2BonusPts ?? '-'}</td>
             <td className="text-right tabular-nums py-0.5 font-semibold">{t2Total}</td>
           </tr>
         </tbody>
@@ -260,22 +260,22 @@ function TeamBoxScore({
                     )}
                   </td>
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/50">
-                    {b.incomingAvg ?? '—'}
+                    {b.incomingAvg ?? '-'}
                   </td>
                   <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game1, b.incomingAvg)}`}>
-                    {b.game1 ?? '—'}
+                    {b.game1 ?? '-'}
                   </td>
                   <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game2, b.incomingAvg)}`}>
-                    {b.game2 ?? '—'}
+                    {b.game2 ?? '-'}
                   </td>
                   <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game3, b.incomingAvg)}`}>
-                    {b.game3 ?? '—'}
+                    {b.game3 ?? '-'}
                   </td>
                   <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs sm:text-sm">
-                    {b.scratchSeries ?? '—'}
+                    {b.scratchSeries ?? '-'}
                   </td>
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/60">
-                    {b.handSeries ?? '—'}
+                    {b.handSeries ?? '-'}
                   </td>
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/40">
                     {b.turkeys > 0 ? b.turkeys : ''}

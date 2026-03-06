@@ -4,9 +4,10 @@ import type { SeasonNav as SeasonNavType } from '@/lib/queries';
 interface Props {
   current: { seasonID: number; slug: string; romanNumeral: string };
   allSeasons: SeasonNavType[];
+  basePath?: string;
 }
 
-export function SeasonNav({ current, allSeasons }: Props) {
+export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) {
   const idx = allSeasons.findIndex(s => s.seasonID === current.seasonID);
   const prev = idx < allSeasons.length - 1 ? allSeasons[idx + 1] : null; // older
   const next = idx > 0 ? allSeasons[idx - 1] : null; // newer
@@ -16,7 +17,7 @@ export function SeasonNav({ current, allSeasons }: Props) {
       <div>
         {prev ? (
           <Link
-            href={`/season/${prev.slug}`}
+            href={`${basePath}/${prev.slug}`}
             className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -35,7 +36,7 @@ export function SeasonNav({ current, allSeasons }: Props) {
       <div>
         {next ? (
           <Link
-            href={`/season/${next.slug}`}
+            href={`${basePath}/${next.slug}`}
             className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
           >
             Season {next.romanNumeral}

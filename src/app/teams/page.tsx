@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getAllTeamsDirectory, getTeamSeasonPresence, getCurrentSeasonID } from '@/lib/queries';
+import { getAllTeamsDirectory, getTeamSeasonPresence, getTeamPlayoffFinishes, getCurrentSeasonID } from '@/lib/queries';
 import { TeamCard } from '@/components/team/TeamCard';
 import { TeamTimeline } from '@/components/team/TeamTimeline';
 
@@ -15,9 +15,10 @@ export default async function TeamsPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   const { filter } = await searchParams;
-  const [teams, presenceData, currentSeasonID] = await Promise.all([
+  const [teams, presenceData, playoffFinishes, currentSeasonID] = await Promise.all([
     getAllTeamsDirectory(),
     getTeamSeasonPresence(),
+    getTeamPlayoffFinishes(),
     getCurrentSeasonID(),
   ]);
 
@@ -77,6 +78,7 @@ export default async function TeamsPage({
       {presenceData.length > 0 && (
         <TeamTimeline
           presenceData={presenceData}
+          playoffFinishes={playoffFinishes}
           currentSeasonID={currentSeasonID ?? undefined}
         />
       )}

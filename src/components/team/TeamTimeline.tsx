@@ -1,17 +1,23 @@
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
-import type { TeamSeasonPresence } from '@/lib/queries';
+import type { TeamSeasonPresence, TeamPlayoffFinish } from '@/lib/queries';
 
 interface Props {
   presenceData: TeamSeasonPresence[];
+  playoffFinishes: TeamPlayoffFinish[];
   currentSeasonID?: number;
 }
 
-export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
-  const { teams, seasons, presenceSet } = useMemo(() => {
+export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }: Props) {
+  const { teams, seasons, presenceSet, finishMap } = useMemo(() => {
     if (presenceData.length === 0) {
-      return { teams: [] as { teamID: number; teamName: string; slug: string }[], seasons: [] as { seasonID: number; slug: string; roman: string }[], presenceSet: new Set<string>() };
+      return {
+        teams: [] as { teamID: number; teamName: string; slug: string }[],
+        seasons: [] as { seasonID: number; slug: string; roman: string }[],
+        presenceSet: new Set<string>(),
+        finishMap: new Map<string, 'champion' | 'runner-up' | 'semifinalist'>(),
+      };
     }
 
     // Unique seasons in reverse chronological order (newest first)
@@ -48,10 +54,31 @@ export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
       set.add(`${row.teamID}-${row.seasonID}`);
     }
 
-    return { teams: allTeams, seasons: allSeasons, presenceSet: set };
-  }, [presenceData]);
+    // Build playoff finish lookup: "teamID-seasonID" -> finish
+    const fMap = new Map<string, 'champion' | 'runner-up' | 'semifinalist'>();
+    for (const pf of playoffFinishes) {
+      fMap.set(`${pf.teamID}-${pf.seasonID}`, pf.finish);
+    }
+
+    return { teams: allTeams, seasons: allSeasons, presenceSet: set, finishMap: fMap };
+  }, [presenceData, playoffFinishes]);
 
   if (teams.length === 0 || seasons.length === 0) return null;
+
+  function getCellClass(teamID: number, seasonID: number): string {
+    const finish = finishMap.get(`${teamID}-${seasonID}`);
+    if (finish === 'runner-up') return 'bg-blue-300';
+    if (finish === 'semifinalist') return 'bg-orange-300';
+    return 'bg-navy/30';
+  }
+
+  function getCellTitle(teamName: string, roman: string, teamID: number, seasonID: number): string {
+    const finish = finishMap.get(`${teamID}-${seasonID}`);
+    const label = finish
+      ? ` - ${finish.charAt(0).toUpperCase() + finish.slice(1)}`
+      : '';
+    return `${teamName} - Season ${roman}${label}`;
+  }
 
   return (
     <section className="mt-12">
@@ -59,6 +86,22 @@ export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
       <p className="font-body text-sm text-navy/50 mb-4">
         {teams.length} teams across {seasons.length} seasons of Splitzkrieg history.
       </p>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 mb-3 text-xs font-body text-navy/60">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block text-yellow-500 text-sm leading-none">★</span> Champion
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-sm bg-blue-300" /> Runner-Up
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-sm bg-orange-300" /> Semifinalist
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-sm bg-navy/30" /> Active
+        </span>
+      </div>
 
       <div className="overflow-x-auto border border-navy/10 rounded-lg">
         <table className="min-w-max text-xs font-body">
@@ -68,7 +111,12 @@ export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
                 Team
               </th>
               {seasons.map(s => (
-                <th key={s.seasonID} className="px-1 py-2 text-center text-navy/60 font-normal min-w-[32px]">
+                <th
+                  key={s.seasonID}
+                  className={`px-1 py-2 text-center text-navy/60 font-normal min-w-[32px]${
+                    s.seasonID === currentSeasonID ? ' border-r-2 border-navy/20' : ''
+                  }`}
+                >
                   <Link
                     href={`/season/${s.slug}`}
                     className="hover:text-red-600 transition-colors"
@@ -96,18 +144,24 @@ export function TeamTimeline({ presenceData, currentSeasonID }: Props) {
                 </td>
                 {seasons.map(s => {
                   const active = presenceSet.has(`${team.teamID}-${s.seasonID}`);
-                  const isCurrent = s.seasonID === currentSeasonID;
                   return (
-                    <td key={s.seasonID} className="px-1 py-1.5 text-center">
+                    <td key={s.seasonID} className={`px-1 py-1.5 text-center${
+                      s.seasonID === currentSeasonID ? ' border-r-2 border-navy/20' : ''
+                    }`}>
                       {active ? (
-                        <div
-                          className={`w-5 h-5 mx-auto rounded-sm ${
-                            isCurrent
-                              ? 'bg-red-600/70'
-                              : 'bg-navy/30'
-                          }`}
-                          title={`${team.teamName} - Season ${s.roman}`}
-                        />
+                        finishMap.get(`${team.teamID}-${s.seasonID}`) === 'champion' ? (
+                          <div
+                            className="w-5 h-5 mx-auto flex items-center justify-center text-yellow-500 text-[1.25rem] leading-none"
+                            title={getCellTitle(team.teamName, s.roman, team.teamID, s.seasonID)}
+                          >
+                            ★
+                          </div>
+                        ) : (
+                          <div
+                            className={`w-5 h-5 mx-auto rounded-sm ${getCellClass(team.teamID, s.seasonID)}`}
+                            title={getCellTitle(team.teamName, s.roman, team.teamID, s.seasonID)}
+                          />
+                        )
                       ) : (
                         <div className="w-5 h-5 mx-auto" />
                       )}

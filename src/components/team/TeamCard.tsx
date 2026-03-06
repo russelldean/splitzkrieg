@@ -23,7 +23,14 @@ export function TeamCard({ team }: Props) {
             {team.teamName}
           </span>
         ) : (
-          team.teamName
+          <span>
+            {team.teamName}
+            {team.championships > 0 && (
+              <span className="ml-1.5 text-amber-600 text-sm" title={`${team.championships} championship${team.championships > 1 ? 's' : ''}`}>
+                {'🏆'.repeat(team.championships)}
+              </span>
+            )}
+          </span>
         )}
       </h3>
 

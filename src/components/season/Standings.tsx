@@ -4,6 +4,9 @@ import type { StandingsRow } from '@/lib/queries';
 interface Props {
   standings: StandingsRow[];
   hasDivisions: boolean;
+  /** Actual playoff teams from playoffResults, or null to use computed positions */
+  playoffTeams?: Set<number> | null;
+  seasonID?: number;
 }
 
 /**
@@ -122,7 +125,7 @@ function StandingsTable({
   );
 }
 
-export function Standings({ standings, hasDivisions }: Props) {
+export function Standings({ standings, hasDivisions, playoffTeams, seasonID }: Props) {
   if (standings.length === 0) {
     return (
       <section id="standings">
@@ -132,8 +135,11 @@ export function Standings({ standings, hasDivisions }: Props) {
     );
   }
 
-  const playoffTeamIDs = getPlayoffTeamIDs(standings, hasDivisions);
-  const playoffLabel = hasDivisions ? 'Playoff position (top 2 per division)' : 'Playoff position (top 8)';
+  // Use actual playoff teams when available, fall back to computed positions
+  const playoffTeamIDs = playoffTeams ?? getPlayoffTeamIDs(standings, hasDivisions);
+  const playoffLabel = playoffTeams
+    ? 'Playoff team'
+    : hasDivisions ? 'Playoff position (top 2 per division)' : 'Playoff position (top 8)';
 
   return (
     <section id="standings">
@@ -162,6 +168,12 @@ export function Standings({ standings, hasDivisions }: Props) {
         <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
         {playoffLabel}
       </p>
+      {(seasonID === 30 || seasonID === 31) && (
+        <p className="text-xs font-body text-navy/40 mt-1.5">
+          Playoff teams shown here may differ from what was originally reported.
+          See <Link href="/rules#numbers" className="text-red-600 hover:text-red-700 underline">A Note on the Numbers</Link> on the Rules page.
+        </p>
+      )}
     </section>
   );
 }

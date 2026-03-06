@@ -452,7 +452,7 @@ function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug:
         <summary className="font-heading text-sm text-navy/60 uppercase tracking-wider cursor-pointer list-none inline-flex items-center gap-1">
           PIN <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-navy/10 text-navy/50 text-[10px] font-bold leading-none">?</span>
         </summary>
-        <p className="text-xs font-body text-navy/40 mt-1">Personal Impact Number — how many points your team would have lost if you didn't show up.</p>
+        <p className="text-xs font-body text-navy/40 mt-1">Personal Impact Number - how many points your team would have lost if you didn't show up.</p>
       </details>
       {(() => {
         const topPin = items[0].pin;

@@ -30,17 +30,16 @@ export default async function SeasonsPage() {
           {(() => {
             const current = seasons[0];
             return (
-              <Link
-                href={`/season/${current.slug}`}
-                className="block mb-8 p-6 bg-navy/[0.03] border border-navy/15 rounded-xl hover:bg-navy/[0.06] hover:border-navy/25 transition-all group"
-              >
+              <div className="mb-8 p-6 bg-navy/[0.03] border border-navy/15 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-body text-[10px] uppercase tracking-wider text-navy/70 bg-navy/10 px-1.5 py-0.5 rounded font-semibold">
                     Current Season
                   </span>
                 </div>
-                <h2 className="font-heading text-2xl sm:text-3xl text-navy group-hover:text-red-600 transition-colors">
-                  {current.period} {current.year}
+                <h2 className="font-heading text-2xl sm:text-3xl">
+                  <Link href={`/season/${current.slug}`} className="text-navy hover:text-red-600 transition-colors">
+                    {current.period} {current.year}
+                  </Link>
                 </h2>
                 <p className="font-body text-sm text-navy/50 mt-1">
                   Season {current.romanNumeral}
@@ -60,8 +59,11 @@ export default async function SeasonsPage() {
                       <span className="font-semibold text-navy/70">{current.champion}</span>
                     </span>
                   )}
+                  <Link href={`/stats/${current.slug}`} className="text-red-600/70 hover:text-red-600 transition-colors font-medium">
+                    Stats &rarr;
+                  </Link>
                 </div>
-              </Link>
+              </div>
             );
           })()}
 
@@ -70,15 +72,17 @@ export default async function SeasonsPage() {
             <div className="space-y-1">
               <h2 className="font-heading text-lg text-navy/70 mb-2">Past Seasons</h2>
               {seasons.slice(1).map((season) => (
-                <Link
+                <div
                   key={season.seasonID}
-                  href={`/season/${season.slug}`}
-                  className="flex items-baseline justify-between gap-4 px-4 py-3 -mx-4 rounded transition-colors group hover:bg-navy/[0.03]"
+                  className="flex items-baseline justify-between gap-4 px-4 py-3 -mx-4 rounded hover:bg-navy/[0.03] transition-colors group"
                 >
                   <div className="flex items-baseline gap-2 min-w-0">
-                    <span className="font-heading text-lg transition-colors whitespace-nowrap text-navy group-hover:text-red-600">
+                    <Link
+                      href={`/season/${season.slug}`}
+                      className="font-heading text-lg whitespace-nowrap text-navy hover:text-red-600 transition-colors"
+                    >
                       {season.period} {season.year}
-                    </span>
+                    </Link>
                     <span className="font-body text-sm text-navy/40">
                       Season {season.romanNumeral}
                     </span>
@@ -93,8 +97,15 @@ export default async function SeasonsPage() {
                         <span className="text-navy/70">{season.champion}</span>
                       </>
                     )}
+                    <span className="text-navy/20">&middot;</span>
+                    <Link
+                      href={`/stats/${season.slug}`}
+                      className="text-red-600/70 hover:text-red-600 transition-colors font-medium"
+                    >
+                      Stats &rarr;
+                    </Link>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

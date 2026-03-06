@@ -18,6 +18,7 @@ import { WeeklyResults } from '@/components/season/WeeklyResults';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekStats } from '@/components/season/WeekStats';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { strikeX } from '@/components/ui/StrikeX';
 
 export const dynamicParams = false;
 
@@ -53,7 +54,7 @@ export async function generateMetadata({
   const season = await getSeasonBySlug(seasonSlug);
   if (!season) return { title: 'Week Not Found | Splitzkrieg' };
 
-  const title = `Week ${weekNum} — Season ${season.romanNumeral} | Splitzkrieg`;
+  const title = `Week ${weekNum} - Season ${season.romanNumeral} | Splitzkrieg`;
   const description = `Week ${weekNum} results for ${season.period} ${season.year} (Season ${season.romanNumeral}). Splitzkrieg Bowling League.`;
 
   return { title, description };
@@ -122,11 +123,11 @@ export default async function WeekPage({
         {/* Week header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-navy">
-              Week {weekNum}
+            <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
+              Season {strikeX(season.romanNumeral)}
             </h1>
-            <p className="font-body text-sm text-navy/50 mt-1">
-              Season {season.romanNumeral} &middot; {season.period} {season.year}
+            <p className="font-body text-lg text-navy/60 mt-1">
+              Week {weekNum} &middot; {season.period} {season.year}
               {dateStr && <> &middot; {dateStr}</>}
             </p>
           </div>
@@ -222,7 +223,7 @@ export default async function WeekPage({
           Season {season.romanNumeral} Standings
         </Link>
         <Link
-          href="/stats"
+          href={`/stats/${seasonSlug}`}
           className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
         >
           Season Leaderboards

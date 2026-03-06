@@ -64,7 +64,9 @@ export async function Header() {
     ...(currentSeasonSlug ? [{ href: `/week/${currentSeasonSlug}/${snapshot!.weekNumber}`, label: '  This Week' }] : []),
     { href: '/seasons', label: 'Seasons' },
     ...(currentSeasonSlug ? [{ href: `/season/${currentSeasonSlug}`, label: '  Current Season' }] : []),
-    { href: '/stats', label: 'The Stats' },
+    ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: '  Current Season Stats' }] : []),
+    { href: '/seasons', label: '  All Season Stats' },
+    { href: '/stats/all-time', label: '  All-Time Stats' },
     { href: '/bowlers', label: 'Bowlers' },
     { href: '/teams', label: 'Teams' },
   ];
@@ -118,8 +120,9 @@ export async function Header() {
               label="The Stats"
               icon={statsIcon}
               links={[
-                { href: '/stats', label: 'Season Leaders' },
-                { href: '/stats#all-time', label: 'All-Time Stats' },
+                ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),
+                { href: '/seasons', label: 'All Season Stats' },
+                { href: '/stats/all-time', label: 'All-Time Stats' },
               ]}
             />
             <NavDropdown

@@ -15,10 +15,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Static generation, build-time data pipeline, design system, and project structure
 - [x] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
 - [x] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot (completed 2026-03-03)
-- [ ] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons)
-- [ ] **Phase 5: Leaderboards and Profile Depth** - All-time leaderboards and enriched bowler profile features
-- [ ] **Phase 6: Champions, Content, and Community** - Historical recognition, blog system, and league info pages
-- [ ] **Phase 7: Admin Tools** - Score entry interface replacing the spreadsheet workflow
+- [x] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons) (completed 2026-03-06)
+- [ ] **Phase 5: Remaining Polish and Data Gaps** - Team H2H, standings polish, match legend, data backfill
+- [ ] **Phase 6: All-Time Leaderboards and Profile Depth** - Career leaderboards with filters, bowler rank context, milestone trackers
+- [ ] **Phase 7: Content and Community Pages** - Rules, blog/recaps, playoff brackets UI, contact integration
+- [ ] **Phase 8: Admin Tools** - Score entry interface replacing the spreadsheet workflow
 
 ## Phase Details
 
@@ -86,48 +87,96 @@ Plans:
 **Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] 04-01-PLAN.md — Data layer: all team and season query functions + TypeScript interfaces
-- [ ] 04-02-PLAN.md — Team profile page (/team/[slug]) with all sections + teams directory (/teams)
-- [ ] 04-03-PLAN.md — Season page (/season/[slug]) with standings, leaderboards, full stats + seasons directory (/seasons)
-- [ ] 04-04-PLAN.md — Weekly results box scores, standings race chart, team timeline visualization
+- [x] 04-01-PLAN.md — Data layer: all team and season query functions + TypeScript interfaces
+- [x] 04-02-PLAN.md — Team profile page (/team/[slug]) with all sections + teams directory (/teams)
+- [x] 04-03-PLAN.md — Season page (/season/[slug]) with standings, leaderboards, full stats + seasons directory (/seasons)
+- [x] 04-04-PLAN.md — Weekly results box scores, standings race chart, team timeline visualization
 
-### Phase 5: Leaderboards and Profile Depth
-**Goal**: Users can browse all-time leaderboards with filters and bowler profiles gain depth with milestones, rankings context, and career timelines
+### Phase 5: Remaining Polish and Data Gaps
+**Goal**: Address remaining UI polish items and fill data gaps as source data becomes available
 **Depends on**: Phase 4
-**Requirements**: LEAD-01, LEAD-02, LEAD-03, LEAD-04, LEAD-05, BWLR-07, BWLR-08, BWLR-10
+**Already done** (from original Phase 5 scope):
+  - ~~Nav restructure~~ — League Nights / Seasons / The Stats / Bowlers / Teams fully implemented
+  - ~~Homepage layout~~ — Countdown in header, milestone ticker, mini standings, matchups, season snapshot all above fold
+  - ~~Season page navigation~~ — Section jump links (Standings, Race Chart, Weekly Results, Records, Leaderboards)
+  - ~~Season hero stripped down~~ — Shows just season name, period/year, champion/playoff bracket
+  - ~~Playoff bracket UI~~ — Visual bracket component with connectors on season hero (semis + final)
+  - ~~Season records/highlights~~ — SeasonHighlights component with high game/series records
+  - ~~Remove IMG_2527.jpg~~ — Done
+  - ~~Division-aware standings~~ — Standings component supports division grouping when seasonDivisions data exists
+  - ~~PIN redesign~~ — Current design accepted
+  - ~~Team timeline playoff overlay~~ — Champions (★), runner-up (blue), semifinalist (orange) with legend
+**What remains**:
+  - Standings title — add week number, e.g. "Standings (after Wk 3)"
+  - Match results color legend/tooltip — green=win, red=loss, amber=tie not obvious to new visitors
+  - Team standing rank clarity on TeamHero
+  - Team head-to-head section — currently shows "coming soon" placeholder on team pages
+**Data gaps** (backfill when source data available):
+  - `seasonDivisions` table — needs population (schema supports it, standings code handles it)
+  - Season champions / playoff results for remaining seasons
+  - Team captains data
+  - Schedule data for Seasons I-XXV (site handles missing gracefully)
 **Success Criteria** (what must be TRUE):
-  1. User can view all-time leaderboards filterable by gender, active-only, and season range with scratch/handicap toggle
-  2. Leaderboard tables are sortable with every bowler name linking to their profile
-  3. Bowler profiles show leaderboard context ("Ranked 5th in career average among active bowlers") for top performers
-  4. Bowler profiles show milestone tracker (e.g., "3 games away from 100 career games") and career timeline (teams played for, chronological)
-  5. League-wide aggregate stats dashboard shows total games, total pins, unique bowlers across all seasons
+  1. Standings show week number in title
+  2. Match results have color legend or tooltip
+  3. Team H2H section shows real data (at least for the 10 seasons with match results)
 **Plans**: TBD
 
 Plans:
 - [ ] 05-01: TBD
 - [ ] 05-02: TBD
-- [ ] 05-03: TBD
 
-### Phase 6: Champions, Content, and Community
-**Goal**: Users can explore league history through champions pages and playoff brackets, read weekly recaps, and find information about joining the league
-**Depends on**: Phase 4
-**Requirements**: CHMP-01, CHMP-02, CHMP-03, CONT-01, CONT-02, CONT-03
+### Phase 6: All-Time Leaderboards and Profile Depth
+**Goal**: Users can browse all-time career leaderboards and bowler profiles gain depth with rankings context, milestone trackers, and career timelines
+**Depends on**: Phase 5
+**Already built**: Per-season leaderboards and full stats tables exist on /stats/[slug]. Championship history table on /stats/all-time. Bowler profiles have career summary, records, avg progression chart, season stats, game log.
+**What remains**:
+  - All-time career leaderboards (highest career avg, most career games, most 200+ games, most career pins, etc.) with gender and active-only filters
+  - Bowler profile enrichments: leaderboard rank context ("Ranked 5th in career average"), milestone tracker ("3 games from 100 career games"), career timeline visualization
+  - League-wide aggregate stats on /stats/all-time (total games, total pins, unique bowlers across all seasons)
+  - Head-to-head stats hub: matchup frequency grid (how often every pair of teams has faced each other), H2H win/loss records, H2H scoring trends — a deep dive into team rivalries across all seasons
 **Success Criteria** (what must be TRUE):
-  1. Champions page shows all season winners across 5 championship categories (or graceful empty state where data is not yet populated)
-  2. Playoff bracket display works for current and past seasons (or graceful empty state)
-  3. Blog system supports creating and displaying weekly recaps with auto-generated highlights from score data
-  4. About / Join the League page shows league info, FAQ, and a working interest form
+  1. /stats/all-time shows all-time career leaderboards (avg, games, pins, 200+ count, etc.) filterable by gender and active-only
+  2. Leaderboard tables are sortable with every bowler name linking to their profile
+  3. Bowler profiles show leaderboard rank context for top performers
+  4. Bowler profiles show milestone tracker with approaching milestones
+  5. League-wide aggregate stats appear on /stats/all-time
+  6. Head-to-head stats page shows matchup frequency grid and H2H records between teams
 **Plans**: TBD
 
 Plans:
 - [ ] 06-01: TBD
 - [ ] 06-02: TBD
-- [ ] 06-03: TBD
 
-### Phase 7: Admin Tools
+### Phase 7: Content and Community Pages
+**Goal**: Flesh out content pages and add community features
+**Depends on**: Phase 5
+**Already built**:
+  - /about page with founding story (links to John Williams profile)
+  - /join page with basic info (email list placeholder)
+  - /rules page with scoring explanation and ruleset history
+  - /resources page with Google Sheets links, social links, league calendar
+  - Visual playoff bracket on season hero (semis + final with connectors)
+  - Championship history table on /stats/all-time with running totals
+  - /blog page (placeholder: "Weekly Stats emails will go here")
+**What remains**:
+  - Blog/recap system — auto-generated weekly recaps from score data (or email archive)
+  - Polish about page (currently ends with "More to come")
+  - Join page — working contact/signup mechanism (currently placeholder)
+  - Expand rules page if needed
+**Success Criteria** (what must be TRUE):
+  1. Blog/recap page has real content (weekly highlights or email archive)
+  2. Join page has a working contact mechanism
+  3. About page tells the full league story
+**Plans**: TBD
+
+Plans:
+- [ ] 07-01: TBD
+- [ ] 07-02: TBD
+
+### Phase 8: Admin Tools
 **Goal**: The commissioner can enter scores through a web interface instead of spreadsheets, with validation to catch data entry errors
 **Depends on**: Phase 1
-**Requirements**: ADMN-01, ADMN-02
 **Success Criteria** (what must be TRUE):
   1. Commissioner can enter scores for a bowling night through a web form (team, bowlers, three games each)
   2. Score entry flags unusual values (e.g., scores over 300, duplicate entries) and validates against known bowlers
@@ -135,21 +184,22 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 08-01: TBD
+- [ ] 08-02: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
-Note: Phases 3 and 4 both depend on Phase 2. Phases 5 and 6 both depend on Phase 4. Phase 7 only depends on Phase 1.
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+Phase 5 (data/polish) unblocks better standings and team pages for Phase 6. Phase 8 only depends on Phase 1.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-02 |
 | 2. Bowler Profiles | 3/3 | Complete | 2026-03-02 |
-| 3. Search and Home Page | 3/3 | Complete   | 2026-03-03 |
-| 4. Teams and Seasons | 0/3 | Not started | - |
-| 5. Leaderboards and Profile Depth | 0/3 | Not started | - |
-| 6. Champions, Content, and Community | 0/3 | Not started | - |
-| 7. Admin Tools | 0/2 | Not started | - |
+| 3. Search and Home Page | 3/3 | Complete | 2026-03-03 |
+| 4. Teams and Seasons | 4/4 | Complete | 2026-03-06 |
+| 5. Remaining Polish and Data Gaps | 0/2 | Not started | - |
+| 6. All-Time Leaderboards and Profile Depth | 0/2 | Not started | - |
+| 7. Content and Community Pages | 0/2 | Not started | - |
+| 8. Admin Tools | 0/2 | Not started | - |

@@ -15,8 +15,9 @@ import {
   getAllSeasonSlugs,
   getSeasonBySlug,
   getSeasonStandings,
-  getSeasonRecords,
   getSeasonHeroStats,
+  getSeasonPlayoffBracket,
+  getPlayoffTeamIDs,
   getSeasonWeeklyScores,
   getSeasonSchedule,
   getStandingsRaceData,
@@ -25,7 +26,7 @@ import {
 } from '@/lib/queries';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
-import { SeasonRecordsSection } from '@/components/season/SeasonRecordsSection';
+import { SeasonHighlights } from '@/components/season/SeasonHighlights';
 import { StandingsRaceChart } from '@/components/season/StandingsRaceChart';
 import { CompactWeekList } from '@/components/season/CompactWeekList';
 import { SeasonNav } from '@/components/season/SeasonNav';
@@ -78,15 +79,16 @@ export default async function SeasonPage({
 
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/season/${slug}`;
 
-  const [standings, records, heroStats, weeklyScores, schedule, raceData, allSeasons, weekSummaries] = await Promise.all([
+  const [standings, heroStats, bracket, weeklyScores, schedule, raceData, allSeasons, weekSummaries, playoffTeams] = await Promise.all([
     getSeasonStandings(season.seasonID),
-    getSeasonRecords(season.seasonID),
     getSeasonHeroStats(season.seasonID),
+    getSeasonPlayoffBracket(season.seasonID),
     getSeasonWeeklyScores(season.seasonID),
     getSeasonSchedule(season.seasonID),
     getStandingsRaceData(season.seasonID),
     getAllSeasonNavList(),
     getSeasonWeekSummaries(season.seasonID),
+    getPlayoffTeamIDs(season.seasonID),
   ]);
 
   const hasDivisions = standings.some((row) => row.divisionName !== null);
@@ -103,7 +105,13 @@ export default async function SeasonPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <SeasonHero season={season} heroStats={heroStats} shareUrl={shareUrl} />
+      <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
+        <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
+        <span className="text-navy/30">/</span>
+        <span className="text-navy/70">Season {season.romanNumeral}</span>
+      </div>
+
+      <SeasonHero season={season} heroStats={heroStats} bracket={bracket} shareUrl={shareUrl} />
 
       {/* Prev/next season navigation */}
       <SeasonNav current={season} allSeasons={allSeasons} />
@@ -114,15 +122,15 @@ export default async function SeasonPage({
           {standings.length > 0 && <a href="#standings" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Standings</a>}
           {raceData.length > 0 && <a href="#race" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Race Chart</a>}
           <a href="#weekly" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Weekly Results</a>
-          {records && <a href="#records" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Records</a>}
-          <Link href="/stats" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">
+          {weeklyScores.length > 0 && <a href="#records" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Records</a>}
+          <Link href={`/stats/${slug}`} className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">
             Leaderboards &rarr;
           </Link>
         </nav>
       )}
 
       <div className="mt-8 space-y-12">
-        <Standings standings={standings} hasDivisions={hasDivisions} />
+        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} />
 
         {hasScheduleData && raceData.length > 0 && (
           <StandingsRaceChart raceData={raceData} standings={standings} />
@@ -143,7 +151,18 @@ export default async function SeasonPage({
           </div>
         )}
 
-        <SeasonRecordsSection records={records} />
+        <div id="records">
+          <SeasonHighlights weeklyScores={weeklyScores} />
+        </div>
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-navy/10 text-center">
+        <p className="font-body text-sm text-navy/50">
+          Looking for individual stats and playoff standings?{' '}
+          <Link href={`/stats/${slug}`} className="text-red-600 hover:text-red-700 transition-colors font-medium">
+            View Season Leaderboards &rarr;
+          </Link>
+        </p>
       </div>
     </main>
   );

@@ -51,9 +51,9 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                   </Link>
                 </td>
                 <td className="text-center tabular-nums py-1.5">
-                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '—'}</span>
+                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
                   <span className="text-navy/30 mx-1">–</span>
-                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '—'}</span>
+                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
                 </td>
                 <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                   <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
@@ -66,7 +66,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                       {mvpBowler.bowlerName}
                       <span className="text-navy/40 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>
-                  ) : '—'}
+                  ) : '-'}
                 </td>
               </tr>
             );
