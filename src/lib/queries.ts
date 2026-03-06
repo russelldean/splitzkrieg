@@ -2027,6 +2027,8 @@ export interface WeeklyMatchScore {
   turkeys: number;
   gender: string | null;
   isFirstNight: boolean;
+  priorBestGame: number | null;
+  priorBestSeries: number | null;
 }
 
 /**
@@ -2067,7 +2069,16 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
             WHERE sc3.bowlerID = sc.bowlerID
               AND sc3.isPenalty = 0
               AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-          ) THEN 1 ELSE 0 END AS isFirstNight
+          ) THEN 1 ELSE 0 END AS isFirstNight,
+          (SELECT MAX(x.val) FROM scores sp
+            CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
+            WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+              AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+          ) AS priorBestGame,
+          (SELECT MAX(sp.scratchSeries) FROM scores sp
+            WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+              AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+          ) AS priorBestSeries
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         JOIN teams t ON sc.teamID = t.teamID

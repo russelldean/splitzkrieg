@@ -80,11 +80,33 @@ export function WeekStats({ weekScores, matchResults }: Props) {
     );
   });
 
+  // --- Splitzkrieg Debuts ---
+  const debuts = weekScores.filter(s => s.isFirstNight);
+
+  // --- All-Time High Game (exclude debuts) ---
+  const allTimeHighGames: { bowlerName: string; bowlerSlug: string; teamName: string; score: number }[] = [];
+  for (const b of bowlers) {
+    if (b.isFirstNight || b.priorBestGame == null) continue;
+    const bestThisWeek = Math.max(b.game1 ?? 0, b.game2 ?? 0, b.game3 ?? 0);
+    if (bestThisWeek > b.priorBestGame) {
+      allTimeHighGames.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: bestThisWeek });
+    }
+  }
+  allTimeHighGames.sort((a, b) => b.score - a.score);
+
+  // --- All-Time High Series (exclude debuts) ---
+  const allTimeHighSeries: { bowlerName: string; bowlerSlug: string; teamName: string; score: number }[] = [];
+  for (const b of bowlers) {
+    if (b.isFirstNight || b.priorBestSeries == null || b.scratchSeries == null) continue;
+    if (b.scratchSeries > b.priorBestSeries) {
+      allTimeHighSeries.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: b.scratchSeries });
+    }
+  }
+  allTimeHighSeries.sort((a, b) => b.score - a.score);
+
   // --- Bowler of the Week (most pins over average: series - 3×incomingAvg) ---
   // Exclude debuts (first night in Splitzkrieg) — they are not eligible
-  const debutBowlerIDs = new Set(
-    weekScores.filter(s => s.isFirstNight).map(s => s.bowlerID)
-  );
+  const debutBowlerIDs = new Set(debuts.map(s => s.bowlerID));
   const bowlerOfWeek = bowlers.reduce<{ name: string; slug: string; pinsOver: number; series: number } | null>((best, b) => {
     if (b.scratchSeries == null || b.incomingAvg == null || b.incomingAvg === 0) return best;
     if (debutBowlerIDs.has(b.bowlerID)) return best;
@@ -149,6 +171,56 @@ export function WeekStats({ weekScores, matchResults }: Props) {
                 <span className="text-navy/30 mx-1">&middot;</span>
                 {teamOfWeek.hcpSeries} Hcp Series
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Debuts, All-Time Records */}
+      {(debuts.length > 0 || allTimeHighGames.length > 0 || allTimeHighSeries.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {debuts.length > 0 && (
+            <div className="border border-navy/10 rounded-lg p-3">
+              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Splitzkrieg Debuts</h3>
+              {debuts.map(b => (
+                <div key={b.bowlerID} className="text-sm font-body py-0.5">
+                  <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                    {b.bowlerName}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+          {allTimeHighGames.length > 0 && (
+            <div className="border border-navy/10 rounded-lg p-3">
+              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Game</h3>
+              {allTimeHighGames.map((b, i) => (
+                <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+                  <span className="truncate mr-2">
+                    <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                      {b.bowlerName}
+                    </Link>
+                    <span className="text-navy/40 text-xs ml-1">({b.teamName})</span>
+                  </span>
+                  <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {allTimeHighSeries.length > 0 && (
+            <div className="border border-navy/10 rounded-lg p-3">
+              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Series</h3>
+              {allTimeHighSeries.map((b, i) => (
+                <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+                  <span className="truncate mr-2">
+                    <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                      {b.bowlerName}
+                    </Link>
+                    <span className="text-navy/40 text-xs ml-1">({b.teamName})</span>
+                  </span>
+                  <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
