@@ -81,8 +81,13 @@ export function WeekStats({ weekScores, matchResults }: Props) {
   });
 
   // --- Bowler of the Week (most pins over average: series - 3×incomingAvg) ---
+  // Exclude debuts (first night in Splitzkrieg) — they are not eligible
+  const debutBowlerIDs = new Set(
+    weekScores.filter(s => s.isFirstNight).map(s => s.bowlerID)
+  );
   const bowlerOfWeek = bowlers.reduce<{ name: string; slug: string; pinsOver: number; series: number } | null>((best, b) => {
     if (b.scratchSeries == null || b.incomingAvg == null || b.incomingAvg === 0) return best;
+    if (debutBowlerIDs.has(b.bowlerID)) return best;
     const pinsOver = b.scratchSeries - 3 * b.incomingAvg;
     const cur = { name: b.bowlerName, slug: b.bowlerSlug, pinsOver, series: b.scratchSeries };
     return !best || cur.pinsOver > best.pinsOver ? cur : best;

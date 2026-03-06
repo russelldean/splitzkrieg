@@ -435,7 +435,6 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
       FROM scores sc
       JOIN seasons sn ON sc.seasonID = sn.seasonID
       WHERE sc.isPenalty = 0
-        AND sc.incomingAvg IS NOT NULL
         AND sc.seasonID = (
           SELECT TOP 1 seasonID FROM seasons
           ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
@@ -443,6 +442,11 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
         AND sc.week = (
           SELECT MAX(sc2.week) FROM scores sc2
           WHERE sc2.seasonID = sc.seasonID AND sc2.isPenalty = 0
+        )
+        AND EXISTS (
+          SELECT 1 FROM scores sc3
+          WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
+            AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
         )
       ORDER BY sc.handSeries DESC
     `);
@@ -730,10 +734,14 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         WHERE sc.seasonID = @seasonID
           AND sc.isPenalty = 0
-          AND sc.incomingAvg IS NOT NULL
           AND sc.week = (
             SELECT MAX(sc2.week) FROM scores sc2
             WHERE sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+          )
+          AND EXISTS (
+            SELECT 1 FROM scores sc3
+            WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
+              AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
           )
         ORDER BY sc.handSeries DESC
       `);
@@ -2018,6 +2026,7 @@ export interface WeeklyMatchScore {
   incomingHcp: number | null;
   turkeys: number;
   gender: string | null;
+  isFirstNight: boolean;
 }
 
 /**
@@ -2052,7 +2061,13 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
           sc.incomingAvg,
           sc.incomingHcp,
           ISNULL(sc.turkeys, 0) AS turkeys,
-          b.gender
+          b.gender,
+          CASE WHEN NOT EXISTS (
+            SELECT 1 FROM scores sc3
+            WHERE sc3.bowlerID = sc.bowlerID
+              AND sc3.isPenalty = 0
+              AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
+          ) THEN 1 ELSE 0 END AS isFirstNight
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         JOIN teams t ON sc.teamID = t.teamID
