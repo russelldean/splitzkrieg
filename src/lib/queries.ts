@@ -435,6 +435,7 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
       FROM scores sc
       JOIN seasons sn ON sc.seasonID = sn.seasonID
       WHERE sc.isPenalty = 0
+        AND sc.incomingAvg IS NOT NULL
         AND sc.seasonID = (
           SELECT TOP 1 seasonID FROM seasons
           ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
@@ -729,6 +730,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         WHERE sc.seasonID = @seasonID
           AND sc.isPenalty = 0
+          AND sc.incomingAvg IS NOT NULL
           AND sc.week = (
             SELECT MAX(sc2.week) FROM scores sc2
             WHERE sc2.seasonID = @seasonID AND sc2.isPenalty = 0
@@ -2015,6 +2017,7 @@ export interface WeeklyMatchScore {
   incomingAvg: number | null;
   incomingHcp: number | null;
   turkeys: number;
+  gender: string | null;
 }
 
 /**
@@ -2048,7 +2051,8 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
           sc.handSeries,
           sc.incomingAvg,
           sc.incomingHcp,
-          ISNULL(sc.turkeys, 0) AS turkeys
+          ISNULL(sc.turkeys, 0) AS turkeys,
+          b.gender
         FROM scores sc
         JOIN bowlers b ON sc.bowlerID = b.bowlerID
         JOIN teams t ON sc.teamID = t.teamID

@@ -2,7 +2,11 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
-import { scoreColorClass } from '@/lib/score-utils';
+/** Color class for a game score relative to the bowler's incoming average. */
+function avgColorClass(score: number | null, avg: number | null): string {
+  if (score === null || avg === null) return '';
+  return score >= avg ? 'text-green-600' : 'text-red-600/70';
+}
 
 interface Props {
   weeklyScores: WeeklyMatchScore[];
@@ -294,13 +298,13 @@ function TeamBoxScore({
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/50">
                     {b.incomingAvg ?? '—'}
                   </td>
-                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${scoreColorClass(b.game1)}`}>
+                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game1, b.incomingAvg)}`}>
                     {b.game1 ?? '—'}
                   </td>
-                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${scoreColorClass(b.game2)}`}>
+                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game2, b.incomingAvg)}`}>
                     {b.game2 ?? '—'}
                   </td>
-                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${scoreColorClass(b.game3)}`}>
+                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game3, b.incomingAvg)}`}>
                     {b.game3 ?? '—'}
                   </td>
                   <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs sm:text-sm">

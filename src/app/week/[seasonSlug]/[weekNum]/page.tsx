@@ -15,6 +15,7 @@ import {
   getAllSeasonNavList,
 } from '@/lib/queries';
 import { WeeklyResults } from '@/components/season/WeeklyResults';
+import { WeekStats } from '@/components/season/WeekStats';
 
 export const dynamicParams = false;
 
@@ -193,6 +194,9 @@ export default async function WeekPage({
         matchResults={weekMatchResults}
         totalWeeks={0}
       />
+
+      {/* Week Stats */}
+      <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
 
       {/* Cross-links */}
       <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">
