@@ -141,7 +141,7 @@ export function AverageProgressionChart({ history }: Props) {
           )}
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-xs text-navy/40 mt-2 font-body">
+      <p className="text-xs text-navy/50 mt-2 font-body">
         27-game rolling average. Red dot marks career high.
       </p>
     </div>

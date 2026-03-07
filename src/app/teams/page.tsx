@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getAllTeamsDirectory, getTeamSeasonPresence, getTeamPlayoffFinishes, getCurrentSeasonID } from '@/lib/queries';
 import { TeamCard } from '@/components/team/TeamCard';
 import { TeamTimeline } from '@/components/team/TeamTimeline';
+import { TrailNav } from '@/components/ui/TrailNav';
 
 export const metadata: Metadata = {
   title: 'Teams | Splitzkrieg',
@@ -28,6 +29,7 @@ export default async function TeamsPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/teams" position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">
         {showAll ? 'Teams' : 'Current Teams'}
       </h1>
@@ -82,6 +84,8 @@ export default async function TeamsPage({
           currentSeasonID={currentSeasonID ?? undefined}
         />
       )}
+
+      <TrailNav current="/teams" />
     </main>
   );
 }

@@ -85,7 +85,7 @@ export async function Header() {
               <span className="font-heading text-navy uppercase tracking-widest text-lg font-normal block leading-none">
                 SPLITZKRIEG
               </span>
-              <span className="font-body text-[10px] text-navy/40 tracking-wider uppercase leading-none mt-0.5 block">
+              <span className="font-body text-[10px] text-navy/50 tracking-wider uppercase leading-none mt-0.5 block">
                 Bowling League &middot; Est. 2007
               </span>
               <span className="hidden sm:block mt-0.5">

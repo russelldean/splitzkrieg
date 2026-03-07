@@ -48,7 +48,7 @@ export function TeamBreakdown({ teams }: Props) {
                     <span className="text-sm text-navy/60 truncate block">{team.teamName}</span>
                   )}
                   {isLifer && (
-                    <span className="text-[11px] italic text-navy/30">forever</span>
+                    <span className="text-[11px] italic text-navy/40">forever</span>
                   )}
                 </div>
                 <div
@@ -61,7 +61,7 @@ export function TeamBreakdown({ teams }: Props) {
                       style={{ width: `${Math.max(team.pct, team.nights > 0 ? 3 : 0)}%` }}
                     />
                   </div>
-                  <span className="text-xs text-navy/40 tabular-nums w-8 text-right">
+                  <span className="text-xs text-navy/50 tabular-nums w-8 text-right">
                     {team.pct === 0 && team.nights > 0 ? '<1' : team.pct}%
                   </span>
                 </div>

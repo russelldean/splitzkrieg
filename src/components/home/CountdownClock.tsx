@@ -125,14 +125,14 @@ export function CountdownClock({ targetDate }: CountdownClockProps) {
       <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[80px]" suppressHydrationWarning>
         <div className="text-3xl sm:text-4xl mb-2" role="img" aria-label="bowling">🎳</div>
         <p className="font-heading text-xl sm:text-2xl text-navy">It&rsquo;s bowling night!</p>
-        <p className="font-body text-sm text-navy/40 mt-1">Lace up those shoes.</p>
+        <p className="font-body text-sm text-navy/50 mt-1">Lace up those shoes.</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[80px]" suppressHydrationWarning>
-      <p className="text-xs text-navy/40 font-body mb-2">Next bowling night</p>
+      <p className="text-xs text-navy/50 font-body mb-2">Next bowling night</p>
       <div className="flex items-baseline gap-2 sm:gap-3">
         <TimeUnit value={countdown?.days ?? 0} label={(countdown?.days ?? 0) === 1 ? 'day' : 'days'} />
         <Separator />

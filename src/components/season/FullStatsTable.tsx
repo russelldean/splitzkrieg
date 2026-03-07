@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { SeasonFullStatsRow } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
+import { ScrollableTable } from '@/components/ui/ScrollableTable';
 
 interface Props {
   stats: SeasonFullStatsRow[];
@@ -58,26 +59,6 @@ export function FullStatsTable({ stats, minGames }: Props) {
   const [genderTab, setGenderTab] = useState<GenderTab>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('scratchAvg');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
-  }, []);
-
-  useEffect(() => {
-    checkScroll();
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', checkScroll, { passive: true });
-    window.addEventListener('resize', checkScroll);
-    return () => {
-      el.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
-    };
-  }, [checkScroll]);
 
   // Compute ranks for eligible bowlers
   const scratchRankByGender = useMemo(() => {
@@ -99,12 +80,6 @@ export function FullStatsTable({ stats, minGames }: Props) {
     eligible.forEach((s, i) => rankMap.set(s.bowlerID, i + 1));
     return rankMap;
   }, [stats, minGames]);
-
-  // Re-check scroll when tab changes
-  useEffect(() => {
-    // Small delay to let DOM update after tab switch
-    requestAnimationFrame(checkScroll);
-  }, [genderTab, checkScroll]);
 
   const filtered = useMemo(() => {
     if (genderTab === 'all') return stats;
@@ -176,19 +151,10 @@ export function FullStatsTable({ stats, minGames }: Props) {
       {filtered.length === 0 ? (
         <p className="font-body text-navy/50 py-4">No bowlers in this category.</p>
       ) : (
-        <div className="relative">
-        {canScrollRight && (
-          <div className="flex items-center justify-end gap-1 mb-2 text-xs font-body text-navy/40 sm:hidden">
-            <span>Scroll for more</span>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </div>
-        )}
-        <div ref={scrollRef} className="overflow-x-auto -mx-4 sm:mx-0">
+        <ScrollableTable>
           <table className="w-full text-sm font-body">
             <thead>
-              <tr className="border-b border-navy/10 text-navy/50 text-xs uppercase tracking-wider">
+              <tr className="border-b border-navy/10 text-navy/60 text-xs uppercase tracking-wider">
                 <th className="px-3 py-2 text-left w-10 sticky left-0 bg-white z-10">#</th>
                 {COLUMNS.map((col) => (
                   <th
@@ -210,7 +176,7 @@ export function FullStatsTable({ stats, minGames }: Props) {
                   key={`${row.bowlerID}-${row.teamSlug ?? 'no-team'}`}
                   className="border-b border-navy/5 hover:bg-navy/[0.02] transition-colors"
                 >
-                  <td className="px-3 py-2 text-navy/40 tabular-nums sticky left-0 bg-white z-10">{i + 1}</td>
+                  <td className="px-3 py-2 text-navy/50 tabular-nums sticky left-0 bg-white z-10">{i + 1}</td>
                   <td className="px-3 py-2 font-medium whitespace-nowrap sticky left-10 bg-white z-10">
                     <Link
                       href={`/bowler/${row.slug}`}
@@ -241,9 +207,9 @@ export function FullStatsTable({ stats, minGames }: Props) {
                   <td className="px-3 py-2 text-navy/70 whitespace-nowrap">
                     <span className="flex items-center justify-end gap-1">
                       <span className="tabular-nums">{row.scratchAvg?.toFixed(1) ?? '\u2014'}</span>
-                      <span className="text-navy/50 text-xs w-6 text-left tabular-nums">
+                      <span className="text-navy/50 text-xs w-8 text-left tabular-nums">
                         {row.gender && scratchRankByGender.has(`${row.gender}-${row.bowlerID}`)
-                          ? `(${scratchRankByGender.get(`${row.gender}-${row.bowlerID}`)})`
+                          ? `(${genderTab === 'all' ? (row.gender === 'M' ? 'M' : 'W') : ''}${scratchRankByGender.get(`${row.gender}-${row.bowlerID}`)})`
                           : ''}
                       </span>
                     </span>
@@ -277,11 +243,7 @@ export function FullStatsTable({ stats, minGames }: Props) {
               ))}
             </tbody>
           </table>
-        </div>
-        {canScrollRight && (
-          <div className="absolute top-0 right-0 bottom-0 w-12 pointer-events-none bg-gradient-to-l from-white via-white/80 to-transparent" />
-        )}
-        </div>
+        </ScrollableTable>
       )}
     </section>
   );

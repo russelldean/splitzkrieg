@@ -1,6 +1,7 @@
 import { getAllBowlersDirectory, type DirectoryBowler } from '@/lib/queries';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BackToTop } from '@/components/ui/BackToTop';
+import { TrailNav } from '@/components/ui/TrailNav';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -47,6 +48,7 @@ export default async function BowlersPage({
   return (
     <div className="min-h-screen bg-cream">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <TrailNav current="/bowlers" position="top" />
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="font-heading text-3xl sm:text-4xl text-navy">
@@ -107,7 +109,7 @@ export default async function BowlersPage({
                         title="Active bowler"
                       />
                     )}
-                    <span className="text-navy/40 text-xs flex-shrink-0">
+                    <span className="text-navy/50 text-xs flex-shrink-0">
                       {bowler.seasonsActive}s
                     </span>
                   </div>
@@ -118,6 +120,7 @@ export default async function BowlersPage({
         </div>
 
         <BackToTop />
+        <TrailNav current="/bowlers" />
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ export function EmptyState({ title, message, icon }: EmptyStateProps) {
         {title}
       </h3>
       {message && (
-        <p className="text-sm font-body text-navy/40 max-w-sm">
+        <p className="text-sm font-body text-navy/50 max-w-sm">
           {message}
         </p>
       )}

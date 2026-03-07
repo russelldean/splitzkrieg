@@ -180,7 +180,7 @@ export default async function BowlerPage({
 
         <SeasonStatsTable seasons={seasonStats} />
 
-        <GameLog gameLog={gameLog} />
+        <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} />
       </div>
     </main>
   );

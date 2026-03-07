@@ -41,6 +41,7 @@ export default async function Home() {
   let weekSchedule: Awaited<ReturnType<typeof getSeasonSchedule>> = [];
 
   let nextWeekNumber = 0;
+  let latestWeekDate: string | null = null;
 
   if (seasonSnapshot) {
     const season = await getSeasonBySlug(seasonSnapshot.slug);
@@ -59,6 +60,12 @@ export default async function Home() {
 
       if (nextWeekNumber > 0) {
         weekSchedule = allSchedule.filter(s => s.week === nextWeekNumber);
+      }
+
+      // Get date for the latest played week
+      const latestWeekSchedule = allSchedule.find(s => s.week === seasonSnapshot.weekNumber);
+      if (latestWeekSchedule?.matchDate) {
+        latestWeekDate = new Date(latestWeekSchedule.matchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       }
     }
   }
@@ -100,10 +107,11 @@ export default async function Home() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-heading text-lg sm:text-xl text-white group-hover:text-red-300 transition-colors">
-                    This Week&apos;s Results
+                    Week {seasonSnapshot.weekNumber} Results
+                    {latestWeekDate && <span className="font-body text-sm text-white/60 ml-2">{latestWeekDate}</span>}
                   </div>
-                  <div className="font-body text-sm text-white/50 mt-0.5">
-                    Season {seasonSnapshot.romanNumeral} · Week {seasonSnapshot.weekNumber}
+                  <div className="font-body text-sm text-white/60 mt-0.5">
+                    Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -126,7 +134,7 @@ export default async function Home() {
                   <div className="relative font-body text-sm font-semibold text-white group-hover:text-red-200 transition-colors">
                     {link.label}
                   </div>
-                  <div className="relative font-body text-xs text-white/50 mt-1 leading-relaxed">
+                  <div className="relative font-body text-xs text-white/60 mt-1 leading-relaxed">
                     {link.description}
                   </div>
                 </Link>
@@ -139,7 +147,7 @@ export default async function Home() {
                   <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
                     {link.label}
                   </div>
-                  <div className="font-body text-xs text-navy/40 mt-1 leading-relaxed">
+                  <div className="font-body text-xs text-navy/50 mt-1 leading-relaxed">
                     {link.description}
                   </div>
                 </Link>

@@ -156,7 +156,7 @@ export function SearchBar() {
               }}
             >
               <span className="font-body text-navy text-sm">{result.item.name}</span>
-              <span className="text-navy/40 text-xs ml-2">
+              <span className="text-navy/50 text-xs ml-2">
                 {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
               </span>
             </li>

@@ -323,7 +323,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
                     <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
                       {b.bowlerName}
                     </Link>
-                    <span className="text-navy/40 text-xs ml-1">({b.teamName})</span>
+                    <span className="text-navy/50 text-xs ml-1">({b.teamName})</span>
                   </span>
                   <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
                 </div>
@@ -339,7 +339,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
                     <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
                       {b.bowlerName}
                     </Link>
-                    <span className="text-navy/40 text-xs ml-1">({b.teamName})</span>
+                    <span className="text-navy/50 text-xs ml-1">({b.teamName})</span>
                   </span>
                   <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
                 </div>
@@ -356,7 +356,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {xpTiers.map(tier => (
               <div key={tier.label} className="border border-navy/10 rounded-lg p-3">
-                <div className="text-xs font-heading text-navy/50 uppercase tracking-wider mb-1.5">{tier.label}</div>
+                <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-1.5">{tier.label}</div>
                 {tier.teams.map(team => (
                   <div key={team.id} className="flex justify-between text-sm font-body py-0.5">
                     <Link href={`/team/${team.teamSlug}`} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
@@ -452,7 +452,7 @@ function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug:
         <summary className="font-heading text-sm text-navy/60 uppercase tracking-wider cursor-pointer list-none inline-flex items-center gap-1">
           PIN <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-navy/10 text-navy/50 text-[10px] font-bold leading-none">?</span>
         </summary>
-        <p className="text-xs font-body text-navy/40 mt-1">Personal Impact Number - how many points your team would have lost if you didn't show up.</p>
+        <p className="text-xs font-body text-navy/50 mt-1">Personal Impact Number - how many points your team would have lost if you didn't show up.</p>
       </details>
       {(() => {
         const topPin = items[0].pin;
@@ -464,7 +464,7 @@ function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug:
                 <Link href={`/bowler/${item.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                   {item.name}
                 </Link>
-                <span className="text-navy/40 text-xs ml-1">({item.team})</span>
+                <span className="text-navy/50 text-xs ml-1">({item.team})</span>
               </span>
               <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>+{item.pin}</span>
             </div>
@@ -472,7 +472,7 @@ function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug:
         });
       })()}
       {tiedCount > 0 && (
-        <div className="text-sm font-body text-navy/40 italic py-0.5">
+        <div className="text-sm font-body text-navy/50 italic py-0.5">
           {tiedCount} tied with +{tiedValue}
         </div>
       )}
@@ -483,7 +483,7 @@ function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug:
 function TiedNote({ count, value, prefix }: { count: number; value: number; prefix?: string }) {
   if (count === 0) return null;
   return (
-    <div className="text-sm font-body text-navy/40 italic py-0.5">
+    <div className="text-sm font-body text-navy/50 italic py-0.5">
       {count} tied with {prefix}{value}
     </div>
   );
@@ -509,7 +509,7 @@ function LeaderList<T>({ title, result, getItem }: {
                 <Link href={`/bowler/${item.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                   {item.name}
                 </Link>
-                {item.team && <span className="text-navy/40 text-xs ml-1">({item.team})</span>}
+                {item.team && <span className="text-navy/50 text-xs ml-1">({item.team})</span>}
               </span>
               <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{item.value}</span>
             </div>

@@ -48,10 +48,10 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                     Week {week}
                   </span>
                   {dateStr && (
-                    <span className="text-xs font-body text-navy/40">{dateStr}</span>
+                    <span className="text-xs font-body text-navy/50">{dateStr}</span>
                   )}
                   {!hasScores && (
-                    <span className="text-xs font-body text-navy/30 italic">Upcoming</span>
+                    <span className="text-xs font-body text-navy/40 italic">Upcoming</span>
                   )}
                 </div>
                 <div className="flex items-center gap-4 text-xs font-body text-navy/50 shrink-0">
@@ -63,10 +63,10 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                         const colorClass = delta >= 0 ? 'text-green-600' : 'text-red-600';
                         return (
                           <span className="hidden sm:inline">
-                            <span className="text-navy/40">Avg </span>
+                            <span className="text-navy/50">Avg </span>
                             <span className="tabular-nums font-semibold text-navy/70">{summary.leagueAvg}</span>
                             <span className="text-navy/30"> / </span>
-                            <span className="text-navy/40">Expected </span>
+                            <span className="text-navy/50">Expected </span>
                             <span className="tabular-nums text-navy/50">{summary.expectedAvg}</span>
                             <span className={`tabular-nums font-semibold ml-1.5 ${colorClass}`}>{sign}{delta.toFixed(1)}</span>
                           </span>
@@ -74,10 +74,10 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                       })()}
                       {summary.botwName && (
                         <span>
-                          <span className="text-navy/40 text-[10px] sm:text-xs">BOTW </span>
+                          <span className="text-navy/50 text-[10px] sm:text-xs">BOTW </span>
                           <span className="font-semibold text-navy/70">{summary.botwName}</span>
                           {summary.botwPinsOver != null && (
-                            <span className="hidden sm:inline tabular-nums text-navy/40 ml-1">+{summary.botwPinsOver}</span>
+                            <span className="hidden sm:inline tabular-nums text-navy/50 ml-1">+{summary.botwPinsOver}</span>
                           )}
                         </span>
                       )}

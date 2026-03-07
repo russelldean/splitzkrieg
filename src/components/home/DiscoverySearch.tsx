@@ -186,7 +186,7 @@ export function DiscoverySearch() {
           className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg border border-navy/10 z-50 overflow-hidden"
         >
           <div className="px-3 py-2 border-b border-navy/5">
-            <span className="text-xs font-body text-navy/40 uppercase tracking-wider">Browse</span>
+            <span className="text-xs font-body text-navy/50 uppercase tracking-wider">Browse</span>
           </div>
           {categories.map((cat) => (
             <Link
@@ -232,7 +232,7 @@ export function DiscoverySearch() {
               }}
             >
               <span className="font-body text-navy">{result.item.name}</span>
-              <span className="text-navy/40 text-xs ml-3 whitespace-nowrap">
+              <span className="text-navy/50 text-xs ml-3 whitespace-nowrap">
                 {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
               </span>
             </li>

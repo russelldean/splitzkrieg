@@ -80,7 +80,7 @@ function WeeklySummaryTable({
     <div className="mb-4 overflow-x-auto">
       <table className="w-full text-sm font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/40 text-xs">
+          <tr className="border-b border-navy/10 text-navy/50 text-xs">
             <th className="text-left font-normal py-1.5 pl-2">Home</th>
             <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
             <th className="text-right font-normal py-1.5">Away</th>
@@ -112,7 +112,7 @@ function WeeklySummaryTable({
                   {mvpBowler ? (
                     <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
                       {mvpBowler.bowlerName}
-                      <span className="text-navy/40 ml-1 text-xs">{mvpBowler.handSeries}</span>
+                      <span className="text-navy/50 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>
                   ) : '-'}
                 </td>
@@ -141,14 +141,12 @@ function MatchupSummary({
 }) {
   const t1Total = (mr.team1GamePts ?? 0) + (mr.team1BonusPts ?? 0);
   const t2Total = (mr.team2GamePts ?? 0) + (mr.team2BonusPts ?? 0);
-  const t1Won = t1Total > t2Total;
-  const t2Won = t2Total > t1Total;
 
   return (
     <div className="bg-navy/[0.03] rounded-lg px-3 py-2 mb-3">
       <table className="w-full text-xs font-body">
         <thead>
-          <tr className="text-navy/40">
+          <tr className="text-navy/50">
             <th className="text-left font-normal py-0.5 w-[30%]"></th>
             <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G1</th>
             <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G2</th>
@@ -160,9 +158,9 @@ function MatchupSummary({
           </tr>
         </thead>
         <tbody>
-          <tr className={t1Won ? 'text-navy' : 'text-navy/60'}>
+          <tr className="text-navy">
             <td className="py-0.5">
-              <Link href={`/team/${homeTeamSlug}`} className={`hover:text-red-600 transition-colors ${t1Won ? 'font-semibold' : ''}`}>
+              <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600 transition-colors">
                 {homeTeamName}
               </Link>
             </td>
@@ -172,11 +170,13 @@ function MatchupSummary({
             <td className="text-right tabular-nums py-0.5">{mr.team1Series ?? '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team1GamePts != null ? mr.team1GamePts / 2 : '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team1BonusPts ?? '-'}</td>
-            <td className={`text-right tabular-nums py-0.5 font-bold ${t1Won ? 'text-green-600' : ''}`}>{t1Total}</td>
+            <td className="text-right tabular-nums py-0.5 font-bold">
+              {t1Total === 9 ? '\u2B50 ' : ''}{t1Total}
+            </td>
           </tr>
-          <tr className={t2Won ? 'text-navy' : 'text-navy/60'}>
+          <tr className="text-navy">
             <td className="py-0.5">
-              <Link href={`/team/${awayTeamSlug}`} className={`hover:text-red-600 transition-colors ${t2Won ? 'font-semibold' : ''}`}>
+              <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600 transition-colors">
                 {awayTeamName}
               </Link>
             </td>
@@ -186,7 +186,9 @@ function MatchupSummary({
             <td className="text-right tabular-nums py-0.5">{mr.team2Series ?? '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team2GamePts != null ? mr.team2GamePts / 2 : '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team2BonusPts ?? '-'}</td>
-            <td className={`text-right tabular-nums py-0.5 font-bold ${t2Won ? 'text-green-600' : ''}`}>{t2Total}</td>
+            <td className="text-right tabular-nums py-0.5 font-bold">
+              {t2Total === 9 ? '\u2B50 ' : ''}{t2Total}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -232,14 +234,14 @@ function TeamBoxScore({
         <table className="w-full text-sm font-body mt-1">
           <thead>
             <tr className="border-b border-navy/10">
-              <th className="text-left px-2 py-1 text-navy/40 font-normal text-xs">Bowler</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">Avg</th>
-              <th className="text-right pl-2 pr-1 py-1 text-navy/40 font-normal text-xs border-l border-navy/10">G1</th>
-              <th className="text-right pl-2 pr-1 py-1 text-navy/40 font-normal text-xs border-l border-navy/10">G2</th>
-              <th className="text-right pl-2 pr-1 py-1 text-navy/40 font-normal text-xs border-l border-navy/10">G3</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">Series</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">Hcp</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">T</th>
+              <th className="text-left px-2 py-1 text-navy/50 font-normal text-xs">Bowler</th>
+              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">Avg</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/50 font-normal text-xs border-l border-navy/10">G1</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/50 font-normal text-xs border-l border-navy/10">G2</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/50 font-normal text-xs border-l border-navy/10">G3</th>
+              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">Series</th>
+              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">Hcp</th>
+              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">T</th>
             </tr>
           </thead>
           <tbody>
@@ -279,7 +281,7 @@ function TeamBoxScore({
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/60">
                     {b.handSeries ?? '-'}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/40">
+                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/50">
                     {b.turkeys > 0 ? b.turkeys : ''}
                   </td>
                 </tr>
@@ -293,7 +295,7 @@ function TeamBoxScore({
               <td className="pl-2 pr-1 py-1 text-right tabular-nums font-semibold text-xs border-l border-navy/10">{g3Total}</td>
               <td className="px-1 py-1 text-right tabular-nums font-bold text-xs">{seriesTot}</td>
               <td className="px-1 py-1 text-right tabular-nums font-bold text-xs">{hcpSeriesTot}</td>
-              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs text-navy/40">
+              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs text-navy/50">
                 {turkeysTot > 0 ? turkeysTot : ''}
               </td>
             </tr>
@@ -361,7 +363,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
               const mvpID = findMatchMVP(homeBowlers, awayBowlers);
               const mr = mrIndex.get(`${week}-${matchup.homeTeamID}-${matchup.awayTeamID}`);
               return (
-                <div key={`${week}-${idx}`} className="border border-navy/5 rounded-lg p-3">
+                <div key={`${week}-${idx}`} id={`match-${idx}`} className="border border-navy/5 rounded-lg p-3 scroll-mt-4">
                   {mr ? (
                     <MatchupSummary
                       mr={mr}
@@ -447,13 +449,13 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                 <span className="font-heading text-lg text-navy">
                   Week {week}
                   {dateStr && (
-                    <span className="text-navy/40 font-body text-sm ml-2">{dateStr}</span>
+                    <span className="text-navy/50 font-body text-sm ml-2">{dateStr}</span>
                   )}
                   {!hasScores && (
-                    <span className="text-navy/30 font-body text-sm ml-2 italic">Upcoming</span>
+                    <span className="text-navy/40 font-body text-sm ml-2 italic">Upcoming</span>
                   )}
                 </span>
-                <span className="text-navy/40 text-sm">
+                <span className="text-navy/50 text-sm">
                   {hasScores ? `${matchCount} matches` : `${matchups.length} matchups`}{' '}
                   {openWeeks.has(week) ? '\u25B2' : '\u25BC'}
                 </span>
@@ -546,7 +548,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                         </div>
                       ))}
                       {matchups.length === 0 && (
-                        <p className="text-sm text-navy/30 italic">Schedule not yet available.</p>
+                        <p className="text-sm text-navy/40 italic">Schedule not yet available.</p>
                       )}
                     </div>
                   )}

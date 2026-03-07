@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getAllPlayoffHistory, type PlayoffSeason } from '@/lib/queries';
+import { TrailNav } from '@/components/ui/TrailNav';
 
 export const metadata: Metadata = {
   title: 'All-Time Stats | Splitzkrieg',
@@ -92,7 +93,7 @@ function PlayoffRow({
     <tr className="border-b border-navy/5 last:border-0">
       <td className="py-3 pr-4 align-top whitespace-nowrap">
         <div className="font-heading text-navy/70">{season.romanNumeral}</div>
-        <div className="text-navy/40 text-xs">{season.displayName}</div>
+        <div className="text-navy/50 text-xs">{season.displayName}</div>
       </td>
       <td className="py-3 pr-4 align-top font-body font-bold text-amber-700">
         <TeamName
@@ -135,9 +136,9 @@ function CovidRow() {
     <tr className="border-b border-navy/5">
       <td className="py-3 pr-4 align-top whitespace-nowrap">
         <div className="font-heading text-navy/70">XXV</div>
-        <div className="text-navy/40 text-xs">Spring 2020</div>
+        <div className="text-navy/50 text-xs">Spring 2020</div>
       </td>
-      <td colSpan={4} className="py-3 align-top font-body text-navy/40 italic">
+      <td colSpan={4} className="py-3 align-top font-body text-navy/50 italic">
         Season Incomplete: Covid
       </td>
     </tr>
@@ -168,6 +169,7 @@ export default async function AllTimeStatsPage() {
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/stats" position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
         <Link
           href="/stats"
@@ -196,7 +198,7 @@ export default async function AllTimeStatsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-navy/10 text-left">
-                <th className="py-2 pr-4 font-heading text-navy/50 text-xs uppercase tracking-wider">
+                <th className="py-2 pr-4 font-heading text-navy/60 text-xs uppercase tracking-wider">
                   Season
                 </th>
                 <th className="py-2 pr-4 font-heading text-amber-700/50 text-xs uppercase tracking-wider">
@@ -205,10 +207,10 @@ export default async function AllTimeStatsPage() {
                 <th className="py-2 pr-4 font-heading text-slate-400 text-xs uppercase tracking-wider">
                   Runner-Up
                 </th>
-                <th className="py-2 pr-4 font-heading text-navy/50 text-xs uppercase tracking-wider">
+                <th className="py-2 pr-4 font-heading text-navy/60 text-xs uppercase tracking-wider">
                   Semifinalist
                 </th>
-                <th className="py-2 font-heading text-navy/50 text-xs uppercase tracking-wider">
+                <th className="py-2 font-heading text-navy/60 text-xs uppercase tracking-wider">
                   Semifinalist
                 </th>
               </tr>
@@ -226,20 +228,7 @@ export default async function AllTimeStatsPage() {
         )}
       </section>
 
-      <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">
-        <Link
-          href="/stats"
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
-        >
-          Current Season Stats
-        </Link>
-        <Link
-          href="/bowlers"
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
-        >
-          Browse Bowlers
-        </Link>
-      </div>
+      <TrailNav current="/stats" />
     </main>
   );
 }

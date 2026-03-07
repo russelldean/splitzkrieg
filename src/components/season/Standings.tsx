@@ -67,7 +67,7 @@ function StandingsTable({
     <div className="overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-sm font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/50 text-xs uppercase tracking-wider">
+          <tr className="border-b border-navy/10 text-navy/60 text-xs uppercase tracking-wider">
             <th className="px-4 py-2 text-left w-12">#</th>
             <th className="px-4 py-2 text-left">Team</th>
             <th className="px-4 py-2 text-right">Total Pts</th>
@@ -87,7 +87,7 @@ function StandingsTable({
                   inPlayoffs ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
                 }`}
               >
-                <td className="px-4 py-2.5 text-navy/40 tabular-nums">
+                <td className="px-4 py-2.5 text-navy/50 tabular-nums">
                   {startRank + i}
                 </td>
                 <td className="px-4 py-2.5 font-medium">
@@ -101,7 +101,7 @@ function StandingsTable({
                 <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-navy">
                   {row.totalPts}
                   {row.lastWeekPts != null && (
-                    <span className="text-xs font-normal text-navy/40 ml-1">
+                    <span className="text-xs font-normal text-navy/50 ml-1">
                       (+{row.lastWeekPts})
                     </span>
                   )}
@@ -110,11 +110,11 @@ function StandingsTable({
                 <td className="px-4 py-2.5 text-right tabular-nums text-navy/70">{row.xp}</td>
                 <td className="px-4 py-2.5 text-left pl-6 tabular-nums text-navy/70">
                   {row.teamScratchAvg?.toFixed(1) ?? '\u2014'}
-                  <span className="text-navy/30 text-xs ml-1">({row.scratchAvgRank})</span>
+                  <span className="text-navy/40 text-xs ml-1">({row.scratchAvgRank})</span>
                 </td>
                 <td className="px-4 py-2.5 text-left pl-6 tabular-nums text-navy/70">
                   {row.teamHcpAvg?.toFixed(1) ?? '\u2014'}
-                  <span className="text-navy/30 text-xs ml-1">({row.hcpAvgRank})</span>
+                  <span className="text-navy/40 text-xs ml-1">({row.hcpAvgRank})</span>
                 </td>
               </tr>
             );
@@ -164,12 +164,12 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID }: P
       ) : (
         <StandingsTable rows={standings} startRank={1} playoffTeamIDs={playoffTeamIDs} />
       )}
-      <p className="text-xs font-body text-navy/40 mt-2 flex items-center gap-1.5">
+      <p className="text-xs font-body text-navy/50 mt-2 flex items-center gap-1.5">
         <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
         {playoffLabel}
       </p>
       {(seasonID === 30 || seasonID === 31) && (
-        <p className="text-xs font-body text-navy/40 mt-1.5">
+        <p className="text-xs font-body text-navy/50 mt-1.5">
           Playoff teams shown here may differ from what was originally reported.
           See <Link href="/rules#numbers" className="text-red-600 hover:text-red-700 underline">A Note on the Numbers</Link> on the Rules page.
         </p>

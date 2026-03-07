@@ -32,7 +32,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
     <div className="mb-4 overflow-x-auto">
       <table className="w-full text-sm font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/40 text-xs">
+          <tr className="border-b border-navy/10 text-navy/50 text-xs">
             <th className="text-left font-normal py-1.5 pl-2">Home</th>
             <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
             <th className="text-right font-normal py-1.5">Away</th>
@@ -51,9 +51,11 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                   </Link>
                 </td>
                 <td className="text-center tabular-nums py-1.5">
-                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
-                  <span className="text-navy/30 mx-1">–</span>
-                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
+                  <a href={`#match-${idx}`} className="hover:underline underline-offset-2">
+                    <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
+                    <span className="text-navy/30 mx-1">–</span>
+                    <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
+                  </a>
                 </td>
                 <td className={`text-right py-1.5 max-w-[120px] sm:max-w-none truncate ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                   <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors" title={matchup.awayTeamName}>
@@ -64,7 +66,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                   {mvpBowler ? (
                     <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
                       {mvpBowler.bowlerName}
-                      <span className="text-navy/40 ml-1 text-xs">{mvpBowler.handSeries}</span>
+                      <span className="text-navy/50 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>
                   ) : '-'}
                 </td>

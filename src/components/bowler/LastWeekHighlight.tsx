@@ -53,7 +53,7 @@ export function LastWeekHighlight({ week, delta }: Props) {
           <span className={`font-heading text-xl tabular-nums ${seriesColorClass(week.scratchSeries)}`}>
             {week.scratchSeries ?? '\u2014'}
           </span>
-          <span className="text-navy/40 text-sm">
+          <span className="text-navy/50 text-sm">
             {expanded ? '\u25B2' : '\u25BC'}
           </span>
         </div>
@@ -88,7 +88,7 @@ export function LastWeekHighlight({ week, delta }: Props) {
               { label: 'Series', value: week.scratchSeries, color: seriesColorClass(week.scratchSeries) },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">
-                <div className="text-xs uppercase tracking-wide text-navy/50 font-body mb-1">
+                <div className="text-xs uppercase tracking-wide text-navy/60 font-body mb-1">
                   {label}
                 </div>
                 <div className={`text-2xl font-heading tabular-nums ${color}`}>

@@ -55,7 +55,7 @@ export function Footer() {
               />
             </Link>
           </div>
-          <p className="font-body text-navy/40 text-sm">
+          <p className="font-body text-navy/50 text-sm">
             Durham, NC &middot; Since 2007
           </p>
           <div className="flex items-center gap-5">

@@ -149,7 +149,7 @@ export default async function WeekPage({
             ) : olderSeason ? (
               <Link
                 href={`/season/${olderSeason.slug}`}
-                className="flex items-center gap-1 text-sm font-body text-navy/40 hover:text-red-600 transition-colors"
+                className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -159,7 +159,7 @@ export default async function WeekPage({
             ) : <span />}
           </div>
           <Link
-            href={`/season/${seasonSlug}#weekly`}
+            href="/week"
             className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
           >
             All Weeks
@@ -178,7 +178,7 @@ export default async function WeekPage({
             ) : newerSeason ? (
               <Link
                 href={`/season/${newerSeason.slug}`}
-                className="flex items-center gap-1 text-sm font-body text-navy/40 hover:text-red-600 transition-colors"
+                className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
               >
                 Season {newerSeason.romanNumeral}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

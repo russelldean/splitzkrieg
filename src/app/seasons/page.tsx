@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getAllSeasonsDirectory } from '@/lib/queries';
+import { TrailNav } from '@/components/ui/TrailNav';
 
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default async function SeasonsPage() {
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-3xl">
+      <TrailNav current="/seasons" position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">Seasons</h1>
       <p className="font-body text-navy/50 mb-8">
         {seasons.length} seasons of Splitzkrieg bowling history.
@@ -46,16 +48,16 @@ export default async function SeasonsPage() {
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm font-body text-navy/60">
                   <span>
-                    <span className="text-navy/40">Teams </span>
+                    <span className="text-navy/50">Teams </span>
                     <span className="font-semibold tabular-nums">{current.teamCount}</span>
                   </span>
                   <span>
-                    <span className="text-navy/40">Bowlers </span>
+                    <span className="text-navy/50">Bowlers </span>
                     <span className="font-semibold tabular-nums">{current.bowlerCount}</span>
                   </span>
                   {current.champion && (
                     <span>
-                      <span className="text-navy/40">Champion </span>
+                      <span className="text-navy/50">Champion </span>
                       <span className="font-semibold text-navy/70">{current.champion}</span>
                     </span>
                   )}
@@ -82,7 +84,7 @@ export default async function SeasonsPage() {
                       <span className="font-heading text-lg text-navy group-hover:text-red-600 transition-colors">
                         {season.period} {season.year}
                       </span>
-                      <span className="font-body text-sm text-navy/40">
+                      <span className="font-body text-sm text-navy/50">
                         {season.romanNumeral}
                       </span>
                     </div>
@@ -104,20 +106,7 @@ export default async function SeasonsPage() {
         </>
       )}
 
-      <div className="mt-10 pt-6 border-t border-navy/10 flex gap-4">
-        <Link
-          href="/"
-          className="font-body text-sm text-navy/60 hover:text-navy transition-colors"
-        >
-          Back to Home
-        </Link>
-        <Link
-          href="/bowlers"
-          className="font-body text-sm text-navy/60 hover:text-navy transition-colors"
-        >
-          Browse All Bowlers
-        </Link>
-      </div>
+      <TrailNav current="/seasons" />
     </main>
   );
 }

@@ -36,20 +36,20 @@ export function CurrentRoster({ roster }: Props) {
                 {member.bowlerName}
               </Link>
               {member.firstSeason && (
-                <span className="text-xs font-body text-navy/40">
+                <span className="text-xs font-body text-navy/50">
                   since {member.firstSeason}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-4 text-sm font-body text-navy/60">
               <span>
-                <span className="text-navy/40">Avg </span>
+                <span className="text-navy/50">Avg </span>
                 <span className="tabular-nums font-semibold text-navy">
                   {member.seasonAverage?.toFixed(1) ?? '\u2014'}
                 </span>
               </span>
               <span>
-                <span className="text-navy/40">Games </span>
+                <span className="text-navy/50">Games </span>
                 <span className="tabular-nums font-semibold text-navy">
                   {member.gamesBowled}
                 </span>

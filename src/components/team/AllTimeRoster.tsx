@@ -15,13 +15,13 @@ export function AllTimeRoster({ roster }: Props) {
         <table className="w-full text-sm font-body">
           <thead>
             <tr className="border-b border-navy/10">
-              <th className="text-left px-4 py-2 text-navy/50 font-normal w-12">#</th>
-              <th className="text-left px-4 py-2 text-navy/50 font-normal">Bowler</th>
-              <th className="text-right px-4 py-2 text-navy/50 font-normal">Games</th>
-              <th className="text-right px-4 py-2 text-navy/50 font-normal">Pins</th>
-              <th className="text-right px-4 py-2 text-navy/50 font-normal">Avg</th>
-              <th className="text-right px-4 py-2 text-navy/50 font-normal">Seasons</th>
-              <th className="text-right px-4 py-2 text-navy/50 font-normal hidden sm:table-cell">Tenure</th>
+              <th className="text-left px-4 py-2 text-navy/60 font-normal w-12">#</th>
+              <th className="text-left px-4 py-2 text-navy/60 font-normal">Bowler</th>
+              <th className="text-right px-4 py-2 text-navy/60 font-normal">Games</th>
+              <th className="text-right px-4 py-2 text-navy/60 font-normal">Pins</th>
+              <th className="text-right px-4 py-2 text-navy/60 font-normal">Avg</th>
+              <th className="text-right px-4 py-2 text-navy/60 font-normal">Seasons</th>
+              <th className="text-right px-4 py-2 text-navy/60 font-normal hidden sm:table-cell">Tenure</th>
             </tr>
           </thead>
           <tbody>
@@ -32,7 +32,7 @@ export function AllTimeRoster({ roster }: Props) {
 
               return (
                 <tr key={member.bowlerID} className="border-b border-navy/5 hover:bg-navy/[0.02]">
-                  <td className="px-4 py-2 text-navy/40 tabular-nums">{i + 1}</td>
+                  <td className="px-4 py-2 text-navy/50 tabular-nums">{i + 1}</td>
                   <td className="px-4 py-2">
                     <Link
                       href={`/bowler/${member.slug}`}

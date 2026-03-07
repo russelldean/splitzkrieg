@@ -186,7 +186,7 @@ function TeamRecordCard({ title, records }: { title: string; records: TeamRecord
               <Link href={`/team/${r.teamSlug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                 {r.teamName}
               </Link>
-              <span className="text-navy/40 text-xs ml-1">Wk {r.week}</span>
+              <span className="text-navy/50 text-xs ml-1">Wk {r.week}</span>
             </span>
             <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{r.value}</span>
           </div>
@@ -210,7 +210,7 @@ function IndividualRecordCard({ title, records }: { title: string; records: Seas
               <Link href={`/bowler/${r.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                 {r.name}
               </Link>
-              <span className="text-navy/40 text-xs ml-1">Wk {r.week}</span>
+              <span className="text-navy/50 text-xs ml-1">Wk {r.week}</span>
             </span>
             <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{r.value}</span>
           </div>
@@ -237,7 +237,7 @@ function CountCard({ title, entries, tiedCount = 0, tiedValue = 0 }: { title: st
         );
       })}
       {tiedCount > 0 && (
-        <div className="text-sm font-body text-navy/40 italic py-0.5">
+        <div className="text-sm font-body text-navy/50 italic py-0.5">
           {tiedCount} tied with {tiedValue}
         </div>
       )}

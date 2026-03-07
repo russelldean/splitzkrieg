@@ -18,6 +18,7 @@ import {
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
 import { SeasonNav } from '@/components/season/SeasonNav';
+import { TrailNav } from '@/components/ui/TrailNav';
 import { FullStatsTable } from '@/components/season/FullStatsTable';
 import { strikeX } from '@/components/ui/StrikeX';
 
@@ -133,6 +134,7 @@ export default async function SeasonStatsPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/stats" position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
         <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
         <span className="text-navy/30">/</span>
@@ -176,21 +178,7 @@ export default async function SeasonStatsPage({
         </div>
       </div>
 
-      {/* Cross-links */}
-      <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">
-        <Link
-          href={`/season/${slug}`}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
-        >
-          Season {season.romanNumeral} Overview
-        </Link>
-        <Link
-          href="/bowlers"
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
-        >
-          Browse Bowlers
-        </Link>
-      </div>
+      <TrailNav current="/stats" />
     </main>
   );
 }

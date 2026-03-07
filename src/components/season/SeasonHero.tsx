@@ -142,14 +142,14 @@ function PlayoffResultsSimple({ bracket }: { bracket: SeasonPlayoffBracket }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2 text-sm font-body">
-        <span className="text-navy/40 text-xs w-12 shrink-0">Final</span>
+        <span className="text-navy/50 text-xs w-12 shrink-0">Final</span>
         <TeamLink name={bracket.final.winnerName} slug={bracket.final.winnerSlug} className="font-semibold text-navy" />
-        <span className="text-navy/30">def.</span>
+        <span className="text-navy/40">def.</span>
         <TeamLink name={bracket.final.loserName} slug={bracket.final.loserSlug} className="text-navy/60" />
       </div>
       {(bracket.semi1 || bracket.semi2) && (
         <div className="flex items-center gap-2 text-sm font-body">
-          <span className="text-navy/40 text-xs w-12 shrink-0">Semis</span>
+          <span className="text-navy/50 text-xs w-12 shrink-0">Semis</span>
           {bracket.semi1 && (
             <TeamLink name={bracket.semi1.loserName} slug={bracket.semi1.loserSlug} className="text-navy/60" />
           )}
@@ -168,7 +168,7 @@ function PlayoffResults({ bracket }: { bracket: SeasonPlayoffBracket }) {
 
   return (
     <div className="mt-6">
-      <div className="text-[0.65rem] uppercase tracking-wider font-heading text-navy/40 mb-3">
+      <div className="text-[0.65rem] uppercase tracking-wider font-heading text-navy/50 mb-3">
         Playoff Bracket
       </div>
       {hasFullBracket ? (

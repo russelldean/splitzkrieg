@@ -103,7 +103,7 @@ function RecordCard({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs uppercase tracking-wide text-navy/50 font-body">
+      <span className="text-xs uppercase tracking-wide text-navy/60 font-body">
         {label}
       </span>
       <div className="flex items-baseline gap-1.5">

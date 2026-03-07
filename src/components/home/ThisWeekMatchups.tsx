@@ -29,13 +29,13 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
       <div className="flex items-baseline justify-between mb-3">
         <div>
           <h3 className="font-heading text-lg text-navy">Up Next</h3>
-          <p className="text-xs font-body text-navy/40">
+          <p className="text-xs font-body text-navy/50">
             Week {weekNumber}{dateStr && <> &middot; {dateStr}</>}
           </p>
         </div>
         <Link
           href={`/week/${seasonSlug}/${weekNumber}`}
-          className="text-xs font-body text-navy/40 hover:text-red-600 transition-colors"
+          className="text-xs font-body text-navy/50 hover:text-red-600 transition-colors"
         >
           Details &rarr;
         </Link>

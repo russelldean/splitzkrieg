@@ -29,6 +29,7 @@ import { Standings } from '@/components/season/Standings';
 import { SeasonHighlights } from '@/components/season/SeasonHighlights';
 import { StandingsRaceChart } from '@/components/season/StandingsRaceChart';
 import { CompactWeekList } from '@/components/season/CompactWeekList';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SeasonNav } from '@/components/season/SeasonNav';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
@@ -114,24 +115,13 @@ export default async function SeasonPage({
       {/* Prev/next season navigation */}
       <SeasonNav current={season} allSeasons={allSeasons} />
 
-      {/* Section jump links */}
-      {hasScheduleData && (
-        <nav className="mt-6 flex flex-wrap gap-2 text-xs font-body">
-          {standings.length > 0 && <a href="#standings" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Standings</a>}
-          {raceData.length > 0 && <a href="#race" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Race Chart</a>}
-          <a href="#weekly" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Weekly Results</a>
-          {weeklyScores.length > 0 && <a href="#records" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Records</a>}
-          <Link href={`/stats/${slug}`} className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">
-            Leaderboards &rarr;
-          </Link>
-        </nav>
-      )}
-
       <div className="mt-8 space-y-12">
         <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} />
 
         {hasScheduleData && raceData.length > 0 && (
-          <StandingsRaceChart raceData={raceData} standings={standings} />
+          <CollapsibleSection title="Standings Race">
+            <StandingsRaceChart raceData={raceData} standings={standings} />
+          </CollapsibleSection>
         )}
 
         {/* Compact week list — replaces full weekly results */}
@@ -158,7 +148,7 @@ export default async function SeasonPage({
         <p className="font-body text-sm text-navy/50">
           Looking for individual stats and playoff standings?{' '}
           <Link href={`/stats/${slug}`} className="text-red-600 hover:text-red-700 transition-colors font-medium">
-            View Season Leaderboards &rarr;
+            View Season Stats &rarr;
           </Link>
         </p>
       </div>
