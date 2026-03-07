@@ -7,9 +7,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 interface Props {
   seasons: TeamSeasonRow[];
   bowlersBySeason: Record<number, TeamSeasonBowler[]>;
+  currentTeamName: string;
 }
 
-export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
+export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }: Props) {
   const [openSeasons, setOpenSeasons] = useState<Set<number>>(
     new Set(seasons[0] ? [seasons[0].seasonID] : [])
   );
@@ -74,10 +75,13 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
                     <Link href={`/season/${season.seasonSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                       {season.seasonName}
                     </Link>
-                    {season.teamNameAtTime !== season.seasonName && (
-                      <span className="text-sm text-navy/40 font-body">
+                    {season.teamNameAtTime !== currentTeamName && (
+                      <span className="text-sm text-navy/50 font-body">
                         as {season.teamNameAtTime}
                       </span>
+                    )}
+                    {season.isChampion && (
+                      <span className="text-base" title="League Champion">🏆</span>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm font-body text-navy/50">
@@ -101,10 +105,10 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
                     <table className="w-full text-sm font-body">
                       <thead>
                         <tr className="border-b border-navy/10">
-                          <th className="text-left px-4 py-2 text-navy/50 font-normal">Bowler</th>
-                          <th className="text-right px-4 py-2 text-navy/50 font-normal">Games</th>
-                          <th className="text-right px-4 py-2 text-navy/50 font-normal">Pins</th>
-                          <th className="text-right px-4 py-2 text-navy/50 font-normal">Avg</th>
+                          <th className="text-left px-4 py-2 text-navy/60 font-normal">Bowler</th>
+                          <th className="text-right px-4 py-2 text-navy/60 font-normal">Games</th>
+                          <th className="text-right px-4 py-2 text-navy/60 font-normal">Pins</th>
+                          <th className="text-right px-4 py-2 text-navy/60 font-normal">Avg</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -135,7 +139,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason }: Props) {
                 )}
 
                 {openSeasons.has(season.seasonID) && bowlers.length === 0 && !isOldSeason && (
-                  <div className="px-4 py-3 text-sm font-body text-navy/40 italic">
+                  <div className="px-4 py-3 text-sm font-body text-navy/50 italic">
                     No individual bowler data available for this season.
                   </div>
                 )}

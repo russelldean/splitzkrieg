@@ -107,6 +107,7 @@ export default async function TeamPage({
         <TeamSeasonByseason
           seasons={teamSeasons}
           bowlersBySeason={bowlersBySeason}
+          currentTeamName={team.teamName}
         />
 
         <AllTimeRoster roster={allTimeRoster} />

@@ -30,14 +30,14 @@ export default function RulesPage() {
           <div className="font-body text-base text-navy/70 leading-relaxed space-y-4">
             <p>
               All historical stats on this site are calculated using our current ruleset.
-              This was a deliberate choice - to rely solely on the math and not try
-              to dig through every email to recreate what was going on at the time.
-              The good part is that everything is measured consistently against the same
-              yardstick and you can compare confidently across eras. The side-effect is
-              some results will look wacky, because even a little change can have ripple
-              effects when you have games decided by a pin or two, or playoff races decided
-              by a game or two. This does not mean the original results were a mistake;
-              it&rsquo;s just a remnant of 19 years of slightly evolving rules.
+              This is a deliberate choice to rely solely on the math and not dig through
+              every email to recreate what was reported at the time. This means everything
+              is measured consistently against the same yardstick and you can compare
+              confidently across eras. The side-effect is some results may look wacky &mdash;
+              even a little change can have ripple effects when there are games decided by
+              a pin or two, or playoff races decided by a game or two. This does not mean
+              the original results were a mistake; it&rsquo;s just a remnant of 19 years
+              of slightly evolving rules.
             </p>
 
             <p>Here&rsquo;s what has changed over the years:</p>
@@ -45,12 +45,12 @@ export default function RulesPage() {
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 <strong className="text-navy">Handicap formula.</strong>{' '}
-                Our original formula was .95*(200-average), this changed to
-                .95*(225-average) to account for the rare times we have bowlers with
-                over 200 averages. This then changed to floor(.95*(225-average)), which
+                Our original formula was <strong className="text-navy">.95*(200-average)</strong>, this changed to
+                <strong className="text-navy">.95*(225-average)</strong> to account for the rare times we have bowlers with
+                over 200 averages. This then changed to <strong className="text-navy">floor(.95*(225-average))</strong>, which
                 means we drop the remainder when calculating handicap instead of rounding
-                to the nearest integer - this is the common practice in other leagues, and
-                the change was made to more closely resemble the system at Bowlero.
+                to the nearest integer.  This change was made to align with common practice
+                and more easily align with the system at Bowlero.
               </li>
               <li>
                 <strong className="text-navy">Penalties and missing bowlers.</strong>{' '}
@@ -67,15 +67,14 @@ export default function RulesPage() {
                 win and 1 pt for the highest team in the match, and then I changed to the
                 system we have now where extra points are determined by how your team did
                 against all the other teams that night. This gives every team a reason to
-                care about the scores all night long, and it eliminates those nights when
-                teams bowl really well and have zero to show for it if they run up against
-                a team that bowls out of their minds.
+                care about their scores all night long, and it eliminates those nights when
+                a team bowls really well and has zero to show for it, because they happen
+                to run up against a team that bowls out of their minds.
               </li>
               <li>
-                <strong className="text-navy">My methods for managing the data.</strong>{' '}
-                I started out using an abacus, then went to Commodore 64, and I&rsquo;m
-                finally up to typing out the scores on a word processor - I&rsquo;m getting
-                a little better at it every day.
+                <strong className="text-navy">My data management.</strong>{' '}
+                I started out with an abacus, then moved to a Commodore 64, and I&rsquo;ve
+                finally got a word processor &mdash; getting a little better every day.
               </li>
             </ul>
           </div>

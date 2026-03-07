@@ -4,9 +4,10 @@ import { useState } from 'react';
 
 interface Props {
   url: string;
+  label?: string;
 }
 
-export function ShareButton({ url }: Props) {
+export function ShareButton({ url, label = 'Share Profile' }: Props) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -38,7 +39,7 @@ export function ShareButton({ url }: Props) {
       {copied ? (
         <span>Copied!</span>
       ) : (
-        <span>Share Profile</span>
+        <span>{label}</span>
       )}
     </button>
   );

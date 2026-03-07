@@ -289,6 +289,7 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
 export interface GameLogWeek {
   seasonID: number;
   displayName: string;
+  seasonSlug: string;
   week: number;
   matchDate: Date | null;
   opponentName: string | null;
@@ -318,6 +319,7 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
         SELECT
           sc.seasonID,
           sn.displayName,
+          LOWER(REPLACE(sn.displayName, ' ', '-'))             AS seasonSlug,
           sc.week,
           sch.matchDate,
           COALESCE(oppHist.teamName, opp.teamName) AS opponentName,
@@ -831,6 +833,7 @@ export interface TeamSeasonRow {
   teamAverage: number | null;
   rosterSize: number;
   hasScheduleData: boolean;
+  isChampion: boolean;
 }
 
 export interface TeamSeasonBowler {
@@ -1088,7 +1091,13 @@ export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonR
           COUNT(DISTINCT sc.bowlerID)                        AS rosterSize,
           CAST(CASE WHEN EXISTS (
             SELECT 1 FROM schedule sch WHERE sch.seasonID = sc.seasonID
-          ) THEN 1 ELSE 0 END AS BIT)                       AS hasScheduleData
+          ) THEN 1 ELSE 0 END AS BIT)                       AS hasScheduleData,
+          CAST(CASE WHEN EXISTS (
+            SELECT 1 FROM seasonChampions ch
+            WHERE ch.winnerTeamID = @teamID
+              AND ch.seasonID = sc.seasonID
+              AND ch.championshipType = 'Team'
+          ) THEN 1 ELSE 0 END AS BIT)                       AS isChampion
         FROM scores sc
         JOIN seasons sn ON sc.seasonID = sn.seasonID
         JOIN teams t ON t.teamID = @teamID
@@ -2260,8 +2269,9 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
           ON  tnh.seasonID = sc.seasonID
           AND tnh.teamID   = sc.teamID
         LEFT JOIN (
-          SELECT DISTINCT seasonID, week, matchDate
+          SELECT seasonID, week, MIN(matchDate) AS matchDate
           FROM schedule
+          GROUP BY seasonID, week
         ) sch
           ON  sch.seasonID = sc.seasonID
           AND sch.week     = sc.week
