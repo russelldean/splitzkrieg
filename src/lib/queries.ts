@@ -8,7 +8,7 @@
  * Phase 2: Expand getBowlerBySlug with full stats, career history, records.
  */
 import { cache } from 'react';
-import { getDb } from './db';
+import { getDb, cachedQuery } from './db';
 
 export interface BowlerSlug {
   slug: string;
@@ -28,10 +28,7 @@ export interface Bowler {
  * Returns empty array if DB credentials are not configured (e.g., local dev without .env.local).
  */
 export async function getAllBowlerSlugs(): Promise<BowlerSlug[]> {
-  if (!process.env.AZURE_SQL_SERVER) {
-    return [];
-  }
-  try {
+  return cachedQuery('getAllBowlerSlugs', async () => {
     const db = await getDb();
     const result = await db.request().query<{ slug: string }>(`
       SELECT slug
@@ -39,10 +36,7 @@ export async function getAllBowlerSlugs(): Promise<BowlerSlug[]> {
       ORDER BY bowlerName
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllBowlerSlugs: DB unavailable, returning empty list.', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -54,10 +48,7 @@ export async function getAllBowlerSlugs(): Promise<BowlerSlug[]> {
  * Returns null if DB credentials are not configured.
  */
 export async function getBowlerBySlug(slug: string): Promise<Bowler | null> {
-  if (!process.env.AZURE_SQL_SERVER) {
-    return null;
-  }
-  try {
+  return cachedQuery(`getBowlerBySlug-${slug}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -72,10 +63,7 @@ export async function getBowlerBySlug(slug: string): Promise<Bowler | null> {
         WHERE slug = @slug
       `);
     return result.recordset[0] ?? null;
-  } catch (err) {
-    console.warn('getBowlerBySlug: DB unavailable, returning null.', err);
-    return null;
-  }
+  }, null);
 }
 
 /* ───────────────────────────────────────────────────────────
@@ -112,8 +100,7 @@ export interface BowlerCareerSummary {
  * Returns null if DB unavailable.
  */
 export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<BowlerCareerSummary | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery(`getBowlerCareerSummary-${bowlerID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -194,10 +181,7 @@ export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<Bo
         WHERE v.bowlerID = @bowlerID
       `);
     return result.recordset[0] ?? null;
-  } catch (err) {
-    console.warn('getBowlerCareerSummary: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 export interface BowlerSeasonStats {
@@ -226,8 +210,7 @@ export interface BowlerSeasonStats {
  * Returns [] if DB unavailable or no data.
  */
 export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeasonStats[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getBowlerSeasonStats-${bowlerID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -280,10 +263,7 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
           CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getBowlerSeasonStats: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 export interface GameLogWeek {
@@ -309,8 +289,7 @@ export interface GameLogWeek {
  * Returns [] if DB unavailable or no data.
  */
 export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getBowlerGameLog-${bowlerID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -355,10 +334,7 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
           sc.week ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getBowlerGameLog: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 export interface RollingAvgPoint {
@@ -375,8 +351,7 @@ export interface RollingAvgPoint {
  * Returns [] if DB unavailable or no data.
  */
 export async function getBowlerRollingAvgHistory(bowlerID: number): Promise<RollingAvgPoint[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getBowlerRollingAvgHistory-${bowlerID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -398,10 +373,7 @@ export async function getBowlerRollingAvgHistory(bowlerID: number): Promise<Roll
           sc.week ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getBowlerRollingAvgHistory: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -409,18 +381,14 @@ export async function getBowlerRollingAvgHistory(bowlerID: number): Promise<Roll
  * Cached across all bowler page builds.
  */
 export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery('getCurrentSeasonID', async () => {
     const db = await getDb();
     const result = await db.request().query<{ seasonID: number }>(`
       SELECT TOP 1 seasonID FROM seasons
       ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
     `);
     return result.recordset[0]?.seasonID ?? null;
-  } catch (err) {
-    console.warn('getCurrentSeasonID: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 /**
@@ -429,8 +397,7 @@ export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
  * Cached to deduplicate across all 625 bowler page builds.
  */
 export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery('getBowlerOfTheWeek', async () => {
     const db = await getDb();
     const result = await db.request().query<{ bowlerID: number }>(`
       SELECT TOP 1 sc.bowlerID
@@ -453,10 +420,7 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
       ORDER BY sc.handSeries DESC
     `);
     return result.recordset[0]?.bowlerID ?? null;
-  } catch (err) {
-    console.warn('getBowlerOfTheWeek: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 /* ───────────────────────────────────────────────────────────
@@ -469,8 +433,7 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
  * Returns null if no future dates exist or DB is unavailable.
  */
 export async function getNextBowlingNight(): Promise<string | null> {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery('getNextBowlingNight', async () => {
     const db = await getDb();
     const result = await db.request().query<{ matchDate: Date }>(`
       SELECT TOP 1 matchDate
@@ -479,10 +442,7 @@ export async function getNextBowlingNight(): Promise<string | null> {
       ORDER BY matchDate ASC
     `);
     return result.recordset[0]?.matchDate?.toISOString() ?? null;
-  } catch (err) {
-    console.warn('getNextBowlingNight: DB unavailable', err);
-    return null;
-  }
+  }, null);
 }
 
 export interface DirectoryBowler {
@@ -499,8 +459,7 @@ export interface DirectoryBowler {
  * Returns [] if DB unavailable.
  */
 export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllBowlersDirectory', async () => {
     const db = await getDb();
     const result = await db.request().query<DirectoryBowler>(`
       SELECT
@@ -515,10 +474,7 @@ export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]>
       ORDER BY b.bowlerName
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllBowlersDirectory: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });
 
 export interface Milestone {
@@ -538,8 +494,7 @@ export interface Milestone {
  * Returns [] if DB unavailable.
  */
 export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getRecentMilestones', async () => {
     const db = await getDb();
     const result = await db.request().query<Milestone>(`
       WITH CareerGames AS (
@@ -576,10 +531,7 @@ export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
       ORDER BY type, threshold DESC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getRecentMilestones: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });
 
 export interface SeasonSnapshot {
@@ -607,8 +559,8 @@ export interface SeasonSnapshot {
  * Returns null if DB unavailable.
  */
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery('getCurrentSeasonSnapshot', async () => {
+
     const db = await getDb();
 
     // Step 1: Find the most recent season
@@ -790,10 +742,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       bowlerOfTheWeek: botwResult.recordset[0] ?? null,
       teamOfTheWeek,
     };
-  } catch (err) {
-    console.warn('getCurrentSeasonSnapshot: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 /* ───────────────────────────────────────────────────────────
@@ -894,8 +843,7 @@ export interface TeamCurrentStanding {
  * Returns null if no match results exist for this team.
  */
 export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurrentStanding | null> {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery(`getTeamCurrentStanding-${teamID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -962,10 +910,7 @@ export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurren
         WHERE r.teamID = @teamID
       `);
     return result.recordset[0] ?? null;
-  } catch (err) {
-    console.warn('getTeamCurrentStanding: DB unavailable', err);
-    return null;
-  }
+  }, null);
 }
 
 /**
@@ -973,17 +918,13 @@ export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurren
  * Returns empty array if DB credentials are not configured.
  */
 export async function getAllTeamSlugs(): Promise<TeamSlug[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllTeamSlugs', async () => {
     const db = await getDb();
     const result = await db.request().query<TeamSlug>(`
       SELECT slug FROM teams WHERE slug IS NOT NULL ORDER BY teamName
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllTeamSlugs: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -992,8 +933,7 @@ export async function getAllTeamSlugs(): Promise<TeamSlug[]> {
  * Returns null if DB unavailable.
  */
 export const getTeamBySlug = cache(async (slug: string): Promise<Team | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery(`getTeamBySlug-${slug}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1008,10 +948,7 @@ export const getTeamBySlug = cache(async (slug: string): Promise<Team | null> =>
         WHERE t.slug = @slug
       `);
     return result.recordset[0] ?? null;
-  } catch (err) {
-    console.warn('getTeamBySlug: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 /**
@@ -1021,8 +958,7 @@ export const getTeamBySlug = cache(async (slug: string): Promise<Team | null> =>
  * Returns [] if DB unavailable.
  */
 export async function getTeamCurrentRoster(teamID: number): Promise<TeamRosterMember[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getTeamCurrentRoster-${teamID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1056,10 +992,7 @@ export async function getTeamCurrentRoster(teamID: number): Promise<TeamRosterMe
         ORDER BY gamesBowled DESC, seasonAverage DESC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamCurrentRoster: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1069,8 +1002,7 @@ export async function getTeamCurrentRoster(teamID: number): Promise<TeamRosterMe
  * Returns [] if DB unavailable.
  */
 export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonRow[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getTeamSeasonByseason-${teamID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1115,10 +1047,7 @@ export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonR
           CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamSeasonByseason: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1128,8 +1057,7 @@ export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonR
  * Returns [] if DB unavailable.
  */
 export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Promise<TeamSeasonBowler[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getTeamSeasonBowlers-${teamID}-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1155,10 +1083,7 @@ export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Pr
         ORDER BY gamesBowled DESC, average DESC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamSeasonBowlers: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1167,8 +1092,7 @@ export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Pr
  * Returns [] if DB unavailable.
  */
 export async function getTeamAllTimeRoster(teamID: number): Promise<AllTimeRosterMember[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getTeamAllTimeRoster-${teamID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1207,10 +1131,7 @@ export async function getTeamAllTimeRoster(teamID: number): Promise<AllTimeRoste
         ORDER BY totalGames DESC, average DESC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamAllTimeRoster: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1219,8 +1140,7 @@ export async function getTeamAllTimeRoster(teamID: number): Promise<AllTimeRoste
  * Returns [] if DB unavailable.
  */
 export async function getTeamFranchiseHistory(teamID: number): Promise<FranchiseNameEntry[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getTeamFranchiseHistory-${teamID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1236,10 +1156,7 @@ export async function getTeamFranchiseHistory(teamID: number): Promise<Franchise
         ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamFranchiseHistory: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1249,8 +1166,7 @@ export async function getTeamFranchiseHistory(teamID: number): Promise<Franchise
  * Returns [] if DB unavailable.
  */
 export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllTeamsDirectory', async () => {
     const db = await getDb();
     const result = await db.request().query<DirectoryTeam>(`
       SELECT
@@ -1299,10 +1215,7 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
         t.teamName ASC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllTeamsDirectory: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });
 
 /* ───────────────────────────────────────────────────────────
@@ -1413,8 +1326,7 @@ export interface SeasonHeroStats {
  * Returns [] if DB unavailable.
  */
 export async function getAllSeasonSlugs(): Promise<SeasonSlug[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllSeasonSlugs', async () => {
     const db = await getDb();
     const result = await db.request().query<SeasonSlug>(`
       SELECT
@@ -1424,10 +1336,7 @@ export async function getAllSeasonSlugs(): Promise<SeasonSlug[]> {
       ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllSeasonSlugs: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1436,8 +1345,7 @@ export async function getAllSeasonSlugs(): Promise<SeasonSlug[]> {
  * Returns null if DB unavailable.
  */
 export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery(`getSeasonBySlug-${slug}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1454,10 +1362,7 @@ export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null
         WHERE LOWER(REPLACE(displayName, ' ', '-')) = @slug
       `);
     return result.recordset[0] ?? null;
-  } catch (err) {
-    console.warn('getSeasonBySlug: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 /**
@@ -1467,8 +1372,7 @@ export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null
  * Returns [] if DB unavailable.
  */
 export async function getSeasonStandings(seasonID: number): Promise<StandingsRow[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getSeasonStandings-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1554,10 +1458,7 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
         ORDER BY sd.divisionName, totalPts DESC, wins DESC, ta.teamScratchAvg DESC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonStandings: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1565,8 +1466,7 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
  * Uses playoffResults table. Returns null if no playoff data exists.
  */
 export const getPlayoffTeamIDs = cache(async (seasonID: number): Promise<Set<number> | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  const ids = await cachedQuery(`getPlayoffTeamIDs-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1579,11 +1479,9 @@ export const getPlayoffTeamIDs = cache(async (seasonID: number): Promise<Set<num
         ) t
       `);
     if (result.recordset.length === 0) return null;
-    return new Set(result.recordset.map(r => r.teamID));
-  } catch (err) {
-    console.warn('getPlayoffTeamIDs: DB unavailable', err);
-    return null;
-  }
+    return result.recordset.map(r => r.teamID);
+  }, null);
+  return ids ? new Set(ids) : null;
 });
 
 /**
@@ -1607,8 +1505,7 @@ export async function getSeasonLeaderboard(
   category: 'avg' | 'highGame' | 'highSeries' | 'totalPins' | 'games200' | 'series600' | 'turkeys' | 'hcpAvg' | 'hcpHighSeries',
   minGames?: number
 ): Promise<SeasonLeaderEntry[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getSeasonLeaderboard-${seasonID}-${gender}-${category}-${minGames}`, async () => {
     const db = await getDb();
 
     const genderFilter = gender !== null
@@ -1694,10 +1591,7 @@ export async function getSeasonLeaderboard(
     }
     const result = await request.query<SeasonLeaderEntry>(sql);
     return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonLeaderboard: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1707,8 +1601,7 @@ export async function getSeasonLeaderboard(
  * Returns [] if DB unavailable.
  */
 export async function getSeasonFullStats(seasonID: number): Promise<SeasonFullStatsRow[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getSeasonFullStats-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1760,10 +1653,7 @@ export async function getSeasonFullStats(seasonID: number): Promise<SeasonFullSt
         ORDER BY scratchAvg DESC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonFullStats: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1774,8 +1664,7 @@ export async function getSeasonFullStats(seasonID: number): Promise<SeasonFullSt
  * Returns [] if DB unavailable.
  */
 export async function getSeasonSchedule(seasonID: number): Promise<SeasonScheduleWeek[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getSeasonSchedule-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -1803,10 +1692,7 @@ export async function getSeasonSchedule(seasonID: number): Promise<SeasonSchedul
         ORDER BY sch.week ASC, sch.matchNumber ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonSchedule: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /**
@@ -1822,8 +1708,7 @@ export async function getSeasonRecords(seasonID: number): Promise<SeasonRecords>
     mostTurkeys: null,
     most200Games: null,
   };
-  if (!process.env.AZURE_SQL_SERVER) return empty;
-  try {
+  return cachedQuery(`getSeasonRecords-${seasonID}`, async () => {
     const db = await getDb();
 
     type RecordRow = { bowlerName: string; slug: string; value: number };
@@ -1912,10 +1797,7 @@ export async function getSeasonRecords(seasonID: number): Promise<SeasonRecords>
       mostTurkeys: turkeyResult.recordset[0] ?? null,
       most200Games: games200Result.recordset[0] ?? null,
     };
-  } catch (err) {
-    console.warn('getSeasonRecords: DB unavailable', err);
-    return empty;
-  }
+  }, empty);
 }
 
 /**
@@ -1926,8 +1808,7 @@ export async function getSeasonRecords(seasonID: number): Promise<SeasonRecords>
  * Returns [] if DB unavailable.
  */
 export const getAllSeasonsDirectory = cache(async (): Promise<DirectorySeason[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllSeasonsDirectory', async () => {
     const db = await getDb();
     const result = await db.request().query<DirectorySeason>(`
       SELECT
@@ -1956,10 +1837,7 @@ export const getAllSeasonsDirectory = cache(async (): Promise<DirectorySeason[]>
       ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllSeasonsDirectory: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });
 
 /**
@@ -1968,8 +1846,8 @@ export const getAllSeasonsDirectory = cache(async (): Promise<DirectorySeason[]>
  * Returns null if DB unavailable.
  */
 export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroStats | null> {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery(`getSeasonHeroStats-${seasonID}`, async () => {
+
     const db = await getDb();
 
     // Aggregate stats
@@ -2059,10 +1937,7 @@ export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroSt
       highSeries: highSeriesResult.recordset[0] ?? null,
       champion: champResult.recordset[0]?.teamName ?? null,
     };
-  } catch (err) {
-    console.warn('getSeasonHeroStats: DB unavailable', err);
-    return null;
-  }
+  }, null);
 }
 
 export interface PlayoffMatchup {
@@ -2086,8 +1961,8 @@ export interface SeasonPlayoffBracket {
  * Returns null if no playoff data exists for this season.
  */
 export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<SeasonPlayoffBracket | null> => {
-  if (!process.env.AZURE_SQL_SERVER) return null;
-  try {
+  return cachedQuery(`getSeasonPlayoffBracket-${seasonID}`, async () => {
+
     const db = await getDb();
 
     // Standings CTE for seed numbers
@@ -2181,10 +2056,7 @@ export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<S
         semis[1].loserName, semis[1].loserSlug, semis[1].loserSeed,
       ) : null),
     };
-  } catch (err) {
-    console.warn('getSeasonPlayoffBracket: DB unavailable', err);
-    return null;
-  }
+  }, null);
 });
 
 /* ───────────────────────────────────────────────────────────
@@ -2222,68 +2094,65 @@ export interface WeeklyMatchScore {
  * Returns [] if DB unavailable.
  */
 export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMatchScore[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
-    const db = await getDb();
-    const result = await db
-      .request()
-      .input('seasonID', seasonID)
-      .query<WeeklyMatchScore>(`
-        SELECT
-          sc.week,
-          sch.matchDate,
-          sc.teamID,
-          COALESCE(tnh.teamName, t.teamName)  AS teamName,
-          t.slug                               AS teamSlug,
-          sc.bowlerID,
-          b.bowlerName,
-          b.slug                               AS bowlerSlug,
-          sc.game1,
-          sc.game2,
-          sc.game3,
-          sc.scratchSeries,
-          sc.handSeries,
-          sc.incomingAvg,
-          sc.incomingHcp,
-          ISNULL(sc.turkeys, 0) AS turkeys,
-          b.gender,
-          CASE WHEN NOT EXISTS (
-            SELECT 1 FROM scores sc3
-            WHERE sc3.bowlerID = sc.bowlerID
-              AND sc3.isPenalty = 0
-              AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-          ) THEN 1 ELSE 0 END AS isFirstNight,
-          (SELECT MAX(x.val) FROM scores sp
-            CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
-            WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
-              AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
-          ) AS priorBestGame,
-          (SELECT MAX(sp.scratchSeries) FROM scores sp
-            WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
-              AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
-          ) AS priorBestSeries
-        FROM scores sc
-        JOIN bowlers b ON sc.bowlerID = b.bowlerID
-        JOIN teams t ON sc.teamID = t.teamID
-        LEFT JOIN teamNameHistory tnh
-          ON  tnh.seasonID = sc.seasonID
-          AND tnh.teamID   = sc.teamID
-        LEFT JOIN (
-          SELECT seasonID, week, MIN(matchDate) AS matchDate
-          FROM schedule
-          GROUP BY seasonID, week
-        ) sch
-          ON  sch.seasonID = sc.seasonID
-          AND sch.week     = sc.week
-        WHERE sc.seasonID = @seasonID
-          AND sc.isPenalty = 0
-        ORDER BY sc.week ASC, sc.teamID ASC, b.bowlerName ASC
-      `);
-    return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonWeeklyScores: DB unavailable', err);
-    return [];
-  }
+  return cachedQuery(`getSeasonWeeklyScores-${seasonID}`, async () => {
+
+      const db = await getDb();
+      const result = await db
+        .request()
+        .input('seasonID', seasonID)
+        .query<WeeklyMatchScore>(`
+          SELECT
+            sc.week,
+            sch.matchDate,
+            sc.teamID,
+            COALESCE(tnh.teamName, t.teamName)  AS teamName,
+            t.slug                               AS teamSlug,
+            sc.bowlerID,
+            b.bowlerName,
+            b.slug                               AS bowlerSlug,
+            sc.game1,
+            sc.game2,
+            sc.game3,
+            sc.scratchSeries,
+            sc.handSeries,
+            sc.incomingAvg,
+            sc.incomingHcp,
+            ISNULL(sc.turkeys, 0) AS turkeys,
+            b.gender,
+            CASE WHEN NOT EXISTS (
+              SELECT 1 FROM scores sc3
+              WHERE sc3.bowlerID = sc.bowlerID
+                AND sc3.isPenalty = 0
+                AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
+            ) THEN 1 ELSE 0 END AS isFirstNight,
+            (SELECT MAX(x.val) FROM scores sp
+              CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
+              WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+                AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+            ) AS priorBestGame,
+            (SELECT MAX(sp.scratchSeries) FROM scores sp
+              WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+                AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+            ) AS priorBestSeries
+          FROM scores sc
+          JOIN bowlers b ON sc.bowlerID = b.bowlerID
+          JOIN teams t ON sc.teamID = t.teamID
+          LEFT JOIN teamNameHistory tnh
+            ON  tnh.seasonID = sc.seasonID
+            AND tnh.teamID   = sc.teamID
+          LEFT JOIN (
+            SELECT seasonID, week, MIN(matchDate) AS matchDate
+            FROM schedule
+            GROUP BY seasonID, week
+          ) sch
+            ON  sch.seasonID = sc.seasonID
+            AND sch.week     = sc.week
+          WHERE sc.seasonID = @seasonID
+            AND sc.isPenalty = 0
+          ORDER BY sc.week ASC, sc.teamID ASC, b.bowlerName ASC
+        `);
+      return result.recordset;
+  }, []);
 }
 
 export interface WeeklyMatchupResult {
@@ -2310,8 +2179,7 @@ export interface WeeklyMatchupResult {
  * Returns [] if DB unavailable.
  */
 export async function getSeasonMatchResults(seasonID: number): Promise<WeeklyMatchupResult[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getSeasonMatchResults-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -2339,10 +2207,7 @@ export async function getSeasonMatchResults(seasonID: number): Promise<WeeklyMat
         ORDER BY sch.week ASC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonMatchResults: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 export interface RaceChartRow {
@@ -2356,8 +2221,7 @@ export interface RaceChartRow {
  * Get cumulative total points (wins + XP) per team per week for standings race chart.
  */
 export async function getStandingsRaceData(seasonID: number): Promise<RaceChartRow[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getStandingsRaceData-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db.request().input('seasonID', seasonID).query<RaceChartRow>(`
       WITH weeklyPts AS (
@@ -2396,10 +2260,7 @@ export async function getStandingsRaceData(seasonID: number): Promise<RaceChartR
       ORDER BY c.week, c.totalPts DESC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getStandingsRaceData: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 export interface TeamSeasonPresence {
@@ -2417,8 +2278,7 @@ export interface TeamSeasonPresence {
  * Returns [] if DB unavailable.
  */
 export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getTeamSeasonPresence', async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -2438,10 +2298,7 @@ export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
         ORDER BY t.teamName, s.seasonID
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamSeasonPresence: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 export interface TeamPlayoffFinish {
@@ -2455,8 +2312,7 @@ export interface TeamPlayoffFinish {
  * Returns [] if DB unavailable.
  */
 export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getTeamPlayoffFinishes', async () => {
     const db = await getDb();
     const result = await db.request().query<TeamPlayoffFinish>(`
       SELECT team1ID AS teamID, seasonID, 'champion' AS finish
@@ -2472,10 +2328,7 @@ export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[
       WHERE playoffType = 'Team' AND round = 'semifinal'
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getTeamPlayoffFinishes: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });
 
 /**
@@ -2492,8 +2345,7 @@ export interface SeasonNav {
 }
 
 export const getAllSeasonNavList = cache(async (): Promise<SeasonNav[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllSeasonNavList', async () => {
     const db = await getDb();
     const result = await db.request().query<SeasonNav>(`
       SELECT
@@ -2507,10 +2359,7 @@ export const getAllSeasonNavList = cache(async (): Promise<SeasonNav[]> => {
       ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllSeasonNavList: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });
 
 /**
@@ -2535,8 +2384,7 @@ export interface WeekSummary {
 }
 
 export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSummary[]> {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery(`getSeasonWeekSummaries-${seasonID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
@@ -2611,10 +2459,7 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
         ORDER BY ws.week DESC
       `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getSeasonWeekSummaries: DB unavailable', err);
-    return [];
-  }
+  }, []);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -2640,8 +2485,7 @@ export interface PlayoffSeason {
 }
 
 export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => {
-  if (!process.env.AZURE_SQL_SERVER) return [];
-  try {
+  return cachedQuery('getAllPlayoffHistory', async () => {
     const db = await getDb();
     const result = await db.request().query<PlayoffSeason>(`
       WITH finals AS (
@@ -2686,8 +2530,5 @@ export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => 
       ORDER BY s.seasonID DESC
     `);
     return result.recordset;
-  } catch (err) {
-    console.warn('getAllPlayoffHistory: DB unavailable', err);
-    return [];
-  }
+  }, []);
 });

@@ -7,6 +7,8 @@
  * generateStaticParams, or API routes only.
  */
 import sql from 'mssql';
+import fs from 'fs';
+import path from 'path';
 
 const config: sql.config = {
   server: process.env.AZURE_SQL_SERVER!,
@@ -22,7 +24,7 @@ const config: sql.config = {
     encrypt: true,
     trustServerCertificate: false,
     connectTimeout: 120000, // 120s for Azure SQL cold start
-    requestTimeout: 30000,
+    requestTimeout: 60000, // 60s — Azure SQL throttles during long builds
   },
 };
 
@@ -49,5 +51,102 @@ export async function closeDb(): Promise<void> {
   if (pool) {
     await pool.close();
     pool = null;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+ * Disk-based query cache for build-time static generation.
+ *
+ * Stores JSON results in .next/cache/sql/ which Vercel
+ * preserves between deployments. Queries only hit the DB
+ * on the first build or after a cache bust.
+ *
+ * Cache busting:
+ *   - Set DB_CACHE_VERSION env var (default: "1")
+ *   - Or use Vercel's "Redeploy without cache" option
+ * ───────────────────────────────────────────────────────── */
+
+const CACHE_VERSION = process.env.DB_CACHE_VERSION ?? '1';
+const CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
+
+function readFromDiskCache<T>(key: string): T | undefined {
+  try {
+    const filePath = path.join(CACHE_DIR, `${key}.json`);
+    const data = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(data) as T;
+  } catch {
+    return undefined; // cache miss
+  }
+}
+
+function writeToDiskCache<T>(key: string, data: T): void {
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    const filePath = path.join(CACHE_DIR, `${key}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(data));
+  } catch {
+    // Non-fatal — just skip caching
+  }
+}
+
+/**
+ * Execute a DB query with retry logic for Azure SQL throttling.
+ * Retries up to `maxRetries` times with exponential backoff on timeout errors.
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxRetries = 3,
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      const isTimeout = code === 'ETIMEOUT' ||
+        (err instanceof Error && err.message.includes('timed out'));
+      if (!isTimeout || attempt === maxRetries) throw err;
+      const delay = 5000 * attempt;
+      console.log(`${label}: timeout on attempt ${attempt}/${maxRetries}, retrying in ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay));
+      // Reset pool in case connection is stale
+      if (pool) {
+        try { await pool.close(); } catch { /* ignore */ }
+        pool = null;
+      }
+    }
+  }
+  throw new Error(`${label}: all retries exhausted`);
+}
+
+/**
+ * All-in-one query wrapper: disk cache → retry → error handling.
+ *
+ * 1. Checks disk cache — if hit, returns instantly (no DB needed)
+ * 2. On cache miss, runs the query with retry (3 attempts with backoff)
+ * 3. On success, writes result to disk cache for future builds
+ * 4. On failure, logs warning and returns fallback (never caches failures)
+ */
+export async function cachedQuery<T>(
+  key: string,
+  fn: () => Promise<T>,
+  fallback: T | readonly never[],
+): Promise<T> {
+  // 1. Check disk cache
+  const cached = readFromDiskCache<T>(key);
+  if (cached !== undefined) return cached;
+
+  // 2. If no DB configured, return fallback
+  if (!process.env.AZURE_SQL_SERVER) return fallback as T;
+
+  // 3. Run query with retry
+  try {
+    const result = await withRetry(fn, key);
+    // 4. Cache successful result
+    writeToDiskCache(key, result);
+    return result;
+  } catch (err) {
+    console.warn(`${key}: DB unavailable`, err);
+    return fallback as T;
   }
 }
