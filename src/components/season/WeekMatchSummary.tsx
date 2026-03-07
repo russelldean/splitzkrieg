@@ -45,8 +45,8 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
             const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
             return (
               <tr key={idx} className="border-b border-navy/5">
-                <td className={`py-1.5 pl-2 ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+                <td className={`py-1.5 pl-2 max-w-[120px] sm:max-w-none truncate ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+                  <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors" title={matchup.homeTeamName}>
                     {matchup.homeTeamName}
                   </Link>
                 </td>
@@ -55,8 +55,8 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                   <span className="text-navy/30 mx-1">–</span>
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
                 </td>
-                <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+                <td className={`text-right py-1.5 max-w-[120px] sm:max-w-none truncate ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+                  <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors" title={matchup.awayTeamName}>
                     {matchup.awayTeamName}
                   </Link>
                 </td>

@@ -19,12 +19,19 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
 
   const hasResults = matchResults.length > 0;
 
+  const matchDate = matchups[0]?.matchDate;
+  const dateStr = matchDate
+    ? new Date(matchDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    : null;
+
   return (
     <div className="bg-white rounded-xl border border-navy/10 p-6">
       <div className="flex items-baseline justify-between mb-3">
         <div>
           <h3 className="font-heading text-lg text-navy">Up Next</h3>
-          <p className="text-xs font-body text-navy/40">Week {weekNumber}</p>
+          <p className="text-xs font-body text-navy/40">
+            Week {weekNumber}{dateStr && <> &middot; {dateStr}</>}
+          </p>
         </div>
         <Link
           href={`/week/${seasonSlug}/${weekNumber}`}

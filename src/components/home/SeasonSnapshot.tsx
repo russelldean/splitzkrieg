@@ -51,7 +51,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
       </p>
 
       {/* Aggregate stats */}
-      <div className="flex justify-around mb-4 pb-4 border-b border-navy/5">
+      <div className="flex justify-around items-start mb-4 pb-4 border-b border-navy/5">
         <StatValue label="Bowlers" value={snapshot.totalBowlers} />
         {snapshot.expectedLeagueAverage > 0
           ? <StatValue label="League Avg / Expected" value={`${snapshot.leagueAverage.toFixed(1)} / ${snapshot.expectedLeagueAverage.toFixed(1)}`} />
@@ -61,7 +61,13 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           const delta = snapshot.leagueAverage - snapshot.expectedLeagueAverage;
           const sign = delta >= 0 ? '+' : '';
           const label = delta >= 0 ? 'Above Expected' : 'Below Expected';
-          return <StatValue label={label} value={`${sign}${delta.toFixed(1)}`} />;
+          const colorClass = delta >= 0 ? 'text-green-600' : 'text-red-600';
+          return (
+            <div className="text-center">
+              <div className={`font-heading text-2xl ${colorClass}`}>{sign}{delta.toFixed(1)}</div>
+              <div className="text-xs font-body text-navy/50 mt-0.5">{label}</div>
+            </div>
+          );
         })()}
       </div>
 

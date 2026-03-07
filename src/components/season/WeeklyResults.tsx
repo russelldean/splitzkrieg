@@ -141,6 +141,8 @@ function MatchupSummary({
 }) {
   const t1Total = (mr.team1GamePts ?? 0) + (mr.team1BonusPts ?? 0);
   const t2Total = (mr.team2GamePts ?? 0) + (mr.team2BonusPts ?? 0);
+  const t1Won = t1Total > t2Total;
+  const t2Won = t2Total > t1Total;
 
   return (
     <div className="bg-navy/[0.03] rounded-lg px-3 py-2 mb-3">
@@ -158,9 +160,9 @@ function MatchupSummary({
           </tr>
         </thead>
         <tbody>
-          <tr className="text-navy">
+          <tr className={t1Won ? 'text-navy' : 'text-navy/60'}>
             <td className="py-0.5">
-              <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+              <Link href={`/team/${homeTeamSlug}`} className={`hover:text-red-600 transition-colors ${t1Won ? 'font-semibold' : ''}`}>
                 {homeTeamName}
               </Link>
             </td>
@@ -170,11 +172,11 @@ function MatchupSummary({
             <td className="text-right tabular-nums py-0.5">{mr.team1Series ?? '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team1GamePts != null ? mr.team1GamePts / 2 : '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team1BonusPts ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5 font-semibold">{t1Total}</td>
+            <td className={`text-right tabular-nums py-0.5 font-bold ${t1Won ? 'text-green-600' : ''}`}>{t1Total}</td>
           </tr>
-          <tr className="text-navy">
+          <tr className={t2Won ? 'text-navy' : 'text-navy/60'}>
             <td className="py-0.5">
-              <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+              <Link href={`/team/${awayTeamSlug}`} className={`hover:text-red-600 transition-colors ${t2Won ? 'font-semibold' : ''}`}>
                 {awayTeamName}
               </Link>
             </td>
@@ -184,7 +186,7 @@ function MatchupSummary({
             <td className="text-right tabular-nums py-0.5">{mr.team2Series ?? '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team2GamePts != null ? mr.team2GamePts / 2 : '-'}</td>
             <td className="text-right tabular-nums py-0.5">{mr.team2BonusPts ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5 font-semibold">{t2Total}</td>
+            <td className={`text-right tabular-nums py-0.5 font-bold ${t2Won ? 'text-green-600' : ''}`}>{t2Total}</td>
           </tr>
         </tbody>
       </table>
@@ -195,8 +197,8 @@ function MatchupSummary({
 /** Color class for game-by-game win/loss in matchup summary. */
 function gameWinClass(myScore: number | null, oppScore: number | null): string {
   if (myScore == null || oppScore == null) return '';
-  if (myScore > oppScore) return 'text-emerald-700';
-  if (myScore < oppScore) return 'text-red-600/70';
+  if (myScore > oppScore) return 'text-green-600 font-semibold';
+  if (myScore < oppScore) return 'text-navy/50';
   return 'text-amber-600'; // tie
 }
 
@@ -232,9 +234,9 @@ function TeamBoxScore({
             <tr className="border-b border-navy/10">
               <th className="text-left px-2 py-1 text-navy/40 font-normal text-xs">Bowler</th>
               <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">Avg</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">G1</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">G2</th>
-              <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">G3</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/40 font-normal text-xs border-l border-navy/10">G1</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/40 font-normal text-xs border-l border-navy/10">G2</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/40 font-normal text-xs border-l border-navy/10">G3</th>
               <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">Series</th>
               <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">Hcp</th>
               <th className="text-right px-1 py-1 text-navy/40 font-normal text-xs">T</th>
@@ -262,13 +264,13 @@ function TeamBoxScore({
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/50">
                     {b.incomingAvg ?? '-'}
                   </td>
-                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game1, b.incomingAvg)}`}>
+                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game1, b.incomingAvg)}`}>
                     {b.game1 ?? '-'}
                   </td>
-                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game2, b.incomingAvg)}`}>
+                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game2, b.incomingAvg)}`}>
                     {b.game2 ?? '-'}
                   </td>
-                  <td className={`px-1 py-1 text-right tabular-nums text-xs sm:text-sm ${avgColorClass(b.game3, b.incomingAvg)}`}>
+                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game3, b.incomingAvg)}`}>
                     {b.game3 ?? '-'}
                   </td>
                   <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs sm:text-sm">
@@ -286,9 +288,9 @@ function TeamBoxScore({
             <tr className="bg-navy/[0.03]">
               <td className="px-2 py-1 text-xs font-heading text-navy/60">Team Total</td>
               <td className="px-1 py-1"></td>
-              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs">{g1Total}</td>
-              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs">{g2Total}</td>
-              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs">{g3Total}</td>
+              <td className="pl-2 pr-1 py-1 text-right tabular-nums font-semibold text-xs border-l border-navy/10">{g1Total}</td>
+              <td className="pl-2 pr-1 py-1 text-right tabular-nums font-semibold text-xs border-l border-navy/10">{g2Total}</td>
+              <td className="pl-2 pr-1 py-1 text-right tabular-nums font-semibold text-xs border-l border-navy/10">{g3Total}</td>
               <td className="px-1 py-1 text-right tabular-nums font-bold text-xs">{seriesTot}</td>
               <td className="px-1 py-1 text-right tabular-nums font-bold text-xs">{hcpSeriesTot}</td>
               <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs text-navy/40">
@@ -345,7 +347,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
   // --- Detail-only mode: just render box scores for each week, no chrome ---
   if (detailOnly) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         {allWeeks.map(week => {
           const hasScores = weeksWithScores.has(week);
           const matchups = getMatchups(schedule, week);
@@ -379,7 +381,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                       </Link>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-3">
                     {homeBowlers.length > 0 && (
                       <TeamBoxScore teamName={matchup.homeTeamName} teamSlug={matchup.homeTeamSlug} bowlers={homeBowlers} mvpBowlerID={mvpID} />
                     )}

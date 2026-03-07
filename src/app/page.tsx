@@ -22,8 +22,8 @@ const quickLinks = [
   { label: 'League Nights', href: '/week', description: 'Weekly matchups and scores' },
   { label: 'Seasons', href: '/seasons', description: 'Every season since 2007' },
   { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings' },
-  { label: 'Bowlers', href: '/bowlers', description: 'Every bowler since 2007' },
-  { label: 'Teams', href: '/teams', description: 'Current and historical rosters' },
+  { label: 'Bowlers', href: '/bowlers?filter=current', description: 'Current season roster' },
+  { label: 'Teams', href: '/teams?filter=current', description: 'Current season teams' },
   { label: 'Resources', href: '/resources', description: 'League links and forms' },
 ];
 

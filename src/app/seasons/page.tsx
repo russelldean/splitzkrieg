@@ -44,7 +44,7 @@ export default async function SeasonsPage() {
                 <p className="font-body text-sm text-navy/50 mt-1">
                   Season {current.romanNumeral}
                 </p>
-                <div className="flex flex-wrap gap-4 mt-4 text-sm font-body text-navy/60">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm font-body text-navy/60">
                   <span>
                     <span className="text-navy/40">Teams </span>
                     <span className="font-semibold tabular-nums">{current.teamCount}</span>
@@ -72,40 +72,32 @@ export default async function SeasonsPage() {
             <div className="space-y-1">
               <h2 className="font-heading text-lg text-navy/70 mb-2">Past Seasons</h2>
               {seasons.slice(1).map((season) => (
-                <div
+                <Link
                   key={season.seasonID}
-                  className="flex items-baseline justify-between gap-4 px-4 py-3 -mx-4 rounded hover:bg-navy/[0.03] transition-colors group"
+                  href={`/season/${season.slug}`}
+                  className="flex items-center justify-between gap-2 px-4 py-3 -mx-4 rounded hover:bg-navy/[0.03] transition-colors group"
                 >
-                  <div className="flex items-baseline gap-2 min-w-0">
-                    <Link
-                      href={`/season/${season.slug}`}
-                      className="font-heading text-lg whitespace-nowrap text-navy hover:text-red-600 transition-colors"
-                    >
-                      {season.period} {season.year}
-                    </Link>
-                    <span className="font-body text-sm text-navy/40">
-                      Season {season.romanNumeral}
-                    </span>
+                  <div className="min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-heading text-lg text-navy group-hover:text-red-600 transition-colors">
+                        {season.period} {season.year}
+                      </span>
+                      <span className="font-body text-sm text-navy/40">
+                        {season.romanNumeral}
+                      </span>
+                    </div>
+                    <div className="flex gap-3 text-xs font-body text-navy/50 mt-0.5">
+                      <span className="tabular-nums">{season.teamCount} teams</span>
+                      <span className="tabular-nums">{season.bowlerCount} bowlers</span>
+                      {season.champion && (
+                        <span className="text-navy/60 hidden sm:inline">{season.champion}</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-3 shrink-0 text-sm font-body text-navy/50">
-                    <span className="tabular-nums text-left min-w-[60px]">{season.teamCount} teams</span>
-                    <span className="text-navy/20">&middot;</span>
-                    <span>{season.bowlerCount} bowlers</span>
-                    {season.champion && (
-                      <>
-                        <span className="text-navy/20">&middot;</span>
-                        <span className="text-navy/70">{season.champion}</span>
-                      </>
-                    )}
-                    <span className="text-navy/20">&middot;</span>
-                    <Link
-                      href={`/stats/${season.slug}`}
-                      className="text-red-600/70 hover:text-red-600 transition-colors font-medium"
-                    >
-                      Stats &rarr;
-                    </Link>
-                  </div>
-                </div>
+                  <svg className="w-4 h-4 text-navy/30 group-hover:text-red-600 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
               ))}
             </div>
           )}

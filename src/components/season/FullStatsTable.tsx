@@ -177,17 +177,25 @@ export function FullStatsTable({ stats, minGames }: Props) {
         <p className="font-body text-navy/50 py-4">No bowlers in this category.</p>
       ) : (
         <div className="relative">
+        {canScrollRight && (
+          <div className="flex items-center justify-end gap-1 mb-2 text-xs font-body text-navy/40 animate-pulse sm:hidden">
+            <span>Scroll for more</span>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
+        )}
         <div ref={scrollRef} className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full text-sm font-body">
             <thead>
               <tr className="border-b border-navy/10 text-navy/50 text-xs uppercase tracking-wider">
-                <th className="px-3 py-2 text-left w-10">#</th>
+                <th className="px-3 py-2 text-left w-10 sticky left-0 bg-white z-10">#</th>
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
                     className={`px-3 py-2 cursor-pointer hover:text-navy transition-colors select-none whitespace-nowrap ${
                       col.align === 'right' ? 'text-right' : 'text-left'
-                    }`}
+                    } ${col.key === 'bowlerName' ? 'sticky left-10 bg-white z-10' : ''}`}
                     onClick={() => handleSort(col.key)}
                   >
                     {col.label}
@@ -202,8 +210,8 @@ export function FullStatsTable({ stats, minGames }: Props) {
                   key={`${row.bowlerID}-${row.teamSlug ?? 'no-team'}`}
                   className="border-b border-navy/5 hover:bg-navy/[0.02] transition-colors"
                 >
-                  <td className="px-3 py-2 text-navy/40 tabular-nums">{i + 1}</td>
-                  <td className="px-3 py-2 font-medium whitespace-nowrap">
+                  <td className="px-3 py-2 text-navy/40 tabular-nums sticky left-0 bg-white z-10">{i + 1}</td>
+                  <td className="px-3 py-2 font-medium whitespace-nowrap sticky left-10 bg-white z-10">
                     <Link
                       href={`/bowler/${row.slug}`}
                       className="text-navy hover:text-red-600 transition-colors"
@@ -211,16 +219,17 @@ export function FullStatsTable({ stats, minGames }: Props) {
                       {row.bowlerName}
                     </Link>
                   </td>
-                  <td className="px-3 py-2 text-navy/60 whitespace-nowrap">
+                  <td className="px-3 py-2 text-navy/60 max-w-[120px] truncate">
                     {row.teamSlug ? (
                       <Link
                         href={`/team/${row.teamSlug}`}
                         className="hover:text-red-600 transition-colors"
+                        title={row.teamName ?? undefined}
                       >
                         {row.teamName ?? '\u2014'}
                       </Link>
                     ) : (
-                      <span>{row.teamName ?? '\u2014'}</span>
+                      <span title={row.teamName ?? undefined}>{row.teamName ?? '\u2014'}</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums text-navy/70">
@@ -270,7 +279,7 @@ export function FullStatsTable({ stats, minGames }: Props) {
           </table>
         </div>
         {canScrollRight && (
-          <div className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-white to-transparent sm:from-transparent" />
+          <div className="absolute top-0 right-0 bottom-0 w-12 pointer-events-none bg-gradient-to-l from-white via-white/80 to-transparent" />
         )}
         </div>
       )}

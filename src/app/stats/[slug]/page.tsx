@@ -151,12 +151,6 @@ export default async function SeasonStatsPage({
         <SeasonNav current={season} allSeasons={allSeasons} basePath="/stats" />
       </div>
 
-      {/* Section jump links */}
-      <nav className="mb-8 flex flex-wrap gap-2 text-xs font-body">
-        <a href="#leaderboards" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Season Leaders</a>
-        <a href="#stats" className="text-navy/50 hover:text-red-600 transition-colors px-2 py-1 rounded bg-navy/[0.03]">Full Stats</a>
-      </nav>
-
       <div className="space-y-12">
         <SeasonLeaderboards
           mensScratch={[

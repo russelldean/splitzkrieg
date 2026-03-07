@@ -84,11 +84,11 @@ export default async function WeeksIndexPage() {
                           );
                         })()}
                         {week.botwName && (
-                          <span className="hidden sm:inline">
-                            <span className="text-navy/40">Bowler of the Week </span>
+                          <span>
+                            <span className="hidden sm:inline text-navy/40">BOTW </span>
                             <span className="font-semibold text-navy/70">{week.botwName}</span>
                             {week.botwPinsOver != null && (
-                              <span className="tabular-nums text-navy/40 ml-1">+{week.botwPinsOver}</span>
+                              <span className="hidden sm:inline tabular-nums text-navy/40 ml-1">+{week.botwPinsOver}</span>
                             )}
                           </span>
                         )}
