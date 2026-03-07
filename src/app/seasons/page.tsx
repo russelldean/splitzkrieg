@@ -90,7 +90,7 @@ export default async function SeasonsPage() {
                       <span className="tabular-nums">{season.teamCount} teams</span>
                       <span className="tabular-nums">{season.bowlerCount} bowlers</span>
                       {season.champion && (
-                        <span className="text-navy/60 hidden sm:inline">{season.champion}</span>
+                        <span className="text-navy/60">{season.champion}</span>
                       )}
                     </div>
                   </div>

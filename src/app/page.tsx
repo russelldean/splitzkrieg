@@ -3,6 +3,7 @@ import Image from 'next/image';
 import {
   getRecentMilestones,
   getCurrentSeasonSnapshot,
+  getNextBowlingNight,
   getSeasonBySlug,
   getSeasonStandings,
   getSeasonSchedule,
@@ -12,6 +13,7 @@ import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
+import { HeaderCountdown } from '@/components/layout/HeaderCountdown';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -28,9 +30,10 @@ const quickLinks = [
 ];
 
 export default async function Home() {
-  const [milestones, seasonSnapshot] = await Promise.all([
+  const [milestones, seasonSnapshot, nextBowlingNight] = await Promise.all([
     getRecentMilestones(),
     getCurrentSeasonSnapshot(),
+    getNextBowlingNight(),
   ]);
 
   // Fetch standings + schedule for current season
@@ -83,6 +86,9 @@ export default async function Home() {
             <p className="font-body text-sm sm:text-base text-navy/50 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
+            <div className="mt-2 sm:hidden">
+              <HeaderCountdown targetDate={nextBowlingNight} />
+            </div>
           </div>
 
           {/* This Week's Results CTA */}

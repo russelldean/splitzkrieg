@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import type { Season, SeasonHeroStats, SeasonPlayoffBracket, PlayoffMatchup } from '@/lib/queries';
-import { ShareButton } from '@/components/bowler/ShareButton';
 import { strikeX } from '@/components/ui/StrikeX';
 
 /** Order matchup teams by regular-season seed (lower seed# = higher finish = top slot). */
@@ -22,7 +21,6 @@ interface Props {
   season: Season;
   heroStats: SeasonHeroStats | null;
   bracket: SeasonPlayoffBracket | null;
-  shareUrl: string;
 }
 
 function TeamLink({ name, slug, className }: { name: string; slug: string; className?: string }) {
@@ -182,21 +180,16 @@ function PlayoffResults({ bracket }: { bracket: SeasonPlayoffBracket }) {
   );
 }
 
-export function SeasonHero({ season, heroStats, bracket, shareUrl }: Props) {
+export function SeasonHero({ season, heroStats, bracket }: Props) {
   return (
     <section className="relative pb-8 border-b border-red-600/20">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
-            Season {strikeX(season.romanNumeral)}
-          </h1>
-          <p className="font-body text-lg text-navy/60 mt-1">
-            {season.period} {season.year}
-          </p>
-        </div>
-        <div className="shrink-0 pt-2">
-          <ShareButton url={shareUrl} />
-        </div>
+      <div>
+        <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
+          Season {strikeX(season.romanNumeral)}
+        </h1>
+        <p className="font-body text-lg text-navy/60 mt-1">
+          {season.period} {season.year}
+        </p>
       </div>
 
       {bracket ? (

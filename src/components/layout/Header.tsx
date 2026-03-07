@@ -60,15 +60,16 @@ export async function Header() {
     : 'This Week';
 
   const mobileLinks = [
-    { href: '/week', label: 'League Nights' },
-    ...(currentSeasonSlug ? [{ href: `/week/${currentSeasonSlug}/${snapshot!.weekNumber}`, label: '  This Week' }] : []),
-    { href: '/seasons', label: 'Seasons' },
-    ...(currentSeasonSlug ? [{ href: `/season/${currentSeasonSlug}`, label: '  Current Season' }] : []),
-    ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: '  Current Season Stats' }] : []),
-    { href: '/seasons', label: '  All Season Stats' },
-    { href: '/stats/all-time', label: '  All-Time Stats' },
-    { href: '/bowlers', label: 'Bowlers' },
-    { href: '/teams', label: 'Teams' },
+    ...(currentSeasonSlug ? [
+      { href: `/week/${currentSeasonSlug}/${snapshot!.weekNumber}`, label: 'This Week\'s Results', icon: leagueNightsIcon },
+      { href: `/season/${currentSeasonSlug}`, label: 'Current Standings', icon: seasonsIcon },
+    ] : []),
+    { href: '/bowlers?filter=current', label: 'Bowlers', icon: bowlersIcon },
+    { href: '/teams?filter=current', label: 'Teams', icon: teamsIcon },
+    ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Season Stats', icon: statsIcon }] : []),
+    { href: '/stats/all-time', label: 'All-Time Stats', icon: statsIcon },
+    { href: '/week', label: 'All League Nights', icon: leagueNightsIcon },
+    { href: '/seasons', label: 'All Seasons', icon: seasonsIcon },
   ];
 
   return (

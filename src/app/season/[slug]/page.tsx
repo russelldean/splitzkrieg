@@ -77,8 +77,6 @@ export default async function SeasonPage({
   const season = await getSeasonBySlug(slug);
   if (!season) notFound();
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/season/${slug}`;
-
   const [standings, heroStats, bracket, weeklyScores, schedule, raceData, allSeasons, weekSummaries, playoffTeams] = await Promise.all([
     getSeasonStandings(season.seasonID),
     getSeasonHeroStats(season.seasonID),
@@ -111,7 +109,7 @@ export default async function SeasonPage({
         <span className="text-navy/70">Season {season.romanNumeral}</span>
       </div>
 
-      <SeasonHero season={season} heroStats={heroStats} bracket={bracket} shareUrl={shareUrl} />
+      <SeasonHero season={season} heroStats={heroStats} bracket={bracket} />
 
       {/* Prev/next season navigation */}
       <SeasonNav current={season} allSeasons={allSeasons} />
