@@ -14,7 +14,7 @@ export function Footer() {
     <footer className="bg-cream-dark border-t border-navy/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Secondary Nav */}
-        <nav className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 mb-6">
+        <nav className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mb-6">
           {secondaryLinks.map((link) => (
             <Link
               key={link.href}
