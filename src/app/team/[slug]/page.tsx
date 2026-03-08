@@ -29,6 +29,26 @@ import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
 import { AllTimeRoster } from '@/components/team/AllTimeRoster';
 import { HeadToHead } from '@/components/team/HeadToHead';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { SectionHeading } from '@/components/ui/SectionHeading';
+
+function GhostTeamExplainer() {
+  return (
+    <section>
+      <SectionHeading>About the Ghost Team</SectionHeading>
+      <div className="bg-white border border-navy/10 rounded-xl p-5 space-y-3 font-body text-navy/75 text-base leading-relaxed">
+        <p>
+          When a team forfeits (or there&rsquo;s an odd number of teams in the league), they receive no points &mdash; but
+          the opposing team doesn&rsquo;t automatically get three free wins. They bowl against the
+          dreaded <span className="font-semibold text-navy">Ghost Team</span>.
+        </p>
+        <p>
+          To earn a win in each game, the team&rsquo;s total must come within <span className="font-semibold text-navy tabular-nums">20 pins</span> of
+          their combined team average.
+        </p>
+      </div>
+    </section>
+  );
+}
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -106,7 +126,11 @@ export default async function TeamPage({
       />
 
       <div className="mt-8 space-y-8">
-        <CurrentRoster roster={currentRoster} />
+        {team.teamName === 'Ghost Team' ? (
+          <GhostTeamExplainer />
+        ) : (
+          <CurrentRoster roster={currentRoster} />
+        )}
 
         <TeamSeasonByseason
           seasons={teamSeasons}

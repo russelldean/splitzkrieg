@@ -5,6 +5,13 @@ import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '
 import { organizeByWeek, indexMatchResults, getMatchups, findMatchMVP } from '@/lib/week-utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
+const GHOST_TEAM_NAME = 'Ghost Team';
+
+function TeamName({ name }: { name: string }) {
+  if (name === GHOST_TEAM_NAME) return <>{name} {'👻'}</>;
+  return <>{name}</>;
+}
+
 /** Color class for a game score relative to the bowler's incoming average. */
 function avgColorClass(score: number | null, avg: number | null): string {
   if (score === null || avg === null) return '';
@@ -96,7 +103,7 @@ function WeeklySummaryTable({
               <tr key={idx} className="border-b border-navy/5">
                 <td className={`py-1.5 pl-2 ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                   <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
-                    {matchup.homeTeamName}
+                    <TeamName name={matchup.homeTeamName} />
                   </Link>
                 </td>
                 <td className="text-center tabular-nums py-1.5">
@@ -106,7 +113,7 @@ function WeeklySummaryTable({
                 </td>
                 <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                   <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
-                    {matchup.awayTeamName}
+                    <TeamName name={matchup.awayTeamName} />
                   </Link>
                 </td>
                 <td className="pl-4 py-1.5 text-amber-800">
@@ -162,7 +169,7 @@ function MatchupSummary({
           <tr className="text-navy">
             <td className="py-0.5">
               <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600 transition-colors">
-                {homeTeamName}
+                <TeamName name={homeTeamName} />
               </Link>
             </td>
             <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team1Game1, mr.team2Game1)}`}>{mr.team1Game1 ?? '-'}</td>
@@ -178,7 +185,7 @@ function MatchupSummary({
           <tr className="text-navy">
             <td className="py-0.5">
               <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600 transition-colors">
-                {awayTeamName}
+                <TeamName name={awayTeamName} />
               </Link>
             </td>
             <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team2Game1, mr.team1Game1)}`}>{mr.team2Game1 ?? '-'}</td>
@@ -229,7 +236,7 @@ function TeamBoxScore({
         href={`/team/${teamSlug}`}
         className="font-heading text-sm text-navy hover:text-red-600 transition-colors"
       >
-        {teamName}
+        <TeamName name={teamName} />
       </Link>
       <div className="overflow-x-auto">
         <table className="w-full text-sm sm:text-base font-body mt-1">
@@ -492,11 +499,11 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                           ) : (
                             <div className="flex items-center gap-2 mb-2 text-sm font-heading text-navy/60">
                               <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600">
-                                {matchup.homeTeamName}
+                                <TeamName name={matchup.homeTeamName} />
                               </Link>
                               <span className="text-navy/30">vs</span>
                               <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600">
-                                {matchup.awayTeamName}
+                                <TeamName name={matchup.awayTeamName} />
                               </Link>
                             </div>
                           )}
@@ -540,11 +547,11 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                       {matchups.map((matchup, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-sm font-body text-navy/65">
                           <Link href={`/team/${matchup.homeTeamSlug}`} className="text-navy hover:text-red-600">
-                            {matchup.homeTeamName}
+                            <TeamName name={matchup.homeTeamName} />
                           </Link>
                           <span className="text-navy/30">vs</span>
                           <Link href={`/team/${matchup.awayTeamSlug}`} className="text-navy hover:text-red-600">
-                            {matchup.awayTeamName}
+                            <TeamName name={matchup.awayTeamName} />
                           </Link>
                         </div>
                       ))}
