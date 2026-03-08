@@ -17,7 +17,7 @@ export default async function SeasonsPage() {
   return (
     <SeasonDirectory
       seasons={seasons}
-      currentSlug={currentSlug}
+      currentSlug={currentSlug ?? null}
       trailCurrent="/seasons"
       heading="Seasons"
       subheading={(count) => `${count} seasons of Splitzkrieg bowling history.`}
