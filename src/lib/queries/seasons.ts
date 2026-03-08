@@ -985,6 +985,11 @@ export const getAllSeasonNavList = cache(async (): Promise<SeasonNav[]> => {
   }, [], { stable: true });
 });
 
+export async function getCurrentSeasonSlug(): Promise<string | undefined> {
+  const seasons = await getAllSeasonNavList();
+  return seasons[0]?.slug;
+}
+
 export interface WeekSummary {
   week: number;
   matchDate: string | null;

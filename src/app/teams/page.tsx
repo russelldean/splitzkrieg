@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getAllTeamsDirectory, getTeamSeasonPresence, getTeamPlayoffFinishes, getCurrentSeasonID } from '@/lib/queries';
+import { getAllTeamsDirectory, getTeamSeasonPresence, getTeamPlayoffFinishes, getCurrentSeasonID, getCurrentSeasonSlug } from '@/lib/queries';
 import { TeamTimeline } from '@/components/team/TeamTimeline';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { TeamsDirectory } from '@/components/team/TeamsDirectory';
@@ -10,16 +10,17 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamsPage() {
-  const [teams, presenceData, playoffFinishes, currentSeasonID] = await Promise.all([
+  const [teams, presenceData, playoffFinishes, currentSeasonID, currentSlug] = await Promise.all([
     getAllTeamsDirectory(),
     getTeamSeasonPresence(),
     getTeamPlayoffFinishes(),
     getCurrentSeasonID(),
+    getCurrentSeasonSlug(),
   ]);
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <TrailNav current="/teams" position="top" />
+      <TrailNav current="/teams" seasonSlug={currentSlug} position="top" />
       <TeamsDirectory teams={teams} />
 
       {presenceData.length > 0 && (
@@ -30,7 +31,7 @@ export default async function TeamsPage() {
         />
       )}
 
-      <TrailNav current="/teams" />
+      <TrailNav current="/teams" seasonSlug={currentSlug} />
     </main>
   );
 }

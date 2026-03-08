@@ -19,6 +19,7 @@ import {
   getBowlerRollingAvgHistory,
   getBowlerOfTheWeek,
   getCurrentSeasonID,
+  getCurrentSeasonSlug,
 } from '@/lib/queries';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
@@ -27,6 +28,7 @@ import type { WeekDelta } from '@/components/bowler/LastWeekHighlight';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
 import { GameLog } from '@/components/bowler/GameLog';
+import { TrailNav } from '@/components/ui/TrailNav';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
@@ -78,13 +80,14 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
     getBowlerRollingAvgHistory(bowler.bowlerID),
     getBowlerOfTheWeek(),
     getCurrentSeasonID(),
+    getCurrentSeasonSlug(),
   ]);
 
   const isBowlerOfTheWeek = botwID === bowler.bowlerID;
@@ -155,6 +158,7 @@ export default async function BowlerPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/bowlers" seasonSlug={currentSlug} position="top" />
       <BowlerHero
         careerSummary={careerSummary}
         currentAvg={currentAvg}
@@ -182,6 +186,8 @@ export default async function BowlerPage({
 
         <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} />
       </div>
+
+      <TrailNav current="/bowlers" seasonSlug={currentSlug} />
     </main>
   );
 }

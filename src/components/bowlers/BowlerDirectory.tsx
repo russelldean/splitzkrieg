@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { DirectoryBowler } from '@/lib/queries';
 
@@ -14,7 +15,8 @@ function groupByLetter(bowlers: DirectoryBowler[]) {
 }
 
 export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
-  const [showCurrent, setShowCurrent] = useState(false);
+  const searchParams = useSearchParams();
+  const [showCurrent, setShowCurrent] = useState(searchParams.get('filter') === 'current');
   const filtered = showCurrent ? bowlers.filter(b => b.isActive) : bowlers;
   const grouped = groupByLetter(filtered);
   const letters = Object.keys(grouped).sort();

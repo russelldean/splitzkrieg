@@ -4,7 +4,7 @@
  */
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getAllSeasonNavList, getSeasonWeekSummaries } from '@/lib/queries';
+import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSlug } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 
 export const metadata: Metadata = {
@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function WeeksIndexPage() {
-  const allSeasons = await getAllSeasonNavList();
+  const [allSeasons, currentSlug] = await Promise.all([
+    getAllSeasonNavList(),
+    getCurrentSeasonSlug(),
+  ]);
 
   // Fetch week summaries for all seasons
   const summariesBySeasonID = new Map<number, Awaited<ReturnType<typeof getSeasonWeekSummaries>>>();
@@ -27,7 +30,7 @@ export default async function WeeksIndexPage() {
 
   return (
     <main id="top" className="container mx-auto px-4 py-8 max-w-3xl">
-      <TrailNav current="/week" position="top" />
+      <TrailNav current="/week" seasonSlug={currentSlug} position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">League Nights</h1>
       <p className="font-body text-navy/50 mb-8">
         Every bowling night, every season.
@@ -121,7 +124,7 @@ export default async function WeeksIndexPage() {
         </a>
       </div>
 
-      <TrailNav current="/week" />
+      <TrailNav current="/week" seasonSlug={currentSlug} />
     </main>
   );
 }

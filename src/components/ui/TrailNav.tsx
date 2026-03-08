@@ -1,16 +1,25 @@
 import Link from 'next/link';
 
-const trail = [
-  { label: 'League Nights', href: '/week' },
-  { label: 'Seasons', href: '/seasons' },
-  { label: 'The Stats', href: '/stats' },
-  { label: 'Bowlers', href: '/bowlers' },
-  { label: 'Teams', href: '/teams' },
-  { label: 'Resources', href: '/resources' },
-];
+function getTrail(seasonSlug?: string) {
+  return [
+    { label: 'League Nights', href: '/week', key: '/week' },
+    { label: 'Seasons', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
+    { label: 'The Stats', href: '/stats', key: '/stats' },
+    { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
+    { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
+    { label: 'Resources', href: '/resources', key: '/resources' },
+  ];
+}
 
-export function TrailNav({ current, position = 'bottom' }: { current: string; position?: 'top' | 'bottom' }) {
-  const idx = trail.findIndex((t) => t.href === current);
+interface TrailNavProps {
+  current: string;
+  position?: 'top' | 'bottom';
+  seasonSlug?: string;
+}
+
+export function TrailNav({ current, position = 'bottom', seasonSlug }: TrailNavProps) {
+  const trail = getTrail(seasonSlug);
+  const idx = trail.findIndex((t) => t.key === current);
   if (idx === -1) return null;
 
   const prev = idx > 0 ? trail[idx - 1] : null;

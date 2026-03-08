@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getAllSeasonsDirectory } from '@/lib/queries';
+import { getAllSeasonsDirectory, getCurrentSeasonSlug } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 
 
@@ -11,14 +11,17 @@ export const metadata: Metadata = {
 };
 
 export default async function SeasonsPage() {
-  const seasons = await getAllSeasonsDirectory();
+  const [seasons, currentSlug] = await Promise.all([
+    getAllSeasonsDirectory(),
+    getCurrentSeasonSlug(),
+  ]);
 
   // First season is the current one (newest first)
   const currentSeasonID = seasons.length > 0 ? seasons[0].seasonID : null;
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-3xl">
-      <TrailNav current="/seasons" position="top" />
+      <TrailNav current="/seasons" seasonSlug={currentSlug} position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">Seasons</h1>
       <p className="font-body text-navy/50 mb-8">
         {seasons.length} seasons of Splitzkrieg bowling history.
@@ -56,8 +59,8 @@ export default async function SeasonsPage() {
                     <span className="font-semibold tabular-nums">{current.bowlerCount}</span>
                   </span>
                   {current.champion && (
-                    <span>
-                      <span className="text-navy/50">Champion </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-sm">{'🏆'}</span>
                       <span className="font-semibold text-navy/70">{current.champion}</span>
                     </span>
                   )}
@@ -92,7 +95,10 @@ export default async function SeasonsPage() {
                       <span className="tabular-nums">{season.teamCount} teams</span>
                       <span className="tabular-nums">{season.bowlerCount} bowlers</span>
                       {season.champion && (
-                        <span className="text-navy/60">{season.champion}</span>
+                        <span className="inline-flex items-center gap-1 text-navy/60">
+                          <span className="text-xs">{'🏆'}</span>
+                          {season.champion}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -106,7 +112,7 @@ export default async function SeasonsPage() {
         </>
       )}
 
-      <TrailNav current="/seasons" />
+      <TrailNav current="/seasons" seasonSlug={currentSlug} />
     </main>
   );
 }

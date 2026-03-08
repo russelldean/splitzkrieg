@@ -19,6 +19,7 @@ import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekStats } from '@/components/season/WeekStats';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { strikeX } from '@/components/ui/StrikeX';
+import { TrailNav } from '@/components/ui/TrailNav';
 
 export const dynamicParams = false;
 
@@ -108,6 +109,7 @@ export default async function WeekPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/week" seasonSlug={seasonSlug} position="top" />
       {/* Breadcrumb + navigation */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-3">
@@ -229,6 +231,8 @@ export default async function WeekPage({
           Season Leaderboards
         </Link>
       </div>
+
+      <TrailNav current="/week" seasonSlug={seasonSlug} />
     </main>
   );
 }

@@ -24,6 +24,7 @@ import {
   getAllSeasonNavList,
   getSeasonWeekSummaries,
 } from '@/lib/queries';
+import { TrailNav } from '@/components/ui/TrailNav';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
 import { SeasonHighlights } from '@/components/season/SeasonHighlights';
@@ -104,6 +105,7 @@ export default async function SeasonPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/seasons" seasonSlug={slug} position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
         <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
         <span className="text-navy/30">/</span>
@@ -152,6 +154,8 @@ export default async function SeasonPage({
           </Link>
         </p>
       </div>
+
+      <TrailNav current="/seasons" seasonSlug={slug} />
     </main>
   );
 }

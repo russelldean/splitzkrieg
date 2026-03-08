@@ -20,6 +20,7 @@ import {
   getTeamAllTimeRoster,
   getTeamFranchiseHistory,
   getTeamCurrentStanding,
+  getCurrentSeasonSlug,
   type TeamSeasonBowler,
 } from '@/lib/queries';
 import { TeamHero } from '@/components/team/TeamHero';
@@ -27,6 +28,7 @@ import { CurrentRoster } from '@/components/team/CurrentRoster';
 import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
 import { AllTimeRoster } from '@/components/team/AllTimeRoster';
 import { HeadToHead } from '@/components/team/HeadToHead';
+import { TrailNav } from '@/components/ui/TrailNav';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -70,12 +72,13 @@ export default async function TeamPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/team/${slug}`;
 
   // Parallel build-time data fetching
-  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding] = await Promise.all([
+  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug] = await Promise.all([
     getTeamCurrentRoster(team.teamID),
     getTeamSeasonByseason(team.teamID),
     getTeamAllTimeRoster(team.teamID),
     getTeamFranchiseHistory(team.teamID),
     getTeamCurrentStanding(team.teamID),
+    getCurrentSeasonSlug(),
   ]);
 
   // Pre-fetch bowler data for all seasons (static build handles the load)
@@ -92,6 +95,7 @@ export default async function TeamPage({
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <TrailNav current="/teams" seasonSlug={currentSlug} position="top" />
       <TeamHero
         team={team}
         rosterCount={rosterCount}
@@ -114,6 +118,8 @@ export default async function TeamPage({
 
         <HeadToHead />
       </div>
+
+      <TrailNav current="/teams" seasonSlug={currentSlug} />
     </main>
   );
 }

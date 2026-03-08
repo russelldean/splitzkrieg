@@ -4,7 +4,7 @@
  */
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getAllPlayoffHistory, type PlayoffSeason } from '@/lib/queries';
+import { getAllPlayoffHistory, getCurrentSeasonSlug, type PlayoffSeason } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 
 export const metadata: Metadata = {
@@ -96,11 +96,14 @@ function PlayoffRow({
         <div className="text-navy/50 text-xs">{season.displayName}</div>
       </td>
       <td className="py-3 pr-4 align-top font-body font-bold text-amber-700">
-        <TeamName
-          canonical={season.championName}
-          historic={season.championHistoricName}
-          count={totals.championships.get(season.championTeamID) || 0}
-        />
+        <span className="inline-flex items-center gap-1">
+          <span className="text-sm">{'🏆'}</span>
+          <TeamName
+            canonical={season.championName}
+            historic={season.championHistoricName}
+            count={totals.championships.get(season.championTeamID) || 0}
+          />
+        </span>
       </td>
       <td className="py-3 pr-4 align-top font-body font-medium text-slate-600">
         <TeamName
@@ -146,7 +149,10 @@ function CovidRow() {
 }
 
 export default async function AllTimeStatsPage() {
-  const playoffs = await getAllPlayoffHistory();
+  const [playoffs, currentSlug] = await Promise.all([
+    getAllPlayoffHistory(),
+    getCurrentSeasonSlug(),
+  ]);
   const snapshots = computeRunningTotals(playoffs);
 
   const rows: React.ReactNode[] = [];
@@ -169,7 +175,7 @@ export default async function AllTimeStatsPage() {
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <TrailNav current="/stats" position="top" />
+      <TrailNav current="/stats" seasonSlug={currentSlug} position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
         <Link
           href="/stats"
@@ -228,7 +234,7 @@ export default async function AllTimeStatsPage() {
         )}
       </section>
 
-      <TrailNav current="/stats" />
+      <TrailNav current="/stats" seasonSlug={currentSlug} />
     </main>
   );
 }

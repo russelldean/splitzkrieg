@@ -90,7 +90,7 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
       {/* Legend */}
       <div className="flex flex-wrap gap-4 mb-3 text-xs font-body text-navy/60">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block text-yellow-500 text-sm leading-none">★</span> Champion
+          <span className="text-sm leading-none">{'🏆'}</span> Champion
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-sm bg-blue-300" /> Runner-Up
@@ -152,10 +152,10 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
                       {active ? (
                         finishMap.get(`${team.teamID}-${s.seasonID}`) === 'champion' ? (
                           <div
-                            className="w-5 h-5 mx-auto flex items-center justify-center text-yellow-500 text-[1.25rem] leading-none"
+                            className="w-5 h-5 mx-auto flex items-center justify-center text-[1rem] leading-none"
                             title={getCellTitle(team.teamName, s.roman, team.teamID, s.seasonID)}
                           >
-                            ★
+                            {'🏆'}
                           </div>
                         ) : (
                           <div

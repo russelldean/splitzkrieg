@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { TeamCard } from '@/components/team/TeamCard';
 import type { DirectoryTeam } from '@/lib/queries';
 
 export function TeamsDirectory({ teams }: { teams: DirectoryTeam[] }) {
-  const [showCurrent, setShowCurrent] = useState(false);
+  const searchParams = useSearchParams();
+  const [showCurrent, setShowCurrent] = useState(searchParams.get('filter') === 'current');
   const activeTeams = teams.filter(t => t.isActive);
   const historicalTeams = teams.filter(t => !t.isActive);
   const showAll = !showCurrent;
