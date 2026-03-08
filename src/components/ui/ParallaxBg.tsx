@@ -11,7 +11,8 @@ interface ParallaxBgProps {
 /**
  * Parallax background that works on both desktop and mobile.
  * - Desktop: CSS background-attachment: fixed
- * - Mobile (touch devices): JS-driven translateY since iOS ignores bg-fixed
+ * - Mobile (touch devices): position:fixed + clip-path:inset(0) on parent
+ *   (pure CSS — no JS scroll listeners, immune to iOS toolbar resizing)
  *
  * Usage: Place inside a positioned container with overflow-hidden.
  * <div className="relative overflow-hidden h-40">
@@ -85,14 +86,13 @@ function DesktopParallax({
   return <div ref={ref} className="absolute inset-0" style={style} />;
 }
 
-/* ── Mobile: simulate bg-fixed via translateY ───────────────── */
-// iOS ignores background-attachment:fixed, so we manually keep the
-// background locked to the viewport by translating it to counteract
-// the container's scroll movement. The container's overflow:hidden
-// clips it to the visible window — same visual result as bg-fixed.
-//
-// We use the exact same image sizing/positioning math as the desktop
-// bg-fixed path so both platforms show the same crop of the image.
+/* ── Mobile: position:fixed + clip-path ────────────────────── */
+// iOS ignores background-attachment:fixed. Instead of JS scroll
+// listeners (which fight with toolbar show/hide), we use:
+//   - clip-path: inset(0) on the parent — this clips fixed children
+//   - position: fixed on the image div — browser keeps it viewport-locked
+//     natively, including during toolbar transitions
+// Result: zero JS, zero shift, pixel-perfect.
 
 function MobileParallax({
   ref,
@@ -104,11 +104,9 @@ function MobileParallax({
   focalY: number;
 }) {
   const innerRef = useRef<HTMLDivElement>(null);
-  // Cache page-top and image dimensions — they only change on resize
-  const layoutRef = useRef({ pageTop: 0, scale: 0, imgW: 0, imgH: 0, bgPosY: 0 });
 
   const computeLayout = useCallback(() => {
-    if (!ref.current) return;
+    if (!ref.current || !innerRef.current) return;
     const rect = ref.current.getBoundingClientRect();
     const pageTop = rect.top + window.scrollY;
     const scale = Math.max(rect.width / IMG_W, rect.height / IMG_H);
@@ -116,45 +114,27 @@ function MobileParallax({
     const imgH = IMG_H * scale;
     const excessY = imgH - rect.height;
     const bgPosY = pageTop - excessY * focalY;
-    layoutRef.current = { pageTop, scale, imgW, imgH, bgPosY };
 
-    if (innerRef.current) {
-      innerRef.current.style.backgroundSize = `${imgW}px ${imgH}px`;
-      innerRef.current.style.backgroundPosition = `center ${bgPosY}px`;
-    }
+    innerRef.current.style.backgroundSize = `${imgW}px ${imgH}px`;
+    innerRef.current.style.backgroundPosition = `center ${bgPosY}px`;
   }, [ref, focalY]);
-
-  // Update transform synchronously — no rAF delay, so the background
-  // never lags behind the scroll by even a single frame
-  const handleScroll = useCallback(() => {
-    if (!ref.current || !innerRef.current) return;
-    const { pageTop } = layoutRef.current;
-
-    // Clamp scrollY to ignore iOS rubber-band overscroll
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    const scrollY = Math.max(0, Math.min(window.scrollY, maxScroll));
-
-    innerRef.current.style.transform = `translateY(${-(pageTop - scrollY)}px)`;
-  }, [ref]);
 
   useEffect(() => {
     computeLayout();
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', () => { computeLayout(); handleScroll(); });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', computeLayout);
-    };
-  }, [handleScroll, computeLayout]);
+    window.addEventListener('resize', computeLayout);
+    return () => window.removeEventListener('resize', computeLayout);
+  }, [computeLayout]);
 
   return (
-    <div ref={ref} className="absolute inset-0 overflow-hidden">
+    <div
+      ref={ref}
+      className="absolute inset-0"
+      style={{ clipPath: 'inset(0)' }}
+    >
       <div
         ref={innerRef}
-        className="absolute inset-x-0 top-0 will-change-transform"
+        className="fixed inset-0"
         style={{
-          height: '100vh',
           backgroundImage: `url(${src})`,
           backgroundRepeat: 'no-repeat',
         }}
