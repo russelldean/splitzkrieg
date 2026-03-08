@@ -272,20 +272,17 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
 
         {/* ── Normal countdown: neon card ── */}
         {phase === 'countdown' && (
-          <div className="relative">
-            <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-navy via-red-500 to-orange-400 animate-border-glow opacity-80" />
-            <div className="relative bg-[#0a0a0a] rounded-xl px-4 py-3 flex items-center justify-center gap-2">
-              <span className="text-xs text-white/40 font-body">Next bowling</span>
-              <span
-                className="font-body text-sm tabular-nums font-semibold animate-neon-pulse"
-                style={{
-                  color: '#ff4444',
-                  textShadow: '0 0 7px #ff4444, 0 0 20px #ff444480, 0 0 40px #ff444440',
-                }}
-              >
-                {countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m {String(countdown.seconds).padStart(2, '0')}s
-              </span>
-            </div>
+          <div className="px-4 py-3 flex items-center justify-center gap-2">
+            <span className="text-xs text-navy/40 font-body">Next bowling</span>
+            <span
+              className="font-body text-sm tabular-nums font-semibold animate-neon-pulse"
+              style={{
+                color: '#1B2A4A',
+                textShadow: '0 0 7px #1B2A4A88, 0 0 20px #1B2A4A55, 0 0 40px #1B2A4A33',
+              }}
+            >
+              {countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m {String(countdown.seconds).padStart(2, '0')}s
+            </span>
           </div>
         )}
 
