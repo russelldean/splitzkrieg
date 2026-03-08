@@ -4,7 +4,7 @@ function getTrail(seasonSlug?: string) {
   return [
     { label: 'League Nights', href: '/week', key: '/week' },
     { label: 'Seasons', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
-    { label: 'The Stats', href: '/stats', key: '/stats' },
+    { label: 'The Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
     { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
     { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
     { label: 'Resources', href: '/resources', key: '/resources' },

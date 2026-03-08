@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 interface Props {
   targetDate: string | null;
+  variant?: 'light' | 'dark';
 }
 
 function getTargetTime(dateStr: string): number {
@@ -55,7 +56,7 @@ function computeCountdown(targetMs: number) {
   return { d, h, m, s };
 }
 
-export function HeaderCountdown({ targetDate }: Props) {
+export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
   const [mounted, setMounted] = useState(false);
   const [cd, setCd] = useState<ReturnType<typeof computeCountdown>>(null);
   const [hotFun, setHotFun] = useState(false);
@@ -77,7 +78,7 @@ export function HeaderCountdown({ targetDate }: Props) {
 
   if (hotFun) {
     return (
-      <span className="font-heading text-[10px] text-red-600 tracking-wider uppercase animate-pulse" suppressHydrationWarning>
+      <span className={`font-heading text-sm tracking-wider uppercase animate-pulse ${variant === 'dark' ? 'text-red-400' : 'text-red-600'}`} suppressHydrationWarning>
         HOT FUN - League in session
       </span>
     );
@@ -85,8 +86,17 @@ export function HeaderCountdown({ targetDate }: Props) {
 
   if (!cd) return null;
 
+  if (variant === 'dark') {
+    return (
+      <span className="font-body text-sm text-white/70 tabular-nums tracking-wide" suppressHydrationWarning>
+        <span className="font-semibold text-white">{cd.d}d {String(cd.h).padStart(2, '0')}h {String(cd.m).padStart(2, '0')}m {String(cd.s).padStart(2, '0')}s</span>
+        {' '}until bowling
+      </span>
+    );
+  }
+
   return (
-    <span className="font-body text-[11px] text-navy/60 tabular-nums tracking-wide" suppressHydrationWarning>
+    <span className="font-body text-sm text-navy/60 tabular-nums tracking-wide" suppressHydrationWarning>
       <span className="font-semibold text-navy/70">{cd.d}d {String(cd.h).padStart(2, '0')}h {String(cd.m).padStart(2, '0')}m {String(cd.s).padStart(2, '0')}s</span>
       {' '}until bowling
     </span>

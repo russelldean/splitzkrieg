@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
-import { getCurrentSeasonSnapshot, getNextBowlingNight } from '@/lib/queries';
-import { HeaderCountdown } from './HeaderCountdown';
+import { getCurrentSeasonSnapshot } from '@/lib/queries';
 
 const bowlersIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -47,10 +46,7 @@ const statsIcon = (
 );
 
 export async function Header() {
-  const [snapshot, nextBowlingNight] = await Promise.all([
-    getCurrentSeasonSnapshot(),
-    getNextBowlingNight(),
-  ]);
+  const snapshot = await getCurrentSeasonSnapshot();
   const currentSeasonSlug = snapshot?.slug ?? null;
   const currentSeasonLabel = snapshot
     ? `Current Season`
@@ -82,14 +78,11 @@ export async function Header() {
               href="/"
               className="hover:text-red transition-colors"
             >
-              <span className="font-heading text-navy uppercase tracking-widest text-lg font-normal block leading-none">
+              <span className="font-heading text-navy uppercase tracking-widest text-xl sm:text-2xl font-normal block leading-none">
                 SPLITZKRIEG
               </span>
-              <span className="font-body text-[10px] text-navy/50 tracking-wider uppercase leading-none mt-0.5 block">
+              <span className="font-body text-[10px] sm:text-xs text-navy/50 tracking-wider uppercase leading-none mt-0.5 block">
                 Bowling League &middot; Est. 2007
-              </span>
-              <span className="hidden sm:block mt-0.5">
-                <HeaderCountdown targetDate={nextBowlingNight} />
               </span>
             </Link>
           </div>
@@ -145,7 +138,16 @@ export async function Header() {
           </nav>
 
           {/* Mobile Nav */}
-          <div className="md:hidden flex-shrink-0">
+          <div className="md:hidden flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/"
+              className="p-2 text-navy/60 hover:text-red-600 transition-colors"
+              aria-label="Home"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                <path d="M10 2.5L2 9h3v7h4v-4h2v4h4V9h3L10 2.5z" />
+              </svg>
+            </Link>
             <MobileNav links={mobileLinks} />
           </div>
         </div>

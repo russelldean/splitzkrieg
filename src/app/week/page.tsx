@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSlug } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { BackToTop } from '@/components/ui/BackToTop';
 
 export const metadata: Metadata = {
   title: 'All League Nights | Splitzkrieg',
@@ -111,18 +112,7 @@ export default async function WeeksIndexPage() {
         );
       })}
 
-      {/* Back to top */}
-      <div className="mt-8 flex justify-center">
-        <a
-          href="#top"
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-body text-navy/50 hover:text-red-600 bg-navy/5 hover:bg-navy/10 rounded-full transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-          </svg>
-          Back to top
-        </a>
-      </div>
+      <BackToTop />
 
       <TrailNav current="/week" seasonSlug={currentSlug} />
     </main>

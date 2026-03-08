@@ -72,8 +72,23 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Milestone Ticker */}
-      <MilestoneTicker milestones={milestones} />
+      {/* Milestone Ticker with countdown overlay */}
+      <div className="relative">
+        <MilestoneTicker milestones={milestones} />
+        {nextBowlingNight && (
+          <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
+            <div className="relative flex items-center">
+              {/* Gradient fade edges */}
+              <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
+              <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
+              {/* Clock */}
+              <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
+                <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -110,7 +125,7 @@ export default async function Home() {
                     Week {seasonSnapshot.weekNumber} Results
                     {latestWeekDate && <span className="font-body text-sm text-white/60 ml-2">{latestWeekDate}</span>}
                   </div>
-                  <div className="font-body text-sm text-white/60 mt-0.5">
+                  <div className="hidden sm:block font-body text-sm text-white/60 mt-0.5">
                     Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
                   </div>
                 </div>
