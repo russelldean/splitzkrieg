@@ -23,12 +23,12 @@ export const metadata = {
 };
 
 const quickLinks = [
-  { label: 'League Nights', href: '/week', description: 'Weekly matchups and scores' },
-  { label: 'Seasons', href: '/seasons', description: 'Every season since 2007' },
-  { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings' },
-  { label: 'Bowlers', href: '/bowlers?filter=current', description: 'Current season roster' },
-  { label: 'Teams', href: '/teams?filter=current', description: 'Current season teams' },
-  { label: 'Resources', href: '/resources', description: 'League links and forms' },
+  { label: 'League Nights', href: '/week', description: 'Weekly matchups and scores', icon: '🎳', accent: 'border-l-red-600/40' },
+  { label: 'Seasons', href: '/seasons', description: 'Every season since 2007', icon: '📅', accent: 'border-l-navy/30' },
+  { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings', icon: '🏆', accent: 'border-l-red-600/40' },
+  { label: 'Bowlers', href: '/bowlers?filter=current', description: 'Current season roster', icon: '👤', accent: 'border-l-navy/30' },
+  { label: 'Teams', href: '/teams?filter=current', description: 'Current season teams', icon: '👥', accent: 'border-l-red-600/40' },
+  { label: 'Resources', href: '/resources', description: 'League links and forms', icon: '📋', accent: 'border-l-navy/30' },
 ];
 
 export default async function Home() {
@@ -123,7 +123,7 @@ export default async function Home() {
           {seasonSnapshot && (
             <Link
               href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
-              className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden hover:shadow-lg transition-all group"
+              className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all group ring-1 ring-navy/10"
             >
               {/* Background image — bowling computer screen, parallax */}
               <ParallaxBg src="/bowling-screen.jpg" />
@@ -132,11 +132,11 @@ export default async function Home() {
               {/* Content */}
               <div className="relative flex items-center justify-between px-6 py-4">
                 <div>
-                  <div className="font-heading text-lg sm:text-xl text-white group-hover:text-red-300 transition-colors">
+                  <div className="font-heading text-xl sm:text-2xl text-white group-hover:text-red-300 transition-colors">
                     Week {seasonSnapshot.weekNumber} Results
-                    {latestWeekDate && <span className="font-body text-sm text-white ml-2">{latestWeekDate}</span>}
+                    {latestWeekDate && <span className="font-body text-sm text-white/80 ml-2">{latestWeekDate}</span>}
                   </div>
-                  <div className="hidden sm:block font-body text-sm text-white mt-0.5">
+                  <div className="hidden sm:block font-body text-sm text-white/80 mt-0.5">
                     Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
                   </div>
                 </div>
@@ -153,12 +153,15 @@ export default async function Home() {
               <Link
                   key={link.href}
                   href={link.href}
-                  className="group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all"
+                  className={`group bg-white rounded-xl border border-navy/10 border-l-4 ${link.accent} p-4 hover:border-navy/20 hover:shadow-sm transition-all`}
                 >
-                  <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
-                    {link.label}
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg" aria-hidden="true">{link.icon}</span>
+                    <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
+                      {link.label}
+                    </div>
                   </div>
-                  <div className="font-body text-xs text-navy/65 mt-1 leading-relaxed">
+                  <div className="font-body text-xs text-navy/65 mt-1 leading-relaxed pl-7">
                     {link.description}
                   </div>
                 </Link>
@@ -167,8 +170,13 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Gradient Divider */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent" />
+      </div>
+
       {/* Content Grid */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-4 sm:pb-6">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Mini Standings */}
           <div>

@@ -9,7 +9,7 @@ interface SeasonSnapshotProps {
 function StatValue({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="text-center">
-      <div className="font-heading text-2xl text-navy">{value}</div>
+      <div className="font-heading text-2xl text-navy tabular-nums">{value}</div>
       <div className="text-xs font-body text-navy/65 mt-0.5">{label}</div>
     </div>
   );
@@ -32,7 +32,7 @@ function LeaderRow({ label, name, slug, value }: { label: string; name: string; 
 export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
   if (!snapshot) {
     return (
-      <div className="bg-white rounded-xl border border-navy/10 p-6 flex flex-col items-center justify-center text-center min-h-[180px]">
+      <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-navy/30 p-6 flex flex-col items-center justify-center text-center min-h-[180px]">
         <p className="font-heading text-lg text-navy mb-2">Season Data</p>
         <p className="font-body text-sm text-navy/65">
           No season data available yet. Check back when the games start rolling.
@@ -42,7 +42,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 p-6 min-h-[180px]">
+    <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-navy/30 p-6 min-h-[180px]">
       <div className="flex items-baseline justify-between mb-1">
         <h3 className="font-heading text-lg text-navy">
           Season {strikeX(snapshot.romanNumeral)}
