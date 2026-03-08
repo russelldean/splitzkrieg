@@ -15,6 +15,7 @@ import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 import { HeaderCountdown } from '@/components/layout/HeaderCountdown';
+import { CountdownClock } from '@/components/home/CountdownClock';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -107,6 +108,11 @@ export default async function Home() {
             <p className="font-body text-sm sm:text-base text-navy/50 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
+          </div>
+
+          {/* Countdown Clock — mobile only (desktop uses HeaderCountdown in ticker) */}
+          <div className="mt-4 sm:hidden">
+            <CountdownClock targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
           </div>
 
           {/* This Week's Results CTA */}

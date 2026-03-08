@@ -1,162 +1,215 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getTargetTime, isLeagueNightNow, isPostBowlingNow, computeCountdown, getDebugTargetTime } from '@/lib/bowling-time';
 
 interface CountdownClockProps {
   targetDate: string | null;
+  weekNumber?: number;
 }
 
 /**
- * Bowling starts at 7:15 PM EST on Monday nights.
- * EST = UTC-5, EDT = UTC-4.
+ * Phases:
+ *  countdown     — compact card (> 2 min to go)
+ *  final         — big digital readout (≤ 2 min)
+ *  takeover      — full-screen HOT FUN overlay (~15 sec)
+ *  bowling       — hidden during league night (7:15–10:45 PM)
+ *  results       — "Week N results pending" (11 PM+ Monday)
+ *  past          — target passed, hide
+ *  no-schedule   — no target date
  */
-function getTargetTime(dateStr: string): number {
-  const d = new Date(dateStr);
-  d.setUTCHours(19, 15, 0, 0);
+type Phase = 'countdown' | 'final' | 'takeover' | 'bowling' | 'results' | 'past' | 'no-schedule';
 
-  try {
-    const eastern = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      hour: 'numeric',
-      hour12: false,
-    });
-    const etHour = parseInt(eastern.format(d), 10);
-    const offsetHours = etHour - 19;
-    d.setUTCHours(19 - offsetHours, 15, 0, 0);
-  } catch {
-    d.setUTCHours(24, 15, 0, 0);
-  }
+const TAKEOVER_DURATION = 10_000;
+const FINAL_COUNTDOWN_THRESHOLD = 2 * 60; // 2 minutes in seconds
 
-  return d.getTime();
-}
-
-/**
- * Check if it's currently league night (Monday 7:15 PM - 10:45 PM Eastern).
- */
-function isLeagueNightNow(): boolean {
-  try {
-    const now = new Date();
-    const eastern = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      weekday: 'long',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: false,
-    });
-    const parts = eastern.formatToParts(now);
-    const weekday = parts.find(p => p.type === 'weekday')?.value;
-    const hour = parseInt(parts.find(p => p.type === 'hour')?.value ?? '0', 10);
-    const minute = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0', 10);
-
-    if (weekday !== 'Monday') return false;
-    const timeInMinutes = hour * 60 + minute;
-    // 7:15 PM = 19:15 = 1155min, 10:45 PM = 22:45 = 1365min
-    return timeInMinutes >= 1155 && timeInMinutes <= 1365;
-  } catch {
-    return false;
-  }
-}
-
-function computeCountdown(targetMs: number) {
-  const diff = targetMs - Date.now();
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  return { days, hours, minutes, seconds, isPast: false };
-}
-
-export function CountdownClock({ targetDate }: CountdownClockProps) {
+export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) {
   const [mounted, setMounted] = useState(false);
-  const [countdown, setCountdown] = useState<ReturnType<typeof computeCountdown> | null>(null);
-  const [hotFun, setHotFun] = useState(false);
+  const [phase, setPhase] = useState<Phase>('countdown');
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
+  const [takeoverOpacity, setTakeoverOpacity] = useState(0);
+  const [debugMode, setDebugMode] = useState(false);
+
+  const getEffectiveTarget = useCallback(() => {
+    const debug = getDebugTargetTime();
+    if (debug !== null) return debug;
+    if (!targetDate) return null;
+    return getTargetTime(targetDate);
+  }, [targetDate]);
 
   useEffect(() => {
     setMounted(true);
-    if (!targetDate) return;
+    const debug = getDebugTargetTime();
+    if (debug !== null) setDebugMode(true);
 
-    const targetMs = getTargetTime(targetDate);
+    const targetMs = getEffectiveTarget();
+    if (!targetMs) {
+      setPhase('no-schedule');
+      return;
+    }
+
+    let takeoverFired = false;
+    let takeoverTimer: ReturnType<typeof setTimeout> | null = null;
+    let fadeTimer: ReturnType<typeof setTimeout> | null = null;
+
     const update = () => {
-      setCountdown(computeCountdown(targetMs));
-      setHotFun(isLeagueNightNow());
+      // Don't update phase during takeover animation
+      if (takeoverFired) return;
+
+      if (!debugMode) {
+        // Post-bowling: Monday 11 PM+
+        if (isPostBowlingNow()) {
+          setPhase('results');
+          return;
+        }
+        // During bowling: Monday 7:15–10:45 PM
+        if (isLeagueNightNow()) {
+          setPhase('bowling');
+          return;
+        }
+      }
+
+      const cd = computeCountdown(targetMs);
+      setCountdown(cd);
+
+      if (cd.isPast) {
+        // Just crossed zero — launch takeover!
+        takeoverFired = true;
+        setPhase('takeover');
+        setTakeoverOpacity(1);
+
+        takeoverTimer = setTimeout(() => {
+          setTakeoverOpacity(0);
+          fadeTimer = setTimeout(() => {
+            setPhase('bowling');
+          }, 500);
+        }, TAKEOVER_DURATION);
+        return;
+      }
+
+      const totalSeconds = cd.days * 86400 + cd.hours * 3600 + cd.minutes * 60 + cd.seconds;
+      setPhase(totalSeconds <= FINAL_COUNTDOWN_THRESHOLD ? 'final' : 'countdown');
     };
+
     update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, [targetDate]);
+    const interval = setInterval(update, 200);
+    return () => {
+      clearInterval(interval);
+      if (takeoverTimer) clearTimeout(takeoverTimer);
+      if (fadeTimer) clearTimeout(fadeTimer);
+    };
+  }, [targetDate, getEffectiveTarget, debugMode]);
 
-  if (!mounted) {
-    return (
-      <div
-        className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[80px]"
-        suppressHydrationWarning
-      />
-    );
-  }
+  if (!mounted) return <CountdownShell />;
 
-  if (!targetDate) {
+  // Hidden during bowling
+  if (phase === 'bowling' || phase === 'past') return null;
+
+  if (phase === 'no-schedule') {
     return (
-      <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[80px]">
-        <p className="font-body text-navy/60 text-sm max-w-[220px] leading-relaxed">
-          Next bowling night? Your guess is as good as ours. Check back once someone figures out the schedule.
+      <div className="bg-white rounded-xl border border-navy/10 p-3 flex flex-col items-center justify-center text-center">
+        <p className="font-body text-navy/60 text-xs max-w-[220px] leading-relaxed">
+          Next bowling night? Check back once someone figures out the schedule.
         </p>
       </div>
     );
   }
 
-  // HOT FUN mode: Monday 7:15-10:45 PM Eastern
-  if (hotFun) {
-    return (
-      <div className="bg-red-600 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[80px]" suppressHydrationWarning>
-        <div className="animate-pulse">
-          <p className="font-heading text-3xl sm:text-5xl text-cream tracking-wider">
-            HOT FUN
-          </p>
+  return (
+    <>
+      {/* Full-screen HOT FUN takeover */}
+      {phase === 'takeover' && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500"
+          style={{ opacity: takeoverOpacity }}
+        >
+          <div className="absolute inset-0 bg-red-600 animate-hot-fun-bg" />
+          <div className="absolute inset-0 opacity-10 pointer-events-none"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
+            }}
+          />
+          <div className="relative text-center">
+            <div className="animate-hot-fun-text">
+              <p className="font-heading text-6xl sm:text-8xl text-cream tracking-wider drop-shadow-lg">
+                HOT FUN
+              </p>
+            </div>
+            <div className="animate-hot-fun-sub mt-4">
+              <p className="font-body text-lg text-cream/80 tracking-widest uppercase">
+                League is in session
+              </p>
+            </div>
+            <div className="mt-6 text-4xl animate-bounce">🎳</div>
+          </div>
         </div>
-        <p className="font-body text-sm text-cream/60 mt-2">League is in session</p>
-      </div>
-    );
-  }
+      )}
 
-  // Past target but not HOT FUN time
-  if (countdown?.isPast) {
-    return (
-      <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center text-center min-h-[80px]" suppressHydrationWarning>
-        <div className="text-3xl sm:text-4xl mb-2" role="img" aria-label="bowling">🎳</div>
-        <p className="font-heading text-xl sm:text-2xl text-navy">It&rsquo;s bowling night!</p>
-        <p className="font-body text-sm text-navy/50 mt-1">Lace up those shoes.</p>
-      </div>
-    );
-  }
+      {/* In-page card */}
+      <div suppressHydrationWarning>
+        {debugMode && (
+          <p className="text-[10px] text-red-400 font-body text-center mb-1">DEBUG MODE</p>
+        )}
 
-  return (
-    <div className="bg-white rounded-xl border border-navy/10 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[80px]" suppressHydrationWarning>
-      <p className="text-xs text-navy/50 font-body mb-2">Next bowling night</p>
-      <div className="flex items-baseline gap-2 sm:gap-3">
-        <TimeUnit value={countdown?.days ?? 0} label={(countdown?.days ?? 0) === 1 ? 'day' : 'days'} />
-        <Separator />
-        <TimeUnit value={countdown?.hours ?? 0} label={(countdown?.hours ?? 0) === 1 ? 'hr' : 'hrs'} />
-        <Separator />
-        <TimeUnit value={countdown?.minutes ?? 0} label="min" />
-        <Separator />
-        <TimeUnit value={countdown?.seconds ?? 0} label="sec" />
+        {/* ── Results pending: post-bowling Monday 11 PM+ ── */}
+        {phase === 'results' && (
+          <div className="bg-white rounded-xl border border-navy/10 px-4 py-3 flex items-center justify-center text-center">
+            <p className="font-body text-sm text-navy/60">
+              Week {weekNumber || '?'} results pending — check back soon
+            </p>
+          </div>
+        )}
+
+        {/* ── Final countdown: digital clock readout ── */}
+        {phase === 'final' && (
+          <div className="bg-[#0a0a0a] rounded-xl p-5 flex flex-col items-center justify-center text-center border border-white/5">
+            <p className="text-[10px] text-white/30 font-body tracking-widest uppercase mb-3">
+              Bowling starts in
+            </p>
+            <div className="relative" style={{ fontFamily: 'var(--font-digital)' }}>
+              {/* Ghost digits — the unlit segments */}
+              <div className="text-6xl font-bold text-white/[0.06] tabular-nums tracking-[0.15em] select-none" aria-hidden>
+                88:88
+              </div>
+              {/* Active digits */}
+              <div className="absolute inset-0 text-6xl font-bold text-red-500 tabular-nums tracking-[0.15em] drop-shadow-[0_0_12px_rgba(239,68,68,0.5)]">
+                {String(countdown.minutes).padStart(2, '0')}
+                <span className="animate-pulse">:</span>
+                {String(countdown.seconds).padStart(2, '0')}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Normal countdown: compact card ── */}
+        {phase === 'countdown' && (
+          <div className="bg-white rounded-xl border border-navy/10 px-4 py-3 flex items-center justify-center gap-2">
+            <span className="text-xs text-navy/40 font-body">Next bowling</span>
+            <span className="font-body text-sm text-navy/70 tabular-nums font-semibold">
+              {countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m {String(countdown.seconds).padStart(2, '0')}s
+            </span>
+          </div>
+        )}
+
+        {/* During takeover, show HOT FUN in-page too */}
+        {phase === 'takeover' && (
+          <div className="bg-red-600 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+            <div className="animate-pulse">
+              <p className="font-heading text-2xl text-cream tracking-wider">HOT FUN</p>
+            </div>
+            <p className="font-body text-xs text-cream/60 mt-1">League is in session 🎳</p>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
 
-function TimeUnit({ value, label }: { value: number; label: string }) {
+function CountdownShell() {
   return (
-    <div className="flex flex-col items-center">
-      <span className="font-heading text-2xl sm:text-3xl text-navy leading-none tabular-nums">
-        {String(value).padStart(2, '0')}
-      </span>
-      <span className="text-[10px] font-body text-navy/60 mt-0.5">{label}</span>
-    </div>
+    <div
+      className="bg-white rounded-xl border border-navy/10 px-4 py-3 flex items-center justify-center"
+      suppressHydrationWarning
+    />
   );
-}
-
-function Separator() {
-  return <span className="font-heading text-2xl sm:text-3xl text-navy/20 leading-none -mt-3">:</span>;
 }

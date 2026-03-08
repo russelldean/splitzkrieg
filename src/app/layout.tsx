@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Inter } from "next/font/google";
+import { DM_Serif_Display, Inter, Orbitron } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -19,6 +19,12 @@ const inter = Inter({
   display: 'swap',
 });
 
+const orbitron = Orbitron({
+  variable: '--font-digital',
+  subsets: ['latin'],
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.org'),
   title: {
@@ -34,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSerif.variable} ${inter.variable}`}>
+    <html lang="en" className={`${dmSerif.variable} ${inter.variable} ${orbitron.variable}`}>
       <body className="bg-cream text-navy font-body">
         <PageTransition />
         <Header />

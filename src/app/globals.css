@@ -54,10 +54,42 @@ body {
   animation: search-glow 3s ease-in-out 3;
 }
 
+@keyframes hot-fun-bg {
+  0%, 100% { background-color: #C53030; }
+  50% { background-color: #9B1C1C; }
+}
+
+@keyframes hot-fun-text {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+@keyframes hot-fun-sub {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-hot-fun-bg {
+  animation: hot-fun-bg 1.5s ease-in-out infinite;
+}
+
+@utility animate-hot-fun-text {
+  animation: hot-fun-text 0.8s ease-in-out infinite;
+}
+
+@utility animate-hot-fun-sub {
+  animation: hot-fun-sub 0.6s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
   .animate-shimmer,
-  .animate-search-glow {
+  .animate-search-glow,
+  .animate-hot-fun-bg,
+  .animate-hot-fun-text,
+  .animate-hot-fun-sub {
     animation: none;
   }
 }
