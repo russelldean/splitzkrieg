@@ -45,6 +45,9 @@ See: .planning/PROJECT.md
 - **[Phase 05 planning]** Dropped 6 profile todos (game log reorder, current team name, collapsible sections, trophy icons, team captain notation, rules history page)
 - **[Phase 05 planning]** Playoff/champion data confirmed populated — removed from data gaps
 - **[Phase 05 planning]** Weekly highlights ticker committed as standalone feature
+- **[Phase 05-01]** Losses computed as (matchWeeks * 3 - wins) to handle ties as half-values
+- **[Phase 05-01]** TeamHero links to /week/ league nights page per CONTEXT.md locked decisions
+- **[Phase 05-01]** SeasonStatsTable converted to client component for expand/collapse
 - **[Phase 05-02]** Single flat H2H query per team; component groups by opponent client-side with useMemo
 - **[Phase 05-02]** Ghost Team included naturally in H2H records (no special filtering)
 
