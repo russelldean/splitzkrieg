@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
-import { getCurrentSeasonSnapshot } from '@/lib/queries';
+import { getCurrentSeasonSnapshot, getRecentMilestones, getNextBowlingNight } from '@/lib/queries';
+import { MilestoneTicker } from '@/components/home/MilestoneTicker';
+import { HeaderCountdown } from './HeaderCountdown';
 
 const bowlersIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -46,7 +48,11 @@ const statsIcon = (
 );
 
 export async function Header() {
-  const snapshot = await getCurrentSeasonSnapshot();
+  const [snapshot, milestones, nextBowlingNight] = await Promise.all([
+    getCurrentSeasonSnapshot(),
+    getRecentMilestones(),
+    getNextBowlingNight(),
+  ]);
   const currentSeasonSlug = snapshot?.slug ?? null;
   const currentSeasonLabel = snapshot
     ? `Current Season`
@@ -69,80 +75,98 @@ export async function Header() {
   ];
 
   return (
-    <header className="bg-cream border-b border-navy/10 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 gap-4">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link
-              href="/"
-              className="hover:text-red transition-colors"
-            >
-              <span className="font-heading text-navy uppercase tracking-widest text-xl sm:text-2xl font-normal block leading-none">
-                SPLITZKRIEG
-              </span>
-              <span className="font-body text-[10px] sm:text-xs text-navy/50 tracking-wider uppercase leading-none mt-0.5 block">
-                Bowling League &middot; Est. 2007
-              </span>
-            </Link>
-          </div>
+    <div className="sticky top-0 z-50">
+      <header className="bg-cream border-b border-navy/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-16 gap-4">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link
+                href="/"
+                className="hover:text-red transition-colors"
+              >
+                <span className="font-heading text-navy uppercase tracking-widest text-xl sm:text-2xl font-normal block leading-none">
+                  SPLITZKRIEG
+                </span>
+                <span className="font-body text-[10px] sm:text-xs text-navy/50 tracking-wider uppercase leading-none mt-0.5 block">
+                  Bowling League &middot; Est. 2007
+                </span>
+              </Link>
+            </div>
 
-          {/* Search Bar — center */}
-          <div className="flex-1 max-w-md mx-auto">
-            <SearchBar />
-          </div>
+            {/* Search Bar — center */}
+            <div className="flex-1 max-w-md mx-auto">
+              <SearchBar />
+            </div>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6 flex-shrink-0">
-            <NavDropdown
-              label="League Nights"
-              icon={leagueNightsIcon}
-              links={[
-                ...(currentSeasonSlug && snapshot ? [{ href: `/week/${currentSeasonSlug}/${snapshot.weekNumber}`, label: thisWeekLabel }] : []),
-                { href: '/week', label: 'All Weeks' },
-              ]}
-            />
-            <NavDropdown
-              label="Seasons"
-              icon={seasonsIcon}
-              links={[
-                ...(currentSeasonSlug ? [{ href: `/season/${currentSeasonSlug}`, label: currentSeasonLabel }] : []),
-                { href: '/seasons', label: 'All Seasons' },
-              ]}
-            />
-            <NavDropdown
-              label="The Stats"
-              icon={statsIcon}
-              links={[
-                ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),
-                { href: '/seasons', label: 'All Season Stats' },
-                { href: '/stats/all-time', label: 'All-Time Stats' },
-              ]}
-            />
-            <NavDropdown
-              label="Bowlers"
-              icon={bowlersIcon}
-              links={[
-                { href: '/bowlers?filter=current', label: 'Current Bowlers' },
-                { href: '/bowlers', label: 'All Bowlers' },
-              ]}
-            />
-            <NavDropdown
-              label="Teams"
-              icon={teamsIcon}
-              links={[
-                { href: '/teams?filter=current', label: 'Current Teams' },
-                { href: '/teams', label: 'All Teams' },
-              ]}
-            />
-          </nav>
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-6 flex-shrink-0">
+              <NavDropdown
+                label="League Nights"
+                icon={leagueNightsIcon}
+                links={[
+                  ...(currentSeasonSlug && snapshot ? [{ href: `/week/${currentSeasonSlug}/${snapshot.weekNumber}`, label: thisWeekLabel }] : []),
+                  { href: '/week', label: 'All Weeks' },
+                ]}
+              />
+              <NavDropdown
+                label="Seasons"
+                icon={seasonsIcon}
+                links={[
+                  ...(currentSeasonSlug ? [{ href: `/season/${currentSeasonSlug}`, label: currentSeasonLabel }] : []),
+                  { href: '/seasons', label: 'All Seasons' },
+                ]}
+              />
+              <NavDropdown
+                label="The Stats"
+                icon={statsIcon}
+                links={[
+                  ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),
+                  { href: '/seasons', label: 'All Season Stats' },
+                  { href: '/stats/all-time', label: 'All-Time Stats' },
+                ]}
+              />
+              <NavDropdown
+                label="Bowlers"
+                icon={bowlersIcon}
+                links={[
+                  { href: '/bowlers?filter=current', label: 'Current Bowlers' },
+                  { href: '/bowlers', label: 'All Bowlers' },
+                ]}
+              />
+              <NavDropdown
+                label="Teams"
+                icon={teamsIcon}
+                links={[
+                  { href: '/teams?filter=current', label: 'Current Teams' },
+                  { href: '/teams', label: 'All Teams' },
+                ]}
+              />
+            </nav>
 
-          {/* Mobile Nav */}
-          <div className="md:hidden flex-shrink-0">
-            <MobileNav links={mobileLinks} />
+            {/* Mobile Nav */}
+            <div className="md:hidden flex-shrink-0">
+              <MobileNav links={mobileLinks} />
+            </div>
           </div>
         </div>
+      </header>
+
+      {/* Milestone Ticker with countdown overlay */}
+      <div className="relative">
+        <MilestoneTicker milestones={milestones} />
+        {nextBowlingNight && (
+          <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
+            <div className="relative flex items-center">
+              <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
+              <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
+              <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
+                <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </header>
+    </div>
   );
 }

@@ -1,19 +1,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import {
-  getRecentMilestones,
   getCurrentSeasonSnapshot,
-  getNextBowlingNight,
   getSeasonBySlug,
   getSeasonStandings,
   getSeasonSchedule,
   getSeasonMatchResults,
 } from '@/lib/queries';
-import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
-import { HeaderCountdown } from '@/components/layout/HeaderCountdown';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -30,11 +27,7 @@ const quickLinks = [
 ];
 
 export default async function Home() {
-  const [milestones, seasonSnapshot, nextBowlingNight] = await Promise.all([
-    getRecentMilestones(),
-    getCurrentSeasonSnapshot(),
-    getNextBowlingNight(),
-  ]);
+  const seasonSnapshot = await getCurrentSeasonSnapshot();
 
   // Fetch standings + schedule for current season
   let standings: Awaited<ReturnType<typeof getSeasonStandings>> = [];
@@ -72,26 +65,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Milestone Ticker with countdown overlay */}
-      <div className="relative">
-        <MilestoneTicker milestones={milestones} />
-        {nextBowlingNight && (
-          <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
-            <div className="relative flex items-center">
-              {/* Gradient fade edges */}
-              <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
-              <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
-              {/* Clock */}
-              <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
-                <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 sm:-mt-1 pb-3 sm:pb-4">
@@ -108,9 +83,6 @@ export default async function Home() {
             <p className="font-body text-sm sm:text-base text-navy/50 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
-            <div className="mt-2 sm:hidden">
-              <HeaderCountdown targetDate={nextBowlingNight} />
-            </div>
           </div>
 
           {/* This Week's Results CTA */}
@@ -119,14 +91,8 @@ export default async function Home() {
               href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
               className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden hover:shadow-lg transition-all group"
             >
-              {/* Background image — bowling computer screen */}
-              <Image
-                src="/bowling-screen.jpg"
-                alt=""
-                fill
-                className="object-cover object-[center_40%]"
-                unoptimized
-              />
+              {/* Background image — bowling computer screen, parallax */}
+              <ParallaxBg src="/bowling-screen.jpg" />
               {/* Semi-transparent overlay for text readability */}
               <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
               {/* Content */}

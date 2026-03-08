@@ -38,7 +38,7 @@ export function MilestoneTicker({ milestones }: MilestoneTickerProps) {
   const items = milestones.length > 0 ? milestones : placeholderMilestones;
 
   return (
-    <div className="w-full border-y border-navy/10 bg-white/50 overflow-hidden">
+    <div className="w-full border-y border-navy/10 bg-cream overflow-hidden shadow-sm">
       <div
         className="flex items-center gap-8 py-3 whitespace-nowrap motion-safe:animate-ticker"
         style={{ width: 'max-content' }}
