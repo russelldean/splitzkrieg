@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
+import { PostHogProvider } from "@/components/PostHogProvider";
 
 const dmSerif = DM_Serif_Display({
   weight: '400',
@@ -42,13 +43,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSerif.variable} ${inter.variable} ${orbitron.variable}`}>
       <body className="bg-cream text-navy font-body">
-        <PageTransition />
-        <Header />
-        <main>
-          {children}
-        </main>
-        <Footer />
-        <FeedbackButton />
+        <PostHogProvider>
+          <PageTransition />
+          <Header />
+          <main>
+            {children}
+          </main>
+          <Footer />
+          <FeedbackButton />
+        </PostHogProvider>
       </body>
     </html>
   );

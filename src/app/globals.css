@@ -138,6 +138,24 @@ body {
   animation-delay: var(--fall-delay, 0s);
 }
 
+@keyframes neon-pulse {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.85; filter: brightness(1.2); }
+}
+
+@utility animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes border-glow {
+  0%, 100% { filter: hue-rotate(0deg) blur(4px); }
+  50% { filter: hue-rotate(30deg) blur(6px); }
+}
+
+@utility animate-border-glow {
+  animation: border-glow 3s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
   .animate-shimmer,
@@ -148,7 +166,9 @@ body {
   .animate-hot-fun-shake,
   .animate-hot-fun-float,
   .animate-hot-fun-zoom,
-  .animate-emoji-fall {
+  .animate-emoji-fall,
+  .animate-border-glow,
+  .animate-neon-pulse {
     animation: none;
   }
 }

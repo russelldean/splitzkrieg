@@ -82,8 +82,12 @@ export default async function Home() {
             <div className="relative flex items-center">
               <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
               <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
-              <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
-                <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
+              <div className="relative pointer-events-auto">
+                {/* Animated gradient border glow */}
+                <div className="absolute -inset-[2px] rounded-full bg-gradient-to-r from-navy via-red-500 to-orange-400 animate-border-glow opacity-80" />
+                <div className="relative bg-[#0a0a0a] px-5 py-2.5 rounded-full">
+                  <HeaderCountdown targetDate={nextBowlingNight} variant="neon" />
+                </div>
               </div>
             </div>
           </div>

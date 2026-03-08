@@ -5,7 +5,7 @@ import { getTargetTime, isLeagueNightNow, computeCountdown, getDebugTargetTime }
 
 interface Props {
   targetDate: string | null;
-  variant?: 'light' | 'dark';
+  variant?: 'light' | 'dark' | 'neon';
 }
 
 export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
@@ -32,8 +32,11 @@ export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
   if (!mounted) return null;
 
   if (hotFun) {
+    const hotFunClass = variant === 'neon'
+      ? 'text-red-400 animate-neon-flicker'
+      : variant === 'dark' ? 'text-red-400' : 'text-red-600';
     return (
-      <span className={`font-heading text-sm tracking-wider uppercase animate-pulse ${variant === 'dark' ? 'text-red-400' : 'text-red-600'}`} suppressHydrationWarning>
+      <span className={`font-heading text-sm tracking-wider uppercase animate-pulse ${hotFunClass}`} suppressHydrationWarning>
         HOT FUN - League in session
       </span>
     );
@@ -43,6 +46,21 @@ export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
 
   const { days, hours, minutes, seconds } = cd;
   const nums = `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+
+  if (variant === 'neon') {
+    return (
+      <span className="font-body text-sm tabular-nums tracking-wide" suppressHydrationWarning>
+        <span
+          className="font-semibold animate-neon-pulse"
+          style={{
+            color: '#ff4444',
+            textShadow: '0 0 7px #ff4444, 0 0 20px #ff444480, 0 0 40px #ff444440',
+          }}
+        >{nums}</span>
+        <span className="text-white/50 ml-1">until bowling</span>
+      </span>
+    );
+  }
 
   if (variant === 'dark') {
     return (
