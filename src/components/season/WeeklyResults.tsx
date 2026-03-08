@@ -156,13 +156,12 @@ function MatchupSummary({
         <thead>
           <tr className="text-navy/65">
             <th className="text-left font-normal py-0.5 w-[30%]"></th>
-            <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G1</th>
-            <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G2</th>
-            <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G3</th>
-            <th className="text-right font-normal py-0.5">Hcp Series</th>
-            <th className="text-right font-normal py-0.5">Wins</th>
-            <th className="text-right font-normal py-0.5">XP</th>
-            <th className="text-right font-normal py-0.5 font-semibold">Total</th>
+            <th className="text-right font-normal py-0.5 pl-3 pr-2 border-l border-navy/10">G1</th>
+            <th className="text-right font-normal py-0.5 pl-3 pr-2 border-l border-navy/10">G2</th>
+            <th className="text-right font-normal py-0.5 pl-3 pr-2 border-l border-navy/10">G3</th>
+            <th className="text-center font-normal py-0.5">W</th>
+            <th className="text-center font-normal py-0.5">XP</th>
+            <th className="text-center font-normal py-0.5 font-semibold">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -172,13 +171,12 @@ function MatchupSummary({
                 <TeamName name={homeTeamName} />
               </Link>
             </td>
-            <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team1Game1, mr.team2Game1)}`}>{mr.team1Game1 ?? '-'}</td>
-            <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team1Game2, mr.team2Game2)}`}>{mr.team1Game2 ?? '-'}</td>
-            <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team1Game3, mr.team2Game3)}`}>{mr.team1Game3 ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team1Series ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team1GamePts != null ? mr.team1GamePts / 2 : '-'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team1BonusPts ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5 font-bold">
+            <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(mr.team1Game1, mr.team2Game1)}`}>{mr.team1Game1 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(mr.team1Game2, mr.team2Game2)}`}>{mr.team1Game2 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(mr.team1Game3, mr.team2Game3)}`}>{mr.team1Game3 ?? '-'}</td>
+            <td className="text-center tabular-nums py-0.5">{mr.team1GamePts != null ? mr.team1GamePts / 2 : '-'}</td>
+            <td className="text-center tabular-nums py-0.5">{mr.team1BonusPts ?? '-'}</td>
+            <td className="text-center tabular-nums py-0.5 font-bold">
               {t1Total === 9 ? '\u2B50 ' : ''}{t1Total}
             </td>
           </tr>
@@ -188,13 +186,12 @@ function MatchupSummary({
                 <TeamName name={awayTeamName} />
               </Link>
             </td>
-            <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team2Game1, mr.team1Game1)}`}>{mr.team2Game1 ?? '-'}</td>
-            <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team2Game2, mr.team1Game2)}`}>{mr.team2Game2 ?? '-'}</td>
-            <td className={`text-right tabular-nums py-0.5 pl-2 border-l border-navy/10 ${gameWinClass(mr.team2Game3, mr.team1Game3)}`}>{mr.team2Game3 ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team2Series ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team2GamePts != null ? mr.team2GamePts / 2 : '-'}</td>
-            <td className="text-right tabular-nums py-0.5">{mr.team2BonusPts ?? '-'}</td>
-            <td className="text-right tabular-nums py-0.5 font-bold">
+            <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(mr.team2Game1, mr.team1Game1)}`}>{mr.team2Game1 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(mr.team2Game2, mr.team1Game2)}`}>{mr.team2Game2 ?? '-'}</td>
+            <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(mr.team2Game3, mr.team1Game3)}`}>{mr.team2Game3 ?? '-'}</td>
+            <td className="text-center tabular-nums py-0.5">{mr.team2GamePts != null ? mr.team2GamePts / 2 : '-'}</td>
+            <td className="text-center tabular-nums py-0.5">{mr.team2BonusPts ?? '-'}</td>
+            <td className="text-center tabular-nums py-0.5 font-bold">
               {t2Total === 9 ? '\u2B50 ' : ''}{t2Total}
             </td>
           </tr>

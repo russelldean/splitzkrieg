@@ -286,8 +286,8 @@ export function WeekStats({ weekScores, matchResults }: Props) {
             </div>
           )}
           {teamOfWeek && (
-            <div className="bg-white border border-navy/10 border-l-4 border-l-navy/30 rounded-lg px-4 py-3 shadow-sm">
-              <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-1">Team of the Week</div>
+            <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
+              <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Team of the Week</div>
               <Link href={`/team/${teamOfWeek.teamSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                 {teamOfWeek.teamName}
               </Link>
