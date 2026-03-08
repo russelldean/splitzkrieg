@@ -40,10 +40,10 @@ export function ParallaxBg({ src }: { src: string }) {
           backgroundSize: 'cover',
           backgroundPosition: 'center 65%',
           backgroundRepeat: 'no-repeat',
-          // Slightly oversized to allow room for parallax shift
-          top: '-20px',
-          bottom: '-20px',
-          transform: `translateY(${-translateY}px)`,
+          // Oversized at top to allow room for downward parallax shift
+          top: '-40px',
+          bottom: '0px',
+          transform: `translateY(${translateY}px)`,
         }}
       />
     </div>

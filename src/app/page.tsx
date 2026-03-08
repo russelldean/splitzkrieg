@@ -118,7 +118,7 @@ export default async function Home() {
               {/* Background image — bowling computer screen, parallax */}
               <ParallaxBg src="/bowling-screen.jpg" />
               {/* Semi-transparent overlay for text readability */}
-              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/50 transition-colors" />
               {/* Content */}
               <div className="relative flex items-center justify-between px-6 py-4">
                 <div>
