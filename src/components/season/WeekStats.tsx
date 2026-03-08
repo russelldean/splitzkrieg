@@ -265,15 +265,16 @@ export function WeekStats({ weekScores, matchResults }: Props) {
 
 
   return (
-    <section className="mt-8 pt-6 border-t border-navy/10">
+    <section className="mt-10">
+      <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-8" />
       <SectionHeading>Weekly Highlights</SectionHeading>
 
       {/* Bowler & Team of the Week */}
       {(bowlerOfWeek || teamOfWeek) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {bowlerOfWeek && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-              <div className="text-xs font-heading text-amber-700 uppercase tracking-wider mb-1">Bowler of the Week</div>
+            <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
+              <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Bowler of the Week</div>
               <Link href={`/bowler/${bowlerOfWeek.slug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                 {bowlerOfWeek.name}
               </Link>
@@ -285,8 +286,8 @@ export function WeekStats({ weekScores, matchResults }: Props) {
             </div>
           )}
           {teamOfWeek && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-              <div className="text-xs font-heading text-amber-700 uppercase tracking-wider mb-1">Team of the Week</div>
+            <div className="bg-white border border-navy/10 border-l-4 border-l-navy/30 rounded-lg px-4 py-3 shadow-sm">
+              <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-1">Team of the Week</div>
               <Link href={`/team/${teamOfWeek.teamSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                 {teamOfWeek.teamName}
               </Link>
@@ -304,7 +305,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
       {(debuts.length > 0 || allTimeHighGames.length > 0 || allTimeHighSeries.length > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {debuts.length > 0 && (
-            <div className="border border-navy/10 rounded-lg p-3">
+            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
               <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Splitzkrieg Debuts</h3>
               {debuts.map(b => (
                 <div key={b.bowlerID} className="text-sm font-body py-0.5">
@@ -316,7 +317,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
             </div>
           )}
           {allTimeHighGames.length > 0 && (
-            <div className="border border-navy/10 rounded-lg p-3">
+            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
               <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Game</h3>
               {allTimeHighGames.map((b, i) => (
                 <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
@@ -332,7 +333,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
             </div>
           )}
           {allTimeHighSeries.length > 0 && (
-            <div className="border border-navy/10 rounded-lg p-3">
+            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
               <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Series</h3>
               {allTimeHighSeries.map((b, i) => (
                 <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
@@ -353,10 +354,11 @@ export function WeekStats({ weekScores, matchResults }: Props) {
       {/* XP Rankings */}
       {xpTiers.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-heading text-lg text-navy mb-2">XP Rankings</h3>
+          <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
+          <h3 className="font-heading text-lg text-navy mb-3">XP Rankings</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {xpTiers.map(tier => (
-              <div key={tier.label} className="border border-navy/10 rounded-lg p-3">
+              <div key={tier.label} className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
                 <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-1.5">{tier.label}</div>
                 {tier.teams.map(team => (
                   <div key={team.id} className="flex justify-between text-sm font-body py-0.5">
@@ -373,9 +375,10 @@ export function WeekStats({ weekScores, matchResults }: Props) {
       )}
 
       {/* High Team Scratch Series + PIN */}
+      <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {topTeamScratch.length > 0 && (
-          <div className="border border-navy/10 rounded-lg p-3">
+          <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
             <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">High Team Scratch Series</h3>
             {(() => {
               const topScratch = topTeamScratch[0].scratchSeries;
@@ -399,6 +402,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
       </div>
 
       {/* Individual Leaders — 2x2 grid */}
+      <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <LeaderList title="High Handicap Series" result={topHcpSeries} getItem={b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.handSeries ?? 0 })} />
         <LeaderList title="High Scratch Game" result={topScratchGame} getItem={g => ({ name: g.bowlerName, slug: g.bowlerSlug, team: g.teamName, value: g.score })} />
@@ -411,9 +415,10 @@ export function WeekStats({ weekScores, matchResults }: Props) {
       </div>
 
       {/* Turkeys + Above Average */}
+      <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {turkeyList.length > 0 && (
-          <div className="border border-navy/10 rounded-lg p-3">
+          <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
             <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Turkeys</h3>
             {turkeyList.map(b => (
               <div key={b.bowlerID} className="flex justify-between text-sm font-body py-0.5">
@@ -430,7 +435,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
           </div>
         )}
         {aboveAvgEveryGame.length > 0 && (
-          <div className="border border-navy/10 rounded-lg p-3">
+          <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
             <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Above Average Every Game</h3>
             {aboveAvgEveryGame.map(b => (
               <div key={b.bowlerID} className="text-sm font-body py-0.5">
@@ -448,7 +453,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
 
 function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug: string; team: string; pin: number }[]; tiedCount: number; tiedValue: number }) {
   return (
-    <div className="border border-navy/10 rounded-lg p-3">
+    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
       <details className="mb-1.5">
         <summary className="font-heading text-sm text-navy/60 uppercase tracking-wider cursor-pointer list-none inline-flex items-center gap-1">
           PIN <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-navy/10 text-navy/65 text-xs font-bold leading-none">?</span>
@@ -497,7 +502,7 @@ function LeaderList<T>({ title, result, getItem }: {
 }) {
   if (result.items.length === 0) return null;
   return (
-    <div className="border border-navy/10 rounded-lg p-3">
+    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
       <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">{title}</h3>
       {(() => {
         const topValue = getItem(result.items[0]).value;

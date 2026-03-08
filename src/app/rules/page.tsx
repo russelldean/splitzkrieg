@@ -7,14 +7,14 @@ export const metadata: Metadata = {
 
 export default function RulesPage() {
   return (
-    <main className="container mx-auto px-4 py-8 max-w-3xl">
-      <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy mb-6">
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-6">
         Rules
       </h1>
 
       <div className="space-y-8">
         {/* League Rules */}
-        <section className="bg-navy/[0.03] rounded-xl px-8 py-8">
+        <section className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-red-600/40 px-8 py-8 shadow-sm">
           <div className="font-body text-lg text-navy/70 leading-relaxed space-y-3 max-w-lg mx-auto">
             <p>Rules are important.</p>
             <p>We play by our own rules.</p>
@@ -23,7 +23,7 @@ export default function RulesPage() {
         </section>
 
         {/* Historical Data Note */}
-        <section className="bg-navy/[0.03] rounded-xl px-8 py-8">
+        <section className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-navy/30 px-8 py-8 shadow-sm">
           <h2 id="numbers" className="font-heading text-xl md:text-2xl text-navy mb-4">
             A Note on the Numbers
           </h2>

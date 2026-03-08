@@ -30,7 +30,7 @@ export default async function WeeksIndexPage() {
   );
 
   return (
-    <main id="top" className="container mx-auto px-4 py-8 max-w-3xl">
+    <main id="top" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TrailNav current="/week" seasonSlug={currentSlug} position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">League Nights</h1>
       <p className="font-body text-navy/65 mb-8">
@@ -40,7 +40,7 @@ export default async function WeeksIndexPage() {
       {allSeasons.map((season) => {
         const summaries = summariesBySeasonID.get(season.seasonID) ?? [];
         return (
-          <div key={season.seasonID} className="mb-8">
+          <div key={season.seasonID} className="mb-10">
             <div className="flex items-baseline gap-3 mb-3">
               <Link
                 href={`/season/${season.slug}`}
@@ -62,7 +62,7 @@ export default async function WeeksIndexPage() {
                     <Link
                       key={week.week}
                       href={`/week/${season.slug}/${week.week}`}
-                      className="flex items-center justify-between px-4 py-2 -mx-1 rounded-lg hover:bg-navy/[0.04] transition-colors group"
+                      className="flex items-center justify-between px-4 py-2 rounded-lg hover:bg-white hover:shadow-sm border border-transparent hover:border-navy/10 transition-all group"
                     >
                       <div className="flex items-center gap-3">
                         <span className="font-heading text-base text-navy group-hover:text-red-600 transition-colors">

@@ -20,7 +20,7 @@ export default async function SeasonsPage() {
   const currentSeasonID = seasons.length > 0 ? seasons[0].seasonID : null;
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-3xl">
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TrailNav current="/seasons" seasonSlug={currentSlug} position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">Seasons</h1>
       <p className="font-body text-navy/65 mb-8">
@@ -35,7 +35,7 @@ export default async function SeasonsPage() {
           {(() => {
             const current = seasons[0];
             return (
-              <div className="mb-8 p-6 bg-navy/[0.03] border border-navy/15 rounded-xl">
+              <div className="mb-8 p-6 bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-xl shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-body text-xs sm:text-sm uppercase tracking-wider text-navy/70 bg-navy/10 px-1.5 py-0.5 rounded font-semibold">
                     Current Season
@@ -72,15 +72,18 @@ export default async function SeasonsPage() {
             );
           })()}
 
+          {/* Gradient divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-8" />
+
           {/* Past seasons compact list */}
           {seasons.length > 1 && (
             <div className="space-y-1">
-              <h2 className="font-heading text-lg text-navy/70 mb-2">Past Seasons</h2>
+              <h2 className="font-heading text-lg text-navy/70 mb-3">Past Seasons</h2>
               {seasons.slice(1).map((season) => (
                 <Link
                   key={season.seasonID}
                   href={`/season/${season.slug}`}
-                  className="flex items-center justify-between gap-2 px-4 py-3 -mx-4 rounded hover:bg-navy/[0.03] transition-colors group"
+                  className="flex items-center justify-between gap-2 px-4 py-3 rounded-lg hover:bg-white hover:shadow-sm border border-transparent hover:border-navy/10 transition-all group"
                 >
                   <div className="min-w-0">
                     <div className="flex items-baseline gap-2">

@@ -40,12 +40,12 @@ export function ScrollableTable({ children, className = '' }: Props) {
 
   return (
     <div className={`relative ${className}`}>
-      <div ref={scrollRef} className="overflow-x-auto -mx-4 sm:mx-0">
+      <div ref={scrollRef} className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
         {children}
       </div>
       {canScrollRight && (
         <>
-          <div className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-white to-transparent" />
+          <div className="absolute top-0 right-0 bottom-0 w-10 pointer-events-none bg-gradient-to-l from-white via-white/80 to-transparent rounded-r-lg" />
           <div className="absolute top-2 right-1 pointer-events-none">
             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-body font-medium text-navy/65 bg-navy/5 rounded-full border border-navy/10 animate-pulse">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">

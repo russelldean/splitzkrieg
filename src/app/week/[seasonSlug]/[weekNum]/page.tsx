@@ -108,7 +108,7 @@ export default async function WeekPage({
   const newerSeason = seasonIdx > 0 ? allSeasons[seasonIdx - 1] : null;
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-5xl">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TrailNav current="/week" seasonSlug={seasonSlug} position="top" />
       {/* Breadcrumb + navigation */}
       <div className="mb-6">
@@ -215,22 +215,6 @@ export default async function WeekPage({
 
       {/* Weekly Highlights */}
       <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
-
-      {/* Cross-links */}
-      <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">
-        <Link
-          href={`/season/${seasonSlug}`}
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
-        >
-          Season {season.romanNumeral} Standings
-        </Link>
-        <Link
-          href={`/stats/${seasonSlug}`}
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
-        >
-          Season Leaderboards
-        </Link>
-      </div>
 
       <TrailNav current="/week" seasonSlug={seasonSlug} />
     </main>

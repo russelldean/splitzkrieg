@@ -42,10 +42,10 @@ export function CollapsibleSection({ title, defaultOpen = false, children }: Pro
   }, []);
 
   return (
-    <div className="border border-navy/10 rounded-lg overflow-hidden">
+    <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
+        className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.03] hover:bg-navy/[0.06] transition-colors"
       >
         <span className="font-heading text-lg text-navy">{title}</span>
         <span className="text-navy/65 text-sm">{open ? '\u25B2' : '\u25BC'}</span>

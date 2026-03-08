@@ -40,10 +40,10 @@ export function SeasonStatsTable({ seasons }: Props) {
   return (
     <section>
       <SectionHeading>Season Stats</SectionHeading>
-      <div className="overflow-x-auto rounded-lg border border-navy/10">
+      <div className="overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm">
         <table className="w-full text-sm sm:text-base font-body">
           <thead>
-            <tr className="bg-navy/5 text-left text-xs uppercase tracking-wide text-navy/60">
+            <tr className="bg-navy/[0.03] text-left text-xs uppercase tracking-wide text-navy/60">
               <th className="px-4 py-3">Season</th>
               <th className="px-4 py-3">Team</th>
               <th className="px-4 py-3 text-right">Games</th>

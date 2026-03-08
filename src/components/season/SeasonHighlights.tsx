@@ -177,7 +177,7 @@ function TeamRecordCard({ title, records }: { title: string; records: TeamRecord
   if (records.length === 0) return null;
   const topVal = records[0].value;
   return (
-    <div className="border border-navy/10 rounded-lg p-3">
+    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
       <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">{title}</h3>
       {records.map((r, i) => {
         const isTop = r.value === topVal;
@@ -201,7 +201,7 @@ function IndividualRecordCard({ title, records }: { title: string; records: Seas
   if (records.length === 0) return null;
   const topVal = records[0].value;
   return (
-    <div className="border border-navy/10 rounded-lg p-3">
+    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
       <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">{title}</h3>
       {records.map((r, i) => {
         const isTop = r.value === topVal;
@@ -224,7 +224,7 @@ function IndividualRecordCard({ title, records }: { title: string; records: Seas
 function CountCard({ title, entries, tiedCount = 0, tiedValue = 0 }: { title: string; entries: CountEntry[]; tiedCount?: number; tiedValue?: number }) {
   const topCount = entries[0]?.count ?? 0;
   return (
-    <div className="border border-navy/10 rounded-lg p-3">
+    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
       <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">{title}</h3>
       {entries.map((e, i) => {
         const isTop = e.count === topCount;

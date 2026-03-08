@@ -157,7 +157,7 @@ export default async function BowlerPage({
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-5xl">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TrailNav current="/bowlers" seasonSlug={currentSlug} position="top" />
       <BowlerHero
         careerSummary={careerSummary}

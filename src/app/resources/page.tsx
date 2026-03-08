@@ -127,7 +127,7 @@ export default async function ResourcesPage() {
                     return (
                       <div
                         key={link.label}
-                        className="bg-cream-dark rounded-lg p-5 border border-navy/5"
+                        className="bg-white rounded-lg p-5 border border-navy/10"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -152,7 +152,7 @@ export default async function ResourcesPage() {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-cream-dark rounded-lg p-5 border border-navy/5 hover:border-navy/15 transition-colors group"
+                      className="bg-white rounded-lg p-5 border border-navy/10 hover:border-navy/20 hover:shadow-sm transition-all group"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>

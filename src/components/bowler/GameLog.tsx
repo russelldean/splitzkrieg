@@ -95,10 +95,10 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
             : hasHighGame ? 'Career high game' : hasHighSeries ? 'Career high series' : '';
 
           return (
-          <div key={season.seasonID} className={`border rounded-lg overflow-hidden ${hasBest && !openSeasons.has(season.seasonID) ? 'border-amber-300 bg-amber-50/30' : 'border-navy/10'}`}>
+          <div key={season.seasonID} className={`border rounded-lg shadow-sm overflow-hidden ${hasBest && !openSeasons.has(season.seasonID) ? 'border-amber-300 bg-amber-50/30' : 'border-navy/10 bg-white'}`}>
             <button
               onClick={() => toggleSeason(season.seasonID)}
-              className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
+              className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.03] hover:bg-navy/[0.06] transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span className="font-heading text-lg text-navy">{season.displayName}</span>
@@ -117,7 +117,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm sm:text-base font-body">
                   <thead>
-                    <tr className="border-b border-navy/10">
+                    <tr className="border-b border-navy/10 bg-navy/[0.02]">
                       <th className="text-left px-4 py-2 text-navy/60 font-normal">Wk</th>
                       <th className="text-left px-4 py-2 text-navy/60 font-normal">Date</th>
                       <th className="text-left px-4 py-2 text-navy/60 font-normal">Opponent</th>

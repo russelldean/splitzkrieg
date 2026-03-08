@@ -29,10 +29,10 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
   if (rows.every(r => r.t1Pts === null)) return null;
 
   return (
-    <div className="mb-4 overflow-x-auto">
+    <div className="mb-4 bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto">
       <table className="w-full text-sm sm:text-base font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/65 text-xs">
+          <tr className="border-b border-navy/10 text-navy/65 text-xs bg-navy/[0.02]">
             <th className="text-left font-normal py-1.5 pl-2">Home</th>
             <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
             <th className="text-right font-normal py-1.5">Away</th>
