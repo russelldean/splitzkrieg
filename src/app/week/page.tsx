@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSlug } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { BackToTop } from '@/components/ui/BackToTop';
+import { formatMatchDate } from '@/lib/bowling-time';
 
 export const metadata: Metadata = {
   title: 'All League Nights | Splitzkrieg',
@@ -76,9 +77,7 @@ export default async function WeeksIndexPage() {
               {summaries.length > 0 ? (
                 <div className="divide-y divide-navy/[0.04]">
                   {summaries.map((week) => {
-                    const dateStr = week.matchDate
-                      ? new Date(week.matchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                      : null;
+                    const dateStr = formatMatchDate(week.matchDate);
                     return (
                       <Link
                         key={week.week}

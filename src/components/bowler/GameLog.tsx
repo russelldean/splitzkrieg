@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { GameLogWeek } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
+import { formatMatchDate } from '@/lib/bowling-time';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
@@ -150,7 +151,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                               href={`/week/${week.seasonSlug}/${week.week}`}
                               className="hover:text-red-600 underline-offset-2 hover:underline transition-colors"
                             >
-                              {new Date(week.matchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {formatMatchDate(week.matchDate)}
                             </Link>
                           ) : (
                             '\u2014'

@@ -118,7 +118,7 @@ export default async function SeasonPage({
       <SeasonNav current={season} allSeasons={allSeasons} />
 
       <div className="mt-8 space-y-12">
-        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={totalWeeks || null} />
+        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} />
 
         {hasScheduleData && raceData.length > 0 && (
           <CollapsibleSection title="Standings Race">
@@ -130,6 +130,7 @@ export default async function SeasonPage({
         {totalWeeks > 0 ? (
           <CompactWeekList
             weekSummaries={weekSummaries}
+            schedule={schedule}
             seasonSlug={slug}
             totalWeeks={totalWeeks}
           />

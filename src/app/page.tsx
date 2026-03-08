@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { formatMatchDate } from '@/lib/bowling-time';
 import {
   getWeeklyHighlights,
   getCurrentSeasonSnapshot,
@@ -67,7 +68,7 @@ export default async function Home() {
       // Get date for the latest played week
       const latestWeekSchedule = allSchedule.find(s => s.week === seasonSnapshot.weekNumber);
       if (latestWeekSchedule?.matchDate) {
-        latestWeekDate = new Date(latestWeekSchedule.matchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        latestWeekDate = formatMatchDate(latestWeekSchedule.matchDate, { month: 'long', day: 'numeric', year: 'numeric' });
       }
     }
   }

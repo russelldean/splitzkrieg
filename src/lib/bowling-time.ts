@@ -76,6 +76,20 @@ export function isPostBowlingNow(): boolean {
 }
 
 /**
+ * Format a match date string safely, avoiding timezone shift.
+ * DB dates come as UTC midnight (e.g. 2026-03-09T00:00:00.000Z),
+ * which shifts to the previous day in US timezones. Using timeZone: 'UTC'
+ * ensures we display the date as stored.
+ */
+export function formatMatchDate(
+  date: string | Date | null | undefined,
+  options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+): string | null {
+  if (!date) return null;
+  return new Date(date).toLocaleDateString('en-US', { ...options, timeZone: 'UTC' });
+}
+
+/**
  * Check for ?countdown_debug=SECONDS in the URL.
  * Returns a fake target time N seconds from now, or null if not set.
  */

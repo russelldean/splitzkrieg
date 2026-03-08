@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { GhostTeamMatchup } from '@/lib/queries';
+import { formatMatchDate } from '@/lib/bowling-time';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
@@ -64,12 +65,7 @@ function gameClass(scratch: number, teamAvg: number): string {
 }
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '\u2014';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return formatMatchDate(dateStr, { month: 'short', day: 'numeric', year: 'numeric' }) ?? '\u2014';
 }
 
 interface Props {

@@ -2,19 +2,28 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { WeekSummary } from '@/lib/queries';
+import type { WeekSummary, SeasonScheduleWeek } from '@/lib/queries';
+import { formatMatchDate } from '@/lib/bowling-time';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   weekSummaries: WeekSummary[];
+  schedule: SeasonScheduleWeek[];
   seasonSlug: string;
   totalWeeks: number;
 }
 
-export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props) {
+export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeeks }: Props) {
   const [expanded, setExpanded] = useState(true);
 
   const summaryMap = new Map(weekSummaries.map(w => [w.week, w]));
+  // Build a map of week -> matchDate from schedule for weeks without scores
+  const scheduleDateMap = new Map<number, string>();
+  for (const s of schedule) {
+    if (s.matchDate && !scheduleDateMap.has(s.week)) {
+      scheduleDateMap.set(s.week, s.matchDate);
+    }
+  }
   const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
 
   return (
@@ -34,9 +43,8 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
           {weeks.map(week => {
             const summary = summaryMap.get(week);
             const hasScores = !!summary;
-            const dateStr = summary?.matchDate
-              ? new Date(summary.matchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              : null;
+            const rawDate = summary?.matchDate ?? scheduleDateMap.get(week) ?? null;
+            const dateStr = formatMatchDate(rawDate);
 
             return (
               <Link
@@ -51,7 +59,7 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                   {dateStr && (
                     <span className="text-xs font-body text-navy/65">{dateStr}</span>
                   )}
-                  {!hasScores && (
+                  {!hasScores && !dateStr && (
                     <span className="text-xs font-body text-navy/60 italic">Upcoming</span>
                   )}
                 </div>

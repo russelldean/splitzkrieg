@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
 import { organizeByWeek, indexMatchResults, getMatchups, findMatchMVP } from '@/lib/week-utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { formatMatchDate } from '@/lib/bowling-time';
 
 const GHOST_TEAM_NAME = 'Ghost Team';
 
@@ -439,9 +440,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
           const hasScores = weeksWithScores.has(week);
           const matchups = getMatchups(schedule, week);
           const date = getWeekDate(weeklyScores, schedule, week);
-          const dateStr = date
-            ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            : null;
+          const dateStr = formatMatchDate(date);
           const teamScores = weekData.get(week);
           const matchCount = matchups.length || (teamScores ? Math.ceil(teamScores.size / 2) : 0);
 
@@ -456,7 +455,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                   {dateStr && (
                     <span className="text-navy/65 font-body text-sm ml-2">{dateStr}</span>
                   )}
-                  {!hasScores && (
+                  {!hasScores && !dateStr && (
                     <span className="text-navy/60 font-body text-sm ml-2 italic">Upcoming</span>
                   )}
                 </span>

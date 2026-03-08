@@ -1,4 +1,5 @@
 import type { BowlerCareerSummary } from '@/lib/queries';
+import { formatMatchDate } from '@/lib/bowling-time';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { WeekDelta } from './LastWeekHighlight';
@@ -10,11 +11,7 @@ interface Props {
 
 function formatFirstNight(summary: BowlerCareerSummary): string {
   if (summary.firstMatchDate) {
-    return new Date(summary.firstMatchDate).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    return formatMatchDate(summary.firstMatchDate, { month: 'short', day: 'numeric', year: 'numeric' }) ?? '\u2014';
   }
   if (summary.firstYear) return String(summary.firstYear);
   return '\u2014';

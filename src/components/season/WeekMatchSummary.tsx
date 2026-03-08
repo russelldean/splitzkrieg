@@ -62,66 +62,53 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
   if (rows.every(r => r.t1Pts === null)) return null;
 
   return (
-    <div className="mb-4 bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-      <table className="w-full text-sm sm:text-base font-body">
-        <thead>
-          <tr className="border-b border-navy/10 text-navy/65 text-xs bg-navy/[0.02]">
-            <th className="text-left font-normal py-1.5 pl-2">Home</th>
-            <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
-            <th className="text-right font-normal py-1.5">Away</th>
-            <th className="text-left font-normal py-1.5 pl-4">Bowler of the Match</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ matchup, t1Pts, t2Pts, mvpBowler }, idx) => {
-            const homeWon = t1Pts != null && t2Pts != null && t1Pts > t2Pts;
-            const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
-            const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
-            const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
-            return (
-              <tr key={idx} className="border-b border-navy/5">
-                <td className={`py-1.5 pl-2 max-w-[120px] sm:max-w-none truncate ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  {homeForfeit ? (
-                    <GhostTeamLink />
-                  ) : (
-                    <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors" title={matchup.homeTeamName}>
-                      <TeamName name={matchup.homeTeamName} />
-                    </Link>
-                  )}
-                </td>
-                <td className="text-center tabular-nums py-1.5">
-                  <a href={`#match-${idx}`} className="hover:underline underline-offset-2">
-                    <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
-                    <span className="text-navy/30 mx-1">–</span>
-                    <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
-                  </a>
-                </td>
-                <td className={`text-right py-1.5 max-w-[120px] sm:max-w-none truncate ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  {awayForfeit ? (
-                    <GhostTeamLink />
-                  ) : (
-                    <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors" title={matchup.awayTeamName}>
-                      <TeamName name={matchup.awayTeamName} />
-                    </Link>
-                  )}
-                </td>
-                <td className="pl-4 py-1.5 text-amber-800">
-                  {mvpBowler ? (
-                    <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
-                      {mvpBowler.bowlerName}
-                      <span className="text-navy/65 ml-1 text-xs">{mvpBowler.handSeries}</span>
-                    </Link>
-                  ) : '-'}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      </div>
+    <div className="mb-4 space-y-2">
+      {rows.map(({ matchup, t1Pts, t2Pts, mvpBowler }, idx) => {
+        const homeWon = t1Pts != null && t2Pts != null && t1Pts > t2Pts;
+        const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
+        const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
+        const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
+        return (
+          <a key={idx} href={`#match-${idx}`} className="block bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between px-3 py-2 font-body">
+              <div className={`flex-1 min-w-0 ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+                {homeForfeit ? (
+                  <GhostTeamLink className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'} />
+                ) : (
+                  <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+                    <TeamName name={matchup.homeTeamName} />
+                  </Link>
+                )}
+              </div>
+              <div className="tabular-nums text-center px-3 shrink-0">
+                <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
+                <span className="text-navy/30 mx-1.5">–</span>
+                <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
+              </div>
+              <div className={`flex-1 min-w-0 text-right ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+                {awayForfeit ? (
+                  <GhostTeamLink className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'} />
+                ) : (
+                  <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+                    <TeamName name={matchup.awayTeamName} />
+                  </Link>
+                )}
+              </div>
+            </div>
+            {mvpBowler && (
+              <div className="px-3 py-1 border-t border-navy/5 bg-navy/[0.02] text-xs font-body text-amber-800">
+                <span className="text-navy/50">Bowler of the Match</span>{' '}
+                <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
+                  {mvpBowler.bowlerName}
+                  <span className="text-navy/65 ml-1">{mvpBowler.handSeries}</span>
+                </Link>
+              </div>
+            )}
+          </a>
+        );
+      })}
       {forfeitTeamNames.length > 0 && (
-        <div className="px-3 py-2 border-t border-navy/8 bg-navy/[0.02] text-xs font-body text-navy/55">
+        <div className="px-3 py-2 bg-navy/[0.02] rounded-lg text-xs font-body text-navy/55">
           {'👻'} Forfeit &mdash;{' '}
           {forfeitTeamNames.map((name, i) => (
             <span key={i}>

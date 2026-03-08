@@ -20,6 +20,7 @@ import { WeekStats } from '@/components/season/WeekStats';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { formatMatchDate } from '@/lib/bowling-time';
 
 export const dynamicParams = false;
 
@@ -93,9 +94,7 @@ export default async function WeekPage({
 
   // Get date for this week
   const matchDate = weekScores[0]?.matchDate ?? weekSchedule[0]?.matchDate ?? null;
-  const dateStr = matchDate
-    ? new Date(matchDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-    : null;
+  const dateStr = formatMatchDate(matchDate, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   // Prev/next week navigation
   const weekIdx = sortedWeeks.indexOf(weekNum);

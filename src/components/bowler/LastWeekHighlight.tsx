@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
+import { formatMatchDate } from '@/lib/bowling-time';
 import type { GameLogWeek } from '@/lib/queries';
 
 export interface WeekDelta {
@@ -23,13 +24,7 @@ interface Props {
 export function LastWeekHighlight({ week, delta }: Props) {
   const [expanded, setExpanded] = useState(false);
 
-  const dateStr = week.matchDate
-    ? new Date(week.matchDate).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null;
+  const dateStr = formatMatchDate(week.matchDate, { month: 'short', day: 'numeric', year: 'numeric' });
 
   const games = [week.game1, week.game2, week.game3].filter(
     (g): g is number => g !== null

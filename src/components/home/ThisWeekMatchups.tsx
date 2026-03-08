@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
+import { formatMatchDate } from '@/lib/bowling-time';
 
 interface Props {
   matchups: SeasonScheduleWeek[];
@@ -20,9 +21,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
   const hasResults = matchResults.length > 0;
 
   const matchDate = matchups[0]?.matchDate;
-  const dateStr = matchDate
-    ? new Date(matchDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-    : null;
+  const dateStr = formatMatchDate(matchDate, { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-red-600/30 p-6">
