@@ -20,7 +20,8 @@ Fix remaining polish items and wire up real head-to-head data on team pages. Sco
 - One row per opponent team with: opponent name (linked to team page), W, L, T, win%
 - Sorted by most matchups first (highlights biggest rivalries)
 - Opponent names link to their team pages (maintains cross-linked graph)
-- Teams with no H2H data omitted from table; listed below as "Have not yet faced each other"
+- Only show teams they've actually played in the table
+- Below the table: "Have not yet faced each other" list, but ONLY for other currently active teams they haven't played. Inactive/defunct teams with no matchups are simply omitted entirely.
 
 ### Team H2H — Drill-Down Detail
 - Click a summary row to expand and see matchup history
