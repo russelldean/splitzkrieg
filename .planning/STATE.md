@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 05-polish-and-team-h2h
-current_plan: 0 of 2
-status: not_started
-last_updated: "2026-03-08"
+current_plan: 2 of 2
+status: completed
+last_updated: "2026-03-08T21:04:35.853Z"
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 5
+  total_plans: 15
+  completed_plans: 15
 ---
 
 # Session State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.0 milestone
 **Current phase:** 05-polish-and-team-h2h
-**Current plan:** 0 of 2
-**Status:** Not started
+**Current plan:** 2 of 2
+**Status:** Complete
 
 ## Session Log
 
@@ -35,6 +35,8 @@ See: .planning/PROJECT.md
 - 2026-03-06–07: Nav restructure, homepage layout, season hero, playoff bracket UI, PIN redesign
 - 2026-03-08: Weekly highlights ticker shipped (replaced milestone ticker)
 - 2026-03-08: Planning review — dropped 6 todos, updated roadmap, parked PIN formula
+- 2026-03-08: Phase 5 Plan 01 — Standings week context, TeamHero W-L record, collapsible season stats
+- 2026-03-08: Phase 5 Plan 02 — Team H2H with real matchResults data, summary table + drill-down
 
 ## Decisions
 
@@ -43,6 +45,8 @@ See: .planning/PROJECT.md
 - **[Phase 05 planning]** Dropped 6 profile todos (game log reorder, current team name, collapsible sections, trophy icons, team captain notation, rules history page)
 - **[Phase 05 planning]** Playoff/champion data confirmed populated — removed from data gaps
 - **[Phase 05 planning]** Weekly highlights ticker committed as standalone feature
+- **[Phase 05-02]** Single flat H2H query per team; component groups by opponent client-side with useMemo
+- **[Phase 05-02]** Ghost Team included naturally in H2H records (no special filtering)
 
 ## Pending Todos
 

@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Bowler Profiles** - The centerpiece page with career stats, records, charts, and shareable URLs
 - [x] **Phase 3: Search and Home Page** - Front door to the site with prominent search and league snapshot (completed 2026-03-03)
 - [x] **Phase 4: Teams and Seasons** - Complete the three-entity browsable graph (bowlers, teams, seasons) (completed 2026-03-06)
-- [ ] **Phase 5: Polish and Team H2H** - Mobile parallax fix, standings polish, match legend, real H2H data on team pages
+- [x] **Phase 5: Polish and Team H2H** - Mobile parallax fix, standings polish, match legend, real H2H data on team pages (completed 2026-03-08)
 - [ ] **Phase 6: All-Time Leaderboards and Profile Depth** - Career leaderboards with filters, bowler rank context, milestone trackers, profile enhancements
 - [ ] **Phase 7: Content and Community Pages** - Blog/recaps, about polish, join form
 - [ ] **Phase 8: Admin Tools** - Score entry interface replacing the spreadsheet workflow
@@ -125,7 +125,7 @@ Plans:
 
 Plans:
 - [ ] 05-01-PLAN.md — Standings week number, TeamHero W-L record, SeasonStatsTable collapsible seasons
-- [ ] 05-02-PLAN.md — Team H2H query, HeadToHead component with summary table and expandable drill-down
+- [x] 05-02-PLAN.md — Team H2H query, HeadToHead component with summary table and expandable drill-down
 
 ### Phase 6: All-Time Leaderboards and Profile Depth
 **Goal**: Users can browse all-time career leaderboards and bowler profiles gain depth with rankings context, milestone trackers, and career timelines
@@ -212,7 +212,7 @@ Phase 5 (polish/H2H) unblocks better team pages for Phase 6. Phase 8 only depend
 | 2. Bowler Profiles | 3/3 | Complete | 2026-03-02 |
 | 3. Search and Home Page | 3/3 | Complete | 2026-03-03 |
 | 4. Teams and Seasons | 4/4 | Complete | 2026-03-06 |
-| 5. Polish and Team H2H | 0/2 | Not started | - |
+| 5. Polish and Team H2H | 2/2 | Complete   | 2026-03-08 |
 | 6. All-Time Leaderboards and Profile Depth | 0/2 | Not started | - |
 | 7. Content and Community Pages | 0/2 | Not started | - |
 | 8. Admin Tools | 0/2 | Not started | - |
