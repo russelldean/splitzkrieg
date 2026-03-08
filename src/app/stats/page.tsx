@@ -18,7 +18,7 @@ export default async function StatsIndexPage() {
   return (
     <SeasonDirectory
       seasons={seasons}
-      currentSlug={currentSlug}
+      currentSlug={currentSlug ?? null}
       trailCurrent="/stats"
       heading="Season Stats"
       subheading={(count) => `Leaderboards and records for ${count} seasons.`}
