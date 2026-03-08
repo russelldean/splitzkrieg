@@ -115,7 +115,7 @@ export async function Header() {
                 icon={statsIcon}
                 links={[
                   ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),
-                  { href: '/seasons', label: 'All Season Stats' },
+                  { href: '/stats', label: 'All Season Stats' },
                   { href: '/stats/all-time', label: 'All-Time Stats' },
                 ]}
               />

@@ -47,30 +47,37 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
         </div>
       </div>
 
-      <nav className="flex flex-wrap gap-1.5 mb-10" aria-label="Jump to letter">
+      {/* Letter jump nav */}
+      <nav className="flex flex-wrap gap-1 mb-10 bg-white rounded-xl border border-navy/8 px-3 py-2.5" aria-label="Jump to letter">
         {letters.map((letter) => (
           <a
             key={letter}
             href={`#letter-${letter}`}
-            className="w-8 h-8 flex items-center justify-center rounded font-heading text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg font-heading text-sm text-navy/60 hover:text-navy hover:bg-navy/[0.06] transition-colors"
           >
             {letter}
           </a>
         ))}
       </nav>
 
-      <div className="space-y-10">
+      <div className="space-y-6">
         {letters.map((letter) => (
-          <section key={letter} id={`letter-${letter}`}>
-            <h2 className="font-heading text-2xl text-navy border-b border-navy/10 pb-2 mb-4">
-              {letter}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-2">
+          <section
+            key={letter}
+            id={`letter-${letter}`}
+            className="bg-white rounded-xl border border-navy/8 overflow-hidden"
+          >
+            <div className="px-5 py-3 border-b border-navy/6 bg-navy/[0.02]">
+              <h2 className="font-heading text-xl text-navy">
+                {letter}
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-0.5 px-5 py-3">
               {grouped[letter].map((bowler) => (
-                <div key={bowler.bowlerID} className="flex items-center gap-2 py-1">
+                <div key={bowler.bowlerID} className="flex items-center gap-2 py-1.5">
                   <Link
                     href={`/bowler/${bowler.slug}`}
-                    className="font-body text-navy hover:text-red transition-colors truncate"
+                    className="font-body text-navy hover:text-red-600 transition-colors truncate"
                   >
                     {bowler.bowlerName}
                   </Link>
@@ -80,7 +87,7 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
                       title="Active bowler"
                     />
                   )}
-                  <span className="text-navy/65 text-xs flex-shrink-0">
+                  <span className="text-navy/50 text-xs flex-shrink-0">
                     {bowler.seasonsActive}s
                   </span>
                 </div>
