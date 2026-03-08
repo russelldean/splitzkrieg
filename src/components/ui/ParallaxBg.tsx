@@ -64,7 +64,7 @@ export function ParallaxBg({ src }: { src: string }) {
       const rect = ref.current.getBoundingClientRect();
       const viewH = window.innerHeight;
       const progress = 1 - (rect.bottom / (viewH + rect.height));
-      setMobileTranslateY(progress * 40);
+      setMobileTranslateY(progress * 12);
     });
   }, []);
 
@@ -90,7 +90,7 @@ export function ParallaxBg({ src }: { src: string }) {
             backgroundSize: 'cover',
             backgroundPosition: 'center 65%',
             backgroundRepeat: 'no-repeat',
-            top: '-40px',
+            top: '-12px',
             bottom: '0px',
             transform: `translateY(${mobileTranslateY}px)`,
           }}
