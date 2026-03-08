@@ -112,7 +112,7 @@ export default async function WeekPage({
       <TrailNav current="/week" seasonSlug={seasonSlug} position="top" />
       {/* Breadcrumb + navigation */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-3">
+        <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-3">
           <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
           <span className="text-navy/30">/</span>
           <Link href={`/season/${seasonSlug}`} className="hover:text-red-600 transition-colors">
@@ -141,7 +141,7 @@ export default async function WeekPage({
             {prevWeek ? (
               <Link
                 href={`/week/${seasonSlug}/${prevWeek}`}
-                className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+                className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -151,7 +151,7 @@ export default async function WeekPage({
             ) : olderSeason ? (
               <Link
                 href={`/season/${olderSeason.slug}`}
-                className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+                className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -162,7 +162,7 @@ export default async function WeekPage({
           </div>
           <Link
             href="/week"
-            className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+            className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
           >
             All Weeks
           </Link>
@@ -170,7 +170,7 @@ export default async function WeekPage({
             {nextWeek ? (
               <Link
                 href={`/week/${seasonSlug}/${nextWeek}`}
-                className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+                className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
               >
                 Week {nextWeek}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -180,7 +180,7 @@ export default async function WeekPage({
             ) : newerSeason ? (
               <Link
                 href={`/season/${newerSeason.slug}`}
-                className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+                className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
               >
                 Season {newerSeason.romanNumeral}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -220,13 +220,13 @@ export default async function WeekPage({
       <div className="mt-8 pt-6 border-t border-navy/10 flex flex-wrap gap-4">
         <Link
           href={`/season/${seasonSlug}`}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           Season {season.romanNumeral} Standings
         </Link>
         <Link
           href={`/stats/${seasonSlug}`}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           Season Leaderboards
         </Link>

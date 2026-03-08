@@ -186,7 +186,7 @@ export function DiscoverySearch() {
           className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg border border-navy/10 z-50 overflow-hidden"
         >
           <div className="px-3 py-2 border-b border-navy/5">
-            <span className="text-xs font-body text-navy/50 uppercase tracking-wider">Browse</span>
+            <span className="text-xs font-body text-navy/65 uppercase tracking-wider">Browse</span>
           </div>
           {categories.map((cat) => (
             <Link
@@ -199,10 +199,10 @@ export function DiscoverySearch() {
               }}
               className="flex items-center gap-3 px-4 py-3 hover:bg-cream-dark transition-colors"
             >
-              <span className="text-navy/50">{cat.icon}</span>
+              <span className="text-navy/65">{cat.icon}</span>
               <div>
                 <div className="font-body text-sm font-medium text-navy">{cat.label}</div>
-                <div className="font-body text-xs text-navy/50">{cat.description}</div>
+                <div className="font-body text-xs text-navy/65">{cat.description}</div>
               </div>
             </Link>
           ))}
@@ -232,7 +232,7 @@ export function DiscoverySearch() {
               }}
             >
               <span className="font-body text-navy">{result.item.name}</span>
-              <span className="text-navy/50 text-xs ml-3 whitespace-nowrap">
+              <span className="text-navy/65 text-xs ml-3 whitespace-nowrap">
                 {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
               </span>
             </li>
@@ -245,7 +245,7 @@ export function DiscoverySearch() {
         <div
           className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg border border-navy/10 z-50 px-4 py-3"
         >
-          <span className="font-body text-sm text-navy/50">
+          <span className="font-body text-sm text-navy/65">
             No bowlers found for &ldquo;{query}&rdquo;
           </span>
         </div>

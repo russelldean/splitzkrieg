@@ -48,7 +48,7 @@ export function CollapsibleSection({ title, defaultOpen = false, children }: Pro
         className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
       >
         <span className="font-heading text-lg text-navy">{title}</span>
-        <span className="text-navy/50 text-sm">{open ? '\u25B2' : '\u25BC'}</span>
+        <span className="text-navy/65 text-sm">{open ? '\u25B2' : '\u25BC'}</span>
       </button>
       {open && (
         <div className="px-4 py-3">

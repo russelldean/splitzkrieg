@@ -30,9 +30,9 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
 
   return (
     <div className="mb-4 overflow-x-auto">
-      <table className="w-full text-sm font-body">
+      <table className="w-full text-sm sm:text-base font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/50 text-xs">
+          <tr className="border-b border-navy/10 text-navy/65 text-xs">
             <th className="text-left font-normal py-1.5 pl-2">Home</th>
             <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
             <th className="text-right font-normal py-1.5">Away</th>
@@ -66,7 +66,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                   {mvpBowler ? (
                     <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
                       {mvpBowler.bowlerName}
-                      <span className="text-navy/50 ml-1 text-xs">{mvpBowler.handSeries}</span>
+                      <span className="text-navy/65 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>
                   ) : '-'}
                 </td>

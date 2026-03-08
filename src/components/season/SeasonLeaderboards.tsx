@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { SeasonLeaderEntry } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface LeaderboardCategory {
   title: string;
@@ -55,9 +56,9 @@ function LeaderboardTable({
 
   return (
     <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <table className="w-full text-sm font-body">
+      <table className="w-full text-sm sm:text-base font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/60 text-xs uppercase tracking-wider">
+          <tr className="border-b border-navy/10 text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
             <th className="px-4 py-2 text-left w-12">#</th>
             <th className="px-4 py-2 text-left">Bowler</th>
             <th className="px-4 py-2 text-left">Team</th>
@@ -71,11 +72,11 @@ function LeaderboardTable({
             return (
               <tr
                 key={`${entry.bowlerID}-${i}`}
-                className={`border-b border-navy/5 hover:bg-navy/[0.02] transition-colors ${
+                className={`border-b border-navy/5 hover:bg-navy/[0.05] transition-colors ${
                   isHighlighted ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
                 } ${isIneligible ? 'opacity-40' : ''}`}
               >
-                <td className="px-4 py-2 text-navy/50 tabular-nums">
+                <td className="px-4 py-2 text-navy/65 tabular-nums">
                   {i + 1}
                 </td>
                 <td className={`px-4 py-2 ${isHighlighted ? 'font-bold' : 'font-medium'}`}>
@@ -169,7 +170,7 @@ export function SeasonLeaderboards({
 
   return (
     <section id="leaderboards">
-      <h2 className="font-heading text-2xl text-navy mb-4">Leaderboards</h2>
+      <SectionHeading>Leaderboards</SectionHeading>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6">

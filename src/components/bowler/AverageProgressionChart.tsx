@@ -10,6 +10,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { RollingAvgPoint } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   history: RollingAvgPoint[];
@@ -74,7 +75,7 @@ export function AverageProgressionChart({ history }: Props) {
 
   return (
     <div className="bg-white rounded-lg border border-navy/10 p-6">
-      <h2 className="font-heading text-2xl text-navy mb-6">Average Progression</h2>
+      <SectionHeading className="mb-6">Average Progression</SectionHeading>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
           <XAxis
@@ -141,7 +142,7 @@ export function AverageProgressionChart({ history }: Props) {
           )}
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-xs text-navy/50 mt-2 font-body">
+      <p className="text-xs text-navy/65 mt-2 font-body">
         27-game rolling average. Red dot marks career high.
       </p>
     </div>

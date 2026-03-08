@@ -237,7 +237,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
       {/* In-page card */}
       <div suppressHydrationWarning>
         {debugMode && (
-          <p className="text-[10px] text-red-400 font-body text-center mb-1">DEBUG MODE</p>
+          <p className="text-xs text-red-400 font-body text-center mb-1">DEBUG MODE</p>
         )}
 
         {/* ── Results pending: post-bowling Monday 11 PM+ ── */}
@@ -252,7 +252,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
         {/* ── Final countdown: digital clock readout ── */}
         {phase === 'final' && (
           <div className="bg-[#0a0a0a] rounded-xl p-5 flex flex-col items-center justify-center text-center border border-white/5">
-            <p className="text-[10px] text-white/30 font-body tracking-widest uppercase mb-3">
+            <p className="text-xs text-white/30 font-body tracking-widest uppercase mb-3">
               Bowling starts in
             </p>
             <div className="relative" style={{ fontFamily: 'var(--font-digital)' }}>

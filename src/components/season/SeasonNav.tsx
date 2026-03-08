@@ -18,7 +18,7 @@ export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) 
         {prev ? (
           <Link
             href={`${basePath}/${prev.slug}`}
-            className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+            className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -29,7 +29,7 @@ export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) 
       </div>
       <Link
         href="/seasons"
-        className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+        className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
       >
         All Seasons
       </Link>
@@ -37,7 +37,7 @@ export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) 
         {next ? (
           <Link
             href={`${basePath}/${next.slug}`}
-            className="flex items-center gap-1 text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+            className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
           >
             Season {next.romanNumeral}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

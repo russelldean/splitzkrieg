@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { AllTimeRosterMember } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   roster: AllTimeRosterMember[];
@@ -10,9 +11,9 @@ export function AllTimeRoster({ roster }: Props) {
 
   return (
     <section>
-      <h2 className="font-heading text-2xl text-navy mb-4">All-Time Roster</h2>
+      <SectionHeading>All-Time Roster</SectionHeading>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm font-body">
+        <table className="w-full text-sm sm:text-base font-body">
           <thead>
             <tr className="border-b border-navy/10">
               <th className="text-left px-4 py-2 text-navy/60 font-normal w-12">#</th>
@@ -31,8 +32,8 @@ export function AllTimeRoster({ roster }: Props) {
                 : `${member.firstSeason} \u2013 ${member.lastSeason}`;
 
               return (
-                <tr key={member.bowlerID} className="border-b border-navy/5 hover:bg-navy/[0.02]">
-                  <td className="px-4 py-2 text-navy/50 tabular-nums">{i + 1}</td>
+                <tr key={member.bowlerID} className="border-b border-navy/5 hover:bg-navy/[0.05] transition-colors">
+                  <td className="px-4 py-2 text-navy/65 tabular-nums">{i + 1}</td>
                   <td className="px-4 py-2">
                     <Link
                       href={`/bowler/${member.slug}`}
@@ -53,7 +54,7 @@ export function AllTimeRoster({ roster }: Props) {
                   <td className="px-4 py-2 text-right tabular-nums text-navy">
                     {member.seasonsWithTeam}
                   </td>
-                  <td className="px-4 py-2 text-right text-navy/50 text-xs hidden sm:table-cell whitespace-nowrap">
+                  <td className="px-4 py-2 text-right text-navy/65 text-xs hidden sm:table-cell whitespace-nowrap">
                     {tenure ?? '\u2014'}
                   </td>
                 </tr>

@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import type { TeamSeasonPresence, TeamPlayoffFinish } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   presenceData: TeamSeasonPresence[];
@@ -82,8 +83,8 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
 
   return (
     <section className="mt-12">
-      <h2 className="font-heading text-2xl text-navy mb-2">League Timeline</h2>
-      <p className="font-body text-sm text-navy/50 mb-4">
+      <SectionHeading className="mb-2">League Timeline</SectionHeading>
+      <p className="font-body text-sm text-navy/65 mb-4">
         {teams.length} teams across {seasons.length} seasons of Splitzkrieg history.
       </p>
 

@@ -27,7 +27,7 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
         <h1 className="font-heading text-3xl sm:text-4xl text-navy">
           {showCurrent ? 'Current Bowlers' : 'All Bowlers'}
         </h1>
-        <p className="font-body text-navy/50 mt-2">
+        <p className="font-body text-navy/65 mt-2">
           {filtered.length} bowlers{!showCurrent && <> across {new Date().getFullYear() - 2007} years of Splitzkrieg history</>}
         </p>
         <div className="flex gap-3 mt-2">
@@ -80,7 +80,7 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
                       title="Active bowler"
                     />
                   )}
-                  <span className="text-navy/50 text-xs flex-shrink-0">
+                  <span className="text-navy/65 text-xs flex-shrink-0">
                     {bowler.seasonsActive}s
                   </span>
                 </div>

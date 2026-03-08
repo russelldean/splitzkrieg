@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { WeekSummary } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   weekSummaries: WeekSummary[];
@@ -19,10 +20,10 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
   return (
     <section id="weekly">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="font-heading text-2xl text-navy">Weekly Results</h2>
+        <SectionHeading className="mb-0">Weekly Results</SectionHeading>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           {expanded ? 'Collapse' : 'Expand'}
         </button>
@@ -48,13 +49,13 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                     Week {week}
                   </span>
                   {dateStr && (
-                    <span className="text-xs font-body text-navy/50">{dateStr}</span>
+                    <span className="text-xs font-body text-navy/65">{dateStr}</span>
                   )}
                   {!hasScores && (
                     <span className="text-xs font-body text-navy/60 italic">Upcoming</span>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-xs font-body text-navy/50 shrink-0">
+                <div className="flex items-center gap-4 text-xs font-body text-navy/65 shrink-0">
                   {hasScores && summary && (
                     <>
                       {summary.leagueAvg != null && summary.expectedAvg != null && (() => {
@@ -63,21 +64,21 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                         const colorClass = delta >= 0 ? 'text-green-600' : 'text-red-600';
                         return (
                           <span className="hidden sm:inline">
-                            <span className="text-navy/50">Avg </span>
+                            <span className="text-navy/65">Avg </span>
                             <span className="tabular-nums font-semibold text-navy/70">{summary.leagueAvg}</span>
                             <span className="text-navy/30"> / </span>
-                            <span className="text-navy/50">Expected </span>
-                            <span className="tabular-nums text-navy/50">{summary.expectedAvg}</span>
+                            <span className="text-navy/65">Expected </span>
+                            <span className="tabular-nums text-navy/65">{summary.expectedAvg}</span>
                             <span className={`tabular-nums font-semibold ml-1.5 ${colorClass}`}>{sign}{delta.toFixed(1)}</span>
                           </span>
                         );
                       })()}
                       {summary.botwName && (
                         <span>
-                          <span className="text-navy/50 text-[10px] sm:text-xs">BOTW </span>
+                          <span className="text-navy/65 text-xs">BOTW </span>
                           <span className="font-semibold text-navy/70">{summary.botwName}</span>
                           {summary.botwPinsOver != null && (
-                            <span className="hidden sm:inline tabular-nums text-navy/50 ml-1">+{summary.botwPinsOver}</span>
+                            <span className="hidden sm:inline tabular-nums text-navy/65 ml-1">+{summary.botwPinsOver}</span>
                           )}
                         </span>
                       )}
@@ -96,7 +97,7 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
       <div className="mt-3">
         <Link
           href="/week"
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           View all weeks across all seasons &rarr;
         </Link>

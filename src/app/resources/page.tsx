@@ -107,7 +107,7 @@ export default async function ResourcesPage() {
           <h1 className="font-heading text-3xl sm:text-4xl text-navy">
             Resources &amp; Quick Links
           </h1>
-          <p className="font-body text-navy/50 mt-2 text-lg">
+          <p className="font-body text-navy/65 mt-2 text-lg">
             Everything you need, all in one place. No more hunting through emails.
           </p>
         </div>
@@ -159,7 +159,7 @@ export default async function ResourcesPage() {
                           <h3 className="font-body font-medium text-navy group-hover:text-red transition-colors">
                             {link.label}
                           </h3>
-                          <p className="font-body text-sm text-navy/50 mt-1">
+                          <p className="font-body text-sm text-navy/65 mt-1">
                             {link.description}
                           </p>
                         </div>

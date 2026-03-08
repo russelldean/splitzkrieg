@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { BowlerSeasonStats } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   seasons: BowlerSeasonStats[];
@@ -11,7 +12,7 @@ export function SeasonStatsTable({ seasons }: Props) {
   if (seasons.length === 0) {
     return (
       <section>
-        <h2 className="font-heading text-2xl text-navy mb-4">Season Stats</h2>
+        <SectionHeading>Season Stats</SectionHeading>
         <div className="bg-white rounded-lg border border-navy/10 p-6">
           <EmptyState title="No season data available" />
         </div>
@@ -38,9 +39,9 @@ export function SeasonStatsTable({ seasons }: Props) {
 
   return (
     <section>
-      <h2 className="font-heading text-2xl text-navy mb-4">Season Stats</h2>
+      <SectionHeading>Season Stats</SectionHeading>
       <div className="overflow-x-auto rounded-lg border border-navy/10">
-        <table className="w-full text-sm font-body">
+        <table className="w-full text-sm sm:text-base font-body">
           <thead>
             <tr className="bg-navy/5 text-left text-xs uppercase tracking-wide text-navy/60">
               <th className="px-4 py-3">Season</th>
@@ -55,7 +56,7 @@ export function SeasonStatsTable({ seasons }: Props) {
           </thead>
           <tbody className="divide-y divide-navy/5">
             {seasons.map((season) => (
-              <tr key={`${season.seasonID}-${season.teamSlug ?? 'no-team'}`} className="hover:bg-navy/[0.02]">
+              <tr key={`${season.seasonID}-${season.teamSlug ?? 'no-team'}`} className="hover:bg-navy/[0.05] transition-colors">
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Link
                     href={`/season/${season.seasonSlug}`}
@@ -73,7 +74,7 @@ export function SeasonStatsTable({ seasons }: Props) {
                       {season.teamName ?? ''}
                     </Link>
                   ) : (
-                    <span className="text-navy/50">{season.teamName ?? '\u2014'}</span>
+                    <span className="text-navy/65">{season.teamName ?? '\u2014'}</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">{season.gamesBowled}</td>
@@ -96,7 +97,7 @@ export function SeasonStatsTable({ seasons }: Props) {
             {/* Career totals row */}
             <tr className="font-semibold bg-navy/5">
               <td className="px-4 py-3">Career</td>
-              <td className="px-4 py-3 text-navy/50">{'\u2014'}</td>
+              <td className="px-4 py-3 text-navy/65">{'\u2014'}</td>
               <td className="px-4 py-3 text-right">{totals.gamesBowled}</td>
               <td className="px-4 py-3 text-right">{careerAvg}</td>
               <td className={`px-4 py-3 text-right ${scoreColorClass(careerHighGame || null)}`}>

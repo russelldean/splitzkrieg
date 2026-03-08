@@ -23,12 +23,12 @@ export default async function SeasonsPage() {
     <main className="container mx-auto px-4 py-8 max-w-3xl">
       <TrailNav current="/seasons" seasonSlug={currentSlug} position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">Seasons</h1>
-      <p className="font-body text-navy/50 mb-8">
+      <p className="font-body text-navy/65 mb-8">
         {seasons.length} seasons of Splitzkrieg bowling history.
       </p>
 
       {seasons.length === 0 ? (
-        <p className="font-body text-navy/50">No seasons found.</p>
+        <p className="font-body text-navy/65">No seasons found.</p>
       ) : (
         <>
           {/* Featured current season card */}
@@ -37,7 +37,7 @@ export default async function SeasonsPage() {
             return (
               <div className="mb-8 p-6 bg-navy/[0.03] border border-navy/15 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="font-body text-[10px] uppercase tracking-wider text-navy/70 bg-navy/10 px-1.5 py-0.5 rounded font-semibold">
+                  <span className="font-body text-xs sm:text-sm uppercase tracking-wider text-navy/70 bg-navy/10 px-1.5 py-0.5 rounded font-semibold">
                     Current Season
                   </span>
                 </div>
@@ -46,16 +46,16 @@ export default async function SeasonsPage() {
                     {current.period} {current.year}
                   </Link>
                 </h2>
-                <p className="font-body text-sm text-navy/50 mt-1">
+                <p className="font-body text-sm text-navy/65 mt-1">
                   Season {current.romanNumeral}
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm font-body text-navy/60">
                   <span>
-                    <span className="text-navy/50">Teams </span>
+                    <span className="text-navy/65">Teams </span>
                     <span className="font-semibold tabular-nums">{current.teamCount}</span>
                   </span>
                   <span>
-                    <span className="text-navy/50">Bowlers </span>
+                    <span className="text-navy/65">Bowlers </span>
                     <span className="font-semibold tabular-nums">{current.bowlerCount}</span>
                   </span>
                   {current.champion && (
@@ -87,11 +87,11 @@ export default async function SeasonsPage() {
                       <span className="font-heading text-lg text-navy group-hover:text-red-600 transition-colors">
                         {season.period} {season.year}
                       </span>
-                      <span className="font-body text-sm text-navy/50">
+                      <span className="font-body text-sm text-navy/65">
                         {season.romanNumeral}
                       </span>
                     </div>
-                    <div className="flex gap-3 text-xs font-body text-navy/50 mt-0.5">
+                    <div className="flex gap-3 text-xs font-body text-navy/65 mt-0.5">
                       <span className="tabular-nums">{season.teamCount} teams</span>
                       <span className="tabular-nums">{season.bowlerCount} bowlers</span>
                       {season.champion && (

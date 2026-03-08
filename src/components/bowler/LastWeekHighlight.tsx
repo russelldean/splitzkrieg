@@ -40,11 +40,11 @@ export function LastWeekHighlight({ week, delta }: Props) {
     <section>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between bg-white rounded-lg border border-navy/10 px-6 py-4 hover:bg-navy/[0.02] transition-colors"
+        className="w-full flex items-center justify-between bg-white rounded-lg border border-navy/10 px-6 py-4 hover:bg-navy/[0.05] transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className="font-heading text-xl text-navy">Last Week</span>
-          <span className="text-sm text-navy/50 font-body">
+          <span className="text-sm text-navy/65 font-body">
             {week.displayName} Wk {week.week}
             {dateStr ? ` \u00b7 ${dateStr}` : ''}
           </span>
@@ -53,7 +53,7 @@ export function LastWeekHighlight({ week, delta }: Props) {
           <span className={`font-heading text-xl tabular-nums ${seriesColorClass(week.scratchSeries)}`}>
             {week.scratchSeries ?? '\u2014'}
           </span>
-          <span className="text-navy/50 text-sm">
+          <span className="text-navy/65 text-sm">
             {expanded ? '\u25B2' : '\u25BC'}
           </span>
         </div>
@@ -152,7 +152,7 @@ function DeltaBadge({
     <span
       className={`inline-flex items-center gap-1.5 text-xs font-body px-2.5 py-1 rounded-full border ${colors[variant]}`}
     >
-      <span className="text-navy/50">{label}</span>
+      <span className="text-navy/65">{label}</span>
       <span>{value}</span>
     </span>
   );

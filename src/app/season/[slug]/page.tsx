@@ -106,7 +106,7 @@ export default async function SeasonPage({
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
       <TrailNav current="/seasons" seasonSlug={slug} position="top" />
-      <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
+      <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
         <span className="text-navy/30">/</span>
         <span className="text-navy/70">Season {season.romanNumeral}</span>
@@ -135,7 +135,7 @@ export default async function SeasonPage({
           />
         ) : (
           <div className="bg-navy/[0.02] rounded-lg px-6 py-4">
-            <p className="font-body text-sm text-navy/50 italic">
+            <p className="font-body text-sm text-navy/65 italic">
               This is an archival season page. Weekly results are available from Season XXVI onwards.
             </p>
           </div>
@@ -147,7 +147,7 @@ export default async function SeasonPage({
       </div>
 
       <div className="mt-8 pt-6 border-t border-navy/10 text-center">
-        <p className="font-body text-sm text-navy/50">
+        <p className="font-body text-sm text-navy/65">
           Looking for individual stats and playoff standings?{' '}
           <Link href={`/stats/${slug}`} className="text-red-600 hover:text-red-700 transition-colors font-medium">
             View Season Stats &rarr;

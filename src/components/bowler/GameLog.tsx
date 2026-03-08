@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { GameLogWeek } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 type GameLogSeason = {
   seasonID: number;
@@ -75,10 +76,10 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-heading text-2xl text-navy">Game Log</h2>
+        <SectionHeading className="mb-0">Game Log</SectionHeading>
         <button
           onClick={toggleAll}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           {allOpen ? 'Collapse All' : 'Expand All'}
         </button>
@@ -102,19 +103,19 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
               <div className="flex items-center gap-2">
                 <span className="font-heading text-lg text-navy">{season.displayName}</span>
                 {hasBest && !openSeasons.has(season.seasonID) && (
-                  <span className="text-[10px] font-body font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                  <span className="text-xs font-body font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
                     {bestLabel}
                   </span>
                 )}
               </div>
-              <span className="text-navy/50 text-sm">
+              <span className="text-navy/65 text-sm">
                 {season.weeks.length} nights {openSeasons.has(season.seasonID) ? '\u25B2' : '\u25BC'}
               </span>
             </button>
 
             {openSeasons.has(season.seasonID) && (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm font-body">
+                <table className="w-full text-sm sm:text-base font-body">
                   <thead>
                     <tr className="border-b border-navy/10">
                       <th className="text-left px-4 py-2 text-navy/60 font-normal">Wk</th>
@@ -132,7 +133,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                       const isHighSeries = highSeries != null && week.scratchSeries === highSeries;
                       const isCareerBest = isHighGame || isHighSeries;
                       return (
-                      <tr key={i} className={`border-b hover:bg-navy/[0.02] ${isCareerBest ? 'bg-amber-50 border-b-amber-200' : 'border-navy/5'}`}>
+                      <tr key={i} className={`border-b hover:bg-navy/[0.05] transition-colors ${isCareerBest ? 'bg-amber-50 border-b-amber-200' : 'border-navy/5'}`}>
                         <td className="px-4 py-2 text-navy/60">
                           <span className="flex items-center gap-1">
                             {week.week}
@@ -161,7 +162,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                               {week.opponentName ?? ''}
                             </Link>
                           ) : (
-                            <span className="text-navy/50">{week.opponentName ?? '\u2014'}</span>
+                            <span className="text-navy/65">{week.opponentName ?? '\u2014'}</span>
                           )}
                         </td>
                         <td className={`px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game1)}`}>

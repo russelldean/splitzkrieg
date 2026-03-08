@@ -55,7 +55,7 @@ export function Footer() {
               />
             </Link>
           </div>
-          <p className="font-body text-navy/50 text-sm">
+          <p className="font-body text-navy/65 text-sm">
             Durham, NC &middot; Since 2007
           </p>
           <div className="flex items-center gap-5">
@@ -64,7 +64,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Splitzkrieg on Instagram"
-              className="text-navy/50 hover:text-red transition-colors"
+              className="text-navy/65 hover:text-red transition-colors"
             >
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -79,7 +79,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Splitzkrieg on Facebook"
-              className="text-navy/50 hover:text-red transition-colors"
+              className="text-navy/65 hover:text-red transition-colors"
             >
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path

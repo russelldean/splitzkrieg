@@ -109,7 +109,7 @@ export default async function Home() {
               unoptimized
               priority
             />
-            <p className="font-body text-sm sm:text-base text-navy/50 -mt-4 sm:-mt-6">
+            <p className="font-body text-sm sm:text-base text-navy/65 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>
@@ -158,7 +158,7 @@ export default async function Home() {
                   <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
                     {link.label}
                   </div>
-                  <div className="font-body text-xs text-navy/50 mt-1 leading-relaxed">
+                  <div className="font-body text-xs text-navy/65 mt-1 leading-relaxed">
                     {link.description}
                   </div>
                 </Link>

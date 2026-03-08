@@ -137,7 +137,7 @@ export default async function SeasonStatsPage({
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
       <TrailNav current="/stats" seasonSlug={currentSlug} position="top" />
-      <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
+      <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
         <span className="text-navy/30">/</span>
         <Link href={`/season/${slug}`} className="hover:text-red-600 transition-colors">Season {season.romanNumeral}</Link>

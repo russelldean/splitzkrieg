@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { SeasonRecords } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   records: SeasonRecords;
@@ -43,7 +44,7 @@ export function SeasonRecordsSection({ records }: Props) {
 
   return (
     <section id="records">
-      <h2 className="font-heading text-2xl text-navy mb-4">Season Records</h2>
+      <SectionHeading>Season Records</SectionHeading>
       <div className="bg-navy/[0.02] rounded-lg px-4 py-2">
         <RecordRow label="High Scratch Game" record={records.highScratchGame} />
         <RecordRow label="High Scratch Series" record={records.highScratchSeries} />

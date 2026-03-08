@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { TeamSeasonRow, TeamSeasonBowler } from '@/lib/queries';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   seasons: TeamSeasonRow[];
@@ -43,10 +44,10 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-heading text-2xl text-navy">Season-by-Season</h2>
+        <SectionHeading className="mb-0">Season-by-Season</SectionHeading>
         <button
           onClick={toggleAll}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           {allOpen ? 'Collapse All' : 'Expand All'}
         </button>
@@ -62,7 +63,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
           return (
             <div key={season.seasonID}>
               {showOldSeasonNote && (
-                <div className="px-4 py-3 mb-1 bg-navy/[0.02] border border-navy/10 rounded-lg text-sm font-body text-navy/50 italic">
+                <div className="px-4 py-3 mb-1 bg-navy/[0.02] border border-navy/10 rounded-lg text-sm font-body text-navy/65 italic">
                   Detailed team records before Season XXVI are coming soon. Individual bowler stats are shown below.
                 </div>
               )}
@@ -76,7 +77,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                       {season.seasonName}
                     </Link>
                     {season.teamNameAtTime !== currentTeamName && (
-                      <span className="text-sm text-navy/50 font-body">
+                      <span className="text-sm text-navy/65 font-body">
                         as {season.teamNameAtTime}
                       </span>
                     )}
@@ -84,7 +85,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                       <span className="text-base" title="League Champion">🏆</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-sm font-body text-navy/50">
+                  <div className="flex items-center gap-4 text-sm font-body text-navy/65">
                     <span className="hidden sm:inline">
                       {season.totalGames} games
                     </span>
@@ -102,7 +103,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
 
                 {openSeasons.has(season.seasonID) && bowlers.length > 0 && (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm font-body">
+                    <table className="w-full text-sm sm:text-base font-body">
                       <thead>
                         <tr className="border-b border-navy/10">
                           <th className="text-left px-4 py-2 text-navy/60 font-normal">Bowler</th>
@@ -113,7 +114,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                       </thead>
                       <tbody>
                         {bowlers.map(bowler => (
-                          <tr key={bowler.bowlerID} className="border-b border-navy/5 hover:bg-navy/[0.02]">
+                          <tr key={bowler.bowlerID} className="border-b border-navy/5 hover:bg-navy/[0.05] transition-colors">
                             <td className="px-4 py-2">
                               <Link
                                 href={`/bowler/${bowler.slug}`}
@@ -139,7 +140,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                 )}
 
                 {openSeasons.has(season.seasonID) && bowlers.length === 0 && !isOldSeason && (
-                  <div className="px-4 py-3 text-sm font-body text-navy/50 italic">
+                  <div className="px-4 py-3 text-sm font-body text-navy/65 italic">
                     No individual bowler data available for this season.
                   </div>
                 )}

@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import type { WeeklyMatchScore } from '@/lib/queries';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   weeklyScores: WeeklyMatchScore[];
@@ -137,7 +138,7 @@ export function SeasonHighlights({ weeklyScores }: Props) {
 
   return (
     <section className="space-y-6">
-      <h2 className="font-heading text-2xl text-navy mb-1">Season Records</h2>
+      <SectionHeading className="mb-1">Season Records</SectionHeading>
 
       {/* Team records */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -186,7 +187,7 @@ function TeamRecordCard({ title, records }: { title: string; records: TeamRecord
               <Link href={`/team/${r.teamSlug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                 {r.teamName}
               </Link>
-              <span className="text-navy/50 text-xs ml-1">Wk {r.week}</span>
+              <span className="text-navy/65 text-xs ml-1">Wk {r.week}</span>
             </span>
             <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{r.value}</span>
           </div>
@@ -210,7 +211,7 @@ function IndividualRecordCard({ title, records }: { title: string; records: Seas
               <Link href={`/bowler/${r.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                 {r.name}
               </Link>
-              <span className="text-navy/50 text-xs ml-1">Wk {r.week}</span>
+              <span className="text-navy/65 text-xs ml-1">Wk {r.week}</span>
             </span>
             <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{r.value}</span>
           </div>
@@ -237,7 +238,7 @@ function CountCard({ title, entries, tiedCount = 0, tiedValue = 0 }: { title: st
         );
       })}
       {tiedCount > 0 && (
-        <div className="text-sm font-body text-navy/50 italic py-0.5">
+        <div className="text-sm font-body text-navy/65 italic py-0.5">
           {tiedCount} tied with {tiedValue}
         </div>
       )}

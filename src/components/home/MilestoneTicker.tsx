@@ -28,7 +28,7 @@ function TickerIcon({ icon }: { icon: TickerItem['icon'] }) {
     case 'clock':
     default:
       return (
-        <svg className="w-4 h-4 text-navy/50 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-4 h-4 text-navy/65 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clipRule="evenodd" />
         </svg>
       );

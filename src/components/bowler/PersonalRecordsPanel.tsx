@@ -1,5 +1,6 @@
 import type { BowlerCareerSummary } from '@/lib/queries';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { WeekDelta } from './LastWeekHighlight';
 
 interface Props {
@@ -23,8 +24,8 @@ export function PersonalRecordsPanel({ careerSummary, delta }: Props) {
   if (!careerSummary) {
     return (
       <section>
-        <h2 className="font-heading text-2xl text-navy mb-4">Personal Records</h2>
-        <div className="bg-white rounded-lg border border-navy/10 p-6">
+        <SectionHeading>Personal Records</SectionHeading>
+        <div className="bg-white rounded-lg border border-navy/10 border-l-4 border-l-red-600/30 p-6">
           <EmptyState title="No games recorded yet" />
         </div>
       </section>
@@ -33,8 +34,8 @@ export function PersonalRecordsPanel({ careerSummary, delta }: Props) {
 
   return (
     <section>
-      <h2 className="font-heading text-2xl text-navy mb-4">Personal Records</h2>
-      <div className="bg-white rounded-lg border border-navy/10 p-6">
+      <SectionHeading>Personal Records</SectionHeading>
+      <div className="bg-white rounded-lg border border-navy/10 border-l-4 border-l-red-600/30 p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6">
           <RecordCard label="First Night" value={formatFirstNight(careerSummary)} />
           <RecordCard

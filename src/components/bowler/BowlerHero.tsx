@@ -31,7 +31,7 @@ export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUr
           {currentTeam && currentTeam.slug && (
             <Link
               href={`/team/${currentTeam.slug}`}
-              className="inline-flex items-center gap-1 mt-2 font-body text-sm text-navy/50 hover:text-red-600 transition-colors"
+              className="inline-flex items-center gap-1 mt-2 font-body text-sm text-navy/65 hover:text-red-600 transition-colors"
             >
               {currentTeam.name}
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -63,8 +63,8 @@ function StatPill({ label, value, delta }: { label: string; value: string | numb
 
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-navy/5 rounded-full text-sm font-body text-navy">
-      <span className="text-navy/50">{label}</span>
-      <span className="font-semibold">{display}</span>
+      <span className="text-navy/65">{label}</span>
+      <span className="font-bold font-heading">{display}</span>
       {delta && (
         <span className={`text-xs ${delta.startsWith('-') ? 'text-red-500' : 'text-green-600'}`}>
           {delta}

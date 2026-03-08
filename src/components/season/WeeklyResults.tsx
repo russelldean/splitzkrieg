@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
 import { organizeByWeek, indexMatchResults, getMatchups, findMatchMVP } from '@/lib/week-utils';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 /** Color class for a game score relative to the bowler's incoming average. */
 function avgColorClass(score: number | null, avg: number | null): string {
@@ -78,9 +79,9 @@ function WeeklySummaryTable({
 
   return (
     <div className="mb-4 overflow-x-auto">
-      <table className="w-full text-sm font-body">
+      <table className="w-full text-sm sm:text-base font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/50 text-xs">
+          <tr className="border-b border-navy/10 text-navy/65 text-xs">
             <th className="text-left font-normal py-1.5 pl-2">Home</th>
             <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
             <th className="text-right font-normal py-1.5">Away</th>
@@ -112,7 +113,7 @@ function WeeklySummaryTable({
                   {mvpBowler ? (
                     <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
                       {mvpBowler.bowlerName}
-                      <span className="text-navy/50 ml-1 text-xs">{mvpBowler.handSeries}</span>
+                      <span className="text-navy/65 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>
                   ) : '-'}
                 </td>
@@ -146,7 +147,7 @@ function MatchupSummary({
     <div className="bg-navy/[0.03] rounded-lg px-3 py-2 mb-3">
       <table className="w-full text-xs font-body">
         <thead>
-          <tr className="text-navy/50">
+          <tr className="text-navy/65">
             <th className="text-left font-normal py-0.5 w-[30%]"></th>
             <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G1</th>
             <th className="text-right font-normal py-0.5 pl-2 border-l border-navy/10">G2</th>
@@ -200,7 +201,7 @@ function MatchupSummary({
 function gameWinClass(myScore: number | null, oppScore: number | null): string {
   if (myScore == null || oppScore == null) return '';
   if (myScore > oppScore) return 'text-green-600 font-semibold';
-  if (myScore < oppScore) return 'text-navy/50';
+  if (myScore < oppScore) return 'text-navy/65';
   return 'text-amber-600'; // tie
 }
 
@@ -231,17 +232,17 @@ function TeamBoxScore({
         {teamName}
       </Link>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm font-body mt-1">
+        <table className="w-full text-sm sm:text-base font-body mt-1">
           <thead>
             <tr className="border-b border-navy/10">
-              <th className="text-left px-2 py-1 text-navy/50 font-normal text-xs">Bowler</th>
-              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">Avg</th>
-              <th className="text-right pl-2 pr-1 py-1 text-navy/50 font-normal text-xs border-l border-navy/10">G1</th>
-              <th className="text-right pl-2 pr-1 py-1 text-navy/50 font-normal text-xs border-l border-navy/10">G2</th>
-              <th className="text-right pl-2 pr-1 py-1 text-navy/50 font-normal text-xs border-l border-navy/10">G3</th>
-              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">Series</th>
-              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">Hcp</th>
-              <th className="text-right px-1 py-1 text-navy/50 font-normal text-xs">T</th>
+              <th className="text-left px-2 py-1 text-navy/65 font-normal text-xs">Bowler</th>
+              <th className="text-right px-1 py-1 text-navy/65 font-normal text-xs">Avg</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/65 font-normal text-xs border-l border-navy/10">G1</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/65 font-normal text-xs border-l border-navy/10">G2</th>
+              <th className="text-right pl-2 pr-1 py-1 text-navy/65 font-normal text-xs border-l border-navy/10">G3</th>
+              <th className="text-right px-1 py-1 text-navy/65 font-normal text-xs">Series</th>
+              <th className="text-right px-1 py-1 text-navy/65 font-normal text-xs">Hcp</th>
+              <th className="text-right px-1 py-1 text-navy/65 font-normal text-xs">T</th>
             </tr>
           </thead>
           <tbody>
@@ -258,12 +259,12 @@ function TeamBoxScore({
                       {b.bowlerName}
                     </Link>
                     {isDebut && (
-                      <span className="ml-1.5 text-[10px] font-heading text-red-600/70 bg-red-600/10 px-1 py-0.5 rounded uppercase tracking-wider">
+                      <span className="ml-1.5 text-xs font-heading text-red-600/70 bg-red-600/10 px-1 py-0.5 rounded uppercase tracking-wider">
                         Debut
                       </span>
                     )}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/50">
+                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/65">
                     {b.incomingAvg ?? '-'}
                   </td>
                   <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game1, b.incomingAvg)}`}>
@@ -281,7 +282,7 @@ function TeamBoxScore({
                   <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/60">
                     {b.handSeries ?? '-'}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/50">
+                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/65">
                     {b.turkeys > 0 ? b.turkeys : ''}
                   </td>
                 </tr>
@@ -295,7 +296,7 @@ function TeamBoxScore({
               <td className="pl-2 pr-1 py-1 text-right tabular-nums font-semibold text-xs border-l border-navy/10">{g3Total}</td>
               <td className="px-1 py-1 text-right tabular-nums font-bold text-xs">{seriesTot}</td>
               <td className="px-1 py-1 text-right tabular-nums font-bold text-xs">{hcpSeriesTot}</td>
-              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs text-navy/50">
+              <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs text-navy/65">
                 {turkeysTot > 0 ? turkeysTot : ''}
               </td>
             </tr>
@@ -416,14 +417,14 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
     <section id="weekly">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="font-heading text-2xl text-navy">Weekly Results</h2>
-          <p className="font-body text-sm text-navy/50">
+          <SectionHeading className="mb-0">Weekly Results</SectionHeading>
+          <p className="font-body text-sm text-navy/65">
             Match-by-match scores for every bowling night.
           </p>
         </div>
         <button
           onClick={toggleAll}
-          className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           {allOpen ? 'Collapse All' : 'Expand All'}
         </button>
@@ -449,13 +450,13 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                 <span className="font-heading text-lg text-navy">
                   Week {week}
                   {dateStr && (
-                    <span className="text-navy/50 font-body text-sm ml-2">{dateStr}</span>
+                    <span className="text-navy/65 font-body text-sm ml-2">{dateStr}</span>
                   )}
                   {!hasScores && (
                     <span className="text-navy/60 font-body text-sm ml-2 italic">Upcoming</span>
                   )}
                 </span>
-                <span className="text-navy/50 text-sm">
+                <span className="text-navy/65 text-sm">
                   {hasScores ? `${matchCount} matches` : `${matchups.length} matchups`}{' '}
                   {openWeeks.has(week) ? '\u25B2' : '\u25BC'}
                 </span>
@@ -537,7 +538,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                     // Future week -- show schedule matchups
                     <div className="space-y-2">
                       {matchups.map((matchup, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm font-body text-navy/50">
+                        <div key={idx} className="flex items-center gap-2 text-sm font-body text-navy/65">
                           <Link href={`/team/${matchup.homeTeamSlug}`} className="text-navy hover:text-red-600">
                             {matchup.homeTeamName}
                           </Link>

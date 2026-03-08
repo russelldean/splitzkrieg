@@ -156,7 +156,7 @@ export function SearchBar() {
               }}
             >
               <span className="font-body text-navy text-sm">{result.item.name}</span>
-              <span className="text-navy/50 text-xs ml-2">
+              <span className="text-navy/65 text-xs ml-2">
                 {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
               </span>
             </li>
@@ -167,7 +167,7 @@ export function SearchBar() {
       {/* No results */}
       {showNoResults && (
         <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-navy/10 z-50 px-4 py-2.5">
-          <span className="font-body text-sm text-navy/50">
+          <span className="font-body text-sm text-navy/65">
             No bowlers found for &ldquo;{query}&rdquo;
           </span>
         </div>

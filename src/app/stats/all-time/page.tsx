@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getAllPlayoffHistory, getCurrentSeasonSlug, type PlayoffSeason } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 export const metadata: Metadata = {
   title: 'All-Time Stats | Splitzkrieg',
@@ -93,7 +94,7 @@ function PlayoffRow({
     <tr className="border-b border-navy/5 last:border-0">
       <td className="py-3 pr-4 align-top whitespace-nowrap">
         <div className="font-heading text-navy/70">{season.romanNumeral}</div>
-        <div className="text-navy/50 text-xs">{season.displayName}</div>
+        <div className="text-navy/65 text-xs">{season.displayName}</div>
       </td>
       <td className="py-3 pr-4 align-top font-body font-bold text-amber-700">
         <span className="inline-flex items-center gap-1">
@@ -139,9 +140,9 @@ function CovidRow() {
     <tr className="border-b border-navy/5">
       <td className="py-3 pr-4 align-top whitespace-nowrap">
         <div className="font-heading text-navy/70">XXV</div>
-        <div className="text-navy/50 text-xs">Spring 2020</div>
+        <div className="text-navy/65 text-xs">Spring 2020</div>
       </td>
-      <td colSpan={4} className="py-3 align-top font-body text-navy/50 italic">
+      <td colSpan={4} className="py-3 align-top font-body text-navy/65 italic">
         Season Incomplete: Covid
       </td>
     </tr>
@@ -176,7 +177,7 @@ export default async function AllTimeStatsPage() {
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
       <TrailNav current="/stats" seasonSlug={currentSlug} position="top" />
-      <div className="flex items-center gap-2 text-sm font-body text-navy/50 mb-4">
+      <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link
           href="/stats"
           className="hover:text-red-600 transition-colors"
@@ -196,27 +197,25 @@ export default async function AllTimeStatsPage() {
 
       {/* Championship History */}
       <section className="mt-10">
-        <h2 className="font-heading text-2xl text-navy mb-4">
-          Championship History
-        </h2>
+        <SectionHeading>Championship History</SectionHeading>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-navy/10 text-left">
-                <th className="py-2 pr-4 font-heading text-navy/60 text-xs uppercase tracking-wider">
+                <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
                   Season
                 </th>
-                <th className="py-2 pr-4 font-heading text-amber-700/50 text-xs uppercase tracking-wider">
+                <th className="py-2 pr-4 font-heading text-amber-700/50 text-xs sm:text-sm uppercase tracking-wider">
                   Champion
                 </th>
-                <th className="py-2 pr-4 font-heading text-slate-400 text-xs uppercase tracking-wider">
+                <th className="py-2 pr-4 font-heading text-slate-400 text-xs sm:text-sm uppercase tracking-wider">
                   Runner-Up
                 </th>
-                <th className="py-2 pr-4 font-heading text-navy/60 text-xs uppercase tracking-wider">
+                <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
                   Semifinalist
                 </th>
-                <th className="py-2 font-heading text-navy/60 text-xs uppercase tracking-wider">
+                <th className="py-2 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
                   Semifinalist
                 </th>
               </tr>
@@ -228,7 +227,7 @@ export default async function AllTimeStatsPage() {
         </div>
 
         {playoffs.length === 0 && (
-          <p className="font-body text-navy/50 italic mt-4">
+          <p className="font-body text-navy/65 italic mt-4">
             No playoff data available.
           </p>
         )}

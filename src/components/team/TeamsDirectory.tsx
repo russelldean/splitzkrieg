@@ -56,7 +56,7 @@ export function TeamsDirectory({ teams }: { teams: DirectoryTeam[] }) {
       )}
 
       {teams.length === 0 && (
-        <p className="font-body text-navy/50 text-center py-12">
+        <p className="font-body text-navy/65 text-center py-12">
           No teams found. Check back when the season starts.
         </p>
       )}

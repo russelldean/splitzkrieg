@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { SeasonFullStatsRow } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { ScrollableTable } from '@/components/ui/ScrollableTable';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   stats: SeasonFullStatsRow[];
@@ -121,15 +122,15 @@ export function FullStatsTable({ stats, minGames }: Props) {
   if (stats.length === 0) {
     return (
       <section id="stats">
-        <h2 className="font-heading text-2xl text-navy mb-4">Full Stats</h2>
-        <p className="font-body text-navy/50">No stats data available.</p>
+        <SectionHeading>Full Stats</SectionHeading>
+        <p className="font-body text-navy/65">No stats data available.</p>
       </section>
     );
   }
 
   return (
     <section>
-      <h2 className="font-heading text-2xl text-navy mb-4">Full Stats</h2>
+      <SectionHeading>Full Stats</SectionHeading>
 
       {/* Gender tabs */}
       <div className="flex gap-1 mb-4">
@@ -149,12 +150,12 @@ export function FullStatsTable({ stats, minGames }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="font-body text-navy/50 py-4">No bowlers in this category.</p>
+        <p className="font-body text-navy/65 py-4">No bowlers in this category.</p>
       ) : (
         <ScrollableTable>
-          <table className="w-full text-sm font-body">
+          <table className="w-full text-sm sm:text-base font-body">
             <thead>
-              <tr className="border-b border-navy/10 text-navy/60 text-xs uppercase tracking-wider">
+              <tr className="border-b border-navy/10 text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
                 <th className="px-3 py-2 text-left w-10 sticky left-0 bg-white z-10">#</th>
                 {COLUMNS.map((col) => (
                   <th
@@ -174,9 +175,9 @@ export function FullStatsTable({ stats, minGames }: Props) {
               {sorted.map((row, i) => (
                 <tr
                   key={`${row.bowlerID}-${row.teamSlug ?? 'no-team'}`}
-                  className="border-b border-navy/5 hover:bg-navy/[0.02] transition-colors"
+                  className="border-b border-navy/5 hover:bg-navy/[0.05] transition-colors"
                 >
-                  <td className="px-3 py-2 text-navy/50 tabular-nums sticky left-0 bg-white z-10">{i + 1}</td>
+                  <td className="px-3 py-2 text-navy/65 tabular-nums sticky left-0 bg-white z-10">{i + 1}</td>
                   <td className="px-3 py-2 font-medium whitespace-nowrap sticky left-10 bg-white z-10">
                     <Link
                       href={`/bowler/${row.slug}`}
@@ -207,7 +208,7 @@ export function FullStatsTable({ stats, minGames }: Props) {
                   <td className="px-3 py-2 text-navy/70 whitespace-nowrap">
                     <span className="flex items-center justify-end gap-1">
                       <span className="tabular-nums">{row.scratchAvg?.toFixed(1) ?? '\u2014'}</span>
-                      <span className="text-navy/50 text-xs w-8 text-left tabular-nums">
+                      <span className="text-navy/65 text-xs w-8 text-left tabular-nums">
                         {row.gender && scratchRankByGender.has(`${row.gender}-${row.bowlerID}`)
                           ? `(${genderTab === 'all' ? (row.gender === 'M' ? 'M' : 'W') : ''}${scratchRankByGender.get(`${row.gender}-${row.bowlerID}`)})`
                           : ''}
@@ -217,7 +218,7 @@ export function FullStatsTable({ stats, minGames }: Props) {
                   <td className="px-3 py-2 text-navy/70 whitespace-nowrap">
                     <span className="flex items-center justify-end gap-1">
                       <span className="tabular-nums">{row.hcpAvg?.toFixed(1) ?? '\u2014'}</span>
-                      <span className="text-navy/50 text-xs w-6 text-left tabular-nums">
+                      <span className="text-navy/65 text-xs w-6 text-left tabular-nums">
                         {hcpRanks.has(row.bowlerID)
                           ? `(${hcpRanks.get(row.bowlerID)})`
                           : ''}

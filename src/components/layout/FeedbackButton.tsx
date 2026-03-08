@@ -110,7 +110,7 @@ export function FeedbackButton() {
                 Need me to remember something for the email?<br />
                 Spotted an error? Have a suggestion?
               </p>
-              <p className="mt-2 italic text-navy/50">
+              <p className="mt-2 italic text-navy/65">
                 Drop anything you want to share with me here.
               </p>
             </div>
@@ -163,7 +163,7 @@ export function FeedbackButton() {
                   : status === 'error' ? 'Try Again'
                   : 'Send'}
               </button>
-              <span className="text-xs font-body text-navy/50">
+              <span className="text-xs font-body text-navy/65">
                 {message.length > 0 && `${message.length}/2000`}
               </span>
             </div>
