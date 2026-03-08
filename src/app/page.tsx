@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import {
-  getRecentMilestones,
+  getWeeklyHighlights,
   getCurrentSeasonSnapshot,
   getNextBowlingNight,
   getSeasonBySlug,
@@ -31,9 +31,9 @@ const quickLinks = [
 ];
 
 export default async function Home() {
-  const [seasonSnapshot, milestones, nextBowlingNight] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, nextBowlingNight] = await Promise.all([
     getCurrentSeasonSnapshot(),
-    getRecentMilestones(),
+    getWeeklyHighlights(),
     getNextBowlingNight(),
   ]);
 
@@ -75,7 +75,7 @@ export default async function Home() {
     <div className="min-h-screen bg-cream">
       {/* Milestone Ticker */}
       <div className="relative">
-        <MilestoneTicker milestones={milestones} />
+        <MilestoneTicker items={weeklyHighlights} />
         {nextBowlingNight && (
           <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
             <div className="relative flex items-center">

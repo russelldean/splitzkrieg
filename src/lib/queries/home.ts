@@ -27,6 +27,12 @@ export interface Milestone {
   threshold: number;
 }
 
+export interface TickerItem {
+  text: string;
+  href: string;
+  icon: 'debut' | 'trophy' | 'star' | 'clock';
+}
+
 export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
   return cachedQuery('getRecentMilestones', async () => {
     const db = await getDb();
@@ -264,4 +270,110 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       teamOfTheWeek,
     };
   }, null);
+});
+
+/**
+ * Weekly highlights for the ticker: debuts, all-time high games, all-time high series.
+ * Pulls from the most recent week of the current season.
+ */
+export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
+  return cachedQuery('getWeeklyHighlights', async () => {
+    const db = await getDb();
+
+    // Get current season + latest week
+    const latestResult = await db.request().query<{ seasonID: number; week: number }>(`
+      SELECT TOP 1 sc.seasonID, sc.week
+      FROM scores sc
+      JOIN seasons s ON sc.seasonID = s.seasonID
+      WHERE sc.isPenalty = 0
+      ORDER BY s.year DESC, CASE s.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, sc.week DESC
+    `);
+    const latest = latestResult.recordset[0];
+    if (!latest) return [];
+
+    // Get scores for that week with prior bests and debut flag
+    const result = await db.request()
+      .input('seasonID', latest.seasonID)
+      .input('week', latest.week)
+      .query<{
+        bowlerName: string;
+        slug: string;
+        game1: number | null;
+        game2: number | null;
+        game3: number | null;
+        scratchSeries: number;
+        isFirstNight: number;
+        priorBestGame: number | null;
+        priorBestSeries: number | null;
+      }>(`
+        SELECT
+          b.bowlerName,
+          b.slug,
+          sc.game1,
+          sc.game2,
+          sc.game3,
+          sc.scratchSeries,
+          CASE WHEN NOT EXISTS (
+            SELECT 1 FROM scores sc3
+            WHERE sc3.bowlerID = sc.bowlerID
+              AND sc3.isPenalty = 0
+              AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
+          ) THEN 1 ELSE 0 END AS isFirstNight,
+          (SELECT MAX(x.val) FROM scores sp
+            CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
+            WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+              AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+          ) AS priorBestGame,
+          (SELECT MAX(sp.scratchSeries) FROM scores sp
+            WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+              AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+          ) AS priorBestSeries
+        FROM scores sc
+        JOIN bowlers b ON sc.bowlerID = b.bowlerID
+        WHERE sc.seasonID = @seasonID
+          AND sc.week = @week
+          AND sc.isPenalty = 0
+      `);
+
+    const items: TickerItem[] = [];
+
+    for (const row of result.recordset) {
+      const href = `/bowler/${row.slug}`;
+
+      // Debut
+      if (row.isFirstNight === 1) {
+        items.push({
+          text: `${row.bowlerName} made their Splitzkrieg debut!`,
+          href,
+          icon: 'debut',
+        });
+        continue; // no prior bests to compare for first-nighters
+      }
+
+      // All-time high game
+      const bestGameThisWeek = Math.max(
+        row.game1 ?? 0,
+        row.game2 ?? 0,
+        row.game3 ?? 0,
+      );
+      if (row.priorBestGame !== null && bestGameThisWeek > row.priorBestGame) {
+        items.push({
+          text: `${row.bowlerName}: New High Game — ${bestGameThisWeek}`,
+          href,
+          icon: 'trophy',
+        });
+      }
+
+      // All-time high series
+      if (row.priorBestSeries !== null && row.scratchSeries > row.priorBestSeries) {
+        items.push({
+          text: `${row.bowlerName}: New High Series — ${row.scratchSeries}`,
+          href,
+          icon: 'star',
+        });
+      }
+    }
+
+    return items;
+  }, []);
 });
