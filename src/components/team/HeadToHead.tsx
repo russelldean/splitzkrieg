@@ -17,16 +17,40 @@ interface H2HSummary {
   matchupDetails: TeamH2HMatchup[];
 }
 
-function matchResultClass(ourPts: number, theirPts: number): string {
-  if (ourPts > theirPts) return 'text-green-600 font-semibold';
-  if (ourPts < theirPts) return 'text-navy/65';
-  return 'text-amber-600'; // tie
+/** Count per-game W/L/T from a single matchup night */
+function countGames(m: TeamH2HMatchup): { w: number; l: number; t: number } {
+  let w = 0, l = 0, t = 0;
+  const pairs: [number | null, number | null][] = [
+    [m.ourGame1, m.theirGame1],
+    [m.ourGame2, m.theirGame2],
+    [m.ourGame3, m.theirGame3],
+  ];
+  for (const [ours, theirs] of pairs) {
+    if (ours == null || theirs == null) continue;
+    if (ours > theirs) w++;
+    else if (ours < theirs) l++;
+    else t++;
+  }
+  return { w, l, t };
 }
 
-function matchResultLabel(ourPts: number, theirPts: number): string {
-  if (ourPts > theirPts) return 'W';
-  if (ourPts < theirPts) return 'L';
-  return 'T';
+function nightRecordStr(m: TeamH2HMatchup): string {
+  const { w, l, t } = countGames(m);
+  return `${w}-${l}-${t}`;
+}
+
+function nightResultClass(m: TeamH2HMatchup): string {
+  const { w, l } = countGames(m);
+  if (w > l) return 'text-green-600 font-semibold';
+  if (w < l) return 'text-navy/65';
+  return 'text-amber-600';
+}
+
+function gameResultClass(ours: number | null, theirs: number | null): string {
+  if (ours == null || theirs == null) return 'text-navy/50';
+  if (ours > theirs) return 'text-green-600 font-semibold';
+  if (ours < theirs) return 'text-navy/65';
+  return 'text-amber-600';
 }
 
 function formatDate(dateStr: string | null): string {
@@ -65,15 +89,16 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID }: Props) {
       }
       const s = map.get(m.opponentID)!;
       s.totalMatchups++;
-      if (m.ourGamePts > m.theirGamePts) s.wins++;
-      else if (m.ourGamePts < m.theirGamePts) s.losses++;
-      else s.ties++;
+      const g = countGames(m);
+      s.wins += g.w;
+      s.losses += g.l;
+      s.ties += g.t;
       s.matchupDetails.push(m);
     }
-    // Calculate win% and sort by most matchups
     const result = Array.from(map.values());
     for (const s of result) {
-      s.winPct = s.totalMatchups > 0 ? s.wins / s.totalMatchups : 0;
+      const totalGames = s.wins + s.losses + s.ties;
+      s.winPct = totalGames > 0 ? s.wins / totalGames : 0;
     }
     result.sort((a, b) => b.totalMatchups - a.totalMatchups);
     return result;
@@ -108,13 +133,12 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID }: Props) {
       <SectionHeading>Head-to-Head Records</SectionHeading>
 
       <div className="border border-navy/10 rounded-xl overflow-hidden bg-white shadow-sm">
-        {/* Summary table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm sm:text-base font-body">
             <thead>
               <tr className="border-b border-navy/10 bg-navy/[0.03]">
                 <th className="text-left px-4 py-2.5 text-navy/60 font-normal">Opponent</th>
-                <th className="text-right px-3 py-2.5 text-navy/60 font-normal">Mtch</th>
+                <th className="text-right px-3 py-2.5 text-navy/60 font-normal">Nights</th>
                 <th className="text-right px-3 py-2.5 text-navy/60 font-normal">W</th>
                 <th className="text-right px-3 py-2.5 text-navy/60 font-normal">L</th>
                 <th className="text-right px-3 py-2.5 text-navy/60 font-normal">T</th>
@@ -138,7 +162,6 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID }: Props) {
         </div>
       </div>
 
-      {/* Have not yet faced */}
       {notYetFaced.length > 0 && (
         <p className="mt-4 text-sm font-body text-navy/55">
           <span className="font-medium text-navy/70">Have not yet faced: </span>
@@ -215,9 +238,11 @@ function DrillDown({ details }: { details: TeamH2HMatchup[] }) {
               <th className="text-left px-4 py-1.5 font-normal">Date</th>
               <th className="text-left px-3 py-1.5 font-normal">Season</th>
               <th className="text-right px-3 py-1.5 font-normal">Wk</th>
-              <th className="text-center px-3 py-1.5 font-normal">Result</th>
-              <th className="text-right px-3 py-1.5 font-normal">Us</th>
-              <th className="text-right px-4 py-1.5 font-normal">Them</th>
+              <th className="text-center px-3 py-1.5 font-normal">Record</th>
+              <th className="text-right px-2 py-1.5 font-normal">G1</th>
+              <th className="text-right px-2 py-1.5 font-normal">G2</th>
+              <th className="text-right px-2 py-1.5 font-normal">G3</th>
+              <th className="text-right px-3 py-1.5 font-normal">Series</th>
             </tr>
           </thead>
           <tbody>
@@ -243,14 +268,26 @@ function DrillDown({ details }: { details: TeamH2HMatchup[] }) {
                   </Link>
                 </td>
                 <td className="text-right px-3 py-1.5 tabular-nums text-navy/60">{m.week}</td>
-                <td className={`text-center px-3 py-1.5 tabular-nums ${matchResultClass(m.ourGamePts, m.theirGamePts)}`}>
-                  {matchResultLabel(m.ourGamePts, m.theirGamePts)}
+                <td className={`text-center px-3 py-1.5 tabular-nums ${nightResultClass(m)}`}>
+                  {nightRecordStr(m)}
+                </td>
+                <td className={`text-right px-2 py-1.5 tabular-nums ${gameResultClass(m.ourGame1, m.theirGame1)}`}>
+                  {m.ourGame1 != null && m.theirGame1 != null
+                    ? `${m.ourGame1}-${m.theirGame1}`
+                    : '\u2014'}
+                </td>
+                <td className={`text-right px-2 py-1.5 tabular-nums ${gameResultClass(m.ourGame2, m.theirGame2)}`}>
+                  {m.ourGame2 != null && m.theirGame2 != null
+                    ? `${m.ourGame2}-${m.theirGame2}`
+                    : '\u2014'}
+                </td>
+                <td className={`text-right px-2 py-1.5 tabular-nums ${gameResultClass(m.ourGame3, m.theirGame3)}`}>
+                  {m.ourGame3 != null && m.theirGame3 != null
+                    ? `${m.ourGame3}-${m.theirGame3}`
+                    : '\u2014'}
                 </td>
                 <td className="text-right px-3 py-1.5 tabular-nums text-navy/70">
-                  {m.ourSeries ?? '\u2014'}
-                </td>
-                <td className="text-right px-4 py-1.5 tabular-nums text-navy/60">
-                  {m.theirSeries ?? '\u2014'}
+                  {m.ourSeries ?? '\u2014'}-{m.theirSeries ?? '\u2014'}
                 </td>
               </tr>
             ))}
