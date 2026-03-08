@@ -73,25 +73,21 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Milestone Ticker — fixed below header */}
-      <div className="fixed top-16 left-0 right-0 z-40">
-        <div className="relative">
-          <MilestoneTicker milestones={milestones} />
-          {nextBowlingNight && (
-            <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
-              <div className="relative flex items-center">
-                <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
-                <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
-                <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
-                  <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
-                </div>
+      {/* Milestone Ticker */}
+      <div className="relative">
+        <MilestoneTicker milestones={milestones} />
+        {nextBowlingNight && (
+          <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
+            <div className="relative flex items-center">
+              <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
+              <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
+              <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
+                <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-      {/* Spacer for fixed ticker */}
-      <div className="h-11" />
 
       {/* Hero Section */}
       <section className="relative">
@@ -128,9 +124,9 @@ export default async function Home() {
                 <div>
                   <div className="font-heading text-lg sm:text-xl text-white group-hover:text-red-300 transition-colors">
                     Week {seasonSnapshot.weekNumber} Results
-                    {latestWeekDate && <span className="font-body text-sm text-white/80 ml-2">{latestWeekDate}</span>}
+                    {latestWeekDate && <span className="font-body text-sm text-white ml-2">{latestWeekDate}</span>}
                   </div>
-                  <div className="hidden sm:block font-body text-sm text-white/80 mt-0.5">
+                  <div className="hidden sm:block font-body text-sm text-white mt-0.5">
                     Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
                   </div>
                 </div>
