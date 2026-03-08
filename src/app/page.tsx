@@ -117,15 +117,26 @@ export default async function Home() {
           {seasonSnapshot && (
             <Link
               href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
-              className="block mt-6 sm:mt-8 bg-navy rounded-xl px-6 py-4 hover:bg-navy/90 transition-colors group"
+              className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden hover:shadow-lg transition-all group"
             >
-              <div className="flex items-center justify-between">
+              {/* Background image — bowling computer screen */}
+              <Image
+                src="/bowling-screen.jpg"
+                alt=""
+                fill
+                className="object-cover object-[center_40%]"
+                unoptimized
+              />
+              {/* Semi-transparent overlay for text readability */}
+              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
+              {/* Content */}
+              <div className="relative flex items-center justify-between px-6 py-4">
                 <div>
                   <div className="font-heading text-lg sm:text-xl text-white group-hover:text-red-300 transition-colors">
                     Week {seasonSnapshot.weekNumber} Results
-                    {latestWeekDate && <span className="font-body text-sm text-white/60 ml-2">{latestWeekDate}</span>}
+                    {latestWeekDate && <span className="font-body text-sm text-white/80 ml-2">{latestWeekDate}</span>}
                   </div>
-                  <div className="hidden sm:block font-body text-sm text-white/60 mt-0.5">
+                  <div className="hidden sm:block font-body text-sm text-white/80 mt-0.5">
                     Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
                   </div>
                 </div>
@@ -139,22 +150,7 @@ export default async function Home() {
           {/* Explore Cards */}
           <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {quickLinks.map((link) =>
-              link.href === '/stats' ? (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="group relative rounded-xl p-4 overflow-hidden bg-gradient-to-br from-navy via-navy/90 to-red/80 hover:shadow-lg hover:shadow-red/20 transition-all hover:scale-[1.03]"
-                >
-                  <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] animate-shimmer" />
-                  <div className="relative font-body text-sm font-semibold text-white group-hover:text-red-200 transition-colors">
-                    {link.label}
-                  </div>
-                  <div className="relative font-body text-xs text-white/60 mt-1 leading-relaxed">
-                    {link.description}
-                  </div>
-                </Link>
-              ) : (
-                <Link
+              <Link
                   key={link.href}
                   href={link.href}
                   className="group bg-white rounded-xl border border-navy/10 p-4 hover:border-navy/20 hover:shadow-sm transition-all"
@@ -166,7 +162,6 @@ export default async function Home() {
                     {link.description}
                   </div>
                 </Link>
-              )
             )}
           </div>
         </div>
