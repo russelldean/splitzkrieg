@@ -121,11 +121,11 @@ Plans:
   2. Standings show week number in title
   3. Match results have color legend or tooltip
   4. Team H2H section shows real data for the 10 seasons with match results
-**Plans**: TBD
+**Plans**: 2 plans in 1 wave
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Standings week number, TeamHero W-L record, SeasonStatsTable collapsible seasons
+- [ ] 05-02-PLAN.md — Team H2H query, HeadToHead component with summary table and expandable drill-down
 
 ### Phase 6: All-Time Leaderboards and Profile Depth
 **Goal**: Users can browse all-time career leaderboards and bowler profiles gain depth with rankings context, milestone trackers, and career timelines
