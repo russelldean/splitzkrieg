@@ -2,24 +2,27 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 
-const IMG_W = 640;
-const IMG_H = 478;
-const OBJ_POS_Y = 0.65;
+interface ParallaxBgProps {
+  src: string;
+  /** Vertical focal point as a fraction (0 = top, 1 = bottom). Default 0.65 */
+  focalY?: number;
+}
 
-export function ParallaxBg({ src }: { src: string }) {
+/**
+ * Parallax background that works on both desktop and mobile.
+ * - Desktop: CSS background-attachment: fixed
+ * - Mobile (touch devices): JS-driven translateY since iOS ignores bg-fixed
+ *
+ * Usage: Place inside a positioned container with overflow-hidden.
+ * <div className="relative overflow-hidden h-40">
+ *   <ParallaxBg src="/my-image.jpg" />
+ *   <div className="relative z-10">Content on top</div>
+ * </div>
+ */
+export function ParallaxBg({ src, focalY = 0.65 }: ParallaxBgProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [desktopStyle, setDesktopStyle] = useState<React.CSSProperties>({
-    backgroundImage: `url(${src})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center 65%',
-    backgroundRepeat: 'no-repeat',
-  });
-  const [mobileTranslateY, setMobileTranslateY] = useState(0);
-  const initialTopRef = useRef<number | null>(null);
-  const rafRef = useRef<number>(0);
 
-  // Detect mobile (iOS/Android ignore background-attachment: fixed)
   useEffect(() => {
     const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
     setIsMobile(mq.matches);
@@ -28,25 +31,47 @@ export function ParallaxBg({ src }: { src: string }) {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Desktop: original bg-fixed approach
+  if (isMobile) {
+    return <MobileParallax ref={ref} src={src} focalY={focalY} />;
+  }
+
+  return <DesktopParallax ref={ref} src={src} focalY={focalY} />;
+}
+
+/* ── Desktop: bg-fixed approach ─────────────────────────────── */
+
+const IMG_W = 640;
+const IMG_H = 478;
+
+function DesktopParallax({
+  ref,
+  src,
+  focalY,
+}: {
+  ref: React.RefObject<HTMLDivElement | null>;
+  src: string;
+  focalY: number;
+}) {
+  const [style, setStyle] = useState<React.CSSProperties>({
+    backgroundImage: `url(${src})`,
+    backgroundSize: 'cover',
+    backgroundPosition: `center ${focalY * 100}%`,
+    backgroundRepeat: 'no-repeat',
+  });
+
   useEffect(() => {
-    if (isMobile) return;
     function compute() {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
-      const elW = rect.width;
-      const elH = rect.height;
-      const scale = Math.max(elW / IMG_W, elH / IMG_H);
-      const imgW = IMG_W * scale;
+      const scale = Math.max(rect.width / IMG_W, rect.height / IMG_H);
       const imgH = IMG_H * scale;
-      const excessY = imgH - elH;
-      const offsetY = excessY * OBJ_POS_Y;
-      const barPageTop = rect.top + window.scrollY;
-      const bgPosY = barPageTop - offsetY;
+      const excessY = imgH - rect.height;
+      const offsetY = excessY * focalY;
+      const bgPosY = rect.top + window.scrollY - offsetY;
 
-      setDesktopStyle({
+      setStyle({
         backgroundImage: `url(${src})`,
-        backgroundSize: `${imgW}px ${imgH}px`,
+        backgroundSize: `${IMG_W * scale}px ${imgH}px`,
         backgroundPosition: `center ${bgPosY}px`,
         backgroundAttachment: 'fixed',
         backgroundRepeat: 'no-repeat',
@@ -55,27 +80,58 @@ export function ParallaxBg({ src }: { src: string }) {
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [src, isMobile]);
+  }, [src, focalY, ref]);
 
-  // Mobile: counteract scroll to make background move slower than content
+  return <div ref={ref} className="absolute inset-0" style={style} />;
+}
+
+/* ── Mobile: simulate bg-fixed via translateY ───────────────── */
+// iOS ignores background-attachment:fixed, so we manually keep the
+// background locked to the viewport by translating it to counteract
+// the container's scroll movement. The container's overflow:hidden
+// clips it to the visible window — same visual result as bg-fixed.
+//
+// We use the exact same image sizing/positioning math as the desktop
+// bg-fixed path so both platforms show the same crop of the image.
+
+function MobileParallax({
+  ref,
+  src,
+  focalY,
+}: {
+  ref: React.RefObject<HTMLDivElement | null>;
+  src: string;
+  focalY: number;
+}) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+
   const handleScroll = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
-      if (!ref.current) return;
+      if (!ref.current || !innerRef.current) return;
       const rect = ref.current.getBoundingClientRect();
-      // Record where the element started
-      if (initialTopRef.current === null) {
-        initialTopRef.current = rect.top + window.scrollY;
-      }
-      // How far the element has scrolled from its initial position
-      const scrolled = initialTopRef.current - (rect.top + window.scrollY);
-      // Counteract 40% of the scroll — background moves at 60% speed
-      setMobileTranslateY(scrolled * 0.4);
+
+      // Same image sizing as desktop — scale to cover the container
+      const scale = Math.max(rect.width / IMG_W, rect.height / IMG_H);
+      const imgW = IMG_W * scale;
+      const imgH = IMG_H * scale;
+
+      // Same focal-point positioning as desktop
+      const excessY = imgH - rect.height;
+      const offsetY = excessY * focalY;
+      const pageTop = rect.top + window.scrollY;
+      const bgPosY = pageTop - offsetY;
+
+      // Pin to viewport by counteracting container scroll
+      const el = innerRef.current;
+      el.style.transform = `translateY(${-rect.top}px)`;
+      el.style.backgroundSize = `${imgW}px ${imgH}px`;
+      el.style.backgroundPosition = `center ${bgPosY}px`;
     });
-  }, []);
+  }, [ref, focalY]);
 
   useEffect(() => {
-    if (!isMobile) return;
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll);
@@ -84,26 +140,19 @@ export function ParallaxBg({ src }: { src: string }) {
       window.removeEventListener('resize', handleScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isMobile, handleScroll]);
+  }, [handleScroll]);
 
-  if (isMobile) {
-    return (
-      <div ref={ref} className="absolute inset-0 overflow-hidden">
-        <div
-          className="absolute inset-0 will-change-transform"
-          style={{
-            backgroundImage: `url(${src})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center 65%',
-            backgroundRepeat: 'no-repeat',
-            top: '-50%',
-            bottom: '-50%',
-            transform: `translateY(${mobileTranslateY}px)`,
-          }}
-        />
-      </div>
-    );
-  }
-
-  return <div ref={ref} className="absolute inset-0" style={desktopStyle} />;
+  return (
+    <div ref={ref} className="absolute inset-0 overflow-hidden">
+      <div
+        ref={innerRef}
+        className="absolute inset-x-0 top-0 will-change-transform"
+        style={{
+          height: '100vh',
+          backgroundImage: `url(${src})`,
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+    </div>
+  );
 }
