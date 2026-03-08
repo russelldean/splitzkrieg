@@ -16,6 +16,7 @@ export function ParallaxBg({ src }: { src: string }) {
     backgroundRepeat: 'no-repeat',
   });
   const [mobileTranslateY, setMobileTranslateY] = useState(0);
+  const initialTopRef = useRef<number | null>(null);
   const rafRef = useRef<number>(0);
 
   // Detect mobile (iOS/Android ignore background-attachment: fixed)
@@ -56,15 +57,20 @@ export function ParallaxBg({ src }: { src: string }) {
     return () => window.removeEventListener('resize', compute);
   }, [src, isMobile]);
 
-  // Mobile: scroll-driven transform parallax
+  // Mobile: counteract scroll to make background move slower than content
   const handleScroll = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
-      const viewH = window.innerHeight;
-      const progress = 1 - (rect.bottom / (viewH + rect.height));
-      setMobileTranslateY(progress * 12);
+      // Record where the element started
+      if (initialTopRef.current === null) {
+        initialTopRef.current = rect.top + window.scrollY;
+      }
+      // How far the element has scrolled from its initial position
+      const scrolled = initialTopRef.current - (rect.top + window.scrollY);
+      // Counteract 40% of the scroll — background moves at 60% speed
+      setMobileTranslateY(scrolled * 0.4);
     });
   }, []);
 
@@ -90,8 +96,8 @@ export function ParallaxBg({ src }: { src: string }) {
             backgroundSize: 'cover',
             backgroundPosition: 'center 65%',
             backgroundRepeat: 'no-repeat',
-            top: '-12px',
-            bottom: '0px',
+            top: '-50%',
+            bottom: '-50%',
             transform: `translateY(${mobileTranslateY}px)`,
           }}
         />
