@@ -85,6 +85,7 @@ export interface TeamCurrentStanding {
   seasonSlug: string;
   seasonRoman: string;
   wins: number;
+  losses: number;
   xp: number;
   totalPts: number;
   divisionRank: number;
@@ -122,10 +123,22 @@ export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurren
           JOIN currentSeason cs ON sch.seasonID = cs.seasonID
           GROUP BY sch.team2ID
         ),
+        matchCounts AS (
+          SELECT teamID, COUNT(*) AS matchWeeks FROM (
+            SELECT sch.team1ID AS teamID
+            FROM matchResults mr JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+            JOIN currentSeason cs ON sch.seasonID = cs.seasonID
+            UNION ALL
+            SELECT sch.team2ID AS teamID
+            FROM matchResults mr JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+            JOIN currentSeason cs ON sch.seasonID = cs.seasonID
+          ) x GROUP BY teamID
+        ),
         standings AS (
           SELECT
             tp.teamID,
             CAST(SUM(tp.gamePts) AS DECIMAL(5,1)) / 2 AS wins,
+            CAST(mc.matchWeeks * 3 - SUM(tp.gamePts) / 2.0 AS DECIMAL(5,1)) AS losses,
             SUM(tp.xp) AS xp,
             SUM(tp.gamePts) + SUM(tp.xp) AS totalPts,
             sd.divisionName
@@ -133,7 +146,8 @@ export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurren
           CROSS JOIN currentSeason cs
           LEFT JOIN seasonDivisions sd
             ON sd.seasonID = cs.seasonID AND sd.teamID = tp.teamID
-          GROUP BY tp.teamID, sd.divisionName
+          LEFT JOIN matchCounts mc ON mc.teamID = tp.teamID
+          GROUP BY tp.teamID, sd.divisionName, mc.matchWeeks
         ),
         ranked AS (
           SELECT *,
@@ -150,6 +164,7 @@ export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurren
           cs.seasonSlug,
           cs.romanNumeral AS seasonRoman,
           r.wins,
+          r.losses,
           r.xp,
           r.totalPts,
           r.divisionRank,
@@ -483,3 +498,106 @@ export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[
     return result.recordset;
   }, [], { stable: true });
 });
+
+// ── Head-to-Head ──────────────────────────────────────────────
+
+export interface TeamH2HMatchup {
+  opponentID: number;
+  opponentName: string;
+  opponentSlug: string;
+  seasonID: number;
+  seasonName: string;
+  seasonSlug: string;
+  week: number;
+  matchDate: string | null;
+  ourGamePts: number;
+  theirGamePts: number;
+  ourSeries: number | null;
+  theirSeries: number | null;
+}
+
+export interface TeamH2HActiveTeam {
+  teamID: number;
+  teamName: string;
+  slug: string;
+}
+
+export async function getTeamH2H(teamID: number): Promise<TeamH2HMatchup[]> {
+  return cachedQuery(`getTeamH2H-${teamID}`, async () => {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('teamID', teamID)
+      .query<TeamH2HMatchup>(`
+        WITH matchups AS (
+          SELECT
+            sch.team2ID AS opponentID,
+            sch.seasonID,
+            sch.week,
+            sch.matchDate,
+            mr.team1GamePts AS ourGamePts,
+            mr.team2GamePts AS theirGamePts,
+            mr.team1Series AS ourSeries,
+            mr.team2Series AS theirSeries
+          FROM matchResults mr
+          JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+          WHERE sch.team1ID = @teamID
+          UNION ALL
+          SELECT
+            sch.team1ID AS opponentID,
+            sch.seasonID,
+            sch.week,
+            sch.matchDate,
+            mr.team2GamePts AS ourGamePts,
+            mr.team1GamePts AS theirGamePts,
+            mr.team2Series AS ourSeries,
+            mr.team1Series AS theirSeries
+          FROM matchResults mr
+          JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+          WHERE sch.team2ID = @teamID
+        )
+        SELECT
+          m.opponentID,
+          COALESCE(tnh_latest.teamName, t.teamName) AS opponentName,
+          t.slug AS opponentSlug,
+          m.seasonID,
+          sn.displayName AS seasonName,
+          LOWER(REPLACE(sn.displayName, ' ', '-')) AS seasonSlug,
+          m.week,
+          m.matchDate,
+          m.ourGamePts,
+          m.theirGamePts,
+          m.ourSeries,
+          m.theirSeries
+        FROM matchups m
+        JOIN teams t ON m.opponentID = t.teamID
+        JOIN seasons sn ON m.seasonID = sn.seasonID
+        OUTER APPLY (
+          SELECT TOP 1 tnh.teamName
+          FROM teamNameHistory tnh
+          JOIN seasons sn2 ON tnh.seasonID = sn2.seasonID
+          WHERE tnh.teamID = m.opponentID
+          ORDER BY sn2.year DESC, CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+        ) tnh_latest
+        ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, m.week DESC
+      `);
+    return result.recordset;
+  }, []);
+}
+
+export async function getActiveTeamIDs(): Promise<TeamH2HActiveTeam[]> {
+  return cachedQuery('getActiveTeamIDs', async () => {
+    const db = await getDb();
+    const result = await db.request().query<TeamH2HActiveTeam>(`
+      SELECT DISTINCT t.teamID, t.teamName, t.slug
+      FROM teams t
+      JOIN scores sc ON sc.teamID = t.teamID AND sc.isPenalty = 0
+      WHERE sc.seasonID = (
+        SELECT TOP 1 seasonID FROM seasons
+        ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+      )
+      ORDER BY t.teamName
+    `);
+    return result.recordset;
+  }, [], { stable: true });
+}
