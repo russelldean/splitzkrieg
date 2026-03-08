@@ -2,15 +2,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import {
+  getRecentMilestones,
   getCurrentSeasonSnapshot,
+  getNextBowlingNight,
   getSeasonBySlug,
   getSeasonStandings,
   getSeasonSchedule,
   getSeasonMatchResults,
 } from '@/lib/queries';
+import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
+import { HeaderCountdown } from '@/components/layout/HeaderCountdown';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -27,7 +31,11 @@ const quickLinks = [
 ];
 
 export default async function Home() {
-  const seasonSnapshot = await getCurrentSeasonSnapshot();
+  const [seasonSnapshot, milestones, nextBowlingNight] = await Promise.all([
+    getCurrentSeasonSnapshot(),
+    getRecentMilestones(),
+    getNextBowlingNight(),
+  ]);
 
   // Fetch standings + schedule for current season
   let standings: Awaited<ReturnType<typeof getSeasonStandings>> = [];
@@ -65,6 +73,26 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
+      {/* Milestone Ticker — fixed below header */}
+      <div className="fixed top-16 left-0 right-0 z-40">
+        <div className="relative">
+          <MilestoneTicker milestones={milestones} />
+          {nextBowlingNight && (
+            <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
+              <div className="relative flex items-center">
+                <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
+                <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
+                <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
+                  <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Spacer for fixed ticker */}
+      <div className="h-11" />
+
       {/* Hero Section */}
       <section className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />

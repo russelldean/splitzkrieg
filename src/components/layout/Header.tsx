@@ -2,9 +2,7 @@ import Link from 'next/link';
 import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
-import { getCurrentSeasonSnapshot, getRecentMilestones, getNextBowlingNight } from '@/lib/queries';
-import { MilestoneTicker } from '@/components/home/MilestoneTicker';
-import { HeaderCountdown } from './HeaderCountdown';
+import { getCurrentSeasonSnapshot } from '@/lib/queries';
 
 const bowlersIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -48,11 +46,7 @@ const statsIcon = (
 );
 
 export async function Header() {
-  const [snapshot, milestones, nextBowlingNight] = await Promise.all([
-    getCurrentSeasonSnapshot(),
-    getRecentMilestones(),
-    getNextBowlingNight(),
-  ]);
+  const snapshot = await getCurrentSeasonSnapshot();
   const currentSeasonSlug = snapshot?.slug ?? null;
   const currentSeasonLabel = snapshot
     ? `Current Season`
@@ -75,8 +69,7 @@ export async function Header() {
   ];
 
   return (
-    <div className="sticky top-0 z-50">
-      <header className="bg-cream border-b border-navy/10">
+    <header className="bg-cream border-b border-navy/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16 gap-4">
             {/* Logo */}
@@ -150,23 +143,6 @@ export async function Header() {
             </div>
           </div>
         </div>
-      </header>
-
-      {/* Milestone Ticker with countdown overlay */}
-      <div className="relative">
-        <MilestoneTicker milestones={milestones} />
-        {nextBowlingNight && (
-          <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
-            <div className="relative flex items-center">
-              <div className="absolute -left-10 w-10 h-full bg-gradient-to-r from-transparent to-cream" />
-              <div className="absolute -right-10 w-10 h-full bg-gradient-to-l from-transparent to-cream" />
-              <div className="relative bg-navy px-4 py-2.5 rounded-full pointer-events-auto shadow-sm">
-                <HeaderCountdown targetDate={nextBowlingNight} variant="dark" />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    </header>
   );
 }
