@@ -104,11 +104,16 @@ export function FeedbackButton() {
               </button>
             </div>
 
-            <p className="text-sm font-body text-navy/70 mb-4">
-              Spotted an error?<br />
-              Have a suggestion or other feedback?<br />
-              Let me know.
-            </p>
+            <div className="text-sm font-body text-navy/70 mb-4">
+              <p>
+                Something memorable happen on the lanes?<br />
+                Need me to remember something for the email?<br />
+                Spotted an error? Have a suggestion?
+              </p>
+              <p className="mt-2 italic text-navy/50">
+                Drop anything you want to share with me here.
+              </p>
+            </div>
 
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -141,14 +146,11 @@ export function FeedbackButton() {
               />
             </div>
 
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs font-body text-navy/50">
-                {message.length > 0 && `${message.length}/2000`}
-              </span>
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-3 mt-4 pb-[env(safe-area-inset-bottom)]">
               <button
                 type="submit"
                 disabled={status === 'sending' || status === 'sent' || !message.trim()}
-                className={`px-5 py-2 rounded-lg text-sm font-body font-semibold transition-colors ${
+                className={`w-full sm:w-auto order-first sm:order-last px-5 py-2 rounded-lg text-sm font-body font-semibold transition-colors ${
                   status === 'sent'
                     ? 'bg-green-600 text-white'
                     : status === 'error'
@@ -161,6 +163,9 @@ export function FeedbackButton() {
                   : status === 'error' ? 'Try Again'
                   : 'Send'}
               </button>
+              <span className="text-xs font-body text-navy/50">
+                {message.length > 0 && `${message.length}/2000`}
+              </span>
             </div>
           </form>
         </div>
