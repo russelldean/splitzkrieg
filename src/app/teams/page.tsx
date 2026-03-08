@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getAllTeamsDirectory, getTeamSeasonPresence, getTeamPlayoffFinishes, getCurrentSeasonID, getCurrentSeasonSlug } from '@/lib/queries';
 import { TeamTimeline } from '@/components/team/TeamTimeline';
@@ -21,7 +22,9 @@ export default async function TeamsPage() {
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
       <TrailNav current="/teams" seasonSlug={currentSlug} position="top" />
-      <TeamsDirectory teams={teams} />
+      <Suspense>
+        <TeamsDirectory teams={teams} />
+      </Suspense>
 
       {presenceData.length > 0 && (
         <TeamTimeline

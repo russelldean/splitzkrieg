@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getAllBowlersDirectory, getCurrentSeasonSlug } from '@/lib/queries';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BackToTop } from '@/components/ui/BackToTop';
@@ -34,7 +35,9 @@ export default async function BowlersPage() {
     <div className="min-h-screen bg-cream">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <TrailNav current="/bowlers" seasonSlug={currentSlug} position="top" />
-        <BowlerDirectory bowlers={bowlers} />
+        <Suspense>
+          <BowlerDirectory bowlers={bowlers} />
+        </Suspense>
         <BackToTop />
         <TrailNav current="/bowlers" seasonSlug={currentSlug} />
       </div>
