@@ -44,9 +44,9 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                     Current Season
                   </span>
                 </div>
-                <h2 className="font-heading text-2xl sm:text-3xl text-navy">
+                <Link href={`/season/${current.slug}`} className="font-heading text-2xl sm:text-3xl text-navy hover:text-red-600 transition-colors">
                   {current.period} {current.year}
-                </h2>
+                </Link>
                 <p className="font-body text-sm text-navy/65 mt-1">
                   Season {current.romanNumeral}
                 </p>
@@ -83,6 +83,12 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                   >
                     Leaderboards &rarr;
                   </Link>
+                  <Link
+                    href={`/week/${current.slug}`}
+                    className="text-sm font-medium text-navy/40 hover:text-navy transition-colors"
+                  >
+                    League Nights &rarr;
+                  </Link>
                 </div>
               </div>
             );
@@ -103,9 +109,12 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                   >
                     <div className="min-w-0">
                       <div className="flex items-baseline gap-2">
-                        <span className="font-heading text-lg text-navy">
+                        <Link
+                          href={`/season/${season.slug}`}
+                          className="font-heading text-lg text-navy hover:text-red-600 transition-colors"
+                        >
                           {season.period} {season.year}
-                        </span>
+                        </Link>
                         <span className="font-body text-sm text-navy/50">
                           {season.romanNumeral}
                         </span>
@@ -137,6 +146,12 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                         }`}
                       >
                         Stats
+                      </Link>
+                      <Link
+                        href={`/week/${season.slug}`}
+                        className="text-xs font-body font-medium text-navy/35 hover:text-navy transition-colors"
+                      >
+                        Nights
                       </Link>
                     </div>
                   </div>

@@ -10,9 +10,10 @@ interface Props {
   franchiseNames: FranchiseNameEntry[];
   shareUrl: string;
   currentStanding?: TeamCurrentStanding | null;
+  isGhostTeam?: boolean;
 }
 
-export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, shareUrl, currentStanding }: Props) {
+export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, shareUrl, currentStanding, isGhostTeam }: Props) {
   return (
     <section className="pb-8 border-b border-red-600/20">
       <div className="flex items-start justify-between gap-4">
@@ -37,41 +38,66 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
 
       {/* Current season standing callout */}
       {currentStanding && (
-        <Link
-          href={`/week/${currentStanding.seasonSlug}`}
-          className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg hover:bg-navy/[0.07] hover:border-navy/20 transition-all group"
-        >
-          <div className="font-heading text-2xl text-navy">
-            #{currentStanding.divisionRank}
-            <span className="text-base text-navy/65 font-body ml-1">of {currentStanding.divisionSize}</span>
+        <div className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg">
+          <div className="text-center">
+            <div className="font-heading text-2xl text-navy">
+              #{currentStanding.divisionRank}
+              <span className="text-base text-navy/65 font-body ml-1">of {currentStanding.divisionSize}</span>
+            </div>
+            {currentStanding.divisionName && (
+              <div className="font-body text-xs text-navy/50 mt-0.5">{currentStanding.divisionName}</div>
+            )}
           </div>
-          <div className="border-l border-navy/10 pl-4">
+          <div className="border-l border-navy/10 pl-4 flex-1">
             <div className="font-body text-sm text-navy tabular-nums">
               {currentStanding.wins}W-{currentStanding.losses}L · {currentStanding.xp}XP · {currentStanding.totalPts}pts
             </div>
-            <div className="font-body text-xs text-navy/65">
-              Season {currentStanding.seasonRoman}{currentStanding.divisionName ? ` · ${currentStanding.divisionName}` : ''} · League Nights →
+            <div className="font-body text-xs text-navy/55 mt-0.5">
+              Season {currentStanding.seasonRoman}
             </div>
           </div>
-        </Link>
+          <div className="flex gap-3 shrink-0">
+            <Link
+              href={`/season/${currentStanding.seasonSlug}`}
+              className="text-xs font-body font-semibold text-navy/55 hover:text-red-600 transition-colors"
+            >
+              Standings
+            </Link>
+            <Link
+              href={`/week/${currentStanding.seasonSlug}`}
+              className="text-xs font-body font-semibold text-navy/55 hover:text-red-600 transition-colors"
+            >
+              League Nights
+            </Link>
+          </div>
+        </div>
       )}
 
       <div className="flex flex-wrap items-start gap-2 mt-4">
-        <StatPill label="Current Roster" value={rosterCount} />
-        <StatPill label="Seasons Active" value={seasonsActive} />
+        {isGhostTeam ? (
+          <>
+            <StatPill label="Current Roster" value="X" strike />
+            <StatPill label="Seasons Active" value="X" strike />
+          </>
+        ) : (
+          <>
+            <StatPill label="Current Roster" value={rosterCount} />
+            <StatPill label="Seasons Active" value={seasonsActive} />
+          </>
+        )}
         <FranchiseHistory names={franchiseNames} />
       </div>
     </section>
   );
 }
 
-function StatPill({ label, value }: { label: string; value: string | number | null }) {
+function StatPill({ label, value, strike }: { label: string; value: string | number | null; strike?: boolean }) {
   const display = value === null || value === 0 ? '\u2014' : String(value);
 
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-navy/5 rounded-full text-sm font-body text-navy">
       <span className="text-navy/65">{label}</span>
-      <span className="font-bold font-heading">{display}</span>
+      <span className={`font-bold font-heading ${strike ? 'text-red-600/60' : ''}`}>{display}</span>
     </span>
   );
 }

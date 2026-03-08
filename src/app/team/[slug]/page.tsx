@@ -22,6 +22,7 @@ import {
   getTeamCurrentStanding,
   getTeamH2H,
   getActiveTeamIDs,
+  getGhostTeamH2H,
   getCurrentSeasonSlug,
   type TeamSeasonBowler,
 } from '@/lib/queries';
@@ -30,8 +31,50 @@ import { CurrentRoster } from '@/components/team/CurrentRoster';
 import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
 import { AllTimeRoster } from '@/components/team/AllTimeRoster';
 import { HeadToHead } from '@/components/team/HeadToHead';
+import { GhostTeamH2H } from '@/components/team/GhostTeamH2H';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import type { GhostTeamMatchup } from '@/lib/queries';
+
+function GhostTeamAllTime({ ghostH2H, ghostWinPct }: { ghostH2H: GhostTeamMatchup[]; ghostWinPct: number | null }) {
+  let wins = 0, losses = 0, ties = 0;
+  for (const m of ghostH2H) {
+    const threshold = m.teamAvg - 20;
+    for (const scratch of [m.scratchGame1, m.scratchGame2, m.scratchGame3]) {
+      if (scratch < threshold) wins++;
+      else if (scratch > threshold) losses++;
+      else ties++;
+    }
+  }
+  const totalNights = ghostH2H.length;
+
+  return (
+    <section>
+      <SectionHeading>All-Time Record</SectionHeading>
+      <div className="bg-white border border-navy/10 rounded-xl p-5">
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <div className="font-heading text-3xl text-navy tabular-nums">
+              {ghostWinPct != null ? `${ghostWinPct.toFixed(1)}%` : '\u2014'}
+            </div>
+            <div className="text-xs font-body text-navy/65 mt-0.5">Win Rate</div>
+          </div>
+          <div className="border-l border-navy/10 pl-6">
+            <div className="font-body text-sm text-navy tabular-nums">
+              <span className="text-green-600 font-semibold">{wins}W</span>
+              {' \u2013 '}
+              <span className="text-navy/65">{losses}L</span>
+              {ties > 0 && <>{' \u2013 '}<span className="text-amber-600">{ties}T</span></>}
+            </div>
+            <div className="font-body text-xs text-navy/55 mt-1">
+              {totalNights} matchup {totalNights === 1 ? 'night' : 'nights'} &middot; {wins + losses + ties} games
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function GhostTeamExplainer() {
   return (
@@ -93,16 +136,19 @@ export default async function TeamPage({
 
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/team/${slug}`;
 
+  const isGhostTeam = team.teamID === 45;
+
   // Parallel build-time data fetching
-  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug, h2hMatchups, activeTeams] = await Promise.all([
+  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug, h2hMatchups, activeTeams, ghostH2H] = await Promise.all([
     getTeamCurrentRoster(team.teamID),
     getTeamSeasonByseason(team.teamID),
     getTeamAllTimeRoster(team.teamID),
     getTeamFranchiseHistory(team.teamID),
     getTeamCurrentStanding(team.teamID),
     getCurrentSeasonSlug(),
-    getTeamH2H(team.teamID),
+    isGhostTeam ? Promise.resolve([]) : getTeamH2H(team.teamID),
     getActiveTeamIDs(),
+    isGhostTeam ? getGhostTeamH2H() : Promise.resolve([]),
   ]);
 
   // Pre-fetch bowler data for all seasons (static build handles the load)
@@ -117,6 +163,20 @@ export default async function TeamPage({
   const rosterCount = currentRoster.length;
   const seasonsActive = teamSeasons.length;
 
+  // Ghost Team all-time win percentage
+  let ghostWinPct: number | null = null;
+  if (isGhostTeam && ghostH2H.length > 0) {
+    let wins = 0, total = 0;
+    for (const m of ghostH2H) {
+      const threshold = m.teamAvg - 20;
+      for (const scratch of [m.scratchGame1, m.scratchGame2, m.scratchGame3]) {
+        total++;
+        if (scratch < threshold) wins++;
+      }
+    }
+    ghostWinPct = total > 0 ? (wins / total) * 100 : null;
+  }
+
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TrailNav current="/teams" seasonSlug={currentSlug} position="top" />
@@ -127,6 +187,7 @@ export default async function TeamPage({
         franchiseNames={franchiseHistory}
         shareUrl={shareUrl}
         currentStanding={currentStanding}
+        isGhostTeam={isGhostTeam}
       />
 
       <div className="mt-8 space-y-8">
@@ -136,15 +197,23 @@ export default async function TeamPage({
           <CurrentRoster roster={currentRoster} />
         )}
 
-        <TeamSeasonByseason
-          seasons={teamSeasons}
-          bowlersBySeason={bowlersBySeason}
-          currentTeamName={team.teamName}
-        />
+        {isGhostTeam && ghostH2H.length > 0 ? (
+          <GhostTeamAllTime ghostH2H={ghostH2H} ghostWinPct={ghostWinPct} />
+        ) : (
+          <TeamSeasonByseason
+            seasons={teamSeasons}
+            bowlersBySeason={bowlersBySeason}
+            currentTeamName={team.teamName}
+          />
+        )}
 
-        <AllTimeRoster roster={allTimeRoster} />
+        {!isGhostTeam && <AllTimeRoster roster={allTimeRoster} />}
 
-        <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} />
+        {isGhostTeam ? (
+          <GhostTeamH2H matchups={ghostH2H} />
+        ) : (
+          <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} />
+        )}
       </div>
 
       <TrailNav current="/teams" seasonSlug={currentSlug} />

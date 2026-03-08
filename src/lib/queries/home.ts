@@ -93,7 +93,7 @@ export interface SeasonSnapshot {
 }
 
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
-  return cachedQuery('getCurrentSeasonSnapshot', async () => {
+  return cachedQuery('getCurrentSeasonSnapshot-v2', async () => {
 
     const db = await getDb();
 
@@ -118,14 +118,20 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
         leagueAverage: number;
         expectedLeagueAverage: number;
       }>(`
+        WITH latestWeek AS (
+          SELECT MAX(sc.week) AS wk FROM scores sc WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        )
         SELECT
-          MAX(sc.week) AS weekNumber,
+          lw.wk AS weekNumber,
           COUNT(DISTINCT sc.bowlerID) AS totalBowlers,
           CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage,
-          CAST(AVG(CAST(sc.incomingAvg AS DECIMAL(5,1))) AS DECIMAL(5,1)) AS expectedLeagueAverage
+          CAST(AVG(CASE WHEN sc.incomingAvg > 0 THEN CAST(sc.incomingAvg AS DECIMAL(5,1)) END) AS DECIMAL(5,1)) AS expectedLeagueAverage
         FROM scores sc
+        CROSS JOIN latestWeek lw
         WHERE sc.seasonID = @seasonID
           AND sc.isPenalty = 0
+          AND sc.week = lw.wk
+        GROUP BY lw.wk
       `);
 
     const stats = statsResult.recordset[0];

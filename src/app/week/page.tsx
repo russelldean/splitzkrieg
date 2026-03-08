@@ -19,15 +19,19 @@ export default async function WeeksIndexPage() {
     getCurrentSeasonSlug(),
   ]);
 
-  // Fetch week summaries for all seasons
+  // Fetch week summaries — batch to avoid overwhelming Azure SQL (30 conn limit)
   const summariesBySeasonID = new Map<number, Awaited<ReturnType<typeof getSeasonWeekSummaries>>>();
+  const BATCH_SIZE = 8;
 
-  await Promise.all(
-    allSeasons.map(async (season) => {
-      const summaries = await getSeasonWeekSummaries(season.seasonID);
-      summariesBySeasonID.set(season.seasonID, summaries);
-    })
-  );
+  for (let i = 0; i < allSeasons.length; i += BATCH_SIZE) {
+    const batch = allSeasons.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (season) => {
+        const summaries = await getSeasonWeekSummaries(season.seasonID);
+        summariesBySeasonID.set(season.seasonID, summaries);
+      })
+    );
+  }
 
   return (
     <main id="top" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

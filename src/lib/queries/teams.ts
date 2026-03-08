@@ -399,7 +399,7 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
         COUNT(DISTINCT sc.seasonID)  AS seasonsActive,
         COUNT(sc.scoreID) * 3        AS totalGames,
         SUM(sc.scratchSeries)        AS totalPins,
-        CAST(CASE WHEN EXISTS (
+        CAST(CASE WHEN t.teamID = 45 OR EXISTS (
           SELECT 1 FROM scores sc2
           WHERE sc2.teamID = t.teamID
             AND sc2.isPenalty = 0
@@ -425,7 +425,7 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
       LEFT JOIN scores sc ON sc.teamID = t.teamID AND sc.isPenalty = 0
       GROUP BY t.teamID, t.teamName, t.slug
       ORDER BY
-        CASE WHEN EXISTS (
+        CASE WHEN t.teamID = 45 OR EXISTS (
           SELECT 1 FROM scores sc2
           WHERE sc2.teamID = t.teamID
             AND sc2.isPenalty = 0
@@ -510,8 +510,12 @@ export interface TeamH2HMatchup {
   seasonSlug: string;
   week: number;
   matchDate: string | null;
-  ourGamePts: number;
-  theirGamePts: number;
+  ourGame1: number | null;
+  ourGame2: number | null;
+  ourGame3: number | null;
+  theirGame1: number | null;
+  theirGame2: number | null;
+  theirGame3: number | null;
   ourSeries: number | null;
   theirSeries: number | null;
 }
@@ -535,26 +539,34 @@ export async function getTeamH2H(teamID: number): Promise<TeamH2HMatchup[]> {
             sch.seasonID,
             sch.week,
             sch.matchDate,
-            mr.team1GamePts AS ourGamePts,
-            mr.team2GamePts AS theirGamePts,
+            mr.team1Game1 AS ourGame1,
+            mr.team1Game2 AS ourGame2,
+            mr.team1Game3 AS ourGame3,
+            mr.team2Game1 AS theirGame1,
+            mr.team2Game2 AS theirGame2,
+            mr.team2Game3 AS theirGame3,
             mr.team1Series AS ourSeries,
             mr.team2Series AS theirSeries
           FROM matchResults mr
           JOIN schedule sch ON mr.scheduleID = sch.scheduleID
-          WHERE sch.team1ID = @teamID
+          WHERE sch.team1ID = @teamID AND sch.team2ID != 45
           UNION ALL
           SELECT
             sch.team1ID AS opponentID,
             sch.seasonID,
             sch.week,
             sch.matchDate,
-            mr.team2GamePts AS ourGamePts,
-            mr.team1GamePts AS theirGamePts,
+            mr.team2Game1 AS ourGame1,
+            mr.team2Game2 AS ourGame2,
+            mr.team2Game3 AS ourGame3,
+            mr.team1Game1 AS theirGame1,
+            mr.team1Game2 AS theirGame2,
+            mr.team1Game3 AS theirGame3,
             mr.team2Series AS ourSeries,
             mr.team1Series AS theirSeries
           FROM matchResults mr
           JOIN schedule sch ON mr.scheduleID = sch.scheduleID
-          WHERE sch.team2ID = @teamID
+          WHERE sch.team2ID = @teamID AND sch.team1ID != 45
         )
         SELECT
           m.opponentID,
@@ -565,8 +577,12 @@ export async function getTeamH2H(teamID: number): Promise<TeamH2HMatchup[]> {
           LOWER(REPLACE(sn.displayName, ' ', '-')) AS seasonSlug,
           m.week,
           m.matchDate,
-          m.ourGamePts,
-          m.theirGamePts,
+          m.ourGame1,
+          m.ourGame2,
+          m.ourGame3,
+          m.theirGame1,
+          m.theirGame2,
+          m.theirGame3,
           m.ourSeries,
           m.theirSeries
         FROM matchups m
@@ -580,6 +596,91 @@ export async function getTeamH2H(teamID: number): Promise<TeamH2HMatchup[]> {
           ORDER BY sn2.year DESC, CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
         ) tnh_latest
         ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, m.week DESC
+      `);
+    return result.recordset;
+  }, []);
+}
+
+// ── Ghost Team H2H ──────────────────────────────────────────
+
+export interface GhostTeamMatchup {
+  opponentID: number;
+  opponentName: string;
+  opponentSlug: string;
+  seasonID: number;
+  seasonName: string;
+  seasonSlug: string;
+  week: number;
+  matchDate: string | null;
+  teamAvg: number;
+  scratchGame1: number;
+  scratchGame2: number;
+  scratchGame3: number;
+  scratchSeries: number;
+}
+
+export async function getGhostTeamH2H(): Promise<GhostTeamMatchup[]> {
+  return cachedQuery('getGhostTeamH2H', async () => {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .query<GhostTeamMatchup>(`
+        WITH ghostMatches AS (
+          SELECT
+            sch.scheduleID,
+            sch.seasonID,
+            sch.week,
+            sch.matchDate,
+            CASE WHEN sch.team1ID = 45 THEN sch.team2ID ELSE sch.team1ID END AS opponentID
+          FROM schedule sch
+          WHERE (sch.team1ID = 45 OR sch.team2ID = 45)
+            AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
+        ),
+        oppScores AS (
+          SELECT
+            gm.scheduleID,
+            gm.seasonID,
+            gm.week,
+            gm.matchDate,
+            gm.opponentID,
+            SUM(sc.game1) AS scratchGame1,
+            SUM(sc.game2) AS scratchGame2,
+            SUM(sc.game3) AS scratchGame3,
+            SUM(sc.scratchSeries) AS scratchSeries,
+            SUM(CAST(sc.incomingAvg AS INT)) AS teamAvg
+          FROM ghostMatches gm
+          JOIN scores sc ON sc.seasonID = gm.seasonID
+            AND sc.week = gm.week
+            AND sc.teamID = gm.opponentID
+            AND sc.isPenalty = 0
+          GROUP BY gm.scheduleID, gm.seasonID, gm.week, gm.matchDate, gm.opponentID
+          HAVING SUM(sc.incomingAvg) IS NOT NULL
+        )
+        SELECT
+          os.opponentID,
+          COALESCE(tnh_latest.teamName, t.teamName) AS opponentName,
+          t.slug AS opponentSlug,
+          os.seasonID,
+          sn.displayName AS seasonName,
+          LOWER(REPLACE(sn.displayName, ' ', '-')) AS seasonSlug,
+          os.week,
+          os.matchDate,
+          os.teamAvg,
+          os.scratchGame1,
+          os.scratchGame2,
+          os.scratchGame3,
+          os.scratchSeries
+        FROM oppScores os
+        JOIN teams t ON os.opponentID = t.teamID
+        JOIN seasons sn ON os.seasonID = sn.seasonID
+        OUTER APPLY (
+          SELECT TOP 1 tnh.teamName
+          FROM teamNameHistory tnh
+          JOIN seasons sn2 ON tnh.seasonID = sn2.seasonID
+          WHERE tnh.teamID = os.opponentID
+          ORDER BY sn2.year DESC, CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+        ) tnh_latest
+        ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, os.week DESC
       `);
     return result.recordset;
   }, []);

@@ -7,14 +7,13 @@ import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
-const INITIAL_VISIBLE = 3;
-
 interface Props {
   seasons: BowlerSeasonStats[];
 }
 
 export function SeasonStatsTable({ seasons }: Props) {
-  const [showAll, setShowAll] = useState(false);
+  const PREVIEW_COUNT = 3;
+  const [expanded, setExpanded] = useState<boolean | null>(null); // null = show first 3
 
   if (seasons.length === 0) {
     return (
@@ -44,12 +43,19 @@ export function SeasonStatsTable({ seasons }: Props) {
   const careerHighGame = Math.max(...seasons.map((s) => s.highGame ?? 0));
   const careerHighSeries = Math.max(...seasons.map((s) => s.highSeries ?? 0));
 
-  const hiddenCount = seasons.length - INITIAL_VISIBLE;
-  const visibleSeasons = showAll ? seasons : seasons.slice(0, INITIAL_VISIBLE);
-
   return (
     <section>
-      <SectionHeading>Season Stats</SectionHeading>
+      <div className="flex items-center justify-between mb-4">
+        <SectionHeading className="mb-0">Season Stats</SectionHeading>
+        {seasons.length > PREVIEW_COUNT && (
+          <button
+            onClick={() => setExpanded(expanded === true ? false : true)}
+            className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
+          >
+            {expanded === true ? 'Collapse All' : 'Expand All'}
+          </button>
+        )}
+      </div>
       <div className="overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm">
         <table className="w-full text-sm sm:text-base font-body">
           <thead>
@@ -65,7 +71,7 @@ export function SeasonStatsTable({ seasons }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-navy/5">
-            {visibleSeasons.map((season) => (
+            {(expanded === true ? seasons : expanded === false ? [] : seasons.slice(0, PREVIEW_COUNT)).map((season) => (
               <tr key={`${season.seasonID}-${season.teamSlug ?? 'no-team'}`} className="hover:bg-navy/[0.05] transition-colors">
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Link
@@ -103,34 +109,6 @@ export function SeasonStatsTable({ seasons }: Props) {
                 </td>
               </tr>
             ))}
-
-            {/* Expand/collapse toggle row */}
-            {hiddenCount > 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-2 text-center">
-                  <button
-                    onClick={() => setShowAll(!showAll)}
-                    className="text-sm text-red-600 hover:text-red-700 font-body cursor-pointer py-1 inline-flex items-center gap-1"
-                  >
-                    {showAll ? (
-                      <>
-                        Show fewer
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                        </svg>
-                      </>
-                    ) : (
-                      <>
-                        Show all {seasons.length} seasons
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </>
-                    )}
-                  </button>
-                </td>
-              </tr>
-            )}
 
             {/* Career totals row */}
             <tr className="font-semibold bg-navy/5">

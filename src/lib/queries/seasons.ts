@@ -1024,7 +1024,7 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
                      ELSE sc.game3 END) AS highGame,
             MAX(sc.scratchSeries) AS highSeries,
             CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAvg,
-            CAST(AVG(CAST(sc.incomingAvg AS DECIMAL(5,1))) AS DECIMAL(5,1)) AS expectedAvg
+            CAST(AVG(CASE WHEN sc.incomingAvg > 0 THEN CAST(sc.incomingAvg AS DECIMAL(5,1)) END) AS DECIMAL(5,1)) AS expectedAvg
           FROM scores sc
           LEFT JOIN schedule sch ON sch.seasonID = sc.seasonID AND sch.week = sc.week
           WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0

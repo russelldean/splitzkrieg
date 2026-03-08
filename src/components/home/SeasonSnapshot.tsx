@@ -54,7 +54,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           Full leaderboards &rarr;
         </Link>
       </div>
-      <p className="text-xs font-body text-navy/65 mb-4">
+      <p className="inline-block text-xs font-body font-semibold text-navy/70 bg-navy/[0.06] px-2 py-0.5 rounded mb-4 tabular-nums">
         Week {snapshot.weekNumber}
       </p>
 
