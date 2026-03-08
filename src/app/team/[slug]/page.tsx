@@ -20,6 +20,8 @@ import {
   getTeamAllTimeRoster,
   getTeamFranchiseHistory,
   getTeamCurrentStanding,
+  getTeamH2H,
+  getActiveTeamIDs,
   getCurrentSeasonSlug,
   type TeamSeasonBowler,
 } from '@/lib/queries';
@@ -92,13 +94,15 @@ export default async function TeamPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/team/${slug}`;
 
   // Parallel build-time data fetching
-  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug] = await Promise.all([
+  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug, h2hMatchups, activeTeams] = await Promise.all([
     getTeamCurrentRoster(team.teamID),
     getTeamSeasonByseason(team.teamID),
     getTeamAllTimeRoster(team.teamID),
     getTeamFranchiseHistory(team.teamID),
     getTeamCurrentStanding(team.teamID),
     getCurrentSeasonSlug(),
+    getTeamH2H(team.teamID),
+    getActiveTeamIDs(),
   ]);
 
   // Pre-fetch bowler data for all seasons (static build handles the load)
@@ -140,7 +144,7 @@ export default async function TeamPage({
 
         <AllTimeRoster roster={allTimeRoster} />
 
-        <HeadToHead />
+        <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} />
       </div>
 
       <TrailNav current="/teams" seasonSlug={currentSlug} />
