@@ -51,7 +51,7 @@ export function CompactWeekList({ weekSummaries, seasonSlug, totalWeeks }: Props
                     <span className="text-xs font-body text-navy/50">{dateStr}</span>
                   )}
                   {!hasScores && (
-                    <span className="text-xs font-body text-navy/40 italic">Upcoming</span>
+                    <span className="text-xs font-body text-navy/60 italic">Upcoming</span>
                   )}
                 </div>
                 <div className="flex items-center gap-4 text-xs font-body text-navy/50 shrink-0">

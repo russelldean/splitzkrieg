@@ -138,16 +138,7 @@ export async function Header() {
           </nav>
 
           {/* Mobile Nav */}
-          <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-            <Link
-              href="/"
-              className="p-2 text-navy/60 hover:text-red-600 transition-colors"
-              aria-label="Home"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                <path d="M10 2.5L2 9h3v7h4v-4h2v4h4V9h3L10 2.5z" />
-              </svg>
-            </Link>
+          <div className="md:hidden flex-shrink-0">
             <MobileNav links={mobileLinks} />
           </div>
         </div>

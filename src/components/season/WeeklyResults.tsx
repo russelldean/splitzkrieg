@@ -452,7 +452,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                     <span className="text-navy/50 font-body text-sm ml-2">{dateStr}</span>
                   )}
                   {!hasScores && (
-                    <span className="text-navy/40 font-body text-sm ml-2 italic">Upcoming</span>
+                    <span className="text-navy/60 font-body text-sm ml-2 italic">Upcoming</span>
                   )}
                 </span>
                 <span className="text-navy/50 text-sm">
@@ -548,7 +548,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                         </div>
                       ))}
                       {matchups.length === 0 && (
-                        <p className="text-sm text-navy/40 italic">Schedule not yet available.</p>
+                        <p className="text-sm text-navy/60 italic">Schedule not yet available.</p>
                       )}
                     </div>
                   )}

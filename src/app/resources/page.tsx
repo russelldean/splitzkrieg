@@ -134,12 +134,12 @@ export default async function ResourcesPage() {
                             <h3 className="font-body font-medium text-navy/60">
                               {link.label}
                             </h3>
-                            <p className="font-body text-sm text-navy/40 mt-1">
+                            <p className="font-body text-sm text-navy/60 mt-1">
                               {link.description}
                             </p>
                           </div>
                         </div>
-                        <span className="inline-block mt-3 font-body text-xs text-navy/40">
+                        <span className="inline-block mt-3 font-body text-xs text-navy/60">
                           Link coming soon
                         </span>
                       </div>

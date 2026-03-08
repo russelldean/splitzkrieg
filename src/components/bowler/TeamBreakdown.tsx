@@ -48,7 +48,7 @@ export function TeamBreakdown({ teams }: Props) {
                     <span className="text-sm text-navy/60 truncate block">{team.teamName}</span>
                   )}
                   {isLifer && (
-                    <span className="text-[11px] italic text-navy/40">forever</span>
+                    <span className="text-[11px] italic text-navy/60">forever</span>
                   )}
                 </div>
                 <div

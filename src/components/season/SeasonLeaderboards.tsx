@@ -47,7 +47,7 @@ function LeaderboardTable({
 }) {
   if (entries.length === 0) {
     return (
-      <p className="font-body text-sm text-navy/50 italic py-2">
+      <p className="font-body text-sm text-navy/70 italic py-2">
         No data for this category.
       </p>
     );
@@ -115,13 +115,13 @@ function LeaderboardTable({
       {(showHighlight && highlightLabel || ineligibleLabel) && (
         <div className="mt-1 px-4 space-y-0.5">
           {showHighlight && highlightLabel && (
-            <p className="text-xs font-body text-navy/50 flex items-center gap-1.5">
+            <p className="text-xs font-body text-navy/70 flex items-center gap-1.5">
               <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
               {highlightLabel}
             </p>
           )}
           {ineligibleLabel && (
-            <p className="text-xs font-body text-navy/50 flex items-center gap-1.5">
+            <p className="text-xs font-body text-navy/70 flex items-center gap-1.5">
               <span className="inline-block w-3 h-2 bg-navy/5 rounded-sm opacity-40" />
               {ineligibleLabel}
             </p>
@@ -190,7 +190,7 @@ export function SeasonLeaderboards({
 
       {/* Tab content */}
       {allEmpty ? (
-        <p className="font-body text-sm text-navy/50 italic">No data for this category.</p>
+        <p className="font-body text-sm text-navy/70 italic">No data for this category.</p>
       ) : (
         <div className="space-y-6">
           {categories.map((cat, i) => {
@@ -203,7 +203,7 @@ export function SeasonLeaderboards({
                   {cat.title}
                 </h4>
                 {minGames && isAvgCategory && (
-                  <p className="font-body text-xs text-navy/40 mb-2">
+                  <p className="font-body text-xs text-navy/60 mb-2">
                     ({minGames} min games)
                   </p>
                 )}
@@ -217,7 +217,7 @@ export function SeasonLeaderboards({
                   ineligibleLabel={ineligible?.label}
                 />
                 {isLastAvgBeforeNonAvg && (
-                  <p className="font-body text-xs text-navy/40 mt-4">
+                  <p className="font-body text-xs text-navy/60 mt-4">
                     To qualify for the individual playoffs, bowlers must bowl 18 games in the season.
                     To qualify for team playoffs, bowlers must bowl 9 games with the team.
                   </p>

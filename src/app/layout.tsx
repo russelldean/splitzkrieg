@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { FeedbackButton } from "@/components/layout/FeedbackButton";
 
 const dmSerif = DM_Serif_Display({
   weight: '400',
@@ -41,6 +42,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <FeedbackButton />
       </body>
     </html>
   );

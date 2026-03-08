@@ -144,7 +144,7 @@ function PlayoffResultsSimple({ bracket }: { bracket: SeasonPlayoffBracket }) {
       <div className="flex items-center gap-2 text-sm font-body">
         <span className="text-navy/50 text-xs w-12 shrink-0">Final</span>
         <TeamLink name={bracket.final.winnerName} slug={bracket.final.winnerSlug} className="font-semibold text-navy" />
-        <span className="text-navy/40">def.</span>
+        <span className="text-navy/60">def.</span>
         <TeamLink name={bracket.final.loserName} slug={bracket.final.loserSlug} className="text-navy/60" />
       </div>
       {(bracket.semi1 || bracket.semi2) && (
