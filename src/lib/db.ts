@@ -67,11 +67,13 @@ export async function closeDb(): Promise<void> {
  * ───────────────────────────────────────────────────────── */
 
 const CACHE_VERSION = process.env.DB_CACHE_VERSION ?? '1';
-const CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
+const VERSIONED_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
+const STABLE_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', 'stable');
 
-function readFromDiskCache<T>(key: string): T | undefined {
+function readFromDiskCache<T>(key: string, stable?: boolean): T | undefined {
   try {
-    const filePath = path.join(CACHE_DIR, `${key}.json`);
+    const dir = stable ? STABLE_CACHE_DIR : VERSIONED_CACHE_DIR;
+    const filePath = path.join(dir, `${key}.json`);
     const data = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(data) as T;
   } catch {
@@ -79,10 +81,11 @@ function readFromDiskCache<T>(key: string): T | undefined {
   }
 }
 
-function writeToDiskCache<T>(key: string, data: T): void {
+function writeToDiskCache<T>(key: string, data: T, stable?: boolean): void {
   try {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-    const filePath = path.join(CACHE_DIR, `${key}.json`);
+    const dir = stable ? STABLE_CACHE_DIR : VERSIONED_CACHE_DIR;
+    fs.mkdirSync(dir, { recursive: true });
+    const filePath = path.join(dir, `${key}.json`);
     fs.writeFileSync(filePath, JSON.stringify(data));
   } catch {
     // Non-fatal — just skip caching
@@ -131,9 +134,12 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
+  options?: { stable?: boolean },
 ): Promise<T> {
+  const stable = options?.stable;
+
   // 1. Check disk cache
-  const cached = readFromDiskCache<T>(key);
+  const cached = readFromDiskCache<T>(key, stable);
   if (cached !== undefined) return cached;
 
   // 2. If no DB configured, return fallback
@@ -143,7 +149,7 @@ export async function cachedQuery<T>(
   try {
     const result = await withRetry(fn, key);
     // 4. Cache successful result
-    writeToDiskCache(key, result);
+    writeToDiskCache(key, result, stable);
     return result;
   } catch (err) {
     console.warn(`${key}: DB unavailable`, err);
