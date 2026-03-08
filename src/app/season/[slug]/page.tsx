@@ -118,7 +118,7 @@ export default async function SeasonPage({
       <SeasonNav current={season} allSeasons={allSeasons} />
 
       <div className="mt-8 space-y-12">
-        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} />
+        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={totalWeeks || null} />
 
         {hasScheduleData && raceData.length > 0 && (
           <CollapsibleSection title="Standings Race">

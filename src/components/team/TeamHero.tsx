@@ -38,7 +38,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
       {/* Current season standing callout */}
       {currentStanding && (
         <Link
-          href={`/season/${currentStanding.seasonSlug}#standings`}
+          href={`/week/${currentStanding.seasonSlug}`}
           className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg hover:bg-navy/[0.07] hover:border-navy/20 transition-all group"
         >
           <div className="font-heading text-2xl text-navy">
@@ -47,10 +47,10 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
           </div>
           <div className="border-l border-navy/10 pl-4">
             <div className="font-body text-sm text-navy tabular-nums">
-              {currentStanding.wins}W · {currentStanding.xp}XP · {currentStanding.totalPts}pts
+              {currentStanding.wins}W-{currentStanding.losses}L · {currentStanding.xp}XP · {currentStanding.totalPts}pts
             </div>
             <div className="font-body text-xs text-navy/65">
-              Season {currentStanding.seasonRoman}{currentStanding.divisionName ? ` · ${currentStanding.divisionName}` : ''} · View Standings →
+              Season {currentStanding.seasonRoman}{currentStanding.divisionName ? ` · ${currentStanding.divisionName}` : ''} · League Nights →
             </div>
           </div>
         </Link>

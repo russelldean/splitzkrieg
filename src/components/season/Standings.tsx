@@ -8,6 +8,8 @@ interface Props {
   /** Actual playoff teams from playoffResults, or null to use computed positions */
   playoffTeams?: Set<number> | null;
   seasonID?: number;
+  /** Week number to display in heading (e.g. "Standings (after Wk 3)") */
+  weekNumber?: number | null;
 }
 
 /**
@@ -126,11 +128,11 @@ function StandingsTable({
   );
 }
 
-export function Standings({ standings, hasDivisions, playoffTeams, seasonID }: Props) {
+export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber }: Props) {
   if (standings.length === 0) {
     return (
       <section id="standings">
-        <SectionHeading>Standings</SectionHeading>
+        <SectionHeading>Standings{weekNumber ? ` (after Wk ${weekNumber})` : ''}</SectionHeading>
         <p className="font-body text-navy/65">No standings data available for this season.</p>
       </section>
     );
@@ -144,7 +146,7 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID }: P
 
   return (
     <section id="standings">
-      <SectionHeading>Standings</SectionHeading>
+      <SectionHeading>Standings{weekNumber ? ` (after Wk ${weekNumber})` : ''}</SectionHeading>
       {hasDivisions ? (
         <div className="space-y-8">
           {(() => {
