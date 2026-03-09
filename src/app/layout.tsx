@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
+import { ConsoleGreeting } from "@/components/layout/ConsoleGreeting";
 import { PostHogProvider } from "@/components/PostHogProvider";
 
 const dmSerif = DM_Serif_Display({
@@ -51,6 +52,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <FeedbackButton />
+          <ConsoleGreeting />
         </PostHogProvider>
       </body>
     </html>
