@@ -39,17 +39,32 @@ function TickerIcon({ icon }: { icon: TickerItem['icon'] }) {
   }
 }
 
+const EASTER_EGGS: TickerItem[] = [
+  { text: 'Are you still looking at this?', icon: 'star', href: '/' },
+  { text: "Your team might be waiting for you to bowl.", icon: 'star', href: '/' },
+];
+
 export function MilestoneTicker({ items = [] }: MilestoneTickerProps) {
   if (items.length === 0) return null;
+
+  // Build cycle: full items between each easter egg so they're spread out
+  // e.g. [A,B,C, egg1, A,B,C, egg2] — each egg appears once per cycle
+  const cycle: TickerItem[] = [];
+  for (let i = 0; i < EASTER_EGGS.length; i++) {
+    cycle.push(...items, EASTER_EGGS[i]);
+  }
+  // Duplicate cycle for seamless CSS loop
+  const strip = [...cycle, ...cycle];
+  // Scale animation duration: base 60s per items.length, proportional to cycle length
+  const duration = Math.round((cycle.length / items.length) * 60);
 
   return (
     <div className="w-full border-y border-navy/10 bg-cream overflow-hidden shadow-sm">
       <div
         className="flex items-center gap-8 py-3 whitespace-nowrap motion-safe:animate-ticker"
-        style={{ width: 'max-content' }}
+        style={{ width: 'max-content', animationDuration: `${duration}s` }}
       >
-        {/* Render twice for seamless loop */}
-        {[...items, ...items].map((item, i) => (
+        {strip.map((item, i) => (
           <Link
             key={`${item.href}-${item.icon}-${i}`}
             href={item.href}
