@@ -32,8 +32,10 @@ import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
 import { GameLog } from '@/components/bowler/GameLog';
 import { YouAreAStar } from '@/components/bowler/YouAreAStar';
+import { MilestoneWatch } from '@/components/bowler/MilestoneWatch';
 import { TrailNav } from '@/components/ui/TrailNav';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
+import { computePersonalMilestones } from '@/lib/milestone-config';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -184,6 +186,10 @@ export default async function BowlerPage({
         )}
 
         <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} />
+
+        {careerSummary && (
+          <MilestoneWatch milestones={computePersonalMilestones(careerSummary)} />
+        )}
 
         {rollingAvgHistory.length >= 6 && (
           <AverageProgressionChart history={rollingAvgHistory} />

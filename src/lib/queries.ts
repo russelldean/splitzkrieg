@@ -6,3 +6,4 @@ export * from './queries/bowlers';
 export * from './queries/teams';
 export * from './queries/seasons';
 export * from './queries/home';
+export * from './queries/milestones';

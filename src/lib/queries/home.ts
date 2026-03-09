@@ -32,7 +32,7 @@ export interface Milestone {
 export interface TickerItem {
   text: string;
   href: string;
-  icon: 'debut' | 'trophy' | 'star' | 'clock';
+  icon: 'debut' | 'trophy' | 'star' | 'clock' | 'milestone';
 }
 
 const GET_RECENT_MILESTONES_SQL = `

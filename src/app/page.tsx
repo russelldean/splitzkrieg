@@ -10,6 +10,8 @@ import {
   getSeasonStandings,
   getSeasonSchedule,
   getSeasonMatchResults,
+  getLeagueMilestones,
+  milestoneTickerItems,
 } from '@/lib/queries';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
@@ -33,11 +35,15 @@ const quickLinks = [
 ];
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, nextBowlingNight] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, nextBowlingNight, leagueMilestones] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
     getNextBowlingNight(),
+    getLeagueMilestones(),
   ]);
+
+  // Merge milestone achievements into the ticker
+  const allTickerItems = [...weeklyHighlights, ...milestoneTickerItems(leagueMilestones)];
 
   // Fetch standings + schedule for current season
   let standings: Awaited<ReturnType<typeof getSeasonStandings>> = [];
@@ -77,7 +83,7 @@ export default async function Home() {
     <div className="min-h-screen bg-cream">
       {/* Milestone Ticker */}
       <div className="relative">
-        <MilestoneTicker items={weeklyHighlights} />
+        <MilestoneTicker items={allTickerItems} />
         {nextBowlingNight && (
           <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
             <div className="relative flex items-center">
