@@ -32,7 +32,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
         )}
         </div>
         <div className="shrink-0 pt-2">
-          <ShareButton url={shareUrl} label="Share Team Profile" />
+          <ShareButton url={shareUrl} title={`${team.teamName} – Splitzkrieg`} label="Share Team Profile" />
         </div>
       </div>
 

@@ -43,7 +43,7 @@ export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUr
           <PrivacyNote />
         </div>
         <div className="shrink-0 pt-2">
-          <ShareButton url={shareUrl} />
+          <ShareButton url={shareUrl} title={`${name} – Splitzkrieg`} />
         </div>
       </div>
 
