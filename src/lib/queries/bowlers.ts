@@ -423,6 +423,7 @@ export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]>
  * ─────────────────────────────────────────────────────────── */
 
 export interface BowlerStarStats {
+  perfectGames: number;
   botwWins: number;
   playoffAppearances: number;
   championships: number;
@@ -436,7 +437,7 @@ export interface BowlerStarStats {
 }
 
 const GET_BOWLER_STAR_STATS_SQL = `
-  SELECT p.code, COUNT(*) AS cnt /* v2: aboveAvg patch */
+  SELECT p.code, COUNT(*) AS cnt /* v3: perfectGame patch */
   FROM bowlerPatches bp
   JOIN patches p ON p.patchID = bp.patchID
   WHERE bp.bowlerID = @bowlerID
@@ -446,11 +447,11 @@ const GET_BOWLER_STAR_STATS_SQL = `
 export interface BowlerPatch {
   seasonID: number;
   week: number | null;
-  patch: 'botw' | 'highGame' | 'highSeries' | 'threeOfAKind' | 'playoff' | 'champion' | 'scratchPlayoff' | 'hcpPlayoff' | 'scratchChampion' | 'hcpChampion';
+  patch: 'perfectGame' | 'botw' | 'highGame' | 'highSeries' | 'threeOfAKind' | 'playoff' | 'champion' | 'scratchPlayoff' | 'hcpPlayoff' | 'scratchChampion' | 'hcpChampion';
 }
 
 const GET_BOWLER_PATCHES_SQL = `
-  SELECT bp.seasonID, bp.week, p.code AS patch
+  SELECT bp.seasonID, bp.week, p.code AS patch /* v2: perfectGame */
   FROM bowlerPatches bp
   JOIN patches p ON p.patchID = bp.patchID
   WHERE bp.bowlerID = @bowlerID
@@ -470,6 +471,7 @@ export async function getBowlerPatches(bowlerID: number): Promise<BowlerPatch[]>
 
 export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarStats> {
   const empty: BowlerStarStats = {
+    perfectGames: 0,
     botwWins: 0,
     playoffAppearances: 0,
     championships: 0,
@@ -490,6 +492,7 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
 
     const counts = new Map(result.recordset.map(r => [r.code, r.cnt]));
     return {
+      perfectGames: counts.get('perfectGame') ?? 0,
       botwWins: counts.get('botw') ?? 0,
       playoffAppearances: counts.get('playoff') ?? 0,
       championships: counts.get('champion') ?? 0,

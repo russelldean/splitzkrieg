@@ -17,6 +17,7 @@ interface StarLine {
 }
 
 const PATCH_STYLE: Record<string, { abbr: string; color: string; bg: string }> = {
+  perfectGame:    { abbr: '300', color: 'text-amber-800',   bg: 'bg-amber-200' },
   champion:       { abbr: '\uD83C\uDFC6', color: 'text-amber-700',   bg: 'bg-amber-100' },
   playoff:        { abbr: 'TP',   color: 'text-indigo-700', bg: 'bg-indigo-100' },
   scratchPlayoff: { abbr: 'SP',   color: 'text-rose-700',   bg: 'bg-rose-100' },
@@ -34,6 +35,14 @@ export function YouAreAStar({ stats, inTicker, easterEgg }: Props) {
   const [open, setOpen] = useState(false);
 
   const lines: StarLine[] = [];
+
+  if (stats.perfectGames > 0) {
+    lines.push({
+      patch: 'perfectGame',
+      label: 'Perfect Game',
+      value: `${stats.perfectGames}x`,
+    });
+  }
 
   if (stats.championships > 0) {
     lines.push({

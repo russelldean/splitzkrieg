@@ -48,6 +48,7 @@ function buildPatchLookup(patches: BowlerPatch[]) {
 }
 
 const PATCH_CONFIG: Record<string, { label: string; abbr: string; color: string; bg: string }> = {
+  perfectGame:    { label: 'Perfect Game',       abbr: '300',  color: 'text-amber-800',  bg: 'bg-amber-200' },
   botw:           { label: 'Bowler of the Week', abbr: 'BOTW', color: 'text-purple-700', bg: 'bg-purple-100' },
   highGame:       { label: 'Weekly High Game',   abbr: 'HG',   color: 'text-blue-700',   bg: 'bg-blue-100' },
   highSeries:     { label: 'Weekly High Series', abbr: 'HS',   color: 'text-emerald-700', bg: 'bg-emerald-100' },

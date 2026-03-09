@@ -102,6 +102,16 @@ async function main() {
     totalInserted += inserted;
   }
 
+  // ─── Perfect Game (300) from score data ───
+  // Note: Geoffrey Berry's playoff 300 (S27) was manually inserted since
+  // playoff scores aren't in the scores table.
+  await insertPatches('perfectGame', `
+    SELECT sc.bowlerID, sc.seasonID, sc.week
+    FROM scores sc
+    WHERE sc.isPenalty = 0
+      AND (sc.game1 = 300 OR sc.game2 = 300 OR sc.game3 = 300)
+  `, 'Perfect Game');
+
   // ─── Bowler of the Week ───
   await insertPatches('botw', `
     SELECT x.bowlerID, x.seasonID, x.week
