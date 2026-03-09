@@ -20,6 +20,9 @@ import {
   getBowlerOfTheWeek,
   getCurrentSeasonID,
   getCurrentSeasonSlug,
+  getBowlerStarStats,
+  getBowlerPatches,
+  getWeeklyHighlights,
 } from '@/lib/queries';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
@@ -28,6 +31,7 @@ import type { WeekDelta } from '@/components/bowler/LastWeekHighlight';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
 import { GameLog } from '@/components/bowler/GameLog';
+import { YouAreAStar } from '@/components/bowler/YouAreAStar';
 import { TrailNav } from '@/components/ui/TrailNav';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
 
@@ -80,7 +84,7 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
@@ -88,6 +92,9 @@ export default async function BowlerPage({
     getBowlerOfTheWeek(),
     getCurrentSeasonID(),
     getCurrentSeasonSlug(),
+    getBowlerStarStats(bowler.bowlerID),
+    getBowlerPatches(bowler.bowlerID),
+    getWeeklyHighlights(),
   ]);
 
   const isBowlerOfTheWeek = botwID === bowler.bowlerID;
@@ -184,7 +191,12 @@ export default async function BowlerPage({
 
         <SeasonStatsTable seasons={seasonStats} />
 
-        <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} />
+        <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} patches={patches} />
+
+        <YouAreAStar
+          stats={starStats}
+          inTicker={tickerItems.some(t => t.href === `/bowler/${slug}`)}
+        />
       </div>
 
       <TrailNav current="/bowlers" seasonSlug={currentSlug} />
