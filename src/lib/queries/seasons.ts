@@ -786,7 +786,7 @@ const PLAYOFF_SEMI_SQL = `
   ORDER BY pr.playoffID
 `;
 
-const PLAYOFF_ALL_SQL = PLAYOFF_FINAL_SQL + PLAYOFF_SEMI_SQL;
+const PLAYOFF_ALL_SQL = PLAYOFF_FINAL_SQL + PLAYOFF_SEMI_SQL + '/* v2: infer semi winners from final */';
 
 export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<SeasonPlayoffBracket | null> => {
   return cachedQuery(`getSeasonPlayoffBracket-${seasonID}`, async () => {
@@ -818,22 +818,34 @@ export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<S
       return { winnerName: wName, winnerSlug: wSlug, winnerSeed: wSeed, loserName: lName, loserSlug: lSlug, loserSeed: lSeed };
     }
 
+    // When winnerTeamID is NULL on semis, infer winner from the final:
+    // the two finalists are the two semi winners — assign each to one semi.
+    const remainingFinalists = [
+      { name: f.champName, slug: f.champSlug, seed: f.champSeed },
+      { name: f.ruName, slug: f.ruSlug, seed: f.ruSeed },
+    ];
+
+    function buildSemi(semi: typeof semis[0] | undefined): PlayoffMatchup | null {
+      if (!semi) return null;
+      if (semi.winnerName) {
+        return buildMatchup(semi.winnerName, semi.winnerSlug!, semi.winnerSeed,
+          semi.loserName, semi.loserSlug, semi.loserSeed);
+      }
+      // Infer: pick a remaining finalist (prefer one whose slug differs from the loser)
+      let idx = remainingFinalists.findIndex(t => t.slug !== semi.loserSlug);
+      if (idx === -1) idx = 0; // fallback
+      if (idx < remainingFinalists.length) {
+        const inferred = remainingFinalists.splice(idx, 1)[0];
+        return buildMatchup(inferred.name, inferred.slug, inferred.seed,
+          semi.loserName, semi.loserSlug, semi.loserSeed);
+      }
+      return buildMatchup('', '', null, semi.loserName, semi.loserSlug, semi.loserSeed);
+    }
+
     return {
       final: buildMatchup(f.champName, f.champSlug, f.champSeed, f.ruName, f.ruSlug, f.ruSeed),
-      semi1: semis[0]?.winnerName ? buildMatchup(
-        semis[0].winnerName, semis[0].winnerSlug!, semis[0].winnerSeed,
-        semis[0].loserName, semis[0].loserSlug, semis[0].loserSeed,
-      ) : (semis[0] ? buildMatchup(
-        '', '', null,
-        semis[0].loserName, semis[0].loserSlug, semis[0].loserSeed,
-      ) : null),
-      semi2: semis[1]?.winnerName ? buildMatchup(
-        semis[1].winnerName, semis[1].winnerSlug!, semis[1].winnerSeed,
-        semis[1].loserName, semis[1].loserSlug, semis[1].loserSeed,
-      ) : (semis[1] ? buildMatchup(
-        '', '', null,
-        semis[1].loserName, semis[1].loserSlug, semis[1].loserSeed,
-      ) : null),
+      semi1: buildSemi(semis[0]),
+      semi2: buildSemi(semis[1]),
     };
   }, null, { stable: true, sql: PLAYOFF_ALL_SQL });
 });
