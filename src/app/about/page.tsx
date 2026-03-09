@@ -68,9 +68,9 @@ export default function AboutPage() {
 
           <p>
             I&rsquo;ve been planning to make this site since 2009, and it only took me
-            17 years to get to it - boom. There&rsquo;s a lot of information
+            17 years and a bit of unemployment to get to it - boom. There&rsquo;s a lot of information
             packed in here - go digging and see what you can find.  Send me any errors you
-            find or any suggestions you have and I&rsquo;ll keep building this out. Most importantly, keep coming out to the lanes when you
+            find or any suggestions you have and I&rsquo;ll keep building this out. Your job is to keep coming out to the lanes when you
             can - now you can see all the bowlers that are going to pass you by on
             the all-time lists if you don&rsquo;t.
           </p>

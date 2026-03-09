@@ -3,6 +3,7 @@ import type { BowlerCareerSummary } from '@/lib/queries';
 import { ShareButton } from '@/components/bowler/ShareButton';
 import { TeamBreakdown, type TeamStat } from '@/components/bowler/TeamBreakdown';
 import { BowlerOfTheWeekRibbon } from '@/components/bowler/BowlerOfTheWeekRibbon';
+import { PrivacyNote } from '@/components/bowler/PrivacyNote';
 
 
 interface Props {
@@ -39,6 +40,7 @@ export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUr
               </svg>
             </Link>
           )}
+          <PrivacyNote />
         </div>
         <div className="shrink-0 pt-2">
           <ShareButton url={shareUrl} />
