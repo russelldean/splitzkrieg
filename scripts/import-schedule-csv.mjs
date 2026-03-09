@@ -91,9 +91,57 @@ function parseStartDate(csvText) {
   return new Date(fullYear, m - 1, d);
 }
 
-// --- Parse two-column format (Season XXII style) ---
+// --- Detect column layout from first data row ---
+function detectColumnLayout(lines) {
+  for (const line of lines) {
+    const cols = line.split(',');
+    const col0 = cols[0]?.trim();
+    if (!col0 || !col0.match(/^\d{1,2}-[A-Za-z]{3}$/)) continue;
+
+    // Find the second date column (right-side date)
+    let rightDateIdx = -1;
+    for (let i = 1; i < cols.length; i++) {
+      if (cols[i]?.trim().match(/^\d{1,2}-[A-Za-z]{3}$/)) {
+        rightDateIdx = i;
+        break;
+      }
+    }
+
+    if (rightDateIdx === -1) continue;
+
+    // Detect layout by finding team columns (non-empty, non-date, non-lane)
+    const isLane = (s) => /^\d+\/\d+$/.test(s?.trim());
+    const leftTeamCols = [];
+    for (let i = 1; i < rightDateIdx; i++) {
+      const v = cols[i]?.trim();
+      if (v && !isLane(v)) leftTeamCols.push(i);
+    }
+    const rightTeamCols = [];
+    for (let i = rightDateIdx + 1; i < cols.length; i++) {
+      const v = cols[i]?.trim();
+      if (v && !isLane(v)) rightTeamCols.push(i);
+    }
+
+    if (leftTeamCols.length >= 2 && rightTeamCols.length >= 2) {
+      const layout = {
+        leftTeam1: leftTeamCols[0],
+        leftTeam2: leftTeamCols[1],
+        rightDate: rightDateIdx,
+        rightTeam1: rightTeamCols[0],
+        rightTeam2: rightTeamCols[1],
+      };
+      console.log(`  Column layout: leftTeam1=${layout.leftTeam1}, leftTeam2=${layout.leftTeam2}, rightDate=${layout.rightDate}, rightTeam1=${layout.rightTeam1}, rightTeam2=${layout.rightTeam2}`);
+      return layout;
+    }
+  }
+  // Fallback to Season XXII layout
+  return { leftTeam1: 2, leftTeam2: 3, rightDate: 5, rightTeam1: 6, rightTeam2: 7 };
+}
+
+// --- Parse two-column format (multiple layout variants) ---
 function parseTwoColumnCSV(csvText, yearHint) {
   const lines = csvText.split('\n').map(l => l.replace(/\r$/, ''));
+  const layout = detectColumnLayout(lines);
   const weeks = [];
 
   let currentLeftDate = null;
@@ -120,11 +168,11 @@ function parseTwoColumnCSV(csvText, yearHint) {
     }
 
     const leftDate = cols[0]?.trim();
-    const leftTeam1 = cols[2]?.trim();
-    const leftTeam2 = cols[3]?.trim();
-    const rightDate = cols[5]?.trim();
-    const rightTeam1 = cols[6]?.trim();
-    const rightTeam2 = cols[7]?.trim();
+    const leftTeam1 = cols[layout.leftTeam1]?.trim();
+    const leftTeam2 = cols[layout.leftTeam2]?.trim();
+    const rightDate = cols[layout.rightDate]?.trim();
+    const rightTeam1 = cols[layout.rightTeam1]?.trim();
+    const rightTeam2 = cols[layout.rightTeam2]?.trim();
 
     if (leftDate && leftDate.match(/^\d{1,2}-[A-Za-z]{3}$/)) {
       currentLeftDate = leftDate;
