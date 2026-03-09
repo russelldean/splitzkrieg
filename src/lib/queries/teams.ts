@@ -702,3 +702,99 @@ export async function getActiveTeamIDs(): Promise<TeamH2HActiveTeam[]> {
     return result.recordset;
   }, [], { stable: true });
 }
+
+// ── Pairwise H2H Summary ────────────────────────────────────
+
+export interface PairH2HSummary {
+  team1ID: number;
+  team2ID: number;
+  wins: number;    // team1 game wins
+  losses: number;  // team1 game losses
+  ties: number;
+}
+
+/**
+ * For a list of team-pair tuples, return their all-time H2H game record.
+ * Used on week preview pages to show the matchup history.
+ */
+export async function getPairwiseH2H(
+  pairs: { team1ID: number; team2ID: number }[]
+): Promise<PairH2HSummary[]> {
+  if (pairs.length === 0) return [];
+  const pairKey = (a: number, b: number) => a < b ? `${a}-${b}` : `${b}-${a}`;
+  const seen = new Set<string>();
+  const uniquePairs: { a: number; b: number }[] = [];
+  for (const { team1ID, team2ID } of pairs) {
+    const k = pairKey(team1ID, team2ID);
+    if (!seen.has(k)) {
+      seen.add(k);
+      uniquePairs.push({ a: Math.min(team1ID, team2ID), b: Math.max(team1ID, team2ID) });
+    }
+  }
+
+  const cacheKey = `getPairwiseH2H-${uniquePairs.map(p => `${p.a}_${p.b}`).join(',')}`;
+  return cachedQuery(cacheKey, async () => {
+    const db = await getDb();
+
+    interface RawRow {
+      team1ID: number;
+      team2ID: number;
+      t1g1: number | null; t1g2: number | null; t1g3: number | null;
+      t2g1: number | null; t2g2: number | null; t2g3: number | null;
+    }
+
+    const conditions = uniquePairs.map((p, i) =>
+      `(sch.team1ID = @a${i} AND sch.team2ID = @b${i}) OR (sch.team1ID = @b${i} AND sch.team2ID = @a${i})`
+    ).join(' OR ');
+
+    const request = db.request();
+    for (let i = 0; i < uniquePairs.length; i++) {
+      request.input(`a${i}`, uniquePairs[i].a);
+      request.input(`b${i}`, uniquePairs[i].b);
+    }
+
+    const result = await request.query<RawRow>(`
+      SELECT
+        sch.team1ID,
+        sch.team2ID,
+        mr.team1Game1 AS t1g1, mr.team1Game2 AS t1g2, mr.team1Game3 AS t1g3,
+        mr.team2Game1 AS t2g1, mr.team2Game2 AS t2g2, mr.team2Game3 AS t2g3
+      FROM matchResults mr
+      JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+      WHERE ${conditions}
+    `);
+
+    // Accumulate W/L/T from perspective of first team in each requested pair
+    const map = new Map<string, PairH2HSummary>();
+    for (const { team1ID, team2ID } of pairs) {
+      const k = pairKey(team1ID, team2ID);
+      if (!map.has(k)) {
+        map.set(k, { team1ID, team2ID, wins: 0, losses: 0, ties: 0 });
+      }
+    }
+
+    for (const row of result.recordset) {
+      const games: [number | null, number | null][] = [
+        [row.t1g1, row.t2g1],
+        [row.t1g2, row.t2g2],
+        [row.t1g3, row.t2g3],
+      ];
+      for (const [g1, g2] of games) {
+        if (g1 == null || g2 == null) continue;
+        const k = pairKey(row.team1ID, row.team2ID);
+        const summary = map.get(k);
+        if (!summary) continue;
+
+        const sameOrder = summary.team1ID === row.team1ID;
+        const t1Score = sameOrder ? g1 : g2;
+        const t2Score = sameOrder ? g2 : g1;
+
+        if (t1Score > t2Score) summary.wins++;
+        else if (t1Score < t2Score) summary.losses++;
+        else summary.ties++;
+      }
+    }
+
+    return Array.from(map.values());
+  }, []);
+}

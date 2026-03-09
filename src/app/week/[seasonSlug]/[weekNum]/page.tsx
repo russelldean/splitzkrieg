@@ -13,9 +13,11 @@ import {
   getSeasonSchedule,
   getSeasonMatchResults,
   getAllSeasonNavList,
+  getPairwiseH2H,
 } from '@/lib/queries';
 import { WeeklyResults } from '@/components/season/WeeklyResults';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
+import { WeekSchedulePreview } from '@/components/season/WeekSchedulePreview';
 import { WeekStats } from '@/components/season/WeekStats';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { strikeX } from '@/components/ui/StrikeX';
@@ -95,6 +97,16 @@ export default async function WeekPage({
   // Get date for this week
   const matchDate = weekScores[0]?.matchDate ?? weekSchedule[0]?.matchDate ?? null;
   const dateStr = formatMatchDate(matchDate, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  // Detect future week (has schedule but no scores)
+  const isFutureWeek = weekSchedule.length > 0 && weekScores.length === 0;
+
+  // Fetch H2H summaries for future week matchups
+  const h2hSummaries = isFutureWeek
+    ? await getPairwiseH2H(
+        weekSchedule.map(s => ({ team1ID: s.homeTeamID, team2ID: s.awayTeamID }))
+      )
+    : [];
 
   // Prev/next week navigation
   const weekIdx = sortedWeeks.indexOf(weekNum);
@@ -191,29 +203,36 @@ export default async function WeekPage({
         </div>
       </div>
 
-      {/* Match summary scoreboard */}
-      <WeekMatchSummary
-        weekScores={weekScores}
-        schedule={weekSchedule}
-        matchResults={weekMatchResults}
-        week={weekNum}
-      />
-
-      {/* Detailed match results — collapsed by default */}
-      <div className="mt-6">
-        <CollapsibleSection title="Full Match Details">
-          <WeeklyResults
-            weeklyScores={weekScores}
+      {isFutureWeek ? (
+        /* Future week: show schedule with H2H records */
+        <WeekSchedulePreview schedule={weekSchedule} h2hSummaries={h2hSummaries} />
+      ) : (
+        <>
+          {/* Match summary scoreboard */}
+          <WeekMatchSummary
+            weekScores={weekScores}
             schedule={weekSchedule}
             matchResults={weekMatchResults}
-            totalWeeks={0}
-            detailOnly
+            week={weekNum}
           />
-        </CollapsibleSection>
-      </div>
 
-      {/* Weekly Highlights */}
-      <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
+          {/* Detailed match results — collapsed by default */}
+          <div className="mt-6">
+            <CollapsibleSection title="Full Match Details">
+              <WeeklyResults
+                weeklyScores={weekScores}
+                schedule={weekSchedule}
+                matchResults={weekMatchResults}
+                totalWeeks={0}
+                detailOnly
+              />
+            </CollapsibleSection>
+          </div>
+
+          {/* Weekly Highlights */}
+          <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
+        </>
+      )}
 
       <TrailNav current="/week" seasonSlug={seasonSlug} />
     </main>
