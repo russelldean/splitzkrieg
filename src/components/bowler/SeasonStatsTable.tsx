@@ -31,8 +31,9 @@ export function SeasonStatsTable({ seasons }: Props) {
       gamesBowled: acc.gamesBowled + s.gamesBowled,
       totalPins: acc.totalPins + s.totalPins,
       games200Plus: acc.games200Plus + s.games200Plus,
+      turkeys: acc.turkeys + s.turkeys,
     }),
-    { gamesBowled: 0, totalPins: 0, games200Plus: 0 },
+    { gamesBowled: 0, totalPins: 0, games200Plus: 0, turkeys: 0 },
   );
 
   const careerAvg =
@@ -67,7 +68,7 @@ export function SeasonStatsTable({ seasons }: Props) {
               <th className="px-4 py-3 text-right">High Game</th>
               <th className="px-4 py-3 text-right">High Series</th>
               <th className="px-4 py-3 text-right">200+</th>
-              <th className="px-4 py-3 text-right">Total Pins</th>
+              <th className="px-4 py-3 text-right">Turkeys</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-navy/5">
@@ -104,9 +105,7 @@ export function SeasonStatsTable({ seasons }: Props) {
                   {season.highSeries ?? '\u2014'}
                 </td>
                 <td className="px-4 py-3 text-right">{season.games200Plus}</td>
-                <td className="px-4 py-3 text-right">
-                  {season.totalPins.toLocaleString()}
-                </td>
+                <td className="px-4 py-3 text-right">{season.turkeys}</td>
               </tr>
             ))}
 
@@ -123,9 +122,7 @@ export function SeasonStatsTable({ seasons }: Props) {
                 {careerHighSeries || '\u2014'}
               </td>
               <td className="px-4 py-3 text-right">{totals.games200Plus}</td>
-              <td className="px-4 py-3 text-right">
-                {totals.totalPins.toLocaleString()}
-              </td>
+              <td className="px-4 py-3 text-right">{totals.turkeys}</td>
             </tr>
           </tbody>
         </table>

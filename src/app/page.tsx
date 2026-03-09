@@ -149,7 +149,7 @@ export default async function Home() {
           )}
 
           {/* Explore Cards */}
-          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
             {quickLinks.map((link) =>
               <Link
                   key={link.href}

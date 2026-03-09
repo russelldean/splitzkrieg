@@ -176,6 +176,7 @@ export interface BowlerSeasonStats {
   highSeries: number | null;
   games200Plus: number;
   series600Plus: number;
+  turkeys: number;
 }
 
 export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeasonStats[]> {
@@ -214,7 +215,8 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
             CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
             CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
           )                                                    AS games200Plus,
-          SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus
+          SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
+          SUM(ISNULL(sc.turkeys, 0))                              AS turkeys
         FROM scores sc
         JOIN seasons sn ON sc.seasonID = sn.seasonID
         LEFT JOIN teams t ON sc.teamID = t.teamID

@@ -18,7 +18,7 @@ export default async function BowlersPage() {
   if (bowlers.length === 0) {
     return (
       <div className="min-h-screen bg-cream">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
           <EmptyState
             title="No Bowlers Found"
             message="No bowler data available."

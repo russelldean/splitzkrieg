@@ -119,7 +119,7 @@ export default async function WeekPage({
   const newerSeason = seasonIdx > 0 ? allSeasons[seasonIdx - 1] : null;
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} position="top" />
       {/* Breadcrumb + navigation */}
       <div className="mb-6">

@@ -91,9 +91,9 @@ function WeeklySummaryTable({
         <thead>
           <tr className="border-b border-navy/10 text-navy/65 text-xs">
             <th className="text-left font-normal py-1.5 pl-2">Home</th>
-            <th className="text-center font-normal py-1.5 w-[100px]">Score</th>
+            <th className="text-center font-normal py-1.5 w-[80px] sm:w-[100px]">Score</th>
             <th className="text-right font-normal py-1.5">Away</th>
-            <th className="text-left font-normal py-1.5 pl-4">Bowler of the Match</th>
+            <th className="hidden sm:table-cell text-left font-normal py-1.5 pl-4">Bowler of the Match</th>
           </tr>
         </thead>
         <tbody>
@@ -117,7 +117,7 @@ function WeeklySummaryTable({
                     <TeamName name={matchup.awayTeamName} />
                   </Link>
                 </td>
-                <td className="pl-4 py-1.5 text-amber-800">
+                <td className="hidden sm:table-cell pl-4 py-1.5 text-amber-800">
                   {mvpBowler ? (
                     <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
                       {mvpBowler.bowlerName}
@@ -429,7 +429,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
         </div>
         <button
           onClick={toggleAll}
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors px-3 py-2 -mr-3"
         >
           {allOpen ? 'Collapse All' : 'Expand All'}
         </button>

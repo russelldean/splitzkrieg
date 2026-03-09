@@ -80,7 +80,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
         <SectionHeading className="mb-0">Game Log</SectionHeading>
         <button
           onClick={toggleAll}
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors px-3 py-2 -mr-3"
         >
           {allOpen ? 'Collapse All' : 'Expand All'}
         </button>
@@ -119,13 +119,13 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                 <table className="w-full text-sm sm:text-base font-body">
                   <thead>
                     <tr className="border-b border-navy/10 bg-navy/[0.02]">
-                      <th className="text-left px-4 py-2 text-navy/60 font-normal">Wk</th>
-                      <th className="text-left px-4 py-2 text-navy/60 font-normal">Date</th>
-                      <th className="text-left px-4 py-2 text-navy/60 font-normal">Opponent</th>
-                      <th className="text-right px-4 py-2 text-navy/60 font-normal">G1</th>
-                      <th className="text-right px-4 py-2 text-navy/60 font-normal">G2</th>
-                      <th className="text-right px-4 py-2 text-navy/60 font-normal">G3</th>
-                      <th className="text-right px-4 py-2 text-navy/60 font-normal">Series</th>
+                      <th className="text-left px-2 sm:px-4 py-2 text-navy/60 font-normal">Wk</th>
+                      <th className="text-left px-2 sm:px-4 py-2 text-navy/60 font-normal">Date</th>
+                      <th className="text-left px-2 sm:px-4 py-2 text-navy/60 font-normal">Opponent</th>
+                      <th className="text-right px-2 sm:px-4 py-2 text-navy/60 font-normal">G1</th>
+                      <th className="text-right px-2 sm:px-4 py-2 text-navy/60 font-normal">G2</th>
+                      <th className="text-right px-2 sm:px-4 py-2 text-navy/60 font-normal">G3</th>
+                      <th className="text-right px-2 sm:px-4 py-2 text-navy/60 font-normal">Series</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -135,7 +135,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                       const isCareerBest = isHighGame || isHighSeries;
                       return (
                       <tr key={i} className={`border-b hover:bg-navy/[0.05] transition-colors ${isCareerBest ? 'bg-amber-50 border-b-amber-200' : 'border-navy/5'}`}>
-                        <td className="px-4 py-2 text-navy/60">
+                        <td className="px-2 sm:px-4 py-2 text-navy/60">
                           <span className="flex items-center gap-1">
                             {week.week}
                             {isCareerBest && (
@@ -145,7 +145,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                             )}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-navy/60">
+                        <td className="px-2 sm:px-4 py-2 text-navy/60">
                           {week.matchDate ? (
                             <Link
                               href={`/week/${week.seasonSlug}/${week.week}`}
@@ -157,7 +157,7 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                             '\u2014'
                           )}
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-2 sm:px-4 py-2">
                           {week.opponentSlug ? (
                             <Link href={`/team/${week.opponentSlug}`} className="text-navy hover:text-red-600 underline-offset-2 hover:underline">
                               {week.opponentName ?? ''}
@@ -166,16 +166,16 @@ export function GameLog({ gameLog, highGame, highSeries }: Props) {
                             <span className="text-navy/65">{week.opponentName ?? '\u2014'}</span>
                           )}
                         </td>
-                        <td className={`px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game1)}`}>
+                        <td className={`px-2 sm:px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game1)}`}>
                           {week.game1 ?? '\u2014'}
                         </td>
-                        <td className={`px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game2)}`}>
+                        <td className={`px-2 sm:px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game2)}`}>
                           {week.game2 ?? '\u2014'}
                         </td>
-                        <td className={`px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game3)}`}>
+                        <td className={`px-2 sm:px-4 py-2 text-right tabular-nums ${scoreColorClass(week.game3)}`}>
                           {week.game3 ?? '\u2014'}
                         </td>
-                        <td className={`px-4 py-2 text-right tabular-nums font-semibold ${seriesColorClass(week.scratchSeries)}`}>
+                        <td className={`px-2 sm:px-4 py-2 text-right tabular-nums font-semibold ${seriesColorClass(week.scratchSeries)}`}>
                           {week.scratchSeries ?? '\u2014'}
                         </td>
                       </tr>
