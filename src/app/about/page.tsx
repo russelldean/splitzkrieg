@@ -96,7 +96,11 @@ export default function AboutPage() {
             <Link href="/bowler/chris-klindt" className="text-red-600 hover:text-red-700 transition-colors font-medium">Chris Klindt</Link>,{' '}
             <Link href="/bowler/john-bekas" className="text-red-600 hover:text-red-700 transition-colors font-medium">John Bekas</Link>,{' '}
             and many more of you who help this thing keep rolling in all kinds
-            of ways. And to{' '}
+            of ways.
+          </p>
+
+          <p>
+            And to{' '}
             <Link href="/village-lanes" className="text-red-600 hover:text-red-700 transition-colors font-medium">Village Lanes</Link>,
             for being the star of the show for all those years.
           </p>
