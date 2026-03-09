@@ -47,11 +47,11 @@ const EASTER_EGGS: TickerItem[] = [
 export function MilestoneTicker({ items = [] }: MilestoneTickerProps) {
   if (items.length === 0) return null;
 
-  // Build cycle: full items between each easter egg so they're spread out
-  // e.g. [A,B,C, egg1, A,B,C, egg2] — each egg appears once per cycle
+  // Build cycle: two full passes of items between each easter egg
+  // e.g. [A,B,C, A,B,C, egg1, A,B,C, A,B,C, egg2]
   const cycle: TickerItem[] = [];
   for (let i = 0; i < EASTER_EGGS.length; i++) {
-    cycle.push(...items, EASTER_EGGS[i]);
+    cycle.push(...items, ...items, EASTER_EGGS[i]);
   }
   // Duplicate cycle for seamless CSS loop
   const strip = [...cycle, ...cycle];
