@@ -10,9 +10,9 @@ interface CountdownClockProps {
 
 /**
  * Phases:
- *  countdown     — compact card (> 2 min to go)
- *  final         — big digital readout (≤ 2 min)
- *  takeover      — full-screen HOT FUN overlay (~15 sec)
+ *  countdown     — compact card (> 5 min to go)
+ *  final         — big digital readout (≤ 5 min)
+ *  takeover      — full-screen HOT FUN overlay (15 sec)
  *  bowling       — hidden during league night (7:15–10:45 PM)
  *  results       — "Week N results pending" (11 PM+ Monday)
  *  past          — target passed, hide
@@ -20,8 +20,8 @@ interface CountdownClockProps {
  */
 type Phase = 'countdown' | 'final' | 'takeover' | 'bowling' | 'results' | 'past' | 'no-schedule';
 
-const TAKEOVER_DURATION = 10_000;
-const FINAL_COUNTDOWN_THRESHOLD = 2 * 60; // 2 minutes in seconds
+const TAKEOVER_DURATION = 15_000;
+const FINAL_COUNTDOWN_THRESHOLD = 5 * 60; // 5 minutes in seconds
 
 export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) {
   const [mounted, setMounted] = useState(false);
