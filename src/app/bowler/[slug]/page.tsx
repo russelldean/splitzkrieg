@@ -23,6 +23,8 @@ import {
   getBowlerStarStats,
   getBowlerPatches,
   getWeeklyHighlights,
+  getLeagueMilestones,
+  milestoneTickerItems,
 } from '@/lib/queries';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
@@ -86,7 +88,7 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
@@ -97,6 +99,7 @@ export default async function BowlerPage({
     getBowlerStarStats(bowler.bowlerID),
     getBowlerPatches(bowler.bowlerID),
     getWeeklyHighlights(),
+    getLeagueMilestones(),
   ]);
 
   const isBowlerOfTheWeek = botwID === bowler.bowlerID;
@@ -201,7 +204,7 @@ export default async function BowlerPage({
 
         <YouAreAStar
           stats={starStats}
-          inTicker={tickerItems.some(t => t.href === `/bowler/${slug}`)}
+          inTicker={[...tickerItems, ...milestoneTickerItems(leagueMilestones)].some(t => t.href === `/bowler/${slug}`)}
         />
       </div>
 

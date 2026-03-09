@@ -115,7 +115,7 @@ export function YouAreAStar({ stats, inTicker }: Props) {
 
   if (inTicker) {
     lines.push({
-      label: 'Featured on Home Page',
+      label: 'Featured on Ticker',
       value: 'Now',
       hint: 'Home',
     });

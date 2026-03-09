@@ -42,8 +42,9 @@ export default async function Home() {
     getLeagueMilestones(),
   ]);
 
-  // Merge milestone achievements into the ticker
-  const allTickerItems = [...weeklyHighlights, ...milestoneTickerItems(leagueMilestones)];
+  // Merge milestone achievements into the ticker, sorted alphabetically by name
+  const allTickerItems = [...weeklyHighlights, ...milestoneTickerItems(leagueMilestones)]
+    .sort((a, b) => a.text.localeCompare(b.text));
 
   // Fetch standings + schedule for current season
   let standings: Awaited<ReturnType<typeof getSeasonStandings>> = [];

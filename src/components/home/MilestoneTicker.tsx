@@ -9,9 +9,7 @@ function TickerIcon({ icon }: { icon: TickerItem['icon'] }) {
   switch (icon) {
     case 'debut':
       return (
-        <svg className="w-4 h-4 text-red flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 1ZM5.05 3.05a.75.75 0 0 1 1.06 0l1.062 1.06a.75.75 0 1 1-1.06 1.061L5.05 4.111a.75.75 0 0 1 0-1.06ZM14.95 3.05a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.06l1.061-1.062a.75.75 0 0 1 1.06 0ZM3 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 3 8ZM14 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 14 8ZM7.172 13.828a.75.75 0 0 1 0 1.061l-1.06 1.06a.75.75 0 0 1-1.061-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
-        </svg>
+        <span className="text-base leading-none flex-shrink-0" aria-hidden="true">👋</span>
       );
     case 'trophy':
       return (
