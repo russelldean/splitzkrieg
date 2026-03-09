@@ -4,7 +4,7 @@
  */
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getAllPlayoffHistory, getCurrentSeasonSlug, type PlayoffSeason } from '@/lib/queries';
+import { getAllPlayoffHistory, type PlayoffSeason } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
@@ -150,10 +150,7 @@ function CovidRow() {
 }
 
 export default async function AllTimeStatsPage() {
-  const [playoffs, currentSlug] = await Promise.all([
-    getAllPlayoffHistory(),
-    getCurrentSeasonSlug(),
-  ]);
+  const playoffs = await getAllPlayoffHistory();
   const snapshots = computeRunningTotals(playoffs);
 
   const rows: React.ReactNode[] = [];
@@ -176,7 +173,7 @@ export default async function AllTimeStatsPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <TrailNav current="/stats" seasonSlug={currentSlug} position="top" />
+      <TrailNav current="/stats" position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link
           href="/stats"
@@ -233,7 +230,7 @@ export default async function AllTimeStatsPage() {
         )}
       </section>
 
-      <TrailNav current="/stats" seasonSlug={currentSlug} />
+      <TrailNav current="/stats" />
     </main>
   );
 }

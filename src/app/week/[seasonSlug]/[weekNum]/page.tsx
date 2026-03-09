@@ -120,7 +120,7 @@ export default async function WeekPage({
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <TrailNav current="/week" seasonSlug={seasonSlug} position="top" />
+      <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} position="top" />
       {/* Breadcrumb + navigation */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-3">
@@ -234,7 +234,7 @@ export default async function WeekPage({
         </>
       )}
 
-      <TrailNav current="/week" seasonSlug={seasonSlug} />
+      <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} />
     </main>
   );
 }

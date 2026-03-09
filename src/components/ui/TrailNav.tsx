@@ -1,10 +1,17 @@
 import Link from 'next/link';
+import { getCurrentSeasonSnapshot } from '@/lib/queries';
 
-function getTrail(seasonSlug?: string) {
+function getTrail(seasonSlug?: string, weekNumber?: number, weekFallbackAnchor?: string, seasonRoman?: string) {
+  const s = seasonRoman ? ` ${seasonRoman}` : '';
+  const weekHref = seasonSlug && weekNumber
+    ? `/week/${seasonSlug}/${weekNumber}`
+    : weekFallbackAnchor
+      ? `/week#season-${weekFallbackAnchor}`
+      : '/week';
   return [
-    { label: 'League Nights', href: '/week', key: '/week' },
-    { label: 'Seasons', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
-    { label: 'The Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
+    { label: seasonSlug ? `Week${weekNumber ? ` ${weekNumber}` : 's'}${s}` : 'League Nights', href: weekHref, key: '/week' },
+    { label: seasonSlug ? `Season${s}` : 'Seasons', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
+    { label: seasonSlug ? `Stats${s}` : 'The Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
     { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
     { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
     { label: 'Resources', href: '/resources', key: '/resources' },
@@ -15,10 +22,27 @@ interface TrailNavProps {
   current: string;
   position?: 'top' | 'bottom';
   seasonSlug?: string;
+  weekNumber?: number;
+  seasonRoman?: string;
 }
 
-export function TrailNav({ current, position = 'bottom', seasonSlug }: TrailNavProps) {
-  const trail = getTrail(seasonSlug);
+export async function TrailNav({ current, position = 'bottom', seasonSlug, weekNumber, seasonRoman }: TrailNavProps) {
+  // Auto-resolve latest week number and roman numeral for the current season
+  let resolvedWeekNumber = weekNumber;
+  let resolvedRoman = seasonRoman;
+  let weekFallbackAnchor: string | undefined;
+  if (seasonSlug && !weekNumber) {
+    const snapshot = await getCurrentSeasonSnapshot();
+    if (snapshot && snapshot.slug === seasonSlug) {
+      resolvedWeekNumber = snapshot.weekNumber;
+      if (!resolvedRoman) resolvedRoman = snapshot.romanNumeral;
+    } else {
+      // Non-current season: link to the week index anchored to this season
+      weekFallbackAnchor = seasonSlug;
+    }
+  }
+
+  const trail = getTrail(seasonSlug, resolvedWeekNumber, weekFallbackAnchor, resolvedRoman);
   const idx = trail.findIndex((t) => t.key === current);
   if (idx === -1) return null;
 

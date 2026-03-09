@@ -14,7 +14,7 @@ import {
   getSeasonWeeklyScores,
   getMinGamesForWeek,
   getAllSeasonNavList,
-  getCurrentSeasonSlug,
+
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
@@ -106,11 +106,10 @@ export default async function SeasonStatsPage({
   const season = await getSeasonBySlug(slug);
   if (!season) notFound();
 
-  const [fullStats, weeklyScores, allSeasons, currentSlug] = await Promise.all([
+  const [fullStats, weeklyScores, allSeasons] = await Promise.all([
     getSeasonFullStats(season.seasonID),
     getSeasonWeeklyScores(season.seasonID),
     getAllSeasonNavList(),
-    getCurrentSeasonSlug(),
   ]);
 
   const currentWeek = weeklyScores.length > 0
@@ -136,7 +135,7 @@ export default async function SeasonStatsPage({
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <TrailNav current="/stats" seasonSlug={currentSlug} position="top" />
+      <TrailNav current="/stats" seasonSlug={slug} seasonRoman={season.romanNumeral} position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
         <span className="text-navy/30">/</span>
@@ -180,7 +179,7 @@ export default async function SeasonStatsPage({
         </div>
       </div>
 
-      <TrailNav current="/stats" seasonSlug={currentSlug} />
+      <TrailNav current="/stats" seasonSlug={slug} seasonRoman={season.romanNumeral} />
     </main>
   );
 }

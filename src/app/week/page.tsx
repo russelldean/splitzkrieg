@@ -4,7 +4,7 @@
  */
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSlug } from '@/lib/queries';
+import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSnapshot } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { BackToTop } from '@/components/ui/BackToTop';
 import { formatMatchDate } from '@/lib/bowling-time';
@@ -15,10 +15,11 @@ export const metadata: Metadata = {
 };
 
 export default async function WeeksIndexPage() {
-  const [allSeasons, currentSlug] = await Promise.all([
+  const [allSeasons, snapshot] = await Promise.all([
     getAllSeasonNavList(),
-    getCurrentSeasonSlug(),
+    getCurrentSeasonSnapshot(),
   ]);
+  const currentSlug = snapshot?.slug;
 
   // Fetch week summaries — batch to avoid overwhelming Azure SQL (30 conn limit)
   const summariesBySeasonID = new Map<number, Awaited<ReturnType<typeof getSeasonWeekSummaries>>>();
@@ -36,7 +37,7 @@ export default async function WeeksIndexPage() {
 
   return (
     <main id="top" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <TrailNav current="/week" seasonSlug={currentSlug} position="top" />
+      <TrailNav current="/week" position="top" />
       <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">League Nights</h1>
       <p className="font-body text-navy/65 mb-8">
         Every bowling night, every season.
@@ -45,18 +46,14 @@ export default async function WeeksIndexPage() {
       {allSeasons.map((season, i) => {
         const summaries = summariesBySeasonID.get(season.seasonID) ?? [];
         const isFirst = i === 0;
+        const isCurrentSeason = season.slug === currentSlug;
         return (
-          <div key={season.seasonID} className="mb-8">
+          <div key={season.seasonID} id={`season-${season.slug}`} className="mb-8 scroll-mt-20">
             <div className={`rounded-xl border overflow-hidden ${isFirst ? 'border-navy/10 border-l-4 border-l-red-600/40 bg-white shadow-sm' : 'border-navy/8 bg-white'}`}>
               {/* Season header */}
               <div className={`px-5 py-4 ${isFirst ? '' : 'border-b border-navy/6'}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-3">
-                    {isFirst && (
-                      <span className="font-body text-xs uppercase tracking-wider text-navy/70 bg-navy/10 px-1.5 py-0.5 rounded font-semibold mr-1">
-                        Current
-                      </span>
-                    )}
                     <Link
                       href={`/season/${season.slug}`}
                       className="font-heading text-xl text-navy hover:text-red-600 transition-colors"
@@ -78,16 +75,22 @@ export default async function WeeksIndexPage() {
                 <div className="divide-y divide-navy/[0.04]">
                   {summaries.map((week) => {
                     const dateStr = formatMatchDate(week.matchDate);
+                    const isLatestWeek = isCurrentSeason && week.week === snapshot?.weekNumber;
                     return (
                       <Link
                         key={week.week}
                         href={`/week/${season.slug}/${week.week}`}
-                        className="flex items-center justify-between px-5 py-2.5 hover:bg-navy/[0.02] transition-colors group"
+                        className={`flex items-center justify-between px-5 py-2.5 hover:bg-navy/[0.02] transition-colors group ${isLatestWeek ? 'bg-red-600/[0.04] border-l-2 border-l-red-600/50' : ''}`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="font-heading text-base text-navy group-hover:text-red-600 transition-colors">
+                          <span className={`font-heading text-base group-hover:text-red-600 transition-colors ${isLatestWeek ? 'text-red-600' : 'text-navy'}`}>
                             Week {week.week}
                           </span>
+                          {isLatestWeek && (
+                            <span className="font-body text-xs uppercase tracking-wider text-red-600/80 bg-red-600/10 px-1.5 py-0.5 rounded font-semibold">
+                              Latest
+                            </span>
+                          )}
                           {dateStr && (
                             <span className="text-xs font-body text-navy/50">{dateStr}</span>
                           )}
@@ -135,7 +138,7 @@ export default async function WeeksIndexPage() {
 
       <BackToTop />
 
-      <TrailNav current="/week" seasonSlug={currentSlug} />
+      <TrailNav current="/week" />
     </main>
   );
 }
