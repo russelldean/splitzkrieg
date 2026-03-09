@@ -191,11 +191,7 @@ export default async function TeamPage({
       />
 
       <div className="mt-8 space-y-8">
-        {team.teamName === 'Ghost Team' ? (
-          <GhostTeamExplainer />
-        ) : (
-          <CurrentRoster roster={currentRoster} />
-        )}
+        {team.teamName === 'Ghost Team' && <GhostTeamExplainer />}
 
         {isGhostTeam && ghostH2H.length > 0 ? (
           <GhostTeamAllTime ghostH2H={ghostH2H} ghostWinPct={ghostWinPct} />

@@ -81,6 +81,9 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                         as {season.teamNameAtTime}
                       </span>
                     )}
+                    {idx === 0 && (
+                      <span className="text-[10px] font-body font-semibold uppercase tracking-wider text-green-700 bg-green-100 px-1.5 py-0.5 rounded">Current</span>
+                    )}
                     {season.isChampion && (
                       <span className="text-base" title="League Champion">🏆</span>
                     )}

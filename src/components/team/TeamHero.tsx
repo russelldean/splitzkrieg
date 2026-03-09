@@ -39,24 +39,23 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
       {/* Current season standing callout */}
       {currentStanding && (
         <div className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg">
-          <div className="text-center">
-            <div className="font-heading text-2xl text-navy">
+          <div className="text-center shrink-0">
+            <div className="font-body text-xs text-navy/50 uppercase tracking-wide">Current Rank</div>
+            <div className="font-heading text-2xl text-navy mt-0.5">
               #{currentStanding.divisionRank}
-              <span className="text-base text-navy/65 font-body ml-1">of {currentStanding.divisionSize}</span>
+              <span className="text-base text-navy/50 font-body ml-0.5">/ {currentStanding.divisionSize}</span>
             </div>
             {currentStanding.divisionName && (
               <div className="font-body text-xs text-navy/50 mt-0.5">{currentStanding.divisionName}</div>
             )}
           </div>
           <div className="border-l border-navy/10 pl-4 flex-1">
-            <div className="font-body text-sm text-navy tabular-nums">
-              {currentStanding.wins}W-{currentStanding.losses}L · {currentStanding.xp}XP · {currentStanding.totalPts}pts
-            </div>
-            <div className="font-body text-xs text-navy/55 mt-0.5">
-              Season {currentStanding.seasonRoman}
+            <div className="font-body text-xs text-navy/50 uppercase tracking-wide">Record</div>
+            <div className="font-body text-sm text-navy font-semibold tabular-nums mt-0.5">
+              {currentStanding.wins} &ndash; {currentStanding.losses}
             </div>
           </div>
-          <div className="flex gap-3 shrink-0">
+          <div className="flex flex-col gap-1.5 shrink-0 border-l border-navy/10 pl-4">
             <Link
               href={`/season/${currentStanding.seasonSlug}`}
               className="text-xs font-body font-semibold text-navy/55 hover:text-red-600 transition-colors"
@@ -75,15 +74,9 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
 
       <div className="flex flex-wrap items-start gap-2 mt-4">
         {isGhostTeam ? (
-          <>
-            <StatPill label="Current Roster" value="X" strike />
-            <StatPill label="Seasons Active" value="X" strike />
-          </>
+          <StatPill label="Seasons Active" value="X" strike />
         ) : (
-          <>
-            <StatPill label="Current Roster" value={rosterCount} />
-            <StatPill label="Seasons Active" value={seasonsActive} />
-          </>
+          <StatPill label="Seasons Active" value={seasonsActive} />
         )}
         <FranchiseHistory names={franchiseNames} />
       </div>

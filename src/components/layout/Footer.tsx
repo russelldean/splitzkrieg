@@ -2,32 +2,74 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const secondaryLinks = [
-  { href: '/about', label: 'About' },
-  { href: '/rules', label: 'Rules' },
-  { href: '/resources', label: 'Resources' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/join', label: 'How to Join' },
+  {
+    href: '/about',
+    label: 'About',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    href: '/rules',
+    label: 'Rules',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    href: '/resources',
+    label: 'Resources',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path d="M3.75 3a.75.75 0 00-.75.75v.5c0 .414.336.75.75.75H4c6.075 0 11 4.925 11 11v.25c0 .414.336.75.75.75h.5a.75.75 0 00.75-.75V16C17 8.82 11.18 3 4 3h-.25z" />
+        <path d="M3 8.75A.75.75 0 013.75 8H4a8 8 0 018 8v.25a.75.75 0 01-.75.75h-.5a.75.75 0 01-.75-.75V16a6 6 0 00-6-6h-.25A.75.75 0 013 9.25v-.5zM7 15a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/blog',
+    label: 'Blog',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/join',
+    label: 'How to Join',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path d="M10 5a3 3 0 11-6 0 3 3 0 016 0zm-9 8c0-2.2 1.8-4 4-4h2c2.2 0 4 1.8 4 4v1H1v-1zm14-4h-1.5a.75.75 0 000 1.5H15v1.5a.75.75 0 001.5 0V10.5H18a.75.75 0 000-1.5h-1.5V7.5a.75.75 0 00-1.5 0V9z" />
+      </svg>
+    ),
+  },
 ];
 
 export function Footer() {
   return (
     <footer className="bg-cream-dark border-t border-navy/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Secondary Nav */}
-        <nav className="flex flex-row flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-6">
+        <nav className="flex flex-row flex-wrap items-center justify-center gap-x-5 gap-y-3 mb-5">
           {secondaryLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-body font-medium text-navy/60 hover:text-navy transition-colors"
+              className="flex items-center gap-1.5 text-sm font-body font-medium text-navy/50 hover:text-navy transition-colors"
             >
+              <span className="text-navy/35">{link.icon}</span>
               {link.label}
             </Link>
           ))}
         </nav>
 
         {/* Branding */}
-        <div className="flex flex-col items-center gap-6 pt-4 border-t border-navy/10">
+        <div className="flex flex-col items-center gap-5 pt-4 border-t border-navy/10">
           <div className="grid grid-cols-3 items-center justify-items-center gap-4 sm:gap-8 max-w-md mx-auto">
             <Image
               src="/59524_441728757459_7049293_n.jpg"

@@ -272,10 +272,9 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
 
         {/* ── Normal countdown: neon card ── */}
         {phase === 'countdown' && (
-          <div className="px-4 py-3 flex items-center justify-center gap-2">
-            <span className="text-xs text-navy/40 font-body">Next bowling</span>
+          <div className="px-4 py-1.5 flex flex-col items-center justify-center">
             <span
-              className="font-body text-sm tabular-nums font-semibold animate-neon-pulse"
+              className="font-body text-base tabular-nums font-semibold animate-neon-pulse"
               style={{
                 color: '#1B2A4A',
                 textShadow: '0 0 7px #1B2A4A88, 0 0 20px #1B2A4A55, 0 0 40px #1B2A4A33',
@@ -283,6 +282,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
             >
               {countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m {String(countdown.seconds).padStart(2, '0')}s
             </span>
+            <span className="text-xs text-navy/50 font-body tracking-wide uppercase mt-0.5">Countdown to bowling</span>
           </div>
         )}
 
