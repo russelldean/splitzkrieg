@@ -10,6 +10,11 @@ interface ParallaxBgProps {
   imgW?: number;
   /** Native image height for positioning math. Default 478 */
   imgH?: number;
+  /** Optional mobile-specific image source + dimensions */
+  mobileSrc?: string;
+  mobileFocalY?: number;
+  mobileImgW?: number;
+  mobileImgH?: number;
 }
 
 /**
@@ -24,7 +29,7 @@ interface ParallaxBgProps {
  *   <div className="relative z-10">Content on top</div>
  * </div>
  */
-export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478 }: ParallaxBgProps) {
+export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478, mobileSrc, mobileFocalY, mobileImgW, mobileImgH }: ParallaxBgProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -37,7 +42,11 @@ export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478 }: Paral
   }, []);
 
   if (isMobile) {
-    return <MobileParallax ref={ref} src={src} focalY={focalY} imgW={imgW} imgH={imgH} />;
+    const mSrc = mobileSrc ?? src;
+    const mFocalY = mobileSrc ? (mobileFocalY ?? focalY) : focalY;
+    const mW = mobileSrc ? (mobileImgW ?? imgW) : imgW;
+    const mH = mobileSrc ? (mobileImgH ?? imgH) : imgH;
+    return <MobileParallax ref={ref} src={mSrc} focalY={mFocalY} imgW={mW} imgH={mH} />;
   }
 
   return <DesktopParallax ref={ref} src={src} focalY={focalY} imgW={imgW} imgH={imgH} />;

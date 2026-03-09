@@ -134,7 +134,7 @@ export default async function Home() {
               className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all group ring-1 ring-navy/10"
             >
               {/* Background image — Village Lanes blue chairs, parallax */}
-              <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} />
+              <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
               {/* Semi-transparent overlay for text readability */}
               <div className="absolute inset-0 bg-black/60 group-hover:bg-black/50 transition-colors" />
               {/* Content */}
