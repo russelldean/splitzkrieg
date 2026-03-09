@@ -179,54 +179,79 @@ async function main() {
              AND sc2.teamID = ch.winnerTeamID AND sc2.isPenalty = 0) >= 3
   `, 'Team Championship');
 
+  // ─── Playoff min-games override per season (default 18) ───
+  // Some seasons had shorter schedules or different qualification rules.
+  const playoffMinGamesOverrides = { 27: 9 };
+  const minGamesCaseExpr = `CASE ${
+    Object.entries(playoffMinGamesOverrides).map(([sid, g]) => `WHEN seasonID = ${sid} THEN ${g}`).join(' ')
+  } ELSE 18 END`;
+
   // ─── Scratch Playoff qualifiers ───
+  // Use DECIMAL(5,1) to match the UI leaderboard rounding
   await insertPatches('scratchPlayoff', `
     SELECT ranked.bowlerID, ranked.seasonID, NULL AS week
     FROM (
       SELECT sc2.seasonID, sc2.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc2.seasonID, b2.gender ORDER BY
-          CAST(SUM(sc2.game1 + sc2.game2 + sc2.game3) AS FLOAT) / (COUNT(*) * 3) DESC
+        RANK() OVER (PARTITION BY sc2.seasonID, b2.gender ORDER BY
+          CAST(SUM(sc2.game1 + sc2.game2 + sc2.game3) * 1.0 / NULLIF(COUNT(sc2.scoreID) * 3, 0) AS DECIMAL(5,1)) DESC
         ) AS scratchRank
       FROM scores sc2
       JOIN bowlers b2 ON b2.bowlerID = sc2.bowlerID
       WHERE sc2.isPenalty = 0 AND b2.gender IN ('M', 'F')
       GROUP BY sc2.seasonID, sc2.bowlerID, b2.gender
-      HAVING COUNT(*) * 3 >= 18
+      HAVING COUNT(*) * 3 >= ${minGamesCaseExpr}
     ) ranked
     WHERE ranked.scratchRank <= 8
   `, 'Scratch Playoff');
 
   // ─── Handicap Playoff qualifiers (top 8 non-scratch-qualifiers by hcp avg) ───
+  // Use DECIMAL(5,1) to match the UI leaderboard rounding
   await insertPatches('hcpPlayoff', `
     SELECT ranked.bowlerID, ranked.seasonID, NULL AS week
     FROM (
       SELECT ss.seasonID, ss.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY ss.seasonID ORDER BY ss.hcpAvg DESC) AS hcpRank
+        RANK() OVER (PARTITION BY ss.seasonID ORDER BY ss.hcpAvg DESC) AS hcpRank
       FROM (
         SELECT sc2.seasonID, sc2.bowlerID,
-          CAST(SUM(sc2.hcpGame1 + sc2.hcpGame2 + sc2.hcpGame3) AS FLOAT) / (COUNT(*) * 3) AS hcpAvg
+          CAST(SUM(sc2.handSeries) * 1.0 / NULLIF(COUNT(sc2.scoreID) * 3, 0) AS DECIMAL(5,1)) AS hcpAvg
         FROM scores sc2
         WHERE sc2.isPenalty = 0
         GROUP BY sc2.seasonID, sc2.bowlerID
-        HAVING COUNT(*) * 3 >= 18
+        HAVING COUNT(*) * 3 >= ${minGamesCaseExpr}
       ) ss
       WHERE NOT EXISTS (
         SELECT 1 FROM (
           SELECT sc3.seasonID, sc3.bowlerID,
-            ROW_NUMBER() OVER (PARTITION BY sc3.seasonID, b3.gender ORDER BY
-              CAST(SUM(sc3.game1 + sc3.game2 + sc3.game3) AS FLOAT) / (COUNT(*) * 3) DESC
+            RANK() OVER (PARTITION BY sc3.seasonID, b3.gender ORDER BY
+              CAST(SUM(sc3.game1 + sc3.game2 + sc3.game3) * 1.0 / NULLIF(COUNT(sc3.scoreID) * 3, 0) AS DECIMAL(5,1)) DESC
             ) AS scratchRank
           FROM scores sc3
           JOIN bowlers b3 ON b3.bowlerID = sc3.bowlerID
           WHERE sc3.isPenalty = 0 AND b3.gender IN ('M', 'F')
           GROUP BY sc3.seasonID, sc3.bowlerID, b3.gender
-          HAVING COUNT(*) * 3 >= 18
+          HAVING COUNT(*) * 3 >= ${minGamesCaseExpr}
         ) sq
         WHERE sq.bowlerID = ss.bowlerID AND sq.seasonID = ss.seasonID AND sq.scratchRank <= 8
       )
     ) ranked
     WHERE ranked.hcpRank <= 8
   `, 'Handicap Playoff');
+
+  // ─── Scratch Champion (individual playoff winner — men's or women's scratch) ───
+  await insertPatches('scratchChampion', `
+    SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
+    FROM seasonChampions sc
+    WHERE sc.championshipType IN ('MensScratch', 'WomensScratch')
+      AND sc.winnerBowlerID IS NOT NULL
+  `, 'Scratch Champion');
+
+  // ─── Handicap Champion (individual playoff winner — handicap) ───
+  await insertPatches('hcpChampion', `
+    SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
+    FROM seasonChampions sc
+    WHERE sc.championshipType = 'Handicap'
+      AND sc.winnerBowlerID IS NOT NULL
+  `, 'Handicap Champion');
 
   // ─── Team Captain (career-level, no season/week) ───
   await insertPatches('captain', `

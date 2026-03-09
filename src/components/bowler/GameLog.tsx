@@ -197,7 +197,7 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
               className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.03] hover:bg-navy/[0.06] transition-colors"
             >
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-heading text-lg text-navy">{season.displayName}</span>
+                <Link href={`/stats/${season.weeks[0]?.seasonSlug ?? ''}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors" onClick={(e) => e.stopPropagation()}>{season.displayName}</Link>
                 {!isOpen && hasBest && (
                   <span className="text-xs font-body font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
                     {bestLabel}

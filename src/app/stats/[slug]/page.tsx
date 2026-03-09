@@ -44,6 +44,18 @@ export async function generateMetadata({
   };
 }
 
+/** Return IDs of the top 8 entries plus any tied at the 8th value. */
+function playoffQualifiers(entries: SeasonLeaderEntry[]): Set<number> {
+  if (entries.length <= 8) return new Set(entries.map(e => e.bowlerID));
+  const cutoffValue = entries[7].value;
+  const ids = new Set<number>();
+  for (const e of entries) {
+    if (e.value >= cutoffValue) ids.add(e.bowlerID);
+    else break;
+  }
+  return ids;
+}
+
 function buildHcpLeaderboard(
   fullStats: import('@/lib/queries').SeasonFullStatsRow[],
   mensAvg: SeasonLeaderEntry[],
@@ -51,8 +63,8 @@ function buildHcpLeaderboard(
   minGames: number = 9
 ): { entries: SeasonLeaderEntry[]; playoffIDs: Set<number>; ineligibleIDs: Set<number> } {
   const ineligibleIds = new Set<number>();
-  mensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
-  womensAvg.slice(0, 8).forEach((e) => ineligibleIds.add(e.bowlerID));
+  playoffQualifiers(mensAvg).forEach((id) => ineligibleIds.add(id));
+  playoffQualifiers(womensAvg).forEach((id) => ineligibleIds.add(id));
 
   const hcpRows = fullStats
     .filter((s) => s.hcpAvg != null && s.gamesBowled >= minGames)
@@ -79,15 +91,8 @@ function buildHcpLeaderboard(
     }
   }
 
-  const playoffIDs = new Set<number>();
-  let playoffCount = 0;
-  for (const row of hcpRows) {
-    if (!ineligibleIds.has(row.bowlerID)) {
-      playoffIDs.add(row.bowlerID);
-      playoffCount++;
-      if (playoffCount >= 8) break;
-    }
-  }
+  const eligible = hcpRows.filter(r => !ineligibleIds.has(r.bowlerID));
+  const playoffIDs = playoffQualifiers(eligible);
 
   const displayedIneligible = new Set<number>(
     hcpRows.slice(0, cutoff).filter((e) => ineligibleIds.has(e.bowlerID)).map((e) => e.bowlerID)
@@ -129,8 +134,8 @@ export default async function SeasonStatsPage({
     fullStats, mensAvg, womensAvg, minGames
   );
 
-  const mensScratchPlayoffIDs = new Set(mensAvg.slice(0, 8).map(e => e.bowlerID));
-  const womensScratchPlayoffIDs = new Set(womensAvg.slice(0, 8).map(e => e.bowlerID));
+  const mensScratchPlayoffIDs = playoffQualifiers(mensAvg);
+  const womensScratchPlayoffIDs = playoffQualifiers(womensAvg);
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">

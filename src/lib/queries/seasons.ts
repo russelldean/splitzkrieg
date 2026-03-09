@@ -321,27 +321,37 @@ export async function getSeasonLeaderboard(
 
   const sql = `
     SELECT TOP 10
-      b.bowlerID,
+      agg.bowlerID,
       b.bowlerName,
       b.slug,
       COALESCE(tnh.teamName, t.teamName) AS teamName,
       t.slug AS teamSlug,
-      ${selectExpr} AS value,
-      ROW_NUMBER() OVER (ORDER BY ${selectExpr} ${orderDir}) AS rank
-    FROM scores sc
-    JOIN bowlers b ON sc.bowlerID = b.bowlerID
-    LEFT JOIN teams t ON sc.teamID = t.teamID
+      agg.value,
+      ROW_NUMBER() OVER (ORDER BY agg.value ${orderDir}) AS rank
+    FROM (
+      SELECT sc.bowlerID,
+        ${selectExpr} AS value
+      FROM scores sc
+      JOIN bowlers b ON sc.bowlerID = b.bowlerID
+      WHERE sc.seasonID = @seasonID
+        AND sc.isPenalty = 0
+        ${genderFilter}
+      GROUP BY sc.bowlerID
+      ${havingClause}
+    ) agg
+    JOIN bowlers b ON b.bowlerID = agg.bowlerID
+    CROSS APPLY (
+      SELECT TOP 1 sc2.teamID
+      FROM scores sc2
+      WHERE sc2.bowlerID = agg.bowlerID AND sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+      GROUP BY sc2.teamID
+      ORDER BY COUNT(*) DESC
+    ) pt
+    LEFT JOIN teams t ON t.teamID = pt.teamID
     LEFT JOIN teamNameHistory tnh
-      ON  tnh.seasonID = sc.seasonID
-      AND tnh.teamID   = sc.teamID
-    WHERE sc.seasonID = @seasonID
-      AND sc.isPenalty = 0
-      ${genderFilter}
-    GROUP BY
-      b.bowlerID, b.bowlerName, b.slug,
-      COALESCE(tnh.teamName, t.teamName), t.slug
-    ${havingClause}
-    ORDER BY value ${orderDir}
+      ON  tnh.seasonID = @seasonID
+      AND tnh.teamID   = pt.teamID
+    ORDER BY agg.value ${orderDir}
   `;
 
   return cachedQuery(`getSeasonLeaderboard-${seasonID}-${gender}-${category}-${minGames}`, async () => {
@@ -357,48 +367,66 @@ export async function getSeasonLeaderboard(
 
 const GET_SEASON_FULL_STATS_SQL = `
   SELECT
-    b.bowlerID,
+    agg.bowlerID,
     b.bowlerName,
     b.slug,
     b.gender,
     COALESCE(tnh.teamName, t.teamName)                   AS teamName,
     t.slug                                               AS teamSlug,
-    COUNT(sc.scoreID) * 3                                AS gamesBowled,
-    SUM(sc.scratchSeries)                                AS totalPins,
-    CAST(
-      SUM(sc.scratchSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
-    AS DECIMAL(5,1))                                     AS scratchAvg,
-    CAST(
-      SUM(sc.handSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
-    AS DECIMAL(5,1))                                     AS hcpAvg,
-    MAX(
-      CASE
-        WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
-        WHEN sc.game2 >= sc.game3 THEN sc.game2
-        ELSE sc.game3
-      END
-    )                                                    AS highGame,
-    MAX(sc.scratchSeries)                                AS highSeries,
-    SUM(
-      CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
-      CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
-      CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
-    )                                                    AS games200Plus,
-    SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
-    SUM(ISNULL(sc.turkeys, 0))                           AS turkeys
-  FROM scores sc
-  JOIN bowlers b ON sc.bowlerID = b.bowlerID
-  LEFT JOIN teams t ON sc.teamID = t.teamID
+    agg.gamesBowled,
+    agg.totalPins,
+    agg.scratchAvg,
+    agg.hcpAvg,
+    agg.highGame,
+    agg.highSeries,
+    agg.games200Plus,
+    agg.series600Plus,
+    agg.turkeys
+  FROM (
+    SELECT
+      sc.bowlerID,
+      COUNT(sc.scoreID) * 3                                AS gamesBowled,
+      SUM(sc.scratchSeries)                                AS totalPins,
+      CAST(
+        SUM(sc.scratchSeries) * 1.0 /
+        NULLIF(COUNT(sc.scoreID) * 3, 0)
+      AS DECIMAL(5,1))                                     AS scratchAvg,
+      CAST(
+        SUM(sc.handSeries) * 1.0 /
+        NULLIF(COUNT(sc.scoreID) * 3, 0)
+      AS DECIMAL(5,1))                                     AS hcpAvg,
+      MAX(
+        CASE
+          WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
+          WHEN sc.game2 >= sc.game3 THEN sc.game2
+          ELSE sc.game3
+        END
+      )                                                    AS highGame,
+      MAX(sc.scratchSeries)                                AS highSeries,
+      SUM(
+        CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
+        CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
+        CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
+      )                                                    AS games200Plus,
+      SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
+      SUM(ISNULL(sc.turkeys, 0))                           AS turkeys
+    FROM scores sc
+    WHERE sc.seasonID = @seasonID
+      AND sc.isPenalty = 0
+    GROUP BY sc.bowlerID
+  ) agg
+  JOIN bowlers b ON b.bowlerID = agg.bowlerID
+  CROSS APPLY (
+    SELECT TOP 1 sc2.teamID
+    FROM scores sc2
+    WHERE sc2.bowlerID = agg.bowlerID AND sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+    GROUP BY sc2.teamID
+    ORDER BY COUNT(*) DESC
+  ) pt
+  LEFT JOIN teams t ON t.teamID = pt.teamID
   LEFT JOIN teamNameHistory tnh
-    ON  tnh.seasonID = sc.seasonID
-    AND tnh.teamID   = sc.teamID
-  WHERE sc.seasonID = @seasonID
-    AND sc.isPenalty = 0
-  GROUP BY
-    b.bowlerID, b.bowlerName, b.slug, b.gender,
-    COALESCE(tnh.teamName, t.teamName), t.slug
+    ON  tnh.seasonID = @seasonID
+    AND tnh.teamID   = pt.teamID
   ORDER BY scratchAvg DESC
 `;
 
@@ -1212,4 +1240,47 @@ export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => 
     const result = await db.request().query<PlayoffSeason>(GET_ALL_PLAYOFF_HISTORY_SQL);
     return result.recordset;
   }, [], { stable: true, sql: GET_ALL_PLAYOFF_HISTORY_SQL });
+});
+
+/* ─────────────────────────────────────────────────────────
+ * Individual Championship History
+ * ───────────────────────────────────────────────────────── */
+
+export interface IndividualChampionSeason {
+  seasonID: number;
+  romanNumeral: string;
+  displayName: string;
+  mensScratchName: string | null;
+  mensScratchSlug: string | null;
+  womensScratchName: string | null;
+  womensScratchSlug: string | null;
+  handicapName: string | null;
+  handicapSlug: string | null;
+}
+
+const GET_ALL_INDIVIDUAL_CHAMPIONS_SQL = `
+  SELECT
+    s.seasonID,
+    s.romanNumeral,
+    s.displayName,
+    bm.bowlerName AS mensScratchName, bm.slug AS mensScratchSlug,
+    bw.bowlerName AS womensScratchName, bw.slug AS womensScratchSlug,
+    bh.bowlerName AS handicapName, bh.slug AS handicapSlug
+  FROM seasons s
+  LEFT JOIN seasonChampions cm ON cm.seasonID = s.seasonID AND cm.championshipType = 'MensScratch'
+  LEFT JOIN bowlers bm ON cm.winnerBowlerID = bm.bowlerID
+  LEFT JOIN seasonChampions cw ON cw.seasonID = s.seasonID AND cw.championshipType = 'WomensScratch'
+  LEFT JOIN bowlers bw ON cw.winnerBowlerID = bw.bowlerID
+  LEFT JOIN seasonChampions ch ON ch.seasonID = s.seasonID AND ch.championshipType = 'Handicap'
+  LEFT JOIN bowlers bh ON ch.winnerBowlerID = bh.bowlerID
+  WHERE cm.id IS NOT NULL OR cw.id IS NOT NULL OR ch.id IS NOT NULL
+  ORDER BY s.seasonID DESC
+`;
+
+export const getAllIndividualChampions = cache(async (): Promise<IndividualChampionSeason[]> => {
+  return cachedQuery('getAllIndividualChampions', async () => {
+    const db = await getDb();
+    const result = await db.request().query<IndividualChampionSeason>(GET_ALL_INDIVIDUAL_CHAMPIONS_SQL);
+    return result.recordset;
+  }, [], { stable: true, sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL });
 });

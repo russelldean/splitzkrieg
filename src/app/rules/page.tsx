@@ -72,6 +72,15 @@ export default function RulesPage() {
                 to run up against a team that bowls out of their minds.
               </li>
               <li>
+                <strong className="text-navy">Individual playoffs.</strong>{' '}
+                For the first 5 seasons, bowlers could qualify for both the Scratch
+                and Handicap playoffs. For the first 7 seasons, the Women&rsquo;s
+                Scratch playoff was not held. In practice, not
+                everyone who qualified could always make it to playoff night, and
+                alternates would step in &mdash; but for record-keeping purposes,
+                the top 8 in each category are recorded as making the playoffs.
+              </li>
+              <li>
                 <strong className="text-navy">My data management.</strong>{' '}
                 I started out with an abacus, then moved to a Commodore 64, and I&rsquo;ve
                 finally got a word processor &mdash; getting a little better every day.
