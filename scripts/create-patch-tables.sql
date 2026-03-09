@@ -37,4 +37,5 @@ INSERT INTO patches (code, name, description) VALUES
   ('hcpPlayoff',     'Handicap Playoff',            'Top 8 by handicap avg (18+ games, excl. scratch qualifiers)'),
   ('scratchChampion','Scratch Champion',             'Won the scratch playoff'),
   ('hcpChampion',    'Handicap Champion',            'Won the handicap playoff'),
-  ('captain',        'Team Captain',                 'Current team captain');
+  ('captain',        'Team Captain',                 'Current team captain'),
+  ('aboveAvg',       'Above Average All 3',          'All 3 games above incoming average');

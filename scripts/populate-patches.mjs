@@ -144,6 +144,17 @@ async function main() {
     ) x WHERE x.rn = 1
   `, 'Weekly High Series');
 
+  // ─── Above Average All 3 Games ───
+  await insertPatches('aboveAvg', `
+    SELECT sc.bowlerID, sc.seasonID, sc.week
+    FROM scores sc
+    WHERE sc.isPenalty = 0
+      AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
+      AND sc.game1 > sc.incomingAvg
+      AND sc.game2 > sc.incomingAvg
+      AND sc.game3 > sc.incomingAvg
+  `, 'Above Average All 3 Games');
+
   // ─── Three of a Kind ───
   await insertPatches('threeOfAKind', `
     SELECT sc.bowlerID, sc.seasonID, sc.week
