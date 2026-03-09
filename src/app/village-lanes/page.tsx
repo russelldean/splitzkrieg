@@ -34,6 +34,8 @@ export default function VillageLanesPage() {
             />
           </div>
         </figure>
+
+        <p className="text-center text-zinc-400 text-lg italic mt-8">For another day</p>
       </div>
     </main>
   );
