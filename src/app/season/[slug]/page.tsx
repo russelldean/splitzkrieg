@@ -104,7 +104,7 @@ export default async function SeasonPage({
   const totalWeeks = Math.max(maxScoreWeek, maxScheduleWeek);
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <TrailNav current="/seasons" seasonSlug={slug} seasonRoman={season.romanNumeral} position="top" />
 
       <SeasonHero season={season} heroStats={heroStats} bracket={bracket} />
