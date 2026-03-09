@@ -4,7 +4,6 @@
  * Pre-rendered at build time via generateStaticParams.
  */
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
   getAllSeasonSlugs,
@@ -136,25 +135,18 @@ export default async function SeasonStatsPage({
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <TrailNav current="/stats" seasonSlug={slug} seasonRoman={season.romanNumeral} position="top" />
-      <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
-        <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
-        <span className="text-navy/30">/</span>
-        <Link href={`/season/${slug}`} className="hover:text-red-600 transition-colors">Season {season.romanNumeral}</Link>
-        <span className="text-navy/30">/</span>
-        <span className="text-navy/70">Stats</span>
-      </div>
 
-      <div className="mb-8">
+      <div className="pb-5 border-b border-red-600/20">
         <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
           Season {strikeX(season.romanNumeral)}
         </h1>
-        <p className="font-body text-lg text-navy/60 mt-1">
+        <p className="font-body text-sm text-navy/55 mt-1">
           The Stats &middot; {season.period} {season.year}
         </p>
-        <SeasonNav current={season} allSeasons={allSeasons} basePath="/stats" />
       </div>
+      <SeasonNav current={season} allSeasons={allSeasons} basePath="/stats" />
 
-      <div className="space-y-12">
+      <div className="mt-6 space-y-12">
         <SeasonLeaderboards
           mensScratch={[
             { title: 'Top 10 Average', entries: mensAvg },

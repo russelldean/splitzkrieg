@@ -119,31 +119,18 @@ export default async function WeekPage({
   const newerSeason = seasonIdx > 0 ? allSeasons[seasonIdx - 1] : null;
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} position="top" />
-      {/* Breadcrumb + navigation */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-3">
-          <Link href="/seasons" className="hover:text-red-600 transition-colors">Seasons</Link>
-          <span className="text-navy/30">/</span>
-          <Link href={`/season/${seasonSlug}`} className="hover:text-red-600 transition-colors">
-            Season {season.romanNumeral}
-          </Link>
-          <span className="text-navy/30">/</span>
-          <span className="text-navy/70">Week {weekNum}</span>
-        </div>
-
         {/* Week header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
-              Season {strikeX(season.romanNumeral)}
-            </h1>
-            <p className="font-body text-lg text-navy/60 mt-1">
-              Week {weekNum} &middot; {season.period} {season.year}
-              {dateStr && <> &middot; {dateStr}</>}
-            </p>
-          </div>
+        <div className="pb-5 border-b border-red-600/20">
+          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
+            Season {strikeX(season.romanNumeral)}
+          </h1>
+          <p className="font-body text-sm text-navy/55 mt-1">
+            Week {weekNum} &middot; {season.period} {season.year}
+            {dateStr && <> &middot; {dateStr}</>}
+          </p>
         </div>
 
         {/* Prev/Next arrows */}

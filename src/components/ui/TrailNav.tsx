@@ -50,12 +50,14 @@ export async function TrailNav({ current, position = 'bottom', seasonSlug, weekN
   const next = idx < trail.length - 1 ? trail[idx + 1] : null;
 
   const wrapperClass = position === 'top'
-    ? 'mb-8'
+    ? 'mb-5'
     : 'mt-12';
 
   return (
     <nav className={wrapperClass}>
-      <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-4" />
+      {position === 'bottom' && (
+        <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-4" />
+      )}
       <div className="flex items-center justify-between">
         {prev ? (
           <Link
@@ -84,6 +86,9 @@ export async function TrailNav({ current, position = 'bottom', seasonSlug, weekN
           <span />
         )}
       </div>
+      {position === 'top' && (
+        <div className="border-b border-navy/20 mt-4" />
+      )}
     </nav>
   );
 }

@@ -182,12 +182,12 @@ function PlayoffResults({ bracket }: { bracket: SeasonPlayoffBracket }) {
 
 export function SeasonHero({ season, heroStats, bracket }: Props) {
   return (
-    <section className="relative pb-8 border-b border-red-600/20">
+    <section className="relative pb-5 border-b border-red-600/20">
       <div>
         <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
           Season {strikeX(season.romanNumeral)}
         </h1>
-        <p className="font-body text-lg text-navy/60 mt-1">
+        <p className="font-body text-sm text-navy/55 mt-1">
           {season.period} {season.year}
         </p>
       </div>
