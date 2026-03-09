@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+summary::-webkit-details-marker { display: none; }
+
 :root {
   --font-dm-serif: 'DM Serif Display', serif;
   --font-inter: 'Inter', sans-serif;

@@ -7,11 +7,13 @@ import type { Metadata } from 'next';
 import {
   getAllPlayoffHistory,
   getAllIndividualChampions,
+  getAllTimeLeaderboard,
   type PlayoffSeason,
   type IndividualChampionSeason,
 } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { AllTimeLeaderboardTable } from '@/components/alltime/AllTimeLeaderboardTable';
 
 export const metadata: Metadata = {
   title: 'All-Time Stats | Splitzkrieg',
@@ -244,9 +246,10 @@ function IndividualChampionRow({
 }
 
 export default async function AllTimeStatsPage() {
-  const [playoffs, individualChampions] = await Promise.all([
+  const [playoffs, individualChampions, leaderboard] = await Promise.all([
     getAllPlayoffHistory(),
     getAllIndividualChampions(),
+    getAllTimeLeaderboard(),
   ]);
   const snapshots = computeRunningTotals(playoffs);
   const individualSnapshots = computeIndividualCounts(individualChampions);
@@ -310,11 +313,32 @@ export default async function AllTimeStatsPage() {
         35+ seasons of Splitzkrieg bowling history
       </p>
 
-      {/* Team Championship History */}
-      <section className="mt-10">
-        <SectionHeading>Team Championships</SectionHeading>
+      {/* All-Time Leaderboard */}
+      <details className="mt-10 group">
+        <summary className="cursor-pointer list-none">
+          <SectionHeading>
+            <span className="inline-flex items-center gap-2">
+              Career Leaderboard
+              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
+            </span>
+          </SectionHeading>
+        </summary>
+        <div className="mt-4">
+          <AllTimeLeaderboardTable data={leaderboard} />
+        </div>
+      </details>
 
-        <div className="overflow-x-auto">
+      {/* Team Championship History */}
+      <details className="mt-10 group">
+        <summary className="cursor-pointer list-none">
+          <SectionHeading>
+            <span className="inline-flex items-center gap-2">
+              Team Championships
+              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
+            </span>
+          </SectionHeading>
+        </summary>
+        <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-navy/10 text-left">
@@ -346,13 +370,19 @@ export default async function AllTimeStatsPage() {
             No playoff data available.
           </p>
         )}
-      </section>
+      </details>
 
       {/* Individual Championship History */}
-      <section className="mt-10">
-        <SectionHeading>Individual Champions</SectionHeading>
-
-        <div className="overflow-x-auto">
+      <details className="mt-10 group">
+        <summary className="cursor-pointer list-none">
+          <SectionHeading>
+            <span className="inline-flex items-center gap-2">
+              Individual Champions
+              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
+            </span>
+          </SectionHeading>
+        </summary>
+        <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-navy/10 text-left">
@@ -381,7 +411,7 @@ export default async function AllTimeStatsPage() {
             No individual championship data available.
           </p>
         )}
-      </section>
+      </details>
 
       <TrailNav current="/stats" />
     </main>

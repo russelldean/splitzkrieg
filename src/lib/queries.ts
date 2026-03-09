@@ -7,3 +7,4 @@ export * from './queries/teams';
 export * from './queries/seasons';
 export * from './queries/home';
 export * from './queries/milestones';
+export * from './queries/alltime';

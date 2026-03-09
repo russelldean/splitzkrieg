@@ -72,7 +72,7 @@ export async function Header() {
         { href: '/week', label: 'All Weeks' },
         { href: '/seasons', label: 'All Seasons' },
         { href: '/stats', label: 'All Season Stats' },
-        { href: '/stats/all-time', label: 'Playoffs' },
+        { href: '/stats/all-time', label: 'All-Time' },
         { href: '/milestones', label: 'Milestone Watch' },
       ],
     },
@@ -134,7 +134,7 @@ export async function Header() {
                 links={[
                   ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),
                   { href: '/stats', label: 'All Season Stats' },
-                  { href: '/stats/all-time', label: 'Playoffs' },
+                  { href: '/stats/all-time', label: 'All-Time' },
                   { href: '/milestones', label: 'Milestone Watch' },
                 ]}
               />
