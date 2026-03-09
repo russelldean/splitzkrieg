@@ -31,6 +31,22 @@ export function FeedbackButton() {
     }
   }, [open]);
 
+  // Reset iOS zoom when keyboard dismisses
+  useEffect(() => {
+    if (!open) return;
+    function resetZoom() {
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1');
+        setTimeout(() => {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1');
+        }, 100);
+      }
+    }
+    document.addEventListener('focusout', resetZoom);
+    return () => document.removeEventListener('focusout', resetZoom);
+  }, [open]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!message.trim()) return;
@@ -88,7 +104,7 @@ export function FeedbackButton() {
           {/* Modal */}
           <form
             onSubmit={handleSubmit}
-            className="relative bg-cream rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 p-6 shadow-2xl border border-navy/10"
+            className="fixed bottom-0 left-0 right-0 sm:static sm:w-full sm:max-w-md sm:mx-4 bg-cream rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl border border-navy/10 max-h-[80vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-xl text-navy">Send Feedback</h2>
@@ -122,7 +138,7 @@ export function FeedbackButton() {
                   placeholder="Name (optional)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
+                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-[16px] sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
                   maxLength={100}
                 />
                 <input
@@ -130,7 +146,7 @@ export function FeedbackButton() {
                   placeholder="Email (optional)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
+                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-[16px] sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
                   maxLength={255}
                 />
               </div>
