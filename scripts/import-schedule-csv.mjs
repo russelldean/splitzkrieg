@@ -27,6 +27,7 @@ const TEAM_NAME_ALIASES = {
   'Big Bowler Brand': 'Werewolf Splitzers',
   'Valley Of The Balls': 'Valley of the Balls',
   'Valley Of the Balls': 'Valley of the Balls',
+  'Smokeable Fernet': 'Smokeabowl Fernet',
 };
 
 // --- Parse CLI args ---
