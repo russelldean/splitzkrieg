@@ -436,133 +436,11 @@ export interface BowlerStarStats {
 }
 
 const GET_BOWLER_STAR_STATS_SQL = `
-  SELECT
-    -- Bowler of the Week wins (highest handSeries among eligible, per week)
-    (SELECT COUNT(*) FROM (
-      SELECT sc.seasonID, sc.week,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.handSeries DESC) AS rn,
-        sc.bowlerID
-      FROM scores sc
-      WHERE sc.isPenalty = 0
-        AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-        AND EXISTS (
-          SELECT 1 FROM scores sc3
-          WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
-            AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-        )
-    ) x WHERE x.bowlerID = @bowlerID AND x.rn = 1) AS botwWins,
-
-    -- Playoff appearances (seasons where bowler's team was in playoffs)
-    (SELECT COUNT(DISTINCT sub.seasonID) FROM (
-      SELECT pr.seasonID
-      FROM playoffResults pr
-      JOIN scores sc ON sc.seasonID = pr.seasonID
-        AND sc.isPenalty = 0
-        AND sc.bowlerID = @bowlerID
-        AND (sc.teamID = pr.team1ID OR sc.teamID = pr.team2ID)
-      WHERE pr.playoffType = 'Team'
-    ) sub) AS playoffAppearances,
-
-    -- Championships (seasons where bowler's team won)
-    (SELECT COUNT(DISTINCT ch.seasonID)
-     FROM seasonChampions ch
-     JOIN scores sc ON sc.seasonID = ch.seasonID
-       AND sc.teamID = ch.winnerTeamID
-       AND sc.bowlerID = @bowlerID
-       AND sc.isPenalty = 0
-     WHERE ch.championshipType = 'Team') AS championships,
-
-    -- Is team captain
-    (SELECT CASE WHEN EXISTS (
-      SELECT 1 FROM teams t WHERE t.captainBowlerID = @bowlerID
-    ) THEN 1 ELSE 0 END) AS isCaptain,
-
-    -- Weekly high game wins (highest single game that week)
-    (SELECT COUNT(*) FROM (
-      SELECT sc.seasonID, sc.week,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY
-          CASE WHEN sc.game1 >= ISNULL(sc.game2,0) AND sc.game1 >= ISNULL(sc.game3,0) THEN sc.game1
-               WHEN sc.game2 >= ISNULL(sc.game3,0) THEN sc.game2
-               ELSE sc.game3 END DESC) AS rn,
-        sc.bowlerID
-      FROM scores sc
-      WHERE sc.isPenalty = 0
-    ) x WHERE x.bowlerID = @bowlerID AND x.rn = 1) AS weeklyHighGameWins,
-
-    -- Weekly high series wins
-    (SELECT COUNT(*) FROM (
-      SELECT sc.seasonID, sc.week,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn,
-        sc.bowlerID
-      FROM scores sc
-      WHERE sc.isPenalty = 0
-    ) x WHERE x.bowlerID = @bowlerID AND x.rn = 1) AS weeklyHighSeriesWins,
-
-    -- Nights where all 3 games were above incoming average
-    (SELECT COUNT(*)
-     FROM scores sc
-     WHERE sc.bowlerID = @bowlerID
-       AND sc.isPenalty = 0
-       AND sc.incomingAvg IS NOT NULL
-       AND sc.incomingAvg > 0
-       AND sc.game1 > sc.incomingAvg
-       AND sc.game2 > sc.incomingAvg
-       AND sc.game3 > sc.incomingAvg) AS aboveAvgAllThreeCount,
-
-    -- Three of a Kind (all 3 games identical)
-    (SELECT COUNT(*)
-     FROM scores sc
-     WHERE sc.bowlerID = @bowlerID
-       AND sc.isPenalty = 0
-       AND sc.game1 = sc.game2 AND sc.game2 = sc.game3
-       AND sc.game1 IS NOT NULL AND sc.game1 > 0) AS threeOfAKindCount,
-
-    -- Scratch Playoff appearances (top 8 men + top 8 women by scratch avg, 18+ games)
-    (SELECT COUNT(*) FROM (
-      SELECT ranked.seasonID
-      FROM (
-        SELECT sc3.seasonID, sc3.bowlerID,
-          ROW_NUMBER() OVER (PARTITION BY sc3.seasonID, b3.gender ORDER BY
-            CAST(SUM(sc3.game1 + sc3.game2 + sc3.game3) AS FLOAT) / (COUNT(*) * 3) DESC
-          ) AS scratchRank
-        FROM scores sc3
-        JOIN bowlers b3 ON b3.bowlerID = sc3.bowlerID
-        WHERE sc3.isPenalty = 0 AND b3.gender IN ('M', 'F')
-        GROUP BY sc3.seasonID, sc3.bowlerID, b3.gender
-        HAVING COUNT(*) * 3 >= 18
-      ) ranked
-      WHERE ranked.bowlerID = @bowlerID AND ranked.scratchRank <= 8
-    ) sub) AS scratchPlayoffAppearances,
-
-    -- Handicap Playoff appearances (top 8 by hcp avg, excluding scratch qualifiers)
-    (SELECT COUNT(*) FROM (
-      SELECT ss.seasonID
-      FROM (
-        SELECT sc2.seasonID, sc2.bowlerID,
-          ROW_NUMBER() OVER (PARTITION BY sc2.seasonID ORDER BY
-            CAST(SUM(sc2.hcpGame1 + sc2.hcpGame2 + sc2.hcpGame3) AS FLOAT) / (COUNT(*) * 3) DESC
-          ) AS hcpRank
-        FROM scores sc2
-        WHERE sc2.isPenalty = 0
-        GROUP BY sc2.seasonID, sc2.bowlerID
-        HAVING COUNT(*) * 3 >= 18
-      ) ss
-      WHERE ss.bowlerID = @bowlerID AND ss.hcpRank <= 8
-        AND NOT EXISTS (
-          SELECT 1 FROM (
-            SELECT sc3.seasonID, sc3.bowlerID,
-              ROW_NUMBER() OVER (PARTITION BY sc3.seasonID, b3.gender ORDER BY
-                CAST(SUM(sc3.game1 + sc3.game2 + sc3.game3) AS FLOAT) / (COUNT(*) * 3) DESC
-              ) AS scratchRank
-            FROM scores sc3
-            JOIN bowlers b3 ON b3.bowlerID = sc3.bowlerID
-            WHERE sc3.isPenalty = 0 AND b3.gender IN ('M', 'F')
-            GROUP BY sc3.seasonID, sc3.bowlerID, b3.gender
-            HAVING COUNT(*) * 3 >= 18
-          ) sq
-          WHERE sq.bowlerID = ss.bowlerID AND sq.seasonID = ss.seasonID AND sq.scratchRank <= 8
-        )
-    ) sub) AS hcpPlayoffAppearances
+  SELECT p.code, COUNT(*) AS cnt
+  FROM bowlerPatches bp
+  JOIN patches p ON p.patchID = bp.patchID
+  WHERE bp.bowlerID = @bowlerID
+  GROUP BY p.code
 `;
 
 export interface BowlerPatch {
@@ -572,124 +450,11 @@ export interface BowlerPatch {
 }
 
 const GET_BOWLER_PATCHES_SQL = `
-  -- Bowler of the Week weeks
-  SELECT seasonID, week, 'botw' AS patch FROM (
-    SELECT sc.seasonID, sc.week, sc.bowlerID,
-      ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.handSeries DESC) AS rn
-    FROM scores sc
-    WHERE sc.isPenalty = 0
-      AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-      AND EXISTS (
-        SELECT 1 FROM scores sc3
-        WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
-          AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-      )
-  ) x WHERE x.bowlerID = @bowlerID AND x.rn = 1
-
-  UNION ALL
-
-  -- Weekly high game
-  SELECT seasonID, week, 'highGame' AS patch FROM (
-    SELECT sc.seasonID, sc.week, sc.bowlerID,
-      ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY
-        CASE WHEN sc.game1 >= ISNULL(sc.game2,0) AND sc.game1 >= ISNULL(sc.game3,0) THEN sc.game1
-             WHEN sc.game2 >= ISNULL(sc.game3,0) THEN sc.game2
-             ELSE sc.game3 END DESC) AS rn
-    FROM scores sc
-    WHERE sc.isPenalty = 0
-  ) x WHERE x.bowlerID = @bowlerID AND x.rn = 1
-
-  UNION ALL
-
-  -- Weekly high series
-  SELECT seasonID, week, 'highSeries' AS patch FROM (
-    SELECT sc.seasonID, sc.week, sc.bowlerID,
-      ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn
-    FROM scores sc
-    WHERE sc.isPenalty = 0
-  ) x WHERE x.bowlerID = @bowlerID AND x.rn = 1
-
-  UNION ALL
-
-  -- Three of a Kind (all 3 games identical)
-  SELECT sc.seasonID, sc.week, 'threeOfAKind' AS patch
-  FROM scores sc
-  WHERE sc.bowlerID = @bowlerID AND sc.isPenalty = 0
-    AND sc.game1 = sc.game2 AND sc.game2 = sc.game3
-    AND sc.game1 IS NOT NULL AND sc.game1 > 0
-
-  UNION ALL
-
-  -- Playoff seasons (week = NULL for season-level)
-  SELECT DISTINCT pr.seasonID, NULL AS week, 'playoff' AS patch
-  FROM playoffResults pr
-  JOIN scores sc ON sc.seasonID = pr.seasonID
-    AND sc.isPenalty = 0
-    AND sc.bowlerID = @bowlerID
-    AND (sc.teamID = pr.team1ID OR sc.teamID = pr.team2ID)
-  WHERE pr.playoffType = 'Team'
-
-  UNION ALL
-
-  -- Championship seasons
-  SELECT DISTINCT ch.seasonID, NULL AS week, 'champion' AS patch
-  FROM seasonChampions ch
-  JOIN scores sc ON sc.seasonID = ch.seasonID
-    AND sc.teamID = ch.winnerTeamID
-    AND sc.bowlerID = @bowlerID
-    AND sc.isPenalty = 0
-  WHERE ch.championshipType = 'Team'
-
-  UNION ALL
-
-  -- Scratch Playoff qualifiers (top 8 men + top 8 women by scratch avg, 18+ games)
-  SELECT seasonID, NULL AS week,
-    'scratchPlayoff' AS patch
-  FROM (
-    SELECT sc2.seasonID, sc2.bowlerID,
-      ROW_NUMBER() OVER (PARTITION BY sc2.seasonID, b2.gender ORDER BY
-        CAST(SUM(sc2.game1 + sc2.game2 + sc2.game3) AS FLOAT) / (COUNT(*) * 3) DESC
-      ) AS scratchRank
-    FROM scores sc2
-    JOIN bowlers b2 ON b2.bowlerID = sc2.bowlerID
-    WHERE sc2.isPenalty = 0 AND b2.gender IN ('M', 'F')
-    GROUP BY sc2.seasonID, sc2.bowlerID, b2.gender
-    HAVING COUNT(*) * 3 >= 18
-  ) ranked
-  WHERE ranked.bowlerID = @bowlerID AND ranked.scratchRank <= 8
-
-  UNION ALL
-
-  -- Handicap Playoff qualifiers (top 8 by hcp avg, excluding scratch qualifiers)
-  SELECT seasonID, NULL AS week,
-    'hcpPlayoff' AS patch
-  FROM (
-    SELECT ss.seasonID, ss.bowlerID,
-      ROW_NUMBER() OVER (PARTITION BY ss.seasonID ORDER BY ss.hcpAvg DESC) AS hcpRank
-    FROM (
-      SELECT sc2.seasonID, sc2.bowlerID,
-        CAST(SUM(sc2.hcpGame1 + sc2.hcpGame2 + sc2.hcpGame3) AS FLOAT) / (COUNT(*) * 3) AS hcpAvg
-      FROM scores sc2
-      WHERE sc2.isPenalty = 0
-      GROUP BY sc2.seasonID, sc2.bowlerID
-      HAVING COUNT(*) * 3 >= 18
-    ) ss
-    WHERE NOT EXISTS (
-      SELECT 1 FROM (
-        SELECT sc3.seasonID, sc3.bowlerID,
-          ROW_NUMBER() OVER (PARTITION BY sc3.seasonID, b3.gender ORDER BY
-            CAST(SUM(sc3.game1 + sc3.game2 + sc3.game3) AS FLOAT) / (COUNT(*) * 3) DESC
-          ) AS scratchRank
-        FROM scores sc3
-        JOIN bowlers b3 ON b3.bowlerID = sc3.bowlerID
-        WHERE sc3.isPenalty = 0 AND b3.gender IN ('M', 'F')
-        GROUP BY sc3.seasonID, sc3.bowlerID, b3.gender
-        HAVING COUNT(*) * 3 >= 18
-      ) sq
-      WHERE sq.bowlerID = ss.bowlerID AND sq.seasonID = ss.seasonID AND sq.scratchRank <= 8
-    )
-  ) ranked
-  WHERE ranked.bowlerID = @bowlerID AND ranked.hcpRank <= 8
+  SELECT bp.seasonID, bp.week, p.code AS patch
+  FROM bowlerPatches bp
+  JOIN patches p ON p.patchID = bp.patchID
+  WHERE bp.bowlerID = @bowlerID
+  ORDER BY bp.seasonID, bp.week
 `;
 
 export async function getBowlerPatches(bowlerID: number): Promise<BowlerPatch[]> {
@@ -721,31 +486,20 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
     const result = await db
       .request()
       .input('bowlerID', bowlerID)
-      .query<{
-        botwWins: number;
-        playoffAppearances: number;
-        championships: number;
-        isCaptain: number;
-        weeklyHighGameWins: number;
-        weeklyHighSeriesWins: number;
-        aboveAvgAllThreeCount: number;
-        threeOfAKindCount: number;
-        scratchPlayoffAppearances: number;
-        hcpPlayoffAppearances: number;
-      }>(GET_BOWLER_STAR_STATS_SQL);
-    const row = result.recordset[0];
-    if (!row) return empty;
+      .query<{ code: string; cnt: number }>(GET_BOWLER_STAR_STATS_SQL);
+
+    const counts = new Map(result.recordset.map(r => [r.code, r.cnt]));
     return {
-      botwWins: row.botwWins,
-      playoffAppearances: row.playoffAppearances,
-      championships: row.championships,
-      isCaptain: row.isCaptain === 1,
-      weeklyHighGameWins: row.weeklyHighGameWins,
-      weeklyHighSeriesWins: row.weeklyHighSeriesWins,
-      aboveAvgAllThreeCount: row.aboveAvgAllThreeCount,
-      threeOfAKindCount: row.threeOfAKindCount,
-      scratchPlayoffAppearances: row.scratchPlayoffAppearances,
-      hcpPlayoffAppearances: row.hcpPlayoffAppearances,
+      botwWins: counts.get('botw') ?? 0,
+      playoffAppearances: counts.get('playoff') ?? 0,
+      championships: counts.get('champion') ?? 0,
+      isCaptain: (counts.get('captain') ?? 0) > 0,
+      weeklyHighGameWins: counts.get('highGame') ?? 0,
+      weeklyHighSeriesWins: counts.get('highSeries') ?? 0,
+      aboveAvgAllThreeCount: counts.get('aboveAvg') ?? 0,
+      threeOfAKindCount: counts.get('threeOfAKind') ?? 0,
+      scratchPlayoffAppearances: counts.get('scratchPlayoff') ?? 0,
+      hcpPlayoffAppearances: counts.get('hcpPlayoff') ?? 0,
     };
   }, empty, { sql: GET_BOWLER_STAR_STATS_SQL });
 }
