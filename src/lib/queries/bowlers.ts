@@ -179,62 +179,64 @@ export interface BowlerSeasonStats {
   turkeys: number;
 }
 
+const BOWLER_SEASON_STATS_SQL = `
+  SELECT
+    sc.seasonID,
+    sn.romanNumeral,
+    sn.displayName,
+    sn.year,
+    sn.period,
+    COALESCE(tnh.teamName, t.teamName)                   AS teamName,
+    t.slug                                               AS teamSlug,
+    LOWER(REPLACE(sn.displayName, ' ', '-'))             AS seasonSlug,
+    COUNT(sc.scoreID)                                    AS nightsBowled,
+    COUNT(sc.scoreID) * 3                                AS gamesBowled,
+    SUM(sc.scratchSeries)                                AS totalPins,
+    CAST(
+      SUM(sc.scratchSeries) * 1.0 /
+      NULLIF(COUNT(sc.scoreID) * 3, 0)
+    AS DECIMAL(5,1))                                     AS seasonAverage,
+    MAX(
+      CASE
+        WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
+        WHEN sc.game2 >= sc.game3 THEN sc.game2
+        ELSE sc.game3
+      END
+    )                                                    AS highGame,
+    MAX(sc.scratchSeries)                                AS highSeries,
+    SUM(
+      CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
+      CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
+      CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
+    )                                                    AS games200Plus,
+    SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
+    SUM(ISNULL(sc.turkeys, 0))                              AS turkeys
+  FROM scores sc
+  JOIN seasons sn ON sc.seasonID = sn.seasonID
+  LEFT JOIN teams t ON sc.teamID = t.teamID
+  LEFT JOIN teamNameHistory tnh
+    ON  tnh.seasonID = sc.seasonID
+    AND tnh.teamID   = sc.teamID
+  WHERE sc.bowlerID = @bowlerID
+    AND sc.isPenalty = 0
+  GROUP BY
+    sc.seasonID, sn.romanNumeral, sn.displayName,
+    sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.slug,
+    LOWER(REPLACE(sn.displayName, ' ', '-'))
+  ORDER BY
+    sn.year DESC,
+    CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
+`;
+
 export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeasonStats[]> {
   return cachedQuery(`getBowlerSeasonStats-${bowlerID}`, async () => {
     const db = await getDb();
     const result = await db
       .request()
       .input('bowlerID', bowlerID)
-      .query<BowlerSeasonStats>(`
-        SELECT
-          sc.seasonID,
-          sn.romanNumeral,
-          sn.displayName,
-          sn.year,
-          sn.period,
-          COALESCE(tnh.teamName, t.teamName)                   AS teamName,
-          t.slug                                               AS teamSlug,
-          LOWER(REPLACE(sn.displayName, ' ', '-'))             AS seasonSlug,
-          COUNT(sc.scoreID)                                    AS nightsBowled,
-          COUNT(sc.scoreID) * 3                                AS gamesBowled,
-          SUM(sc.scratchSeries)                                AS totalPins,
-          CAST(
-            SUM(sc.scratchSeries) * 1.0 /
-            NULLIF(COUNT(sc.scoreID) * 3, 0)
-          AS DECIMAL(5,1))                                     AS seasonAverage,
-          MAX(
-            CASE
-              WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
-              WHEN sc.game2 >= sc.game3 THEN sc.game2
-              ELSE sc.game3
-            END
-          )                                                    AS highGame,
-          MAX(sc.scratchSeries)                                AS highSeries,
-          SUM(
-            CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END +
-            CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END +
-            CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END
-          )                                                    AS games200Plus,
-          SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
-          SUM(ISNULL(sc.turkeys, 0))                              AS turkeys
-        FROM scores sc
-        JOIN seasons sn ON sc.seasonID = sn.seasonID
-        LEFT JOIN teams t ON sc.teamID = t.teamID
-        LEFT JOIN teamNameHistory tnh
-          ON  tnh.seasonID = sc.seasonID
-          AND tnh.teamID   = sc.teamID
-        WHERE sc.bowlerID = @bowlerID
-          AND sc.isPenalty = 0
-        GROUP BY
-          sc.seasonID, sn.romanNumeral, sn.displayName,
-          sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.slug,
-          LOWER(REPLACE(sn.displayName, ' ', '-'))
-        ORDER BY
-          sn.year DESC,
-          CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
-      `);
+      .query<BowlerSeasonStats>(BOWLER_SEASON_STATS_SQL);
     return result.recordset;
-  }, []);
+  }, [], { sql: BOWLER_SEASON_STATS_SQL });
 }
 
 export interface GameLogWeek {

@@ -7,6 +7,7 @@
  * generateStaticParams, or API routes only.
  */
 import sql from 'mssql';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -134,12 +135,17 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
-  options?: { stable?: boolean },
+  options?: { stable?: boolean; sql?: string },
 ): Promise<T> {
   const stable = options?.stable;
 
+  // Include SQL hash in cache key so query changes auto-invalidate
+  const cacheKey = options?.sql
+    ? `${key}_${crypto.createHash('md5').update(options.sql).digest('hex').slice(0, 8)}`
+    : key;
+
   // 1. Check disk cache
-  const cached = readFromDiskCache<T>(key, stable);
+  const cached = readFromDiskCache<T>(cacheKey, stable);
   if (cached !== undefined) return cached;
 
   // 2. If no DB configured, return fallback
@@ -147,12 +153,12 @@ export async function cachedQuery<T>(
 
   // 3. Run query with retry
   try {
-    const result = await withRetry(fn, key);
+    const result = await withRetry(fn, cacheKey);
     // 4. Cache successful result
-    writeToDiskCache(key, result, stable);
+    writeToDiskCache(cacheKey, result, stable);
     return result;
   } catch (err) {
-    console.warn(`${key}: DB unavailable`, err);
+    console.warn(`${cacheKey}: DB unavailable`, err);
     return fallback as T;
   }
 }
