@@ -436,7 +436,7 @@ export interface BowlerStarStats {
 }
 
 const GET_BOWLER_STAR_STATS_SQL = `
-  SELECT p.code, COUNT(*) AS cnt
+  SELECT p.code, COUNT(*) AS cnt /* v2: aboveAvg patch */
   FROM bowlerPatches bp
   JOIN patches p ON p.patchID = bp.patchID
   WHERE bp.bowlerID = @bowlerID
