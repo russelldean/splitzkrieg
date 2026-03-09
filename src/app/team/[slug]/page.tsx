@@ -118,7 +118,7 @@ export async function generateMetadata({
     openGraph: {
       title: `${team.teamName} | Splitzkrieg Bowling`,
       description: `${team.teamName} -- roster, season history, and all-time stats.`,
-      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/team/${slug}`,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.splitzkrieg.org'}/team/${slug}`,
       siteName: 'Splitzkrieg Bowling League',
       type: 'profile',
     },
@@ -134,7 +134,7 @@ export default async function TeamPage({
   const team = await getTeamBySlug(slug);
   if (!team) notFound();
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/team/${slug}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.splitzkrieg.org'}/team/${slug}`;
 
   const isGhostTeam = team.teamID === 45;
 
