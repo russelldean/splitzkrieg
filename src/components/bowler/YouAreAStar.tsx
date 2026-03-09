@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 import type { BowlerStarStats } from '@/lib/queries';
 
 interface Props {
   stats: BowlerStarStats;
   inTicker: boolean;
+  easterEgg?: { src: string; alt: string; width: number; height: number };
 }
 
 interface StarLine {
@@ -28,7 +30,7 @@ const PATCH_STYLE: Record<string, { abbr: string; color: string; bg: string }> =
   hcpChampion:     { abbr: 'HC',   color: 'text-orange-700',  bg: 'bg-orange-200' },
 };
 
-export function YouAreAStar({ stats, inTicker }: Props) {
+export function YouAreAStar({ stats, inTicker, easterEgg }: Props) {
   const [open, setOpen] = useState(false);
 
   const lines: StarLine[] = [];
@@ -151,21 +153,34 @@ export function YouAreAStar({ stats, inTicker }: Props) {
       <span className="block w-10 h-0.5 bg-red-600/40 mt-1.5" />
 
       {open && (
-        <div className="mt-4 bg-white rounded-lg border border-navy/10 divide-y divide-navy/5">
-          {lines.map((line) => (
-            <div key={line.label} className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-2">
-                {line.patch && PATCH_STYLE[line.patch] && (
-                  <span className={`inline-flex items-center text-[10px] font-semibold font-body px-1.5 py-0.5 rounded-full leading-none ${PATCH_STYLE[line.patch].color} ${PATCH_STYLE[line.patch].bg}`}>
-                    {PATCH_STYLE[line.patch].abbr}
-                  </span>
-                )}
-                <span className="text-navy font-medium">{line.label}</span>
+        <>
+          <div className="mt-4 bg-white rounded-lg border border-navy/10 divide-y divide-navy/5">
+            {lines.map((line) => (
+              <div key={line.label} className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  {line.patch && PATCH_STYLE[line.patch] && (
+                    <span className={`inline-flex items-center text-[10px] font-semibold font-body px-1.5 py-0.5 rounded-full leading-none ${PATCH_STYLE[line.patch].color} ${PATCH_STYLE[line.patch].bg}`}>
+                      {PATCH_STYLE[line.patch].abbr}
+                    </span>
+                  )}
+                  <span className="text-navy font-medium">{line.label}</span>
+                </div>
+                <span className="font-heading text-lg text-navy tabular-nums">{line.value}</span>
               </div>
-              <span className="font-heading text-lg text-navy tabular-nums">{line.value}</span>
+            ))}
+          </div>
+          {easterEgg && (
+            <div className="mt-4 rounded-xl overflow-hidden shadow-md">
+              <Image
+                src={easterEgg.src}
+                alt={easterEgg.alt}
+                width={easterEgg.width}
+                height={easterEgg.height}
+                className="w-full h-auto"
+              />
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </section>
   );

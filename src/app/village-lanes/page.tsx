@@ -21,7 +21,7 @@ export default function VillageLanesPage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Party Zone neon sign */}
         <figure>
           <div className="rounded-xl overflow-hidden shadow-md">
@@ -35,7 +35,59 @@ export default function VillageLanesPage() {
           </div>
         </figure>
 
-        <p className="text-center text-zinc-400 text-lg italic mt-8">For another day</p>
+        {/* Panorama */}
+        <figure>
+          <div className="rounded-xl overflow-hidden shadow-md">
+            <Image
+              src="/village-lanes-panorama.jpg"
+              alt="Panoramic view of Village Lanes"
+              width={4032}
+              height={1080}
+              className="w-full h-auto"
+            />
+          </div>
+        </figure>
+
+        {/* Two-column grid: lanes + ball returns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <figure>
+            <div className="rounded-xl overflow-hidden shadow-md">
+              <Image
+                src="/village-lanes-lanes.jpg"
+                alt="Looking down the lanes at Village Lanes"
+                width={3024}
+                height={4032}
+                className="w-full h-auto"
+              />
+            </div>
+          </figure>
+          <figure>
+            <div className="rounded-xl overflow-hidden shadow-md">
+              <Image
+                src="/village-lanes-brunswick-2000s.jpg"
+                alt="Brunswick 2000 ball returns at Village Lanes"
+                width={4032}
+                height={3024}
+                className="w-full h-auto"
+              />
+            </div>
+          </figure>
+        </div>
+
+        {/* Parking lot wide shot */}
+        <figure>
+          <div className="rounded-xl overflow-hidden shadow-md">
+            <Image
+              src="/village-lanes-parking-lot.jpg"
+              alt="Village Lanes from the parking lot"
+              width={4032}
+              height={3024}
+              className="w-full h-auto"
+            />
+          </div>
+        </figure>
+
+        <p className="text-center text-zinc-400 text-lg italic">For another day</p>
       </div>
     </main>
   );

@@ -205,6 +205,7 @@ export default async function BowlerPage({
         <YouAreAStar
           stats={starStats}
           inTicker={[...tickerItems, ...milestoneTickerItems(leagueMilestones)].some(t => t.href === `/bowler/${slug}`)}
+          easterEgg={slug === 'mike-depasquale' ? { src: '/village-lanes-mp300.jpg', alt: 'Mike\'s 300 — Perfect Game at Village Lanes', width: 4032, height: 3024 } : undefined}
         />
       </div>
 
