@@ -6,6 +6,10 @@ interface ParallaxBgProps {
   src: string;
   /** Vertical focal point as a fraction (0 = top, 1 = bottom). Default 0.65 */
   focalY?: number;
+  /** Native image width for positioning math. Default 640 */
+  imgW?: number;
+  /** Native image height for positioning math. Default 478 */
+  imgH?: number;
 }
 
 /**
@@ -20,7 +24,7 @@ interface ParallaxBgProps {
  *   <div className="relative z-10">Content on top</div>
  * </div>
  */
-export function ParallaxBg({ src, focalY = 0.65 }: ParallaxBgProps) {
+export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478 }: ParallaxBgProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -33,25 +37,26 @@ export function ParallaxBg({ src, focalY = 0.65 }: ParallaxBgProps) {
   }, []);
 
   if (isMobile) {
-    return <MobileParallax ref={ref} src={src} focalY={focalY} />;
+    return <MobileParallax ref={ref} src={src} focalY={focalY} imgW={imgW} imgH={imgH} />;
   }
 
-  return <DesktopParallax ref={ref} src={src} focalY={focalY} />;
+  return <DesktopParallax ref={ref} src={src} focalY={focalY} imgW={imgW} imgH={imgH} />;
 }
 
 /* ── Desktop: bg-fixed approach ─────────────────────────────── */
-
-const IMG_W = 640;
-const IMG_H = 478;
 
 function DesktopParallax({
   ref,
   src,
   focalY,
+  imgW,
+  imgH,
 }: {
   ref: React.RefObject<HTMLDivElement | null>;
   src: string;
   focalY: number;
+  imgW: number;
+  imgH: number;
 }) {
   const [style, setStyle] = useState<React.CSSProperties>({
     backgroundImage: `url(${src})`,
@@ -64,15 +69,15 @@ function DesktopParallax({
     function compute() {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
-      const scale = Math.max(rect.width / IMG_W, rect.height / IMG_H);
-      const imgH = IMG_H * scale;
-      const excessY = imgH - rect.height;
+      const scale = Math.max(rect.width / imgW, rect.height / imgH);
+      const scaledH = imgH * scale;
+      const excessY = scaledH - rect.height;
       const offsetY = excessY * focalY;
       const bgPosY = rect.top + window.scrollY - offsetY;
 
       setStyle({
         backgroundImage: `url(${src})`,
-        backgroundSize: `${IMG_W * scale}px ${imgH}px`,
+        backgroundSize: `${imgW * scale}px ${scaledH}px`,
         backgroundPosition: `center ${bgPosY}px`,
         backgroundAttachment: 'fixed',
         backgroundRepeat: 'no-repeat',
@@ -98,10 +103,14 @@ function MobileParallax({
   ref,
   src,
   focalY,
+  imgW,
+  imgH,
 }: {
   ref: React.RefObject<HTMLDivElement | null>;
   src: string;
   focalY: number;
+  imgW: number;
+  imgH: number;
 }) {
   const innerRef = useRef<HTMLDivElement>(null);
 
@@ -109,13 +118,13 @@ function MobileParallax({
     if (!ref.current || !innerRef.current) return;
     const rect = ref.current.getBoundingClientRect();
     const pageTop = rect.top + window.scrollY;
-    const scale = Math.max(rect.width / IMG_W, rect.height / IMG_H);
-    const imgW = IMG_W * scale;
-    const imgH = IMG_H * scale;
-    const excessY = imgH - rect.height;
+    const scale = Math.max(rect.width / imgW, rect.height / imgH);
+    const scaledW = imgW * scale;
+    const scaledH = imgH * scale;
+    const excessY = scaledH - rect.height;
     const bgPosY = pageTop - excessY * focalY;
 
-    innerRef.current.style.backgroundSize = `${imgW}px ${imgH}px`;
+    innerRef.current.style.backgroundSize = `${scaledW}px ${scaledH}px`;
     innerRef.current.style.backgroundPosition = `center ${bgPosY}px`;
   }, [ref, focalY]);
 

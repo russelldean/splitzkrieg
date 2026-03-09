@@ -126,8 +126,8 @@ export default async function Home() {
               href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
               className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all group ring-1 ring-navy/10"
             >
-              {/* Background image — bowling computer screen, parallax */}
-              <ParallaxBg src="/bowling-screen.jpg" />
+              {/* Background image — holographic Splitzkrieg stickers, parallax */}
+              <ParallaxBg src="/splitzkrieg-stickers.jpg" imgW={1512} imgH={2016} focalY={0.45} />
               {/* Semi-transparent overlay for text readability */}
               <div className="absolute inset-0 bg-black/60 group-hover:bg-black/50 transition-colors" />
               {/* Content */}

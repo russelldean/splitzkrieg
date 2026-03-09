@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
+import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
   title: 'About | Splitzkrieg',
@@ -8,12 +10,19 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-6">
-        About
-      </h1>
+    <main>
+      {/* Parallax Hero — Village Lanes exterior */}
+      <div className="relative overflow-hidden h-56 sm:h-72 md:h-80">
+        <ParallaxBg src="/village-lanes-outside.jpg" focalY={0.5} imgW={1440} imgH={1080} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <div className="relative z-10 flex items-end h-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+          <h1 className="font-heading text-4xl sm:text-5xl text-white drop-shadow-lg">
+            About
+          </h1>
+        </div>
+      </div>
 
-      <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-navy/30 px-8 py-12 shadow-sm">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="font-body text-lg text-navy/70 leading-relaxed space-y-6">
           <p>
             In March 2007,{' '}
@@ -37,6 +46,19 @@ export default function AboutPage() {
             was no end of season party.
           </p>
 
+          {/* Inline console photo — the old scoring machine */}
+          <figure className="my-8">
+            <div className="rounded-xl overflow-hidden shadow-md">
+              <Image
+                src="/village-lanes-console.jpg"
+                alt="The original Village Lanes scoring console — NO FOOD, DRINKS, CIGARETTES OR ASHTRAYS ALLOWED ON SCORING CONSOLE"
+                width={2048}
+                height={1536}
+                className="w-full h-auto"
+              />
+            </div>
+          </figure>
+
           <p>
             Nineteen years later - 6 of those original 10 teams are still in the
             league, 13 of the bowlers that showed up that first night have bowled with us
@@ -53,6 +75,19 @@ export default function AboutPage() {
             the all-time lists if you don&rsquo;t.
           </p>
 
+          {/* Group photo */}
+          <figure className="my-8">
+            <div className="rounded-xl overflow-hidden shadow-md">
+              <Image
+                src="/village-lanes-group-photo.jpg"
+                alt="Splitzkrieg Bowling League group photo in front of Village Lanes"
+                width={2048}
+                height={1365}
+                className="w-full h-auto"
+              />
+            </div>
+          </figure>
+
           <p>
             Deep thanks to{' '}
             <Link href="/bowler/james-hepler" className="text-red-600 hover:text-red-700 transition-colors font-medium">James Hepler</Link>,{' '}
@@ -62,8 +97,8 @@ export default function AboutPage() {
             <Link href="/bowler/john-bekas" className="text-red-600 hover:text-red-700 transition-colors font-medium">John Bekas</Link>,{' '}
             and many more of you who help this thing keep rolling in all kinds
             of ways. And to{' '}
-            <Link href="/bowler/john-williams" className="text-red-600 hover:text-red-700 transition-colors font-medium">John Williams</Link>{' '}
-            again, for getting it all started.
+            <Link href="/village-lanes" className="text-red-600 hover:text-red-700 transition-colors font-medium">Village Lanes</Link>,
+            for being the star of the show for all those years.
           </p>
         </div>
       </div>

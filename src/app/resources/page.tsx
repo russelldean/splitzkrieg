@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getCurrentSeasonSlug } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
@@ -70,7 +71,7 @@ const resources: ResourceCategory[] = [
     links: [
       {
         label: 'Village Lanes',
-        href: 'https://www.villagelanes.com',
+        href: '/village-lanes',
         description: 'Where it all started. Durham, NC.',
       },
     ],
@@ -146,25 +147,39 @@ export default async function ResourcesPage() {
                     );
                   }
 
+                  const isInternal = link.href.startsWith('/');
+                  const cardClass = "bg-white rounded-lg p-5 border border-navy/10 hover:border-navy/20 hover:shadow-sm transition-all group";
+                  const cardContent = (
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-body font-medium text-navy group-hover:text-red transition-colors">
+                          {link.label}
+                        </h3>
+                        <p className="font-body text-sm text-navy/65 mt-1">
+                          {link.description}
+                        </p>
+                      </div>
+                      {!isInternal && <ExternalLinkIcon />}
+                    </div>
+                  );
+
+                  if (isInternal) {
+                    return (
+                      <Link key={link.label} href={link.href} className={cardClass}>
+                        {cardContent}
+                      </Link>
+                    );
+                  }
+
                   return (
                     <a
                       key={link.label}
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white rounded-lg p-5 border border-navy/10 hover:border-navy/20 hover:shadow-sm transition-all group"
+                      className={cardClass}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-body font-medium text-navy group-hover:text-red transition-colors">
-                            {link.label}
-                          </h3>
-                          <p className="font-body text-sm text-navy/65 mt-1">
-                            {link.description}
-                          </p>
-                        </div>
-                        <ExternalLinkIcon />
-                      </div>
+                      {cardContent}
                     </a>
                   );
                 })}
