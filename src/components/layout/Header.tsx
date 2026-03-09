@@ -55,17 +55,34 @@ export async function Header() {
     ? `This Week`
     : 'This Week';
 
-  const mobileLinks = [
-    ...(currentSeasonSlug ? [
-      { href: `/week/${currentSeasonSlug}/${snapshot!.weekNumber}`, label: 'This Week\'s Results', icon: leagueNightsIcon },
-      { href: `/season/${currentSeasonSlug}`, label: 'Current Standings', icon: seasonsIcon },
-    ] : []),
-    { href: '/bowlers?filter=current', label: 'Bowlers', icon: bowlersIcon },
-    { href: '/teams?filter=current', label: 'Teams', icon: teamsIcon },
-    ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Season Stats', icon: statsIcon }] : []),
-    { href: '/stats/all-time', label: 'All-Time Stats', icon: statsIcon },
-    { href: '/week', label: 'All League Nights', icon: leagueNightsIcon },
-    { href: '/seasons', label: 'All Seasons', icon: seasonsIcon },
+  const mobileGroups = [
+    ...(currentSeasonSlug && snapshot ? [{
+      title: 'This Season',
+      icon: leagueNightsIcon,
+      links: [
+        { href: `/week/${currentSeasonSlug}/${snapshot.weekNumber}`, label: 'This Week\'s Results' },
+        { href: `/season/${currentSeasonSlug}`, label: 'Standings' },
+        { href: `/stats/${currentSeasonSlug}`, label: 'Season Stats' },
+      ],
+    }] : []),
+    {
+      title: 'All Seasons',
+      icon: seasonsIcon,
+      links: [
+        { href: '/week', label: 'All Weeks' },
+        { href: '/seasons', label: 'All Seasons' },
+        { href: '/stats', label: 'All Season Stats' },
+        { href: '/stats/all-time', label: 'Playoffs' },
+      ],
+    },
+    {
+      title: 'People',
+      icon: bowlersIcon,
+      links: [
+        { href: '/bowlers', label: 'Bowlers' },
+        { href: '/teams', label: 'Teams' },
+      ],
+    },
   ];
 
   return (
@@ -116,7 +133,7 @@ export async function Header() {
                 links={[
                   ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),
                   { href: '/stats', label: 'All Season Stats' },
-                  { href: '/stats/all-time', label: 'All-Time Stats' },
+                  { href: '/stats/all-time', label: 'Playoffs' },
                 ]}
               />
               <NavDropdown
@@ -139,7 +156,7 @@ export async function Header() {
 
             {/* Mobile Nav */}
             <div className="md:hidden flex-shrink-0">
-              <MobileNav links={mobileLinks} />
+              <MobileNav groups={mobileGroups} />
             </div>
           </div>
         </div>
