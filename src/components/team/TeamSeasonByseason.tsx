@@ -89,9 +89,6 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                     <span className="hidden sm:inline">
                       {season.totalGames} games
                     </span>
-                    <span className="hidden sm:inline">
-                      {season.totalPins.toLocaleString()} pins
-                    </span>
                     <span>
                       {season.teamAverage?.toFixed(1) ?? '\u2014'} avg
                     </span>
