@@ -1,5 +1,9 @@
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
+import { TopPerformers } from '@/components/blog/TopPerformers';
+import { MilestonesBlock } from '@/components/blog/MilestonesBlock';
+import { MatchResultsSummary } from '@/components/blog/MatchResultsSummary';
+import { StandingsSnapshot } from '@/components/blog/StandingsSnapshot';
 
 export function useMDXComponents(): MDXComponents {
   return {
@@ -14,5 +18,10 @@ export function useMDXComponents(): MDXComponents {
     ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 font-body text-navy/80">{children}</ol>,
     li: ({ children }) => <li className="mb-1">{children}</li>,
     strong: ({ children }) => <strong className="font-semibold text-navy">{children}</strong>,
-  };
+    // Blog stat block components (async server components)
+    TopPerformers,
+    MilestonesBlock,
+    MatchResultsSummary,
+    StandingsSnapshot,
+  } as MDXComponents;
 }
