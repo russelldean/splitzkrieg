@@ -144,16 +144,9 @@ export async function cachedQuery<T>(
     ? `${key}_${crypto.createHash('md5').update(options.sql).digest('hex').slice(0, 8)}`
     : key;
 
-  // 1. Check disk cache (try hashed key first, then fall back to original key)
-  const cached = readFromDiskCache<T>(cacheKey, stable)
-    ?? (cacheKey !== key ? readFromDiskCache<T>(key, stable) : undefined);
-  if (cached !== undefined) {
-    // If found under old key, write under new key so future lookups are fast
-    if (readFromDiskCache<T>(cacheKey, stable) === undefined) {
-      writeToDiskCache(cacheKey, cached, stable);
-    }
-    return cached;
-  }
+  // 1. Check disk cache
+  const cached = readFromDiskCache<T>(cacheKey, stable);
+  if (cached !== undefined) return cached;
 
   // 2. If no DB configured, return fallback
   if (!process.env.AZURE_SQL_SERVER) return fallback as T;
