@@ -11,7 +11,6 @@ interface Props {
 export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
   const [mounted, setMounted] = useState(false);
   const [cd, setCd] = useState<ReturnType<typeof computeCountdown> | null>(null);
-  const [hotFun, setHotFun] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -22,27 +21,13 @@ export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
     const update = () => {
       const result = computeCountdown(targetMs);
       setCd(result.isPast ? null : result);
-      setHotFun(false); // disabled for now — was triggering on non-league Mondays
     };
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  if (!mounted) return null;
-
-  if (hotFun) {
-    const hotFunClass = variant === 'neon'
-      ? 'text-red-400 animate-neon-flicker'
-      : variant === 'dark' ? 'text-red-400' : 'text-red-600';
-    return (
-      <span className={`font-heading text-sm tracking-wider uppercase animate-pulse ${hotFunClass}`} suppressHydrationWarning>
-        HOT FUN - League in session
-      </span>
-    );
-  }
-
-  if (!cd) return null;
+  if (!mounted || !cd) return null;
 
   const { days, hours, minutes, seconds } = cd;
   const nums = `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
