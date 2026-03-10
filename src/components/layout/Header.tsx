@@ -37,6 +37,12 @@ const leagueNightsIcon = (
   </svg>
 );
 
+const blogIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+  </svg>
+);
+
 const statsIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
     <rect x="2" y="10" width="4" height="8" rx="0.5" />
@@ -82,6 +88,13 @@ export async function Header() {
       links: [
         { href: '/bowlers', label: 'Bowlers' },
         { href: '/teams', label: 'Teams' },
+      ],
+    },
+    {
+      title: 'Blog',
+      icon: blogIcon,
+      links: [
+        { href: '/blog', label: 'All Posts' },
       ],
     },
   ];
@@ -154,6 +167,15 @@ export async function Header() {
                   { href: '/teams', label: 'All Teams' },
                 ]}
               />
+              <Link
+                href="/blog"
+                className="flex items-center gap-1.5 text-sm font-body text-navy/70 hover:text-navy transition-colors"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+                Blog
+              </Link>
             </nav>
 
             {/* Mobile Nav */}

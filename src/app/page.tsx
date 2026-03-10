@@ -31,7 +31,7 @@ const quickLinks = [
   { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings', icon: '🏆', accent: 'border-l-red-600/40' },
   { label: 'Bowlers', href: '/bowlers?filter=current', description: 'Current season roster', icon: '👤', accent: 'border-l-navy/30' },
   { label: 'Teams', href: '/teams?filter=current', description: 'Current season teams', icon: '👥', accent: 'border-l-red-600/40' },
-  { label: 'Resources', href: '/resources', description: 'League links and forms', icon: '📋', accent: 'border-l-navy/30' },
+  { label: 'Blog', href: '/blog', description: 'Weekly recaps and league news', icon: '\u{1F4DD}', accent: 'border-l-navy/30' },
 ];
 
 export default async function Home() {
