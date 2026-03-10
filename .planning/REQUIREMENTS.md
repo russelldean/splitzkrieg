@@ -175,7 +175,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CHMP-02 | Phase 6 | Pending |
 | CHMP-03 | Phase 6 | Pending |
 | CONT-01 | Phase 6 | Complete |
-| CONT-02 | Phase 6 | Pending |
+| CONT-02 | Phase 6 | Complete |
 | CONT-03 | Phase 6 | Pending |
 | HOME-01 | Phase 3 | Complete |
 | HOME-02 | Phase 3 | Complete |
