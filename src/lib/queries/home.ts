@@ -4,10 +4,10 @@
 import { cache } from 'react';
 import { getDb, cachedQuery } from '../db';
 
-const GET_NEXT_BOWLING_NIGHT_SQL = `
+const GET_NEXT_BOWLING_NIGHT_SQL = `/* v2: skip today if past bowling time */
   SELECT TOP 1 matchDate
   FROM schedule
-  WHERE matchDate >= CAST(GETDATE() AS DATE)
+  WHERE matchDate > CAST(GETDATE() AS DATE)
   ORDER BY matchDate ASC
 `;
 
