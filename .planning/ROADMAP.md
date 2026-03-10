@@ -47,9 +47,9 @@ A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 18 
   5. Weekly import pipeline runs without rediscovering steps each time
 **Plans:** 3 plans
 Plans:
-- [ ] 06-01-PLAN.md — MDX infrastructure, blog pages, nav/homepage integration
-- [ ] 06-02-PLAN.md — Stat block components, first blog post, bidirectional cross-links
-- [ ] 06-03-PLAN.md — Publish gate, email script, weekly runbook
+- [x] 06-01-PLAN.md — MDX infrastructure, blog pages, nav/homepage integration
+- [x] 06-02-PLAN.md — Stat block components, first blog post, bidirectional cross-links
+- [x] 06-03-PLAN.md — Publish gate, email script, weekly runbook
 
 ### Phase 7: Homepage Personality and Portfolio Polish
 **Goal**: The site feels authored, not generated. A hiring manager lands on it and sees craft. League members feel warmth and community, not a clinical data portal.
@@ -139,7 +139,7 @@ Items to build when the time is right, not tied to a specific phase:
 | 3. Search and Home Page | Complete | 2026-03-03 |
 | 4. Teams and Seasons | Complete | 2026-03-06 |
 | 5. Polish and Team H2H | Complete | 2026-03-08 |
-| 6. Blog and Weekly Automation | Not started | - |
+| 6. Blog and Weekly Automation | Complete | 2026-03-10 |
 | 7. Homepage Personality and Portfolio Polish | Not started | - |
 | 8. Admin Tools | Not started | - |
 | 9. Data Backfill and Tooling | Not started | - |

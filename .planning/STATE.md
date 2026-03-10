@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05-polish-and-team-h2h
-current_plan: 2 of 2
+current_phase: 06-blog-and-weekly-automation
+current_plan: 3 of 3
 status: completed
-last_updated: "2026-03-08T21:04:35.853Z"
+last_updated: "2026-03-10T22:11:00Z"
 progress:
-  total_phases: 8
+  total_phases: 10
   completed_phases: 5
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 18
+  completed_plans: 18
 ---
 
 # Session State
@@ -22,8 +22,8 @@ See: .planning/PROJECT.md
 ## Position
 
 **Milestone:** v1.0 milestone
-**Current phase:** 05-polish-and-team-h2h
-**Current plan:** 2 of 2
+**Current phase:** 06-blog-and-weekly-automation
+**Current plan:** 3 of 3
 **Status:** Complete
 
 ## Session Log
@@ -37,6 +37,8 @@ See: .planning/PROJECT.md
 - 2026-03-08: Planning review — dropped 6 todos, updated roadmap, parked PIN formula
 - 2026-03-08: Phase 5 Plan 01 — Standings week context, TeamHero W-L record, collapsible season stats
 - 2026-03-08: Phase 5 Plan 02 — Team H2H with real matchResults data, summary table + drill-down
+- 2026-03-10: Phase 6 Plan 01 — MDX blog infrastructure, /blog and /blog/[slug] pages, nav integration
+- 2026-03-10: Phase 6 Plan 03 — Publish gate (leagueSettings), email script (Resend), weekly runbook
 
 ## Decisions
 
@@ -50,6 +52,13 @@ See: .planning/PROJECT.md
 - **[Phase 05-01]** SeasonStatsTable converted to client component for expand/collapse
 - **[Phase 05-02]** Single flat H2H query per team; component groups by opponent client-side with useMemo
 - **[Phase 05-02]** Ghost Team included naturally in H2H records (no special filtering)
+- **[Phase 06-01]** Added @content/* tsconfig path alias for MDX dynamic imports from content/ directory
+- **[Phase 06-01]** Blog uses Promise<params> pattern matching Next.js 16 conventions
+- **[Phase 06-01]** Prev/next nav labeled Newer/Older to match reverse chronological ordering
+- **[Phase 06-03]** Publish gate uses leagueSettings table with settingKey/settingValue pattern
+- **[Phase 06-03]** HIGHLIGHTS query uses publishedSeasonID + publishedWeek instead of MAX(week) ORDER BY
+- **[Phase 06-03]** Email script uses inline HTML (not templates) with navy/cream/red palette
+- **[Phase 06-03]** Runbook includes match results step between import and patches
 
 ## Pending Todos
 

@@ -66,8 +66,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Content
 
-- [ ] **CONT-01**: Blog system for weekly recaps (new content going forward)
-- [ ] **CONT-02**: Auto-generated weekly highlights from score data (personal bests, milestones)
+- [x] **CONT-01**: Blog system for weekly recaps (new content going forward)
+- [x] **CONT-02**: Auto-generated weekly highlights from score data (personal bests, milestones)
 - [ ] **CONT-03**: About / Join the League page with league info, FAQ, and interest form
 
 ### Home Page
@@ -174,7 +174,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CHMP-01 | Phase 6 | Pending |
 | CHMP-02 | Phase 6 | Pending |
 | CHMP-03 | Phase 6 | Pending |
-| CONT-01 | Phase 6 | Pending |
+| CONT-01 | Phase 6 | Complete |
 | CONT-02 | Phase 6 | Pending |
 | CONT-03 | Phase 6 | Pending |
 | HOME-01 | Phase 3 | Complete |
