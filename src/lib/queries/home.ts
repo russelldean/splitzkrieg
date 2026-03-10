@@ -104,7 +104,7 @@ const SNAPSHOT_SEASON_SQL = `
 
 const SNAPSHOT_STATS_SQL = `
   WITH latestWeek AS (
-    SELECT MAX(sc.week) AS wk FROM scores sc WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+    SELECT CAST(settingValue AS INT) AS wk FROM leagueSettings WHERE settingKey = 'publishedWeek'
   )
   SELECT
     lw.wk AS weekNumber,
@@ -194,8 +194,7 @@ const SNAPSHOT_BOTW_SQL = `
   WHERE sc.seasonID = @seasonID
     AND sc.isPenalty = 0
     AND sc.week = (
-      SELECT MAX(sc2.week) FROM scores sc2
-      WHERE sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedWeek'
     )
     AND EXISTS (
       SELECT 1 FROM scores sc3
@@ -216,8 +215,7 @@ const SNAPSHOT_TOTW_SQL = `
     AND sc.isPenalty = 0
     AND sc.teamID IS NOT NULL
     AND sc.week = (
-      SELECT MAX(sc2.week) FROM scores sc2
-      WHERE sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedWeek'
     )
   GROUP BY sc.teamID, t.teamName, t.slug
   ORDER BY totalHandSeries DESC
@@ -310,11 +308,13 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
  */
 
 const HIGHLIGHTS_LATEST_WEEK_SQL = `
-  SELECT TOP 1 sc.seasonID, sc.week
-  FROM scores sc
-  JOIN seasons s ON sc.seasonID = s.seasonID
-  WHERE sc.isPenalty = 0
-  ORDER BY s.year DESC, CASE s.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, sc.week DESC
+  SELECT
+    CAST(ls1.settingValue AS INT) AS seasonID,
+    CAST(ls2.settingValue AS INT) AS week
+  FROM leagueSettings ls1
+  CROSS JOIN leagueSettings ls2
+  WHERE ls1.settingKey = 'publishedSeasonID'
+    AND ls2.settingKey = 'publishedWeek'
 `;
 
 const HIGHLIGHTS_SCORES_SQL = `

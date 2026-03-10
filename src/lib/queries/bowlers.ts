@@ -366,12 +366,10 @@ const GET_BOWLER_OF_THE_WEEK_SQL = `
   JOIN seasons sn ON sc.seasonID = sn.seasonID
   WHERE sc.isPenalty = 0
     AND sc.seasonID = (
-      SELECT TOP 1 seasonID FROM seasons
-      ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedSeasonID'
     )
     AND sc.week = (
-      SELECT MAX(sc2.week) FROM scores sc2
-      WHERE sc2.seasonID = sc.seasonID AND sc2.isPenalty = 0
+      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedWeek'
     )
     AND EXISTS (
       SELECT 1 FROM scores sc3
