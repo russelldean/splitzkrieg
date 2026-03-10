@@ -23,6 +23,7 @@ A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 18 
 **Goal**: Bowlers get a weekly blog post with results and highlights. The commissioner's post-bowling workflow (scores → verify → blog → publish → email) is streamlined into a repeatable pipeline.
 **Depends on**: Phase 5
 **Timeline**: This week (by 2026-03-16)
+**Requirements:** [CONT-01, CONT-02]
 **What exists**:
   - Blog placeholder page at /blog
   - LeaguePals score pull working
@@ -44,7 +45,11 @@ A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 18 
   3. League night page links to its blog post when one exists
   4. Commissioner can control which week is "published" without code changes
   5. Weekly import pipeline runs without rediscovering steps each time
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 06-01-PLAN.md — MDX infrastructure, blog pages, nav/homepage integration
+- [ ] 06-02-PLAN.md — Stat block components, first blog post, bidirectional cross-links
+- [ ] 06-03-PLAN.md — Publish gate, email script, weekly runbook
 
 ### Phase 7: Homepage Personality and Portfolio Polish
 **Goal**: The site feels authored, not generated. A hiring manager lands on it and sees craft. League members feel warmth and community, not a clinical data portal.
