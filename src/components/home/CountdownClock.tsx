@@ -89,33 +89,17 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
       if (takeoverFired) return;
 
       if (!debugMode) {
-        // Post-bowling: Monday 11 PM+
-        if (isPostBowlingNow()) {
-          setPhase('results');
-          return;
-        }
-        // During bowling: Monday 7:15–10:45 PM
-        if (isLeagueNightNow()) {
-          setPhase('bowling');
-          return;
-        }
+        // Disabled for now — was triggering on non-league Mondays
+        // if (isPostBowlingNow()) { setPhase('results'); return; }
+        // if (isLeagueNightNow()) { setPhase('bowling'); return; }
       }
 
       const cd = computeCountdown(targetMs);
       setCountdown(cd);
 
       if (cd.isPast) {
-        // Just crossed zero — launch takeover!
-        takeoverFired = true;
-        setPhase('takeover');
-        setTakeoverOpacity(1);
-
-        takeoverTimer = setTimeout(() => {
-          setTakeoverOpacity(0);
-          fadeTimer = setTimeout(() => {
-            setPhase('bowling');
-          }, 500);
-        }, TAKEOVER_DURATION);
+        // Takeover disabled for now — was triggering at wrong times
+        setPhase('past');
         return;
       }
 

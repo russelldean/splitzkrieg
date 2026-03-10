@@ -22,7 +22,7 @@ export function HeaderCountdown({ targetDate, variant = 'light' }: Props) {
     const update = () => {
       const result = computeCountdown(targetMs);
       setCd(result.isPast ? null : result);
-      setHotFun(debugTarget !== null ? result.isPast : isLeagueNightNow());
+      setHotFun(false); // disabled for now — was triggering on non-league Mondays
     };
     update();
     const interval = setInterval(update, 1000);
