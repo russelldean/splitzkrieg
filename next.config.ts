@@ -1,5 +1,4 @@
 import createMDX from '@next/mdx';
-import remarkGfm from 'remark-gfm';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -7,10 +6,8 @@ const nextConfig: NextConfig = {
 };
 
 const withMDX = createMDX({
-  options: {
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [],
-  },
+  // Note: remarkGfm removed — Turbopack in Next.js 16 requires serializable options.
+  // GFM features (tables, strikethrough) not needed for blog content yet.
 });
 
 export default withMDX(nextConfig);
