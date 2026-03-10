@@ -9,6 +9,7 @@ export interface PostMeta {
   excerpt: string;
   type: 'recap' | 'announcement';
   season?: string;
+  seasonSlug?: string;
   week?: number;
 }
 
@@ -32,6 +33,7 @@ export function getAllPosts(): PostMeta[] {
       excerpt: data.excerpt,
       type: data.type ?? 'announcement',
       ...(data.season ? { season: data.season } : {}),
+      ...(data.seasonSlug ? { seasonSlug: data.seasonSlug } : {}),
       ...(data.week != null ? { week: data.week } : {}),
     } as PostMeta;
   });

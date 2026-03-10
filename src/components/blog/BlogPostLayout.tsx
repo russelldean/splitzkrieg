@@ -51,11 +51,11 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
           {meta.title}
         </h1>
 
-        {/* Season/week context for recaps with cross-link */}
-        {meta.type === 'recap' && meta.season && meta.week != null && (
+        {/* Season/week context cross-link */}
+        {meta.season && meta.seasonSlug && meta.week != null && (
           <p className="font-body text-sm text-navy/60">
             <Link
-              href={`/week/${meta.season}/${meta.week}`}
+              href={`/week/${meta.seasonSlug}/${meta.week}`}
               className="text-red-600 hover:text-red-700 underline"
             >
               Season {meta.season} Week {meta.week} Results

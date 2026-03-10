@@ -23,6 +23,7 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { formatMatchDate } from '@/lib/bowling-time';
+import { getPostForWeek } from '@/lib/blog';
 
 export const dynamicParams = false;
 
@@ -113,6 +114,9 @@ export default async function WeekPage({
   const prevWeek = weekIdx > 0 ? sortedWeeks[weekIdx - 1] : null;
   const nextWeek = weekIdx < sortedWeeks.length - 1 ? sortedWeeks[weekIdx + 1] : null;
 
+  // Check for blog post cross-link
+  const blogPost = getPostForWeek(season.romanNumeral, weekNum);
+
   // Cross-season prev/next: if at first/last week, link to adjacent season
   const seasonIdx = allSeasons.findIndex(s => s.seasonID === season.seasonID);
   const olderSeason = seasonIdx < allSeasons.length - 1 ? allSeasons[seasonIdx + 1] : null;
@@ -189,6 +193,24 @@ export default async function WeekPage({
           </div>
         </div>
       </div>
+
+      {/* Blog cross-link */}
+      {blogPost && (
+        <Link
+          href={`/blog/${blogPost.slug}`}
+          className="flex items-center gap-2 px-4 py-3 mb-6 rounded-lg bg-cream border border-navy/10 hover:border-red-600/30 transition-colors group"
+        >
+          <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+          </svg>
+          <span className="font-body text-sm text-navy/70 group-hover:text-red-600 transition-colors">
+            Read the Week {weekNum} recap on the blog
+          </span>
+          <svg className="w-3 h-3 text-navy/40 group-hover:text-red-600 ml-auto transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </Link>
+      )}
 
       {isFutureWeek ? (
         /* Future week: show schedule with H2H records */
