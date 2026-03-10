@@ -107,7 +107,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
   });
 
   // --- Splitzkrieg Debuts ---
-  const debuts = weekScores.filter(s => s.isFirstNight);
+  const debuts = weekScores.filter(s => s.isFirstNight && !s.isPenalty);
 
   // --- All-Time High Game (exclude debuts) ---
   const allTimeHighGames: { bowlerName: string; bowlerSlug: string; teamName: string; score: number }[] = [];
