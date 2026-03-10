@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getAllPosts, getPostBySlug, getAdjacentPosts } from '@/lib/blog';
+import { MDXRemote } from 'next-mdx-remote/rsc';
+import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent } from '@/lib/blog';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
+import { mdxComponents } from '@/lib/mdx-components';
 
 export const dynamicParams = false;
 
@@ -33,14 +35,14 @@ export default async function BlogPostPage({
   const meta = getPostBySlug(slug);
   if (!meta) notFound();
 
-  const { prev, next } = getAdjacentPosts(slug);
+  const content = getPostContent(slug);
+  if (!content) notFound();
 
-  // Dynamic import of the MDX file — the static prefix is critical for webpack resolution
-  const Post = (await import(`@content/blog/${slug}.mdx`)).default;
+  const { prev, next } = getAdjacentPosts(slug);
 
   return (
     <BlogPostLayout meta={meta} prev={prev} next={next}>
-      <Post />
+      <MDXRemote source={content} components={mdxComponents} />
     </BlogPostLayout>
   );
 }

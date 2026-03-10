@@ -50,6 +50,17 @@ export function getPostBySlug(slug: string): PostMeta | undefined {
 }
 
 /**
+ * Get raw MDX content for a post (frontmatter stripped).
+ */
+export function getPostContent(slug: string): string | undefined {
+  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+  if (!fs.existsSync(filePath)) return undefined;
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const { content } = matter(raw);
+  return content;
+}
+
+/**
  * Get adjacent posts for prev/next navigation.
  * Posts are ordered newest-first, so "prev" is newer and "next" is older.
  */
