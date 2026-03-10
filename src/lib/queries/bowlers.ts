@@ -434,10 +434,12 @@ export interface BowlerStarStats {
   threeOfAKindCount: number;
   scratchPlayoffAppearances: number;
   hcpPlayoffAppearances: number;
+  scratchChampionships: number;
+  hcpChampionships: number;
 }
 
 const GET_BOWLER_STAR_STATS_SQL = `
-  SELECT p.code, COUNT(*) AS cnt /* v3: perfectGame patch */
+  SELECT p.code, COUNT(*) AS cnt /* v4: scratchChampion + hcpChampion */
   FROM bowlerPatches bp
   JOIN patches p ON p.patchID = bp.patchID
   WHERE bp.bowlerID = @bowlerID
@@ -482,6 +484,8 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
     threeOfAKindCount: 0,
     scratchPlayoffAppearances: 0,
     hcpPlayoffAppearances: 0,
+    scratchChampionships: 0,
+    hcpChampionships: 0,
   };
   return cachedQuery(`getBowlerStarStats-${bowlerID}`, async () => {
     const db = await getDb();
@@ -503,6 +507,8 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
       threeOfAKindCount: counts.get('threeOfAKind') ?? 0,
       scratchPlayoffAppearances: counts.get('scratchPlayoff') ?? 0,
       hcpPlayoffAppearances: counts.get('hcpPlayoff') ?? 0,
+      scratchChampionships: counts.get('scratchChampion') ?? 0,
+      hcpChampionships: counts.get('hcpChampion') ?? 0,
     };
   }, empty, { sql: GET_BOWLER_STAR_STATS_SQL });
 }

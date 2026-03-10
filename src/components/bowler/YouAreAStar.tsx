@@ -52,6 +52,22 @@ export function YouAreAStar({ stats, inTicker, easterEgg }: Props) {
     });
   }
 
+  if (stats.scratchChampionships > 0) {
+    lines.push({
+      patch: 'scratchChampion',
+      label: 'Scratch Championships',
+      value: String(stats.scratchChampionships),
+    });
+  }
+
+  if (stats.hcpChampionships > 0) {
+    lines.push({
+      patch: 'hcpChampion',
+      label: 'Handicap Championships',
+      value: String(stats.hcpChampionships),
+    });
+  }
+
   if (stats.playoffAppearances > 0) {
     lines.push({
       patch: 'playoff',
