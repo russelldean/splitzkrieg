@@ -62,8 +62,8 @@ export function WeekStats({ weekScores, matchResults }: Props) {
     .sort((a, b) => b.scratchSeries - a.scratchSeries)
     .slice(0, 5);
 
-  // --- Individual stats ---
-  const bowlers = weekScores.filter(s => s.scratchSeries != null);
+  // --- Individual stats (exclude penalties) ---
+  const bowlers = weekScores.filter(s => s.scratchSeries != null && !s.isPenalty);
 
   // High Handicap Series (top 5, expanding ties)
   const sortedHcpSeries = [...bowlers].sort((a, b) => (b.handSeries ?? 0) - (a.handSeries ?? 0));

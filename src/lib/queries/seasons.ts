@@ -875,6 +875,7 @@ export interface WeeklyMatchScore {
   isFirstNight: boolean;
   priorBestGame: number | null;
   priorBestSeries: number | null;
+  isPenalty: boolean;
 }
 
 const GET_SEASON_WEEKLY_SCORES_SQL = `
@@ -896,6 +897,7 @@ const GET_SEASON_WEEKLY_SCORES_SQL = `
     sc.incomingHcp,
     ISNULL(sc.turkeys, 0) AS turkeys,
     b.gender,
+    sc.isPenalty,
     CASE WHEN NOT EXISTS (
       SELECT 1 FROM scores sc3
       WHERE sc3.bowlerID = sc.bowlerID
@@ -925,8 +927,7 @@ const GET_SEASON_WEEKLY_SCORES_SQL = `
     ON  sch.seasonID = sc.seasonID
     AND sch.week     = sc.week
   WHERE sc.seasonID = @seasonID
-    AND sc.isPenalty = 0
-  ORDER BY sc.week ASC, sc.teamID ASC, b.bowlerName ASC
+  ORDER BY sc.week ASC, sc.teamID ASC, sc.isPenalty ASC, b.bowlerName ASC
 `;
 
 export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMatchScore[]> {

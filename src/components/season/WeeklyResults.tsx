@@ -41,13 +41,13 @@ function getWeekDate(
   return schedDate ?? null;
 }
 
-/** Sum a team's game scores for a given game number. */
+/** Sum a team's game scores for a given game number (excluding penalties). */
 function teamGameTotal(bowlers: WeeklyMatchScore[], gameKey: 'game1' | 'game2' | 'game3'): number {
-  return bowlers.reduce((sum, b) => sum + (b[gameKey] ?? 0), 0);
+  return bowlers.reduce((sum, b) => b.isPenalty ? sum : sum + (b[gameKey] ?? 0), 0);
 }
 
 function teamSeriesTotal(bowlers: WeeklyMatchScore[]): number {
-  return bowlers.reduce((sum, b) => sum + (b.scratchSeries ?? 0), 0);
+  return bowlers.reduce((sum, b) => b.isPenalty ? sum : sum + (b.scratchSeries ?? 0), 0);
 }
 
 function teamHcpSeriesTotal(bowlers: WeeklyMatchScore[]): number {
@@ -252,8 +252,22 @@ function TeamBoxScore({
           </thead>
           <tbody>
             {bowlers.map((b) => {
-              const isDebut = b.incomingAvg === null;
+              const isDebut = !b.isPenalty && b.incomingAvg === null;
               const isMVP = mvpBowlerID != null && b.bowlerID === mvpBowlerID;
+              if (b.isPenalty) {
+                return (
+                  <tr key={`penalty-${b.bowlerID}`} className="border-b border-navy/5 bg-navy/[0.02]">
+                    <td className="px-2 py-1 text-xs sm:text-sm text-navy/50 italic">Penalty</td>
+                    <td className="px-1 py-1"></td>
+                    <td className="pl-2 pr-1 py-1 border-l border-navy/10"></td>
+                    <td className="pl-2 pr-1 py-1 border-l border-navy/10"></td>
+                    <td className="pl-2 pr-1 py-1 border-l border-navy/10"></td>
+                    <td className="px-1 py-1"></td>
+                    <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/40">{b.handSeries ?? '-'}</td>
+                    <td className="px-1 py-1"></td>
+                  </tr>
+                );
+              }
               return (
                 <tr key={b.bowlerID} className={`border-b border-navy/5 ${isMVP ? 'bg-amber-100/40' : ''}`}>
                   <td className="px-2 py-1">

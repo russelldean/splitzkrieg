@@ -34,6 +34,7 @@ export function findMatchMVP(
   let bestID: number | null = null;
   let bestSeries = -1;
   for (const b of [...homeBowlers, ...awayBowlers]) {
+    if (b.isPenalty) continue;
     if (b.handSeries != null && b.handSeries > bestSeries) {
       bestSeries = b.handSeries;
       bestID = b.bowlerID;

@@ -52,15 +52,17 @@ function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => number, m
 export function SeasonHighlights({ weeklyScores }: Props) {
   if (weeklyScores.length === 0) return null;
 
-  const bowlers = weeklyScores.filter(s => s.scratchSeries != null);
+  const bowlers = weeklyScores.filter(s => s.scratchSeries != null && !s.isPenalty);
 
   // --- High Team Hcp Series & Scratch Series (best single-week team totals) ---
+  // HCP series includes penalties (they contribute 597), scratch series excludes them
   const teamWeekTotals = new Map<string, { teamName: string; teamSlug: string; week: number; hcpSeries: number; scratchSeries: number }>();
-  for (const s of bowlers) {
+  for (const s of weeklyScores) {
+    if (s.handSeries == null && s.scratchSeries == null) continue;
     const key = `${s.teamID}-${s.week}`;
     const cur = teamWeekTotals.get(key) ?? { teamName: s.teamName, teamSlug: s.teamSlug, week: s.week, hcpSeries: 0, scratchSeries: 0 };
     cur.hcpSeries += s.handSeries ?? 0;
-    cur.scratchSeries += s.scratchSeries ?? 0;
+    if (!s.isPenalty) cur.scratchSeries += s.scratchSeries ?? 0;
     teamWeekTotals.set(key, cur);
   }
   const teamWeekList = Array.from(teamWeekTotals.values());
@@ -109,6 +111,7 @@ export function SeasonHighlights({ weeklyScores }: Props) {
   // --- Turkeys (season cumulative) ---
   const turkeyMap = new Map<number, { name: string; slug: string; count: number }>();
   for (const b of weeklyScores) {
+    if (b.isPenalty) continue;
     if (b.turkeys > 0) {
       const cur = turkeyMap.get(b.bowlerID) ?? { name: b.bowlerName, slug: b.bowlerSlug, count: 0 };
       cur.count += b.turkeys;

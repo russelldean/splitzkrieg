@@ -47,10 +47,10 @@ export default function RulesPage() {
                 <strong className="text-navy">Handicap formula.</strong>{' '}
                 Our original formula was <strong className="text-navy">.95*(200-average)</strong>, this changed to
                 <strong className="text-navy">.95*(225-average)</strong> to account for the rare times we have bowlers with
-                over 200 averages. This then changed to <strong className="text-navy">floor(.95*(225-average))</strong>, which
-                means we drop the remainder when calculating handicap instead of rounding
-                to the nearest integer.  This change was made to align with common practice
-                and more easily align with the system at Bowlero.
+                over 200 averages. This then changed to <strong className="text-navy">floor(.95*(225-floor(average)))</strong>, which
+                means we drop the remainder on the average first, then calculate handicap
+                and drop the remainder again.  This change was made to align with common practice
+                and match the system at Bowlero.
               </li>
               <li>
                 <strong className="text-navy">Penalties and missing bowlers.</strong>{' '}
