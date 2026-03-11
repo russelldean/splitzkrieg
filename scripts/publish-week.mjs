@@ -11,7 +11,7 @@
  */
 
 import sql from 'mssql';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -87,10 +87,14 @@ async function main() {
 
   await pool.close();
 
+  // Write .published-week file — cachedQuery reads this to auto-invalidate non-stable caches
+  const tag = `s${seasonID}-w${weekNum}`;
+  const tagPath = resolve(PROJECT_ROOT, '.published-week');
+  writeFileSync(tagPath, tag + '\n');
   console.log('');
-  console.log('Remember to bust cache and redeploy for changes to take effect.');
-  console.log('The SQL text in homepage/profile queries changed with the publish gate,');
-  console.log('so cached results from the old MAX(week) queries are already invalidated.');
+  console.log('Wrote .published-week: ' + tag);
+  console.log('All non-stable query caches will auto-invalidate on next build.');
+  console.log('Commit and push to trigger a Vercel redeploy.');
 }
 
 main().catch(e => {

@@ -269,10 +269,10 @@ const SNAPSHOT_ALL_SQL = CURRENT_SEASON_SQL + SNAPSHOT_STATS_SQL + SNAPSHOT_TOP_
   + SNAPSHOT_HIGH_SERIES_SQL + SNAPSHOT_BOTW_SQL + SNAPSHOT_TOTW_SQL;
 
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
-    const ctx = await getPublishedContext();
-    if (!ctx || ctx.week === 0) return null;
+  const ctx = await getPublishedContext();
+  if (!ctx || ctx.week === 0) return null;
 
-  return cachedQuery(`getCurrentSeasonSnapshot-s${ctx.seasonID}-w${ctx.week}`, async () => {
+  return cachedQuery('getCurrentSeasonSnapshot', async () => {
 
     const db = await getDb();
     const req = () => db.request().input('seasonID', ctx.seasonID).input('week', ctx.week);
@@ -350,10 +350,10 @@ const HIGHLIGHTS_SCORES_SQL = `
 `;
 
 export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
-    const ctx = await getPublishedContext();
-    if (!ctx || ctx.week === 0) return [];
+  const ctx = await getPublishedContext();
+  if (!ctx || ctx.week === 0) return [];
 
-  return cachedQuery(`getWeeklyHighlights-s${ctx.seasonID}-w${ctx.week}`, async () => {
+  return cachedQuery('getWeeklyHighlights', async () => {
 
     const db = await getDb();
     const result = await db.request()

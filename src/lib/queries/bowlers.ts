@@ -379,7 +379,7 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
   const ctx = await getPublishedContext();
   if (!ctx || ctx.week === 0) return null;
 
-  return cachedQuery(`getBowlerOfTheWeek-s${ctx.seasonID}-w${ctx.week}`, async () => {
+  return cachedQuery('getBowlerOfTheWeek', async () => {
     const db = await getDb();
     const result = await db.request()
       .input('seasonID', ctx.seasonID)
