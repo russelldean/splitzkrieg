@@ -358,7 +358,7 @@ export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
     const db = await getDb();
     const result = await db.request().query<{ seasonID: number }>(GET_CURRENT_SEASON_ID_SQL);
     return result.recordset[0]?.seasonID ?? null;
-  }, null, { sql: GET_CURRENT_SEASON_ID_SQL });
+  }, null, { stable: true, sql: GET_CURRENT_SEASON_ID_SQL });
 });
 
 const GET_BOWLER_OF_THE_WEEK_SQL = `/* v2: week passed as param */
@@ -415,7 +415,7 @@ export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]>
     const db = await getDb();
     const result = await db.request().query<DirectoryBowler>(GET_ALL_BOWLERS_DIRECTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_BOWLERS_DIRECTORY_SQL });
+  }, [], { stable: true, sql: GET_ALL_BOWLERS_DIRECTORY_SQL });
 });
 
 /* ───────────────────────────────────────────────────────────

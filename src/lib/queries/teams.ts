@@ -333,7 +333,7 @@ export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Pr
       .input('seasonID', seasonID)
       .query<TeamSeasonBowler>(GET_TEAM_SEASON_BOWLERS_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_SEASON_BOWLERS_SQL });
+  }, [], { sql: GET_TEAM_SEASON_BOWLERS_SQL, seasonID });
 }
 
 const GET_TEAM_ALL_TIME_ROSTER_SQL = `

@@ -232,7 +232,7 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
       .input('seasonID', seasonID)
       .query<StandingsRow>(GET_SEASON_STANDINGS_SQL);
     return result.recordset;
-  }, [], { sql: GET_SEASON_STANDINGS_SQL });
+  }, [], { sql: GET_SEASON_STANDINGS_SQL, seasonID });
 }
 
 const GET_PLAYOFF_TEAM_IDS_SQL = `
@@ -362,7 +362,7 @@ export async function getSeasonLeaderboard(
     }
     const result = await request.query<SeasonLeaderEntry>(sql);
     return result.recordset;
-  }, [], { sql });
+  }, [], { sql, seasonID });
 }
 
 const GET_SEASON_FULL_STATS_SQL = `
@@ -438,7 +438,7 @@ export async function getSeasonFullStats(seasonID: number): Promise<SeasonFullSt
       .input('seasonID', seasonID)
       .query<SeasonFullStatsRow>(GET_SEASON_FULL_STATS_SQL);
     return result.recordset;
-  }, [], { sql: GET_SEASON_FULL_STATS_SQL });
+  }, [], { sql: GET_SEASON_FULL_STATS_SQL, seasonID });
 }
 
 const GET_SEASON_SCHEDULE_SQL = `
@@ -580,7 +580,7 @@ export async function getSeasonRecords(seasonID: number): Promise<SeasonRecords>
       mostTurkeys: turkeyResult.recordset[0] ?? null,
       most200Games: games200Result.recordset[0] ?? null,
     };
-  }, empty, { sql: RECORDS_ALL_SQL });
+  }, empty, { sql: RECORDS_ALL_SQL, seasonID });
 }
 
 const GET_ALL_SEASONS_DIRECTORY_SQL = `
@@ -718,7 +718,7 @@ export async function getSeasonHeroStats(seasonID: number): Promise<SeasonHeroSt
       highSeries: highSeriesResult.recordset[0] ?? null,
       champion: champResult.recordset[0]?.teamName ?? null,
     };
-  }, null, { sql: HERO_ALL_SQL });
+  }, null, { sql: HERO_ALL_SQL, seasonID });
 }
 
 export interface PlayoffMatchup {
@@ -939,7 +939,7 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
         .input('seasonID', seasonID)
         .query<WeeklyMatchScore>(GET_SEASON_WEEKLY_SCORES_SQL);
       return result.recordset;
-  }, [], { sql: GET_SEASON_WEEKLY_SCORES_SQL });
+  }, [], { sql: GET_SEASON_WEEKLY_SCORES_SQL, seasonID });
 }
 
 export interface WeeklyMatchupResult {
@@ -991,7 +991,7 @@ export async function getSeasonMatchResults(seasonID: number): Promise<WeeklyMat
       .input('seasonID', seasonID)
       .query<WeeklyMatchupResult>(GET_SEASON_MATCH_RESULTS_SQL);
     return result.recordset;
-  }, [], { sql: GET_SEASON_MATCH_RESULTS_SQL });
+  }, [], { sql: GET_SEASON_MATCH_RESULTS_SQL, seasonID });
 }
 
 export interface RaceChartRow {
@@ -1043,7 +1043,7 @@ export async function getStandingsRaceData(seasonID: number): Promise<RaceChartR
     const db = await getDb();
     const result = await db.request().input('seasonID', seasonID).query<RaceChartRow>(GET_STANDINGS_RACE_DATA_SQL);
     return result.recordset;
-  }, [], { sql: GET_STANDINGS_RACE_DATA_SQL });
+  }, [], { sql: GET_STANDINGS_RACE_DATA_SQL, seasonID });
 }
 
 /* ───────────────────────────────────────────────────────────
@@ -1179,7 +1179,7 @@ export async function getSeasonWeekSummaries(seasonID: number): Promise<WeekSumm
       .input('seasonID', seasonID)
       .query<WeekSummary>(GET_SEASON_WEEK_SUMMARIES_SQL);
     return result.recordset;
-  }, [], { sql: GET_SEASON_WEEK_SUMMARIES_SQL });
+  }, [], { sql: GET_SEASON_WEEK_SUMMARIES_SQL, seasonID });
 }
 
 /* ─────────────────────────────────────────────────────────

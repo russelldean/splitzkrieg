@@ -69,8 +69,8 @@ export async function closeDb(): Promise<void> {
 
 const CACHE_VERSION = process.env.DB_CACHE_VERSION ?? '1';
 
-// Published-week tag: auto-invalidates all non-stable caches when a new week is published.
-// Written by scripts/publish-week.mjs, read once at startup.
+// Published-week tag: auto-invalidates caches when a new week is published.
+// Written by scripts/publish-week.mjs (format: "s35-w4"), read once at startup.
 let _publishedTag = '';
 try {
   _publishedTag = fs.readFileSync(path.join(process.cwd(), '.published-week'), 'utf-8').trim();
@@ -78,6 +78,13 @@ try {
   // File doesn't exist yet — no tag applied
 }
 const PUBLISHED_TAG = _publishedTag;
+
+// Extract the published season ID so season-scoped queries can skip invalidation
+// for completed seasons (their data never changes).
+const PUBLISHED_SEASON_ID = (() => {
+  const m = PUBLISHED_TAG.match(/^s(\d+)-/);
+  return m ? parseInt(m[1], 10) : 0;
+})();
 
 const VERSIONED_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
 const STABLE_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', 'stable');
@@ -146,12 +153,27 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
-  options?: { stable?: boolean; sql?: string },
+  options?: { stable?: boolean; sql?: string; seasonID?: number },
 ): Promise<T> {
   const stable = options?.stable;
 
-  // Include SQL hash + published-week tag in cache key so query/data changes auto-invalidate
-  const hashInput = [options?.sql ?? '', stable ? '' : PUBLISHED_TAG].filter(Boolean).join('|');
+  // Determine whether to include the published-week tag in the hash:
+  //   stable: true          → never include tag (data never changes)
+  //   seasonID provided      → only include tag if seasonID matches the published season
+  //                            (completed seasons are frozen — no need to re-query)
+  //   neither                → always include tag (weekly data like bowler stats, H2H, etc.)
+  let usePublishedTag = false;
+  if (!stable && PUBLISHED_TAG) {
+    if (options?.seasonID != null) {
+      // Season-scoped: only invalidate for the current season
+      usePublishedTag = options.seasonID === PUBLISHED_SEASON_ID;
+    } else {
+      // Non-seasonal, non-stable: always invalidate
+      usePublishedTag = true;
+    }
+  }
+
+  const hashInput = [options?.sql ?? '', usePublishedTag ? PUBLISHED_TAG : ''].filter(Boolean).join('|');
   const cacheKey = hashInput
     ? `${key}_${crypto.createHash('md5').update(hashInput).digest('hex').slice(0, 8)}`
     : key;
