@@ -14,12 +14,14 @@ import {
   getSeasonMatchResults,
   getAllSeasonNavList,
   getPairwiseH2H,
+  getWeekCareerMilestones,
 } from '@/lib/queries';
 import { WeeklyResults } from '@/components/season/WeeklyResults';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekSchedulePreview } from '@/components/season/WeekSchedulePreview';
 import { WeekStats } from '@/components/season/WeekStats';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { formatMatchDate } from '@/lib/bowling-time';
@@ -101,6 +103,9 @@ export default async function WeekPage({
 
   // Detect future week (has schedule but no scores)
   const isFutureWeek = weekSchedule.length > 0 && weekScores.length === 0;
+
+  // Fetch career milestones achieved this week (e.g., 50,000 career pins)
+  const careerMilestones = isFutureWeek ? [] : await getWeekCareerMilestones(season.seasonID, weekNum);
 
   // Fetch H2H summaries for future week matchups
   const h2hSummaries = isFutureWeek
@@ -217,6 +222,14 @@ export default async function WeekPage({
         <WeekSchedulePreview schedule={weekSchedule} h2hSummaries={h2hSummaries} />
       ) : (
         <>
+          {/* Bowler & Team of the Week — top-level awards */}
+          <div className="mb-6">
+            <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['awards']} bare />
+          </div>
+
+          {/* Match Results */}
+          <SectionHeading>Match Results</SectionHeading>
+
           {/* Match summary scoreboard */}
           <WeekMatchSummary
             weekScores={weekScores}
@@ -238,8 +251,13 @@ export default async function WeekPage({
             </CollapsibleSection>
           </div>
 
-          {/* Weekly Highlights */}
-          <WeekStats weekScores={weekScores} matchResults={weekMatchResults} />
+          {/* XP Rankings — below match details */}
+          <div className="mt-6">
+            <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['xp']} bare />
+          </div>
+
+          {/* Weekly Highlights — starts with Milestones & Personal Bests */}
+          <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} exclude={['awards', 'xp']} />
         </>
       )}
 

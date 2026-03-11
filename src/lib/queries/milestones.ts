@@ -210,6 +210,51 @@ export const getLeagueMilestones = cache(async (): Promise<LeagueMilestones> => 
   );
 });
 
+/* ───────────────────────────────────────────────────────────
+ * Week-specific career milestones (from bowlerMilestones table)
+ * ─────────────────────────────────────────────────────────── */
+
+const WEEK_MILESTONES_SQL = `
+  SELECT
+    bm.bowlerID,
+    b.bowlerName,
+    b.slug,
+    bm.category,
+    bm.threshold
+  FROM bowlerMilestones bm
+  JOIN bowlers b ON bm.bowlerID = b.bowlerID
+  WHERE bm.seasonID = @seasonID AND bm.week = @week
+  ORDER BY bm.threshold DESC
+`;
+
+export async function getWeekCareerMilestones(seasonID: number, week: number): Promise<LeagueMilestone[]> {
+  const params = JSON.stringify({ seasonID, week });
+
+  return cachedQuery(
+    'getWeekCareerMilestones',
+    async () => {
+      const db = await getDb();
+      const result = await db.request()
+        .input('seasonID', seasonID).input('week', week)
+        .query<{ bowlerID: number; bowlerName: string; slug: string; category: MilestoneCategory; threshold: number }>(
+          WEEK_MILESTONES_SQL
+        );
+      return result.recordset.map(row => ({
+        bowlerID: row.bowlerID,
+        bowlerName: row.bowlerName,
+        slug: row.slug,
+        category: row.category,
+        categoryLabel: MILESTONE_THRESHOLDS[row.category]?.label ?? row.category,
+        current: row.threshold,
+        threshold: row.threshold,
+        needed: 0,
+      }));
+    },
+    [],
+    { sql: WEEK_MILESTONES_SQL + params },
+  );
+}
+
 /**
  * Convert recently-achieved milestones into ticker items for the home page.
  */

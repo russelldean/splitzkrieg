@@ -252,6 +252,21 @@ CREATE TABLE blogPosts (
 );
 
 -- ============================================================================
+-- MILESTONE TRACKING
+-- ============================================================================
+
+-- Records the season/week when a bowler crosses a career milestone threshold
+CREATE TABLE bowlerMilestones (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    bowlerID    INT NOT NULL REFERENCES bowlers(bowlerID),
+    category    VARCHAR(30) NOT NULL,   -- totalGames, totalPins, games200Plus, series600Plus, totalTurkeys
+    threshold   INT NOT NULL,           -- 50000, 100, etc.
+    seasonID    INT NOT NULL REFERENCES seasons(seasonID),
+    week        INT NOT NULL,
+    CONSTRAINT UQ_BowlerMilestone UNIQUE(bowlerID, category, threshold)
+);
+
+-- ============================================================================
 -- INDEXES FOR PERFORMANCE
 -- ============================================================================
 
