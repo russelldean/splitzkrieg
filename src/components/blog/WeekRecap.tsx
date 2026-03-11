@@ -57,7 +57,7 @@ export async function WeekRecap({ season, seasonSlug, week }: WeekRecapProps) {
   const hasDivisions = standings.some(row => row.divisionName !== null);
 
   return (
-    <div className="space-y-6">
+    <div className="week-recap space-y-6">
       {/* Bowler & Team of the Week */}
       <WeekStats
         weekScores={weekScores}
