@@ -44,14 +44,19 @@ Step-by-step for publishing each week's results.
 - This gates homepage and profile stats to show up to week N
 - The SQL text change auto-invalidates the cache hash (no manual cache busting needed)
 
-### 7. Deploy
+### 7. Update Site Updates
+
+- Add entry to `content/updates.ts` (e.g., "Week N scores are live")
+- Run `node scripts/draft-updates.mjs` if you need to jog your memory on what changed
+
+### 8. Deploy
 
 - Commit all changes and push to main (Vercel auto-deploys)
 - Verify: check splitzkrieg.com after deploy completes (~2-3 min)
 - Check homepage snapshot shows correct week number
 - Check a bowler profile for updated stats
 
-### 8. Send Email
+### 9. Send Email
 
 - Run: `node scripts/send-recap-email.mjs --week=N --season=XXXV`
 - With custom teaser: `--teaser="Three career highs and a debut this week!"`
@@ -70,6 +75,7 @@ Step-by-step for publishing each week's results.
 | Patches | `populate-patches.mjs` | ~5 min |
 | Blog post | Manual + Claude | 15-30 min |
 | Publish week | `publish-week.mjs` | ~5s |
+| Site updates | Edit `content/updates.ts` | ~1 min |
 | Deploy | `git push` | ~3 min |
 | Send email | `send-recap-email.mjs` | ~5s |
 
