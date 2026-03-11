@@ -94,7 +94,17 @@ const CURRENT_SEASON_SQL = `
   ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
 `;
 
-async function getPublishedContext(): Promise<PublishedContext | null> {
+// Memoized per-build so downstream queries can use the resolved week in their cache keys.
+let _publishedContextPromise: Promise<PublishedContext | null> | null = null;
+
+export function getPublishedContext(): Promise<PublishedContext | null> {
+  if (!_publishedContextPromise) {
+    _publishedContextPromise = _resolvePublishedContext();
+  }
+  return _publishedContextPromise;
+}
+
+async function _resolvePublishedContext(): Promise<PublishedContext | null> {
   const db = await getDb();
   const seasonResult = await db.request().query<{
     seasonID: number; displayName: string; romanNumeral: string;
@@ -259,10 +269,10 @@ const SNAPSHOT_ALL_SQL = CURRENT_SEASON_SQL + SNAPSHOT_STATS_SQL + SNAPSHOT_TOP_
   + SNAPSHOT_HIGH_SERIES_SQL + SNAPSHOT_BOTW_SQL + SNAPSHOT_TOTW_SQL;
 
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
-  return cachedQuery('getCurrentSeasonSnapshot-v4', async () => {
-
     const ctx = await getPublishedContext();
     if (!ctx || ctx.week === 0) return null;
+
+  return cachedQuery(`getCurrentSeasonSnapshot-s${ctx.seasonID}-w${ctx.week}`, async () => {
 
     const db = await getDb();
     const req = () => db.request().input('seasonID', ctx.seasonID).input('week', ctx.week);
@@ -340,9 +350,10 @@ const HIGHLIGHTS_SCORES_SQL = `
 `;
 
 export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
-  return cachedQuery('getWeeklyHighlights-v3', async () => {
     const ctx = await getPublishedContext();
     if (!ctx || ctx.week === 0) return [];
+
+  return cachedQuery(`getWeeklyHighlights-s${ctx.seasonID}-w${ctx.week}`, async () => {
 
     const db = await getDb();
     const result = await db.request()

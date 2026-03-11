@@ -4,6 +4,7 @@
  */
 import { cache } from 'react';
 import { getDb, cachedQuery } from '../db';
+import { getPublishedContext } from './home';
 
 export interface BowlerSlug {
   slug: string;
@@ -375,34 +376,14 @@ const GET_BOWLER_OF_THE_WEEK_SQL = `/* v2: week passed as param */
 `;
 
 export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
-  return cachedQuery('getBowlerOfTheWeek-v3', async () => {
+  const ctx = await getPublishedContext();
+  if (!ctx || ctx.week === 0) return null;
+
+  return cachedQuery(`getBowlerOfTheWeek-s${ctx.seasonID}-w${ctx.week}`, async () => {
     const db = await getDb();
-
-    // Resolve published season + week (try leagueSettings, fall back to MAX)
-    const seasonResult = await db.request().query<{ seasonID: number }>(GET_CURRENT_SEASON_ID_SQL);
-    const seasonID = seasonResult.recordset[0]?.seasonID;
-    if (!seasonID) return null;
-
-    let week: number | null = null;
-    try {
-      const lsResult = await db.request().query<{ settingValue: string }>(
-        `SELECT settingValue FROM leagueSettings WHERE settingKey = 'publishedWeek'`
-      );
-      if (lsResult.recordset[0]) week = parseInt(lsResult.recordset[0].settingValue, 10);
-    } catch {
-      // table doesn't exist
-    }
-    if (week == null) {
-      const maxResult = await db.request()
-        .input('seasonID', seasonID)
-        .query<{ maxWeek: number }>(`SELECT MAX(week) AS maxWeek FROM scores WHERE seasonID = @seasonID AND isPenalty = 0`);
-      week = maxResult.recordset[0]?.maxWeek ?? 0;
-    }
-    if (!week) return null;
-
     const result = await db.request()
-      .input('seasonID', seasonID)
-      .input('week', week)
+      .input('seasonID', ctx.seasonID)
+      .input('week', ctx.week)
       .query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
     return result.recordset[0]?.bowlerID ?? null;
   }, null, { sql: GET_BOWLER_OF_THE_WEEK_SQL });
