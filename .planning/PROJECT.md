@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A stats-driven website for the Splitzkrieg Bowling League (splitzkrieg.org) — a social bowling league in Durham, NC running since 2007. The site makes 18 years of league history searchable and fun for 130+ members, with bowler profile pages as the centerpiece. Think Baseball Reference meets a league that names its teams "Gutter Sluts" and "Bowl'd Peanuts." Also serves as a full-stack portfolio piece demonstrating database design, data visualization, and modern web development.
+A stats-driven website for the Splitzkrieg Bowling League (splitzkrieg.org) — a social bowling league in Durham, NC running since 2007. The site makes 19 years of league history searchable and fun for 620+ members, with bowler profile pages as the centerpiece. Think Baseball Reference meets a league that names its teams "Gutter Sluts" and "Bowl'd Peanuts." Also serves as a full-stack portfolio piece demonstrating database design, data visualization, and modern web development.
 
 ## Core Value
 

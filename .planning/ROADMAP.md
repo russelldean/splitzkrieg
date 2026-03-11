@@ -2,7 +2,7 @@
 
 ## Overview
 
-A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 18 years of league history, 130+ bowlers, and a commissioner who wants to automate everything. The site is also a full-stack portfolio piece. Phases 1-5 built the core: bowler profiles, team pages, season pages, search, leaderboards, and the data pipeline. Phases 6+ shift focus to content, automation, polish, and depth.
+A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 19 years of league history, 620+ bowlers, and a commissioner who wants to automate everything. The site is also a full-stack portfolio piece. Phases 1-5 built the core: bowler profiles, team pages, season pages, search, leaderboards, and the data pipeline. Phases 6+ shift focus to content, automation, polish, and depth.
 
 ## Phases
 
