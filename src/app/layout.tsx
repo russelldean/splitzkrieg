@@ -28,7 +28,7 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.org'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'),
   title: {
     template: '%s | Splitzkrieg',
     default: 'Splitzkrieg Bowling League',

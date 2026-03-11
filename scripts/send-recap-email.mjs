@@ -65,7 +65,7 @@ if (!weekNum && !customSlug) {
 // Build slug and subject
 const slug = customSlug ?? `season-${seasonRoman.toLowerCase()}-week-${weekNum}-recap`;
 const subject = customSubject ?? `Week ${weekNum} Recap is Live!`;
-const blogUrl = `https://splitzkrieg.org/blog/${slug}`;
+const blogUrl = `https://splitzkrieg.com/blog/${slug}`;
 const teaser = customTeaser ?? `This week's scores are in. Check out who topped the charts and who made their mark.`;
 
 // Build HTML email
@@ -145,7 +145,7 @@ async function main() {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Splitzkrieg <noreply@splitzkrieg.org>',
+      from: 'Splitzkrieg <noreply@splitzkrieg.com>',
       to: [toAddress],
       subject,
       html,
@@ -156,7 +156,7 @@ async function main() {
       if (error.statusCode === 403) {
         console.error('');
         console.error('403 Forbidden — this usually means the from domain is not verified in Resend.');
-        console.error('Go to https://resend.com/domains and verify splitzkrieg.org.');
+        console.error('Go to https://resend.com/domains and verify splitzkrieg.com.');
       }
       process.exit(1);
     }
@@ -168,7 +168,7 @@ async function main() {
     if (err.message.includes('403') || err.message.includes('forbidden')) {
       console.error('');
       console.error('This usually means the from domain is not verified in Resend.');
-      console.error('Go to https://resend.com/domains and verify splitzkrieg.org.');
+      console.error('Go to https://resend.com/domains and verify splitzkrieg.com.');
     }
     process.exit(1);
   }

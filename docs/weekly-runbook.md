@@ -47,7 +47,7 @@ Step-by-step for publishing each week's results.
 ### 7. Deploy
 
 - Commit all changes and push to main (Vercel auto-deploys)
-- Verify: check splitzkrieg.org after deploy completes (~2-3 min)
+- Verify: check splitzkrieg.com after deploy completes (~2-3 min)
 - Check homepage snapshot shows correct week number
 - Check a bowler profile for updated stats
 
@@ -93,6 +93,6 @@ Step-by-step for publishing each week's results.
   ```
   NEVER use `vercel --prod --force` or bump `DB_CACHE_VERSION`.
 
-- **Email failed with 403?** The from domain (splitzkrieg.org) needs to be verified in Resend. Go to https://resend.com/domains.
+- **Email failed with 403?** The from domain (splitzkrieg.com) needs to be verified in Resend. Go to https://resend.com/domains.
 
 - **Patches taking too long?** The current script recalculates all patches from scratch. This is expected (~5 min). An incremental mode is planned for the future.

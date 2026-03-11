@@ -63,7 +63,7 @@ export async function generateMetadata({
     openGraph: {
       title: `Season ${season.romanNumeral} \u2014 ${season.period} ${season.year} | Splitzkrieg Bowling`,
       description,
-      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.splitzkrieg.org'}/season/${slug}`,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/season/${slug}`,
       siteName: 'Splitzkrieg Bowling League',
       type: 'website',
     },

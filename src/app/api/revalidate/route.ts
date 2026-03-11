@@ -5,7 +5,7 @@
  * Regeneration happens on next visit (stale-while-revalidate).
  *
  * Usage:
- *   curl -X POST "https://splitzkrieg.org/api/revalidate?secret=YOUR_SECRET"
+ *   curl -X POST "https://splitzkrieg.com/api/revalidate?secret=YOUR_SECRET"
  *
  * Protected by REVALIDATION_SECRET env var — returns 401 on mismatch.
  */

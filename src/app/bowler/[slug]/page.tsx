@@ -69,7 +69,7 @@ export async function generateMetadata({
     openGraph: {
       title: `${bowler.bowlerName} | Splitzkrieg Bowling`,
       description: `Career average: ${avgStr} \u00b7 ${games} games bowled`,
-      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.splitzkrieg.org'}/bowler/${slug}`,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/bowler/${slug}`,
       siteName: 'Splitzkrieg Bowling League',
       type: 'profile',
     },
@@ -85,7 +85,7 @@ export default async function BowlerPage({
   const bowler = await getBowlerBySlug(slug);
   if (!bowler) notFound();
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.splitzkrieg.org'}/bowler/${slug}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/bowler/${slug}`;
 
   // Parallel build-time data fetching
   const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones] = await Promise.all([
