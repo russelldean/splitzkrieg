@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import { TrailNav } from '@/components/ui/TrailNav';
+import { SiteUpdates } from '@/components/resources/SiteUpdates';
+import updates from '../../../content/updates';
 
 export const metadata: Metadata = {
   title: 'Resources',
@@ -111,6 +113,9 @@ export default async function ResourcesPage() {
             Everything you need, all in one place. No more hunting through emails.
           </p>
         </div>
+
+        {/* Site Updates */}
+        <SiteUpdates updates={updates} />
 
         {/* Resource Categories */}
         <div className="space-y-10">
