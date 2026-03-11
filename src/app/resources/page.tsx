@@ -26,22 +26,12 @@ const resources: ResourceCategory[] = [
   {
     category: 'League Documents',
     links: [
-      {
-        label: 'Current Season Spreadsheet',
-        href: 'https://docs.google.com/spreadsheets/d/1esTQm815YXB5F9TDOf43V9Pw3_AJ0wZi-MYoE4f2PSg/edit?usp=sharing',
-        description: "This season's scores and standings",
-      },
-      {
+{
         label: 'Master Database',
         href: 'https://docs.google.com/spreadsheets/d/1DJUexHWdj3QPLzQtM2wXC5UvHZ97gbDYNmlFUsI3BUI/edit?usp=sharing',
         description: 'Complete league stats and history',
       },
-      {
-        label: 'Playoff History',
-        href: 'https://docs.google.com/spreadsheets/d/1RDfMPWXcs5GSVlDeMEKezHjO5XiOQBUGRrVi5h4Xcpw/edit?usp=sharing',
-        description: 'Playoff winners and results by season',
-      },
-      {
+{
         label: 'Lineup Submission Form',
         href: 'https://docs.google.com/forms/d/e/1FAIpQLSdsL0IXbCB97O0VlbFNKY1XdCl8502VsxXt3j-oIYFBJRBgSw/viewform',
         description: 'Commissioners: submit weekly lineups here',
