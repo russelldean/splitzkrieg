@@ -181,13 +181,6 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
           for (const week of season.weeks) {
             const wp = weekPatches.get(`${season.seasonID}-${week.week}`);
             if (wp) seasonWeekPatchCount += wp.size;
-            // Client-computed: above avg all 3
-            if (week.incomingAvg && week.incomingAvg > 0
-                && week.game1 != null && week.game1 > week.incomingAvg
-                && week.game2 != null && week.game2 > week.incomingAvg
-                && week.game3 != null && week.game3 > week.incomingAvg) {
-              seasonWeekPatchCount++;
-            }
           }
           const totalPatchCount = seasonWeekPatchCount + (sPatches?.size ?? 0);
 
@@ -251,15 +244,6 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
                         // Compute week patches
                         const wp = weekPatches.get(`${season.seasonID}-${week.week}`);
                         const weekPatchTypes: string[] = wp ? Array.from(wp) : [];
-
-                        // Client-computed: above avg all 3 games
-                        if (week.incomingAvg && week.incomingAvg > 0
-                            && week.game1 != null && week.game1 > week.incomingAvg
-                            && week.game2 != null && week.game2 > week.incomingAvg
-                            && week.game3 != null && week.game3 > week.incomingAvg) {
-                          weekPatchTypes.push('aboveAvg');
-                        }
-
                         const hasPatches = weekPatchTypes.length > 0;
 
                         return (
