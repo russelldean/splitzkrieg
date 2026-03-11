@@ -6,6 +6,10 @@
  *   node scripts/populate-patches.mjs --wipe       # wipe and repopulate all
  *   node scripts/populate-patches.mjs --dry-run    # preview without writing
  *   node scripts/populate-patches.mjs --patch=botw # only repopulate one patch type
+ *   node scripts/populate-patches.mjs --wipe --patch=botw --season=35 --week=4
+ *                                                  # wipe+rebuild botw for one week
+ *   node scripts/populate-patches.mjs --wipe --patch=aboveAvg --season=35
+ *                                                  # wipe+rebuild aboveAvg for one season
  */
 import sql from 'mssql';
 import { readFileSync } from 'fs';
@@ -35,29 +39,72 @@ async function main() {
   const wipe = process.argv.includes('--wipe');
   const patchFilter = process.argv.find(a => a.startsWith('--patch='));
   const targetPatch = patchFilter ? patchFilter.split('=')[1] : null;
+  const seasonArg = process.argv.find(a => a.startsWith('--season='));
+  const weekArg = process.argv.find(a => a.startsWith('--week='));
+  const targetSeasonID = seasonArg ? parseInt(seasonArg.split('=')[1]) : null;
+  const targetWeek = weekArg ? parseInt(weekArg.split('=')[1]) : null;
 
+  if (targetWeek && !targetSeasonID) {
+    console.error('ERROR: --week requires --season');
+    process.exit(1);
+  }
+
+  const scopeLabel = targetSeasonID
+    ? `season ${targetSeasonID}${targetWeek ? ` week ${targetWeek}` : ''}`
+    : 'all seasons';
   console.log(dryRun ? '=== DRY RUN ===' : '=== POPULATING bowlerPatches ===');
+  console.log(`Scope: ${scopeLabel}`);
 
   // Load patch catalog
   const patchRows = (await pool.request().query('SELECT patchID, code FROM patches')).recordset;
   const patchMap = new Map(patchRows.map(p => [p.code, p.patchID]));
   console.log(`Patch catalog: ${patchRows.map(p => p.code).join(', ')}\n`);
 
-  // Wipe if requested
+  // Wipe if requested (scoped by season/week when provided)
   if (wipe) {
     if (targetPatch) {
       const pid = patchMap.get(targetPatch);
       if (!pid) { console.error(`Unknown patch: ${targetPatch}`); process.exit(1); }
-      const del = await pool.request().input('pid', sql.Int, pid)
-        .query('DELETE FROM bowlerPatches WHERE patchID = @pid');
-      console.log(`Wiped ${del.rowsAffected[0]} rows for patch "${targetPatch}"`);
+      const req = pool.request().input('pid', sql.Int, pid);
+      let wipeSQL = 'DELETE FROM bowlerPatches WHERE patchID = @pid';
+      if (targetSeasonID) {
+        req.input('sid', sql.Int, targetSeasonID);
+        wipeSQL += ' AND seasonID = @sid';
+      }
+      if (targetWeek) {
+        req.input('wk', sql.Int, targetWeek);
+        wipeSQL += ' AND week = @wk';
+      }
+      const del = await req.query(wipeSQL);
+      console.log(`Wiped ${del.rowsAffected[0]} rows for patch "${targetPatch}" (${scopeLabel})`);
     } else {
-      const del = await pool.request().query('DELETE FROM bowlerPatches');
-      console.log(`Wiped ${del.rowsAffected[0]} total rows`);
+      const req = pool.request();
+      let wipeSQL = 'DELETE FROM bowlerPatches WHERE 1=1';
+      if (targetSeasonID) {
+        req.input('sid', sql.Int, targetSeasonID);
+        wipeSQL += ' AND seasonID = @sid';
+      }
+      if (targetWeek) {
+        req.input('wk', sql.Int, targetWeek);
+        wipeSQL += ' AND week = @wk';
+      }
+      const del = await req.query(wipeSQL);
+      console.log(`Wiped ${del.rowsAffected[0]} total rows (${scopeLabel})`);
     }
   }
 
   let totalInserted = 0;
+
+  // Scope filters for SQL injection into queries
+  // Weekly patches use sc.seasonID / sc.week
+  const weeklyFilter = [
+    targetSeasonID ? `sc.seasonID = ${parseInt(targetSeasonID)}` : null,
+    targetWeek ? `sc.week = ${parseInt(targetWeek)}` : null,
+  ].filter(Boolean).join(' AND ');
+  const weeklyAnd = weeklyFilter ? ` AND ${weeklyFilter}` : '';
+
+  // Season-level patches use pr.seasonID or ch.seasonID (varies by query)
+  const seasonFilter = targetSeasonID ? parseInt(targetSeasonID) : null;
 
   async function insertPatches(code, query, label) {
     if (targetPatch && targetPatch !== code) return;
@@ -110,9 +157,12 @@ async function main() {
     FROM scores sc
     WHERE sc.isPenalty = 0
       AND (sc.game1 = 300 OR sc.game2 = 300 OR sc.game3 = 300)
+      ${weeklyAnd}
   `, 'Perfect Game');
 
   // ─── Bowler of the Week ───
+  // Note: when scoped to a single week, we still need the full PARTITION to
+  // determine the winner, but we filter the outer result to just that week.
   await insertPatches('botw', `
     SELECT x.bowlerID, x.seasonID, x.week
     FROM (
@@ -126,6 +176,7 @@ async function main() {
           WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
             AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
         )
+        ${weeklyAnd}
     ) x WHERE x.rn = 1
   `, 'Bowler of the Week');
 
@@ -140,6 +191,7 @@ async function main() {
                ELSE sc.game3 END DESC) AS rn
       FROM scores sc
       WHERE sc.isPenalty = 0
+        ${weeklyAnd}
     ) x WHERE x.rn = 1
   `, 'Weekly High Game');
 
@@ -151,6 +203,7 @@ async function main() {
         ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn
       FROM scores sc
       WHERE sc.isPenalty = 0
+        ${weeklyAnd}
     ) x WHERE x.rn = 1
   `, 'Weekly High Series');
 
@@ -163,6 +216,7 @@ async function main() {
       AND sc.game1 > sc.incomingAvg
       AND sc.game2 > sc.incomingAvg
       AND sc.game3 > sc.incomingAvg
+      ${weeklyAnd}
   `, 'Above Average All 3 Games');
 
   // ─── Three of a Kind ───
@@ -172,6 +226,7 @@ async function main() {
     WHERE sc.isPenalty = 0
       AND sc.game1 = sc.game2 AND sc.game2 = sc.game3
       AND sc.game1 IS NOT NULL AND sc.game1 > 0
+      ${weeklyAnd}
   `, 'Three of a Kind');
 
   // ─── Team Playoff appearances (must have 9+ games for that team) ───
@@ -182,6 +237,7 @@ async function main() {
       AND sc.isPenalty = 0
       AND (sc.teamID = pr.team1ID OR sc.teamID = pr.team2ID)
     WHERE pr.playoffType = 'Team'
+      ${seasonFilter ? `AND pr.seasonID = ${seasonFilter}` : ''}
       AND (SELECT COUNT(*) FROM scores sc2
            WHERE sc2.bowlerID = sc.bowlerID AND sc2.seasonID = pr.seasonID
              AND sc2.teamID = sc.teamID AND sc2.isPenalty = 0) >= 3
@@ -195,6 +251,7 @@ async function main() {
       AND sc.teamID = ch.winnerTeamID
       AND sc.isPenalty = 0
     WHERE ch.championshipType = 'Team'
+      ${seasonFilter ? `AND ch.seasonID = ${seasonFilter}` : ''}
       AND (SELECT COUNT(*) FROM scores sc2
            WHERE sc2.bowlerID = sc.bowlerID AND sc2.seasonID = ch.seasonID
              AND sc2.teamID = ch.winnerTeamID AND sc2.isPenalty = 0) >= 3
@@ -219,6 +276,7 @@ async function main() {
       FROM scores sc2
       JOIN bowlers b2 ON b2.bowlerID = sc2.bowlerID
       WHERE sc2.isPenalty = 0 AND b2.gender IN ('M', 'F')
+        ${seasonFilter ? `AND sc2.seasonID = ${seasonFilter}` : ''}
       GROUP BY sc2.seasonID, sc2.bowlerID, b2.gender
       HAVING COUNT(*) * 3 >= ${minGamesCaseExpr}
     ) ranked
@@ -237,6 +295,7 @@ async function main() {
           CAST(SUM(sc2.handSeries) * 1.0 / NULLIF(COUNT(sc2.scoreID) * 3, 0) AS DECIMAL(5,1)) AS hcpAvg
         FROM scores sc2
         WHERE sc2.isPenalty = 0
+          ${seasonFilter ? `AND sc2.seasonID = ${seasonFilter}` : ''}
         GROUP BY sc2.seasonID, sc2.bowlerID
         HAVING COUNT(*) * 3 >= ${minGamesCaseExpr}
       ) ss
@@ -249,6 +308,7 @@ async function main() {
           FROM scores sc3
           JOIN bowlers b3 ON b3.bowlerID = sc3.bowlerID
           WHERE sc3.isPenalty = 0 AND b3.gender IN ('M', 'F')
+            ${seasonFilter ? `AND sc3.seasonID = ${seasonFilter}` : ''}
           GROUP BY sc3.seasonID, sc3.bowlerID, b3.gender
           HAVING COUNT(*) * 3 >= ${minGamesCaseExpr}
         ) sq
@@ -264,6 +324,7 @@ async function main() {
     FROM seasonChampions sc
     WHERE sc.championshipType IN ('MensScratch', 'WomensScratch')
       AND sc.winnerBowlerID IS NOT NULL
+      ${seasonFilter ? `AND sc.seasonID = ${seasonFilter}` : ''}
   `, 'Scratch Champion');
 
   // ─── Handicap Champion (individual playoff winner — handicap) ───
@@ -272,14 +333,20 @@ async function main() {
     FROM seasonChampions sc
     WHERE sc.championshipType = 'Handicap'
       AND sc.winnerBowlerID IS NOT NULL
+      ${seasonFilter ? `AND sc.seasonID = ${seasonFilter}` : ''}
   `, 'Handicap Champion');
 
-  // ─── Team Captain (career-level, no season/week) ───
-  await insertPatches('captain', `
-    SELECT captainBowlerID AS bowlerID, NULL AS seasonID, NULL AS week
-    FROM teams
-    WHERE captainBowlerID IS NOT NULL
-  `, 'Team Captain');
+  // ─── Team Captain (career-level, no season/week — skip if scoped) ───
+  if (!targetSeasonID) {
+    await insertPatches('captain', `
+      SELECT captainBowlerID AS bowlerID, NULL AS seasonID, NULL AS week
+      FROM teams
+      WHERE captainBowlerID IS NOT NULL
+    `, 'Team Captain');
+  } else if (!targetPatch || targetPatch === 'captain') {
+    console.log('\n--- Team Captain (captain) ---');
+    console.log('  Skipped (career-level patch, not affected by season scope)');
+  }
 
   console.log(`\n=== TOTAL: ${totalInserted} patches ${dryRun ? 'would be' : ''} inserted ===`);
   await pool.close();

@@ -87,16 +87,16 @@ if (!skipMatchResults) {
 
 // --- Step 2: Rebuild HCP-dependent patches ---
 // These are the patch types affected by incomingAvg changes:
-//   botw      — highest handSeries that week
-//   aboveAvg  — all 3 games above incomingAvg
-//   hcpPlayoff — top 8 by handicap average
+//   botw      — highest handSeries that week (weekly)
+//   aboveAvg  — all 3 games above incomingAvg (weekly)
+//   hcpPlayoff — top 8 by handicap average (season-level)
 const HCP_PATCH_TYPES = ['botw', 'aboveAvg', 'hcpPlayoff'];
 
 if (!skipPatches) {
   for (const patchType of HCP_PATCH_TYPES) {
     run(
-      `node scripts/populate-patches.mjs --wipe --patch=${patchType}`,
-      `Rebuild ${patchType} patches`
+      `node scripts/populate-patches.mjs --wipe --patch=${patchType} --season=${seasonID}`,
+      `Rebuild ${patchType} patches for season ${seasonID}`
     );
   }
 } else {
