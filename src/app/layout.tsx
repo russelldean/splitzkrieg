@@ -34,6 +34,10 @@ export const metadata: Metadata = {
     default: 'Splitzkrieg Bowling League',
   },
   description: "Stats, records, and history for the Splitzkrieg Bowling League. Since 2007.",
+  other: {
+    'apple-mobile-web-app-capable': 'no',
+    'mobile-web-app-capable': 'no',
+  },
 };
 
 export default function RootLayout({
