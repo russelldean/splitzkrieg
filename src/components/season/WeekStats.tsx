@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import type { WeeklyMatchScore, WeeklyMatchupResult, LeagueMilestone } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { topWithTies, LeaderList, PINList } from './WeekStatsCards';
 
 export type WeekStatsSection = 'awards' | 'records' | 'xp' | 'teamStats' | 'leaders' | 'misc';
 
@@ -18,31 +19,6 @@ interface Props {
   bare?: boolean;
   /** Blog mode: top 1 leaders instead of 5, no turkeys */
   compact?: boolean;
-}
-
-interface TopResult<T> {
-  items: T[];
-  tiedCount: number;
-  tiedValue: number;
-}
-
-/**
- * Return top N items from a pre-sorted array, expanding ties at the cutoff.
- * If expanding would exceed maxShow, truncate and return tied count instead.
- */
-function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => number, maxShow = 7): TopResult<T> {
-  if (sorted.length <= n) return { items: sorted, tiedCount: 0, tiedValue: 0 };
-  const cutoffValue = getValue(sorted[n - 1]);
-  let end = n;
-  while (end < sorted.length && getValue(sorted[end]) === cutoffValue) end++;
-  if (end <= maxShow) {
-    return { items: sorted.slice(0, end), tiedCount: 0, tiedValue: 0 };
-  }
-  // Too many ties — show items above the tie value, then "X tied with Y"
-  let aboveTie = 0;
-  while (aboveTie < sorted.length && getValue(sorted[aboveTie]) > cutoffValue) aboveTie++;
-  const tiedCount = end - aboveTie;
-  return { items: sorted.slice(0, aboveTie), tiedCount, tiedValue: cutoffValue };
 }
 
 /** Compute all the weekly report stats shown at the bottom of the PDF report. */
@@ -143,7 +119,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
   }
   allTimeHighSeries.sort((a, b) => b.score - a.score);
 
-  // --- Bowler of the Week (most pins over average: series - 3×incomingAvg) ---
+  // --- Bowler of the Week (most pins over average: series - 3x incomingAvg) ---
   // Exclude debuts (first night in Splitzkrieg) — they are not eligible
   const debutBowlerIDs = new Set(debuts.map(s => s.bowlerID));
   const bowlerOfWeek = bowlers.reduce<{ name: string; slug: string; pinsOver: number; series: number } | null>((best, b) => {
@@ -154,7 +130,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
     return !best || cur.pinsOver > best.pinsOver ? cur : best;
   }, null);
 
-  // --- Team of the Week (highest hcp series, pins over expected = hcpSeries - sum of 3×(avg+hcp) per bowler) ---
+  // --- Team of the Week (highest hcp series, pins over expected = hcpSeries - sum of 3x(avg+hcp) per bowler) ---
   const teamHcpData = new Map<number, { teamName: string; teamSlug: string; hcpSeries: number; expectedHcpSeries: number }>();
   for (const s of weekScores) {
     const cur = teamHcpData.get(s.teamID) ?? { teamName: s.teamName, teamSlug: s.teamSlug, hcpSeries: 0, expectedHcpSeries: 0 };
@@ -169,12 +145,9 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
     .sort((a, b) => b.hcpSeries - a.hcpSeries)[0] ?? null;
 
   // --- PIN: Personal Impact Number ---
-  // For each bowler, replace their hcp games with penalty (199), recalculate
-  // head-to-head game results and XP tiers, measure point delta for their team.
   const PENALTY_HCP_GAME = 199;
   const pinScores: { name: string; slug: string; team: string; pin: number }[] = [];
   if (matchResults.length > 0) {
-    // Build team hcp game totals from matchResults
     const teamGameTotals = new Map<number, { g1: number; g2: number; g3: number; series: number }>();
     for (const mr of matchResults) {
       if (mr.team1Game1 != null) {
@@ -189,14 +162,12 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       }
     }
 
-    // Find opponent for each team
     const opponentMap = new Map<number, number>();
     for (const mr of matchResults) {
       opponentMap.set(mr.homeTeamID, mr.awayTeamID);
       opponentMap.set(mr.awayTeamID, mr.homeTeamID);
     }
 
-    // Game points helper (2 per win, 1 per tie)
     function calcGamePts(t1: { g1: number; g2: number; g3: number }, t2: { g1: number; g2: number; g3: number }) {
       let p1 = 0, p2 = 0;
       for (const [a, b] of [[t1.g1, t2.g1], [t1.g2, t2.g2], [t1.g3, t2.g3]] as [number, number][]) {
@@ -207,15 +178,12 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       return { p1, p2 };
     }
 
-    // XP from rank
     function getXP(rank: number) { return rank < 5 ? 3 : rank < 10 ? 2 : rank < 15 ? 1 : 0; }
 
-    // Actual XP for each team
     const actualSeriesRanked = [...teamGameTotals.entries()].sort((a, b) => b[1].series - a[1].series);
     const actualXP = new Map<number, number>();
     actualSeriesRanked.forEach(([id], i) => actualXP.set(id, getXP(i)));
 
-    // Actual total points per team
     const actualPoints = new Map<number, number>();
     for (const [tid] of teamGameTotals) actualPoints.set(tid, actualXP.get(tid) ?? 0);
     for (const mr of matchResults) {
@@ -227,7 +195,6 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       actualPoints.set(mr.awayTeamID, (actualPoints.get(mr.awayTeamID) ?? 0) + pts.p2);
     }
 
-    // For each bowler with hcp data, compute PIN
     for (const b of bowlers) {
       if (b.incomingHcp == null || b.game1 == null || b.game2 == null || b.game3 == null) continue;
       const teamGames = teamGameTotals.get(b.teamID);
@@ -236,12 +203,10 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       const oppGames = teamGameTotals.get(oppID);
       if (!oppGames) continue;
 
-      // Bowler's hcp game contributions
       const bHcp1 = b.game1 + b.incomingHcp;
       const bHcp2 = b.game2 + b.incomingHcp;
       const bHcp3 = b.game3 + b.incomingHcp;
 
-      // Hypothetical team games with penalty replacement
       const hypTeam = {
         g1: teamGames.g1 - bHcp1 + PENALTY_HCP_GAME,
         g2: teamGames.g2 - bHcp2 + PENALTY_HCP_GAME,
@@ -250,14 +215,12 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       };
       hypTeam.series = hypTeam.g1 + hypTeam.g2 + hypTeam.g3;
 
-      // Recalculate XP with hypothetical series
       const hypSeriesMap = new Map(actualSeriesRanked.map(([id, t]) => [id, t.series]));
       hypSeriesMap.set(b.teamID, hypTeam.series);
       const hypRanked = [...hypSeriesMap.entries()].sort((a, b) => b[1] - a[1]);
       const hypXP = new Map<number, number>();
       hypRanked.forEach(([id], i) => hypXP.set(id, getXP(i)));
 
-      // Recalculate total points for all teams
       const hypPoints = new Map<number, number>();
       for (const [tid] of teamGameTotals) hypPoints.set(tid, hypXP.get(tid) ?? 0);
       for (const mr of matchResults) {
@@ -496,81 +459,5 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       </div>
       </>)}
     </section>
-  );
-}
-
-function PINList({ items, tiedCount, tiedValue }: { items: { name: string; slug: string; team: string; pin: number }[]; tiedCount: number; tiedValue: number }) {
-  return (
-    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-      <details className="mb-1.5">
-        <summary className="font-heading text-sm text-navy/60 uppercase tracking-wider cursor-pointer list-none inline-flex items-center gap-1">
-          PIN <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-navy/10 text-navy/65 text-xs font-bold leading-none">?</span>
-        </summary>
-        <p className="text-xs font-body text-navy/65 mt-1">Personal Impact Number - how many points your team would have lost if you didn't show up.</p>
-      </details>
-      {(() => {
-        const topPin = items[0].pin;
-        return items.map((item, i) => {
-          const isTop = item.pin === topPin;
-          return (
-            <div key={`${item.slug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
-              <span className="truncate mr-2">
-                <Link href={`/bowler/${item.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
-                  {item.name}
-                </Link>
-                <span className="text-navy/65 text-xs ml-1">({item.team})</span>
-              </span>
-              <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>+{item.pin}</span>
-            </div>
-          );
-        });
-      })()}
-      {tiedCount > 0 && (
-        <div className="text-sm font-body text-navy/65 italic py-0.5">
-          {tiedCount} tied with +{tiedValue}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TiedNote({ count, value, prefix }: { count: number; value: number; prefix?: string }) {
-  if (count === 0) return null;
-  return (
-    <div className="text-sm font-body text-navy/65 italic py-0.5">
-      {count} tied with {prefix}{value}
-    </div>
-  );
-}
-
-function LeaderList<T>({ title, result, getItem }: {
-  title: string;
-  result: TopResult<T>;
-  getItem: (item: T) => { name: string; slug: string; team?: string; value: number };
-}) {
-  if (result.items.length === 0) return null;
-  return (
-    <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-      <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">{title}</h3>
-      {(() => {
-        const topValue = getItem(result.items[0]).value;
-        return result.items.map((raw, i) => {
-          const item = getItem(raw);
-          const isTop = item.value === topValue;
-          return (
-            <div key={`${item.slug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
-              <span className="truncate mr-2">
-                <Link href={`/bowler/${item.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
-                  {item.name}
-                </Link>
-                {item.team && <span className="text-navy/65 text-xs ml-1">({item.team})</span>}
-              </span>
-              <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{item.value}</span>
-            </div>
-          );
-        });
-      })()}
-      <TiedNote count={result.tiedCount} value={result.tiedValue} />
-    </div>
   );
 }
