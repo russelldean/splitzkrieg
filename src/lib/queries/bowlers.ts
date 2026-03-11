@@ -360,17 +360,12 @@ export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
   }, null, { sql: GET_CURRENT_SEASON_ID_SQL });
 });
 
-const GET_BOWLER_OF_THE_WEEK_SQL = `
+const GET_BOWLER_OF_THE_WEEK_SQL = `/* v2: week passed as param */
   SELECT TOP 1 sc.bowlerID
   FROM scores sc
-  JOIN seasons sn ON sc.seasonID = sn.seasonID
   WHERE sc.isPenalty = 0
-    AND sc.seasonID = (
-      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedSeasonID'
-    )
-    AND sc.week = (
-      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedWeek'
-    )
+    AND sc.seasonID = @seasonID
+    AND sc.week = @week
     AND EXISTS (
       SELECT 1 FROM scores sc3
       WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
@@ -380,9 +375,35 @@ const GET_BOWLER_OF_THE_WEEK_SQL = `
 `;
 
 export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
-  return cachedQuery('getBowlerOfTheWeek', async () => {
+  return cachedQuery('getBowlerOfTheWeek-v2', async () => {
     const db = await getDb();
-    const result = await db.request().query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
+
+    // Resolve published season + week (try leagueSettings, fall back to MAX)
+    const seasonResult = await db.request().query<{ seasonID: number }>(GET_CURRENT_SEASON_ID_SQL);
+    const seasonID = seasonResult.recordset[0]?.seasonID;
+    if (!seasonID) return null;
+
+    let week: number | null = null;
+    try {
+      const lsResult = await db.request().query<{ settingValue: string }>(
+        `SELECT settingValue FROM leagueSettings WHERE settingKey = 'publishedWeek'`
+      );
+      if (lsResult.recordset[0]) week = parseInt(lsResult.recordset[0].settingValue, 10);
+    } catch {
+      // table doesn't exist
+    }
+    if (week == null) {
+      const maxResult = await db.request()
+        .input('seasonID', seasonID)
+        .query<{ maxWeek: number }>(`SELECT MAX(week) AS maxWeek FROM scores WHERE seasonID = @seasonID AND isPenalty = 0`);
+      week = maxResult.recordset[0]?.maxWeek ?? 0;
+    }
+    if (!week) return null;
+
+    const result = await db.request()
+      .input('seasonID', seasonID)
+      .input('week', week)
+      .query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
     return result.recordset[0]?.bowlerID ?? null;
   }, null, { sql: GET_BOWLER_OF_THE_WEEK_SQL });
 });

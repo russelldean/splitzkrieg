@@ -46,7 +46,7 @@ async function main() {
         settingKey VARCHAR(50) PRIMARY KEY,
         settingValue VARCHAR(255) NOT NULL
       );
-      INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('publishedWeek', '4');
+      INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('publishedWeek', '3');
       INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('publishedSeasonID', '35');
       PRINT 'Table created and seeded.';
     END
@@ -55,7 +55,7 @@ async function main() {
       PRINT 'Table already exists, skipping creation.';
       -- Ensure seed rows exist
       IF NOT EXISTS (SELECT 1 FROM leagueSettings WHERE settingKey = 'publishedWeek')
-        INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('publishedWeek', '4');
+        INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('publishedWeek', '3');
       IF NOT EXISTS (SELECT 1 FROM leagueSettings WHERE settingKey = 'publishedSeasonID')
         INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('publishedSeasonID', '35');
     END

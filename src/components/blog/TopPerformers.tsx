@@ -4,7 +4,7 @@ import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 
 interface TopPerformersProps {
   season: string;
-  week: number;
+  week: number | string;
 }
 
 function RankedList({
@@ -37,10 +37,11 @@ function RankedList({
 }
 
 export async function TopPerformers({ season, week }: TopPerformersProps) {
+  const weekNum = typeof week === 'string' ? parseInt(week, 10) : week;
   const seasonID = await getSeasonIDByRoman(season);
-  if (!seasonID) return null;
+  if (!seasonID || isNaN(weekNum)) return null;
 
-  const data = await getTopPerformers(seasonID, week);
+  const data = await getTopPerformers(seasonID, weekNum);
 
   return (
     <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-5 my-6">

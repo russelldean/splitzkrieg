@@ -1,8 +1,9 @@
 /**
- * Blog stat block queries: top performers, milestones, match results, standings.
+ * Blog stat block queries: top performers, milestones, match results, standings, leaderboards.
  * All queries take seasonID + week and return data for blog recap components.
  */
 import { getDb, cachedQuery } from '../db';
+import type { SeasonLeaderEntry } from './seasons';
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -271,7 +272,7 @@ const MATCH_RESULTS_SQL = `
   JOIN teams t1 ON sch.team1ID = t1.teamID
   JOIN teams t2 ON sch.team2ID = t2.teamID
   LEFT JOIN (
-    SELECT teamID, alternateName
+    SELECT teamID, teamName AS alternateName
     FROM teamNameHistory
     WHERE id IN (SELECT MAX(id) FROM teamNameHistory WHERE teamID IN (
       SELECT team1ID FROM schedule WHERE seasonID = @seasonID AND week = @week
@@ -279,7 +280,7 @@ const MATCH_RESULTS_SQL = `
     ) GROUP BY teamID)
   ) tnh1 ON tnh1.teamID = t1.teamID
   LEFT JOIN (
-    SELECT teamID, alternateName
+    SELECT teamID, teamName AS alternateName
     FROM teamNameHistory
     WHERE id IN (SELECT MAX(id) FROM teamNameHistory WHERE teamID IN (
       SELECT team1ID FROM schedule WHERE seasonID = @seasonID AND week = @week
@@ -361,7 +362,7 @@ const STANDINGS_SNAPSHOT_SQL = `
   JOIN teams t ON cr.teamID = t.teamID
   LEFT JOIN prevRanked pr ON pr.teamID = cr.teamID
   LEFT JOIN (
-    SELECT teamID, alternateName
+    SELECT teamID, teamName AS alternateName
     FROM teamNameHistory
     WHERE id IN (SELECT MAX(id) FROM teamNameHistory GROUP BY teamID)
   ) tnh ON tnh.teamID = cr.teamID
@@ -377,4 +378,87 @@ export async function getStandingsSnapshot(seasonID: number, week: number): Prom
       .query<StandingsRow>(STANDINGS_SNAPSHOT_SQL);
     return result.recordset;
   }, [], { sql: STANDINGS_SNAPSHOT_SQL + params });
+}
+
+// ── Leaderboard Snapshot (through week N) ───────────────────
+
+export type LeaderboardCategory = 'avg' | 'highSeries' | 'hcpAvg';
+
+/**
+ * Season leaderboard filtered to scores through a given week.
+ * Returns top 10 for a category/gender combination — a snapshot in time.
+ */
+export async function getLeaderboardSnapshot(
+  seasonID: number,
+  week: number,
+  gender: 'M' | 'F' | null,
+  category: LeaderboardCategory,
+  limit = 10,
+): Promise<SeasonLeaderEntry[]> {
+  const genderFilter = gender !== null ? 'AND b.gender = @gender' : '';
+  const minNights = 3;
+
+  let selectExpr: string;
+  let havingClause = '';
+
+  switch (category) {
+    case 'avg':
+      selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+      havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
+      break;
+    case 'highSeries':
+      selectExpr = `MAX(sc.scratchSeries)`;
+      break;
+    case 'hcpAvg':
+      selectExpr = `CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+      havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
+      break;
+  }
+
+  const sql = `
+    SELECT TOP ${limit}
+      agg.bowlerID,
+      b.bowlerName,
+      b.slug,
+      COALESCE(tnh.teamName, t.teamName) AS teamName,
+      t.slug AS teamSlug,
+      agg.value,
+      ROW_NUMBER() OVER (ORDER BY agg.value DESC) AS rank
+    FROM (
+      SELECT sc.bowlerID,
+        ${selectExpr} AS value
+      FROM scores sc
+      JOIN bowlers b ON sc.bowlerID = b.bowlerID
+      WHERE sc.seasonID = @seasonID
+        AND sc.week <= @week
+        AND sc.isPenalty = 0
+        ${genderFilter}
+      GROUP BY sc.bowlerID
+      ${havingClause}
+    ) agg
+    JOIN bowlers b ON b.bowlerID = agg.bowlerID
+    CROSS APPLY (
+      SELECT TOP 1 sc2.teamID
+      FROM scores sc2
+      WHERE sc2.bowlerID = agg.bowlerID AND sc2.seasonID = @seasonID AND sc2.week <= @week AND sc2.isPenalty = 0
+      GROUP BY sc2.teamID
+      ORDER BY COUNT(*) DESC
+    ) pt
+    LEFT JOIN teams t ON t.teamID = pt.teamID
+    LEFT JOIN teamNameHistory tnh
+      ON  tnh.seasonID = @seasonID
+      AND tnh.teamID   = pt.teamID
+    ORDER BY agg.value DESC
+  `;
+
+  const params = JSON.stringify({ seasonID, week, gender, category, limit });
+  return cachedQuery(`getLeaderboardSnapshot`, async () => {
+    const db = await getDb();
+    const request = db.request()
+      .input('seasonID', seasonID)
+      .input('week', week);
+    if (gender !== null) request.input('gender', gender);
+    const result = await request.query<SeasonLeaderEntry>(sql);
+    return result.recordset;
+  }, [], { sql: sql + params });
 }

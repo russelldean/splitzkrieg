@@ -1,11 +1,23 @@
 'use client';
 import Link from 'next/link';
-import type { WeeklyMatchScore, WeeklyMatchupResult } from '@/lib/queries';
+import type { WeeklyMatchScore, WeeklyMatchupResult, LeagueMilestone } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+
+export type WeekStatsSection = 'awards' | 'records' | 'xp' | 'teamStats' | 'leaders' | 'misc';
 
 interface Props {
   weekScores: WeeklyMatchScore[];
   matchResults: WeeklyMatchupResult[];
+  /** Career milestones achieved this week (e.g., 50,000 pins) */
+  careerMilestones?: LeagueMilestone[];
+  /** If provided, only render these sections. Otherwise render all. */
+  only?: WeekStatsSection[];
+  /** If provided, skip these sections. Ignored if `only` is set. */
+  exclude?: WeekStatsSection[];
+  /** Hide the "Weekly Highlights" heading and top divider */
+  bare?: boolean;
+  /** Blog mode: top 1 leaders instead of 5, no turkeys */
+  compact?: boolean;
 }
 
 interface TopResult<T> {
@@ -34,7 +46,7 @@ function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => number, m
 }
 
 /** Compute all the weekly report stats shown at the bottom of the PDF report. */
-export function WeekStats({ weekScores, matchResults }: Props) {
+export function WeekStats({ weekScores, matchResults, careerMilestones = [], only, exclude, bare, compact }: Props) {
   if (weekScores.length === 0) return null;
 
   // --- XP Rankings (teams ranked by hcp series, grouped into XP tiers) ---
@@ -60,16 +72,17 @@ export function WeekStats({ weekScores, matchResults }: Props) {
   // --- High Team Scratch Series ---
   const topTeamScratch = [...rankedTeams]
     .sort((a, b) => b.scratchSeries - a.scratchSeries)
-    .slice(0, 5);
+    .slice(0, compact ? 1 : 5);
 
   // --- Individual stats (exclude penalties) ---
   const bowlers = weekScores.filter(s => s.scratchSeries != null && !s.isPenalty);
 
-  // High Handicap Series (top 5, expanding ties)
+  // High Handicap Series
+  const leaderN = compact ? 1 : 5;
   const sortedHcpSeries = [...bowlers].sort((a, b) => (b.handSeries ?? 0) - (a.handSeries ?? 0));
-  const topHcpSeries = topWithTies(sortedHcpSeries, 5, b => b.handSeries ?? 0);
+  const topHcpSeries = topWithTies(sortedHcpSeries, leaderN, b => b.handSeries ?? 0);
 
-  // High Scratch Game (top 5 individual games, expanding ties)
+  // High Scratch Game (individual games, expanding ties)
   const allGames: { bowlerName: string; bowlerSlug: string; teamName: string; score: number }[] = [];
   for (const b of bowlers) {
     if (b.game1 != null) allGames.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: b.game1 });
@@ -77,19 +90,19 @@ export function WeekStats({ weekScores, matchResults }: Props) {
     if (b.game3 != null) allGames.push({ bowlerName: b.bowlerName, bowlerSlug: b.bowlerSlug, teamName: b.teamName, score: b.game3 });
   }
   allGames.sort((a, b) => b.score - a.score);
-  const topScratchGame = topWithTies(allGames, 5, g => g.score);
+  const topScratchGame = topWithTies(allGames, leaderN, g => g.score);
 
-  // High Men's Scratch Series (top 5, expanding ties)
+  // High Men's Scratch Series
   const sortedMenScratch = [...bowlers]
     .filter(b => b.gender === 'M')
     .sort((a, b) => (b.scratchSeries ?? 0) - (a.scratchSeries ?? 0));
-  const topMenScratch = topWithTies(sortedMenScratch, 5, b => b.scratchSeries ?? 0);
+  const topMenScratch = topWithTies(sortedMenScratch, leaderN, b => b.scratchSeries ?? 0);
 
-  // High Women's Scratch Series (top 5, expanding ties)
+  // High Women's Scratch Series
   const sortedWomenScratch = [...bowlers]
     .filter(b => b.gender === 'F')
     .sort((a, b) => (b.scratchSeries ?? 0) - (a.scratchSeries ?? 0));
-  const topWomenScratch = topWithTies(sortedWomenScratch, 5, b => b.scratchSeries ?? 0);
+  const topWomenScratch = topWithTies(sortedWomenScratch, leaderN, b => b.scratchSeries ?? 0);
 
   // --- Turkeys ---
   const turkeyList = bowlers
@@ -261,16 +274,25 @@ export function WeekStats({ weekScores, matchResults }: Props) {
     pinScores.sort((a, b) => b.pin - a.pin);
   }
   const positivePIN = pinScores.filter(p => p.pin > 0);
-  const topPIN = topWithTies(positivePIN, 5, p => p.pin);
+  const topPIN = topWithTies(positivePIN, compact ? 1 : 5, p => p.pin);
 
+  const show = (section: WeekStatsSection) => {
+    if (only) return only.includes(section);
+    if (exclude) return !exclude.includes(section);
+    return true;
+  };
 
   return (
-    <section className="mt-10">
-      <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-8" />
-      <SectionHeading>Weekly Highlights</SectionHeading>
+    <section className={bare ? '' : 'mt-10'}>
+      {!bare && !compact && (
+        <>
+          <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-8" />
+          <SectionHeading>Weekly Highlights</SectionHeading>
+        </>
+      )}
 
       {/* Bowler & Team of the Week */}
-      {(bowlerOfWeek || teamOfWeek) && (
+      {show('awards') && (bowlerOfWeek || teamOfWeek) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {bowlerOfWeek && (
             <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
@@ -301,58 +323,78 @@ export function WeekStats({ weekScores, matchResults }: Props) {
         </div>
       )}
 
-      {/* Debuts, All-Time Records */}
-      {(debuts.length > 0 || allTimeHighGames.length > 0 || allTimeHighSeries.length > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          {debuts.length > 0 && (
-            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Splitzkrieg Debuts</h3>
-              {debuts.map(b => (
-                <div key={b.bowlerID} className="text-sm font-body py-0.5">
-                  <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
-                    {b.bowlerName}
-                  </Link>
+      {/* Milestones & Personal Bests */}
+      {show('records') && (careerMilestones.length > 0 || debuts.length > 0 || allTimeHighGames.length > 0 || allTimeHighSeries.length > 0) && (
+        <div className="mb-6">
+          {!bare && <h3 className={compact ? "font-heading text-lg text-navy/80 mb-2" : "font-heading text-lg text-navy mb-3"}>Milestones &amp; Personal Bests</h3>}
+          {careerMilestones.length > 0 && (
+            <div className="bg-white border border-navy/10 border-l-4 border-l-amber-500/60 rounded-lg p-3 shadow-sm mb-4">
+              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Career Milestones</h3>
+              {careerMilestones.map((m, i) => (
+                <div key={`${m.slug}-${m.category}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+                  <span className="truncate mr-2">
+                    <Link href={`/bowler/${m.slug}`} className="text-navy hover:text-red-600 transition-colors font-bold">
+                      {m.bowlerName}
+                    </Link>
+                  </span>
+                  <span className="tabular-nums text-navy/80 shrink-0 font-semibold">
+                    {m.threshold.toLocaleString()} {m.categoryLabel}
+                  </span>
                 </div>
               ))}
             </div>
           )}
-          {allTimeHighGames.length > 0 && (
-            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Game</h3>
-              {allTimeHighGames.map((b, i) => (
-                <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
-                  <span className="truncate mr-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {debuts.length > 0 && (
+              <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
+                <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Splitzkrieg Debuts</h3>
+                {debuts.map(b => (
+                  <div key={b.bowlerID} className="text-sm font-body py-0.5">
                     <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
                       {b.bowlerName}
                     </Link>
-                    <span className="text-navy/65 text-xs ml-1">({b.teamName})</span>
-                  </span>
-                  <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {allTimeHighSeries.length > 0 && (
-            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Series</h3>
-              {allTimeHighSeries.map((b, i) => (
-                <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
-                  <span className="truncate mr-2">
-                    <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
-                      {b.bowlerName}
-                    </Link>
-                    <span className="text-navy/65 text-xs ml-1">({b.teamName})</span>
-                  </span>
-                  <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
-                </div>
-              ))}
-            </div>
-          )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {allTimeHighGames.length > 0 && (
+              <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
+                <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Game</h3>
+                {allTimeHighGames.map((b, i) => (
+                  <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+                    <span className="truncate mr-2">
+                      <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                        {b.bowlerName}
+                      </Link>
+                      <span className="text-navy/65 text-xs ml-1">({b.teamName})</span>
+                    </span>
+                    <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {allTimeHighSeries.length > 0 && (
+              <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
+                <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Series</h3>
+                {allTimeHighSeries.map((b, i) => (
+                  <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
+                    <span className="truncate mr-2">
+                      <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                        {b.bowlerName}
+                      </Link>
+                      <span className="text-navy/65 text-xs ml-1">({b.teamName})</span>
+                    </span>
+                    <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* XP Rankings */}
-      {xpTiers.length > 0 && (
+      {show('xp') && xpTiers.length > 0 && (
         <div className="mb-6">
           <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
           <h3 className="font-heading text-lg text-navy mb-3">XP Rankings</h3>
@@ -375,6 +417,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
       )}
 
       {/* High Team Scratch Series + PIN */}
+      {show('teamStats') && (<>
       <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {topTeamScratch.length > 0 && (
@@ -400,8 +443,10 @@ export function WeekStats({ weekScores, matchResults }: Props) {
           <PINList items={topPIN.items} tiedCount={topPIN.tiedCount} tiedValue={topPIN.tiedValue} />
         )}
       </div>
+      </>)}
 
       {/* Individual Leaders — 2x2 grid */}
+      {show('leaders') && (<>
       <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <LeaderList title="High Handicap Series" result={topHcpSeries} getItem={b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.handSeries ?? 0 })} />
@@ -413,11 +458,13 @@ export function WeekStats({ weekScores, matchResults }: Props) {
           <LeaderList title="High Women's Scratch Series" result={topWomenScratch} getItem={b => ({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, value: b.scratchSeries ?? 0 })} />
         )}
       </div>
+      </>)}
 
       {/* Turkeys + Above Average */}
+      {show('misc') && (<>
       <div className="h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {turkeyList.length > 0 && (
+        {!compact && turkeyList.length > 0 && (
           <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
             <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Turkeys</h3>
             {turkeyList.map(b => (
@@ -447,6 +494,7 @@ export function WeekStats({ weekScores, matchResults }: Props) {
           </div>
         )}
       </div>
+      </>)}
     </section>
   );
 }

@@ -78,6 +78,54 @@ export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
   }, [], { sql: GET_RECENT_MILESTONES_SQL });
 });
 
+// ── Published week resolver ─────────────────────────────────
+// Tries leagueSettings first; falls back to MAX(week) if table missing.
+
+interface PublishedContext {
+  seasonID: number;
+  displayName: string;
+  romanNumeral: string;
+  week: number;
+}
+
+const CURRENT_SEASON_SQL = `
+  SELECT TOP 1 seasonID, displayName, romanNumeral
+  FROM seasons
+  ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+`;
+
+async function getPublishedContext(): Promise<PublishedContext | null> {
+  const db = await getDb();
+  const seasonResult = await db.request().query<{
+    seasonID: number; displayName: string; romanNumeral: string;
+  }>(CURRENT_SEASON_SQL);
+  const season = seasonResult.recordset[0];
+  if (!season) return null;
+
+  let week: number | null = null;
+  try {
+    const lsResult = await db.request().query<{ settingValue: string }>(
+      `SELECT settingValue FROM leagueSettings WHERE settingKey = 'publishedWeek'`
+    );
+    if (lsResult.recordset[0]) week = parseInt(lsResult.recordset[0].settingValue, 10);
+  } catch {
+    // table doesn't exist yet — fall through
+  }
+
+  if (week == null) {
+    const maxResult = await db.request()
+      .input('seasonID', season.seasonID)
+      .query<{ maxWeek: number }>(
+        `SELECT MAX(week) AS maxWeek FROM scores WHERE seasonID = @seasonID AND isPenalty = 0`
+      );
+    week = maxResult.recordset[0]?.maxWeek ?? 0;
+  }
+
+  return { ...season, week };
+}
+
+// ── Season Snapshot ─────────────────────────────────────────
+
 export interface SeasonSnapshot {
   seasonID: number;
   displayName: string;
@@ -96,27 +144,16 @@ export interface SeasonSnapshot {
   teamOfTheWeek: { teamName: string; teamSlug: string; score: number } | null;
 }
 
-const SNAPSHOT_SEASON_SQL = `
-  SELECT TOP 1 seasonID, displayName, romanNumeral
-  FROM seasons
-  ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
-`;
-
-const SNAPSHOT_STATS_SQL = `
-  WITH latestWeek AS (
-    SELECT CAST(settingValue AS INT) AS wk FROM leagueSettings WHERE settingKey = 'publishedWeek'
-  )
+const SNAPSHOT_STATS_SQL = `/* v4: week passed as param */
   SELECT
-    lw.wk AS weekNumber,
+    @week AS weekNumber,
     COUNT(DISTINCT sc.bowlerID) AS totalBowlers,
     CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage,
     CAST(AVG(CASE WHEN sc.incomingAvg > 0 THEN CAST(sc.incomingAvg AS DECIMAL(5,1)) END) AS DECIMAL(5,1)) AS expectedLeagueAverage
   FROM scores sc
-  CROSS JOIN latestWeek lw
   WHERE sc.seasonID = @seasonID
     AND sc.isPenalty = 0
-    AND sc.week = lw.wk
-  GROUP BY lw.wk
+    AND sc.week = @week
 `;
 
 const SNAPSHOT_TOP_MALE_AVG_SQL = `
@@ -184,7 +221,7 @@ const SNAPSHOT_HIGH_SERIES_SQL = `
   ORDER BY sc.scratchSeries DESC
 `;
 
-const SNAPSHOT_BOTW_SQL = `
+const SNAPSHOT_BOTW_SQL = `/* v3: week passed as param */
   SELECT TOP 1
     b.bowlerName,
     b.slug,
@@ -193,9 +230,7 @@ const SNAPSHOT_BOTW_SQL = `
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   WHERE sc.seasonID = @seasonID
     AND sc.isPenalty = 0
-    AND sc.week = (
-      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedWeek'
-    )
+    AND sc.week = @week
     AND EXISTS (
       SELECT 1 FROM scores sc3
       WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
@@ -204,7 +239,7 @@ const SNAPSHOT_BOTW_SQL = `
   ORDER BY sc.handSeries DESC
 `;
 
-const SNAPSHOT_TOTW_SQL = `
+const SNAPSHOT_TOTW_SQL = `/* v3: week passed as param */
   SELECT TOP 1
     t.teamName,
     t.slug AS teamSlug,
@@ -214,80 +249,47 @@ const SNAPSHOT_TOTW_SQL = `
   WHERE sc.seasonID = @seasonID
     AND sc.isPenalty = 0
     AND sc.teamID IS NOT NULL
-    AND sc.week = (
-      SELECT CAST(settingValue AS INT) FROM leagueSettings WHERE settingKey = 'publishedWeek'
-    )
+    AND sc.week = @week
   GROUP BY sc.teamID, t.teamName, t.slug
   ORDER BY totalHandSeries DESC
 `;
 
-const SNAPSHOT_ALL_SQL = SNAPSHOT_SEASON_SQL + SNAPSHOT_STATS_SQL + SNAPSHOT_TOP_MALE_AVG_SQL
+const SNAPSHOT_ALL_SQL = CURRENT_SEASON_SQL + SNAPSHOT_STATS_SQL + SNAPSHOT_TOP_MALE_AVG_SQL
   + SNAPSHOT_TOP_FEMALE_AVG_SQL + SNAPSHOT_TOP_HCP_AVG_SQL + SNAPSHOT_HIGH_GAME_SQL
   + SNAPSHOT_HIGH_SERIES_SQL + SNAPSHOT_BOTW_SQL + SNAPSHOT_TOTW_SQL;
 
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
-  return cachedQuery('getCurrentSeasonSnapshot-v2', async () => {
+  return cachedQuery('getCurrentSeasonSnapshot-v3', async () => {
+
+    const ctx = await getPublishedContext();
+    if (!ctx || ctx.week === 0) return null;
 
     const db = await getDb();
+    const req = () => db.request().input('seasonID', ctx.seasonID).input('week', ctx.week);
 
-    const seasonResult = await db.request().query<{
-      seasonID: number;
-      displayName: string;
-      romanNumeral: string;
-    }>(SNAPSHOT_SEASON_SQL);
-
-    const season = seasonResult.recordset[0];
-    if (!season) return null;
-
-    const statsResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{
-        weekNumber: number;
-        totalBowlers: number;
-        leagueAverage: number;
-        expectedLeagueAverage: number;
-      }>(SNAPSHOT_STATS_SQL);
+    const [statsResult, topMaleAvgResult, topFemaleAvgResult, topHcpAvgResult, highGameResult, highSeriesResult, botwResult, totwResult] = await Promise.all([
+      req().query<{ weekNumber: number; totalBowlers: number; leagueAverage: number; expectedLeagueAverage: number }>(SNAPSHOT_STATS_SQL),
+      req().query<{ bowlerName: string; slug: string; average: number }>(SNAPSHOT_TOP_MALE_AVG_SQL),
+      req().query<{ bowlerName: string; slug: string; average: number }>(SNAPSHOT_TOP_FEMALE_AVG_SQL),
+      req().query<{ bowlerName: string; slug: string; average: number }>(SNAPSHOT_TOP_HCP_AVG_SQL),
+      req().query<{ bowlerName: string; slug: string; score: number }>(SNAPSHOT_HIGH_GAME_SQL),
+      req().query<{ bowlerName: string; slug: string; score: number }>(SNAPSHOT_HIGH_SERIES_SQL),
+      req().query<{ bowlerName: string; slug: string; score: number }>(SNAPSHOT_BOTW_SQL),
+      req().query<{ teamName: string; teamSlug: string; totalHandSeries: number }>(SNAPSHOT_TOTW_SQL),
+    ]);
 
     const stats = statsResult.recordset[0];
-
-    const topMaleAvgResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ bowlerName: string; slug: string; average: number }>(SNAPSHOT_TOP_MALE_AVG_SQL);
-
-    const topFemaleAvgResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ bowlerName: string; slug: string; average: number }>(SNAPSHOT_TOP_FEMALE_AVG_SQL);
-
-    const topHcpAvgResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ bowlerName: string; slug: string; average: number }>(SNAPSHOT_TOP_HCP_AVG_SQL);
-
-    const highGameResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ bowlerName: string; slug: string; score: number }>(SNAPSHOT_HIGH_GAME_SQL);
-
-    const highSeriesResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ bowlerName: string; slug: string; score: number }>(SNAPSHOT_HIGH_SERIES_SQL);
-
-    const botwResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ bowlerName: string; slug: string; score: number }>(SNAPSHOT_BOTW_SQL);
-
-    const totwResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ teamName: string; teamSlug: string; totalHandSeries: number }>(SNAPSHOT_TOTW_SQL);
     const totwRow = totwResult.recordset[0];
     const teamOfTheWeek: SeasonSnapshot['teamOfTheWeek'] = totwRow
       ? { teamName: totwRow.teamName, teamSlug: totwRow.teamSlug, score: totwRow.totalHandSeries }
       : null;
 
     return {
-      seasonID: season.seasonID,
-      displayName: season.displayName,
-      romanNumeral: season.romanNumeral,
-      slug: season.displayName.toLowerCase().replace(/ /g, '-'),
-      weekNumber: stats?.weekNumber ?? 0,
+      seasonID: ctx.seasonID,
+      displayName: ctx.displayName,
+      romanNumeral: ctx.romanNumeral,
+      slug: ctx.displayName.toLowerCase().replace(/ /g, '-'),
+      weekNumber: stats?.weekNumber ?? ctx.week,
       totalBowlers: stats?.totalBowlers ?? 0,
       leagueAverage: stats?.leagueAverage ?? 0,
       expectedLeagueAverage: stats?.expectedLeagueAverage ?? 0,
@@ -304,18 +306,8 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
 
 /**
  * Weekly highlights for the ticker: debuts, all-time high games, all-time high series.
- * Pulls from the most recent week of the current season.
+ * Pulls from the most recent published week of the current season.
  */
-
-const HIGHLIGHTS_LATEST_WEEK_SQL = `
-  SELECT
-    CAST(ls1.settingValue AS INT) AS seasonID,
-    CAST(ls2.settingValue AS INT) AS week
-  FROM leagueSettings ls1
-  CROSS JOIN leagueSettings ls2
-  WHERE ls1.settingKey = 'publishedSeasonID'
-    AND ls2.settingKey = 'publishedWeek'
-`;
 
 const HIGHLIGHTS_SCORES_SQL = `
   SELECT
@@ -347,21 +339,15 @@ const HIGHLIGHTS_SCORES_SQL = `
     AND sc.isPenalty = 0
 `;
 
-const HIGHLIGHTS_ALL_SQL = HIGHLIGHTS_LATEST_WEEK_SQL + HIGHLIGHTS_SCORES_SQL;
-
 export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
-  return cachedQuery('getWeeklyHighlights', async () => {
+  return cachedQuery('getWeeklyHighlights-v2', async () => {
+    const ctx = await getPublishedContext();
+    if (!ctx || ctx.week === 0) return [];
+
     const db = await getDb();
-
-    // Get current season + latest week
-    const latestResult = await db.request().query<{ seasonID: number; week: number }>(HIGHLIGHTS_LATEST_WEEK_SQL);
-    const latest = latestResult.recordset[0];
-    if (!latest) return [];
-
-    // Get scores for that week with prior bests and debut flag
     const result = await db.request()
-      .input('seasonID', latest.seasonID)
-      .input('week', latest.week)
+      .input('seasonID', ctx.seasonID)
+      .input('week', ctx.week)
       .query<{
         bowlerName: string;
         slug: string;
@@ -414,5 +400,5 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
     }
 
     return items;
-  }, [], { sql: HIGHLIGHTS_ALL_SQL });
+  }, [], { sql: HIGHLIGHTS_SCORES_SQL });
 });

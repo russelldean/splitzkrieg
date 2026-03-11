@@ -3,7 +3,7 @@ import { getSeasonIDByRoman, getMatchResultsSummary, type MatchResultRow } from 
 
 interface MatchResultsSummaryProps {
   season: string;
-  week: number;
+  week: number | string;
 }
 
 function isSweep(row: MatchResultRow): 'team1' | 'team2' | null {
@@ -14,10 +14,11 @@ function isSweep(row: MatchResultRow): 'team1' | 'team2' | null {
 }
 
 export async function MatchResultsSummary({ season, week }: MatchResultsSummaryProps) {
+  const weekNum = typeof week === 'string' ? parseInt(week, 10) : week;
   const seasonID = await getSeasonIDByRoman(season);
-  if (!seasonID) return null;
+  if (!seasonID || isNaN(weekNum)) return null;
 
-  const matches = await getMatchResultsSummary(seasonID, week);
+  const matches = await getMatchResultsSummary(seasonID, weekNum);
 
   if (matches.length === 0) return null;
 

@@ -3,7 +3,7 @@ import { getSeasonIDByRoman, getStandingsSnapshot } from '@/lib/queries/blog';
 
 interface StandingsSnapshotProps {
   season: string;
-  week: number;
+  week: number | string;
 }
 
 function MovementArrow({ current, previous }: { current: number; previous: number | null }) {
@@ -36,10 +36,11 @@ function MovementArrow({ current, previous }: { current: number; previous: numbe
 }
 
 export async function StandingsSnapshot({ season, week }: StandingsSnapshotProps) {
+  const weekNum = typeof week === 'string' ? parseInt(week, 10) : week;
   const seasonID = await getSeasonIDByRoman(season);
-  if (!seasonID) return null;
+  if (!seasonID || isNaN(weekNum)) return null;
 
-  const standings = await getStandingsSnapshot(seasonID, week);
+  const standings = await getStandingsSnapshot(seasonID, weekNum);
 
   if (standings.length === 0) return null;
 

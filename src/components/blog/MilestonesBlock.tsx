@@ -3,14 +3,15 @@ import { getSeasonIDByRoman, getWeekMilestones } from '@/lib/queries/blog';
 
 interface MilestonesBlockProps {
   season: string;
-  week: number;
+  week: number | string;
 }
 
 export async function MilestonesBlock({ season, week }: MilestonesBlockProps) {
+  const weekNum = typeof week === 'string' ? parseInt(week, 10) : week;
   const seasonID = await getSeasonIDByRoman(season);
-  if (!seasonID) return null;
+  if (!seasonID || isNaN(weekNum)) return null;
 
-  const milestones = await getWeekMilestones(seasonID, week);
+  const milestones = await getWeekMilestones(seasonID, weekNum);
 
   return (
     <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-5 my-6">

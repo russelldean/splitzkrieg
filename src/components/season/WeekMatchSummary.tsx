@@ -23,9 +23,11 @@ interface Props {
   schedule: SeasonScheduleWeek[];
   matchResults: WeeklyMatchupResult[];
   week: number;
+  /** Blog mode: 5+5 side-by-side columns, no Bowler of the Match */
+  compact?: boolean;
 }
 
-export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: Props) {
+export function WeekMatchSummary({ weekScores, schedule, matchResults, week, compact }: Props) {
   const weekData = organizeByWeek(weekScores);
   const mrIndex = indexMatchResults(matchResults);
   const matchups = schedule.filter(s => s.week === week);
@@ -61,63 +63,85 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
 
   if (rows.every(r => r.t1Pts === null)) return null;
 
+  const renderMatchCard = (
+    { matchup, t1Pts, t2Pts, mvpBowler }: typeof rows[number],
+    idx: number,
+  ) => {
+    const homeWon = t1Pts != null && t2Pts != null && t1Pts > t2Pts;
+    const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
+    const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
+    const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
+    return (
+      <a key={idx} href={`#match-${idx}`} className="block bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+        <div className={`flex items-center justify-between font-body ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'}`}>
+          <div className={`flex-1 min-w-0 truncate ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+            {homeForfeit ? (
+              <GhostTeamLink className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'} />
+            ) : (
+              <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+                <TeamName name={matchup.homeTeamName} />
+              </Link>
+            )}
+          </div>
+          <div className={`tabular-nums text-center shrink-0 ${compact ? 'px-1' : 'px-3'}`}>
+            <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
+            <span className="text-navy/30 mx-1">&ndash;</span>
+            <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
+          </div>
+          <div className={`flex-1 min-w-0 truncate text-right ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+            {awayForfeit ? (
+              <GhostTeamLink className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'} />
+            ) : (
+              <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+                <TeamName name={matchup.awayTeamName} />
+              </Link>
+            )}
+          </div>
+        </div>
+        {!compact && mvpBowler && (
+          <div className="px-3 py-1 border-t border-navy/5 bg-navy/[0.02] text-xs font-body text-amber-800">
+            <span className="text-navy/50">Bowler of the Match</span>{' '}
+            <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
+              {mvpBowler.bowlerName}
+              <span className="text-navy/65 ml-1">{mvpBowler.handSeries}</span>
+            </Link>
+          </div>
+        )}
+      </a>
+    );
+  };
+
+  const forfeitNote = forfeitTeamNames.length > 0 && (
+    <div className="px-3 py-2 bg-navy/[0.02] rounded-lg text-xs font-body text-navy/55">
+      {'👻'} Forfeit &mdash;{' '}
+      {forfeitTeamNames.map((name, i) => (
+        <span key={i}>
+          {i > 0 && ', '}
+          <span className="text-navy/70 font-medium">{name}</span>
+        </span>
+      ))}
+    </div>
+  );
+
+  if (compact) {
+    const half = Math.ceil(rows.length / 2);
+    const left = rows.slice(0, half);
+    const right = rows.slice(half);
+    return (
+      <div className="mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+          <div className="space-y-1.5">{left.map((r, i) => renderMatchCard(r, i))}</div>
+          <div className="space-y-1.5">{right.map((r, i) => renderMatchCard(r, half + i))}</div>
+        </div>
+        {forfeitNote}
+      </div>
+    );
+  }
+
   return (
     <div className="mb-4 space-y-2">
-      {rows.map(({ matchup, t1Pts, t2Pts, mvpBowler }, idx) => {
-        const homeWon = t1Pts != null && t2Pts != null && t1Pts > t2Pts;
-        const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
-        const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
-        const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
-        return (
-          <a key={idx} href={`#match-${idx}`} className="block bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between px-3 py-2 font-body">
-              <div className={`flex-1 min-w-0 ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                {homeForfeit ? (
-                  <GhostTeamLink className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'} />
-                ) : (
-                  <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
-                    <TeamName name={matchup.homeTeamName} />
-                  </Link>
-                )}
-              </div>
-              <div className="tabular-nums text-center px-3 shrink-0">
-                <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
-                <span className="text-navy/30 mx-1.5">–</span>
-                <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
-              </div>
-              <div className={`flex-1 min-w-0 text-right ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                {awayForfeit ? (
-                  <GhostTeamLink className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'} />
-                ) : (
-                  <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
-                    <TeamName name={matchup.awayTeamName} />
-                  </Link>
-                )}
-              </div>
-            </div>
-            {mvpBowler && (
-              <div className="px-3 py-1 border-t border-navy/5 bg-navy/[0.02] text-xs font-body text-amber-800">
-                <span className="text-navy/50">Bowler of the Match</span>{' '}
-                <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
-                  {mvpBowler.bowlerName}
-                  <span className="text-navy/65 ml-1">{mvpBowler.handSeries}</span>
-                </Link>
-              </div>
-            )}
-          </a>
-        );
-      })}
-      {forfeitTeamNames.length > 0 && (
-        <div className="px-3 py-2 bg-navy/[0.02] rounded-lg text-xs font-body text-navy/55">
-          {'👻'} Forfeit &mdash;{' '}
-          {forfeitTeamNames.map((name, i) => (
-            <span key={i}>
-              {i > 0 && ', '}
-              <span className="text-navy/70 font-medium">{name}</span>
-            </span>
-          ))}
-        </div>
-      )}
+      {rows.map((r, idx) => renderMatchCard(r, idx))}
+      {forfeitNote}
     </div>
   );
 }

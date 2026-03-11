@@ -51,15 +51,10 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
           {meta.title}
         </h1>
 
-        {/* Season/week context cross-link */}
-        {meta.season && meta.seasonSlug && meta.week != null && (
-          <p className="font-body text-sm text-navy/60">
-            <Link
-              href={`/week/${meta.seasonSlug}/${meta.week}`}
-              className="text-red-600 hover:text-red-700 underline"
-            >
-              Season {meta.season} Week {meta.week} Results
-            </Link>
+        {/* Season/week context marker */}
+        {meta.season && meta.week != null && (
+          <p className="text-sm font-heading text-navy/50 uppercase tracking-wider">
+            Season {meta.season} &middot; Week {meta.week}
           </p>
         )}
       </header>
