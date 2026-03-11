@@ -104,7 +104,7 @@ export function FeedbackButton() {
           {/* Modal */}
           <form
             onSubmit={handleSubmit}
-            className="fixed bottom-0 left-0 right-0 sm:static sm:w-full sm:max-w-md sm:mx-4 bg-cream rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl border border-navy/10 max-h-[80vh] overflow-y-auto"
+            className="fixed bottom-0 left-0 right-0 sm:relative sm:w-full sm:max-w-md sm:mx-4 bg-cream rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl border border-navy/10 max-h-[80vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-xl text-navy">Send Feedback</h2>
