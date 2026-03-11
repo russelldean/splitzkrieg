@@ -52,10 +52,13 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
         </h1>
 
         {/* Season/week context marker */}
-        {meta.season && meta.week != null && (
-          <p className="text-sm font-heading text-navy/50 uppercase tracking-wider">
+        {meta.season && meta.week != null && meta.seasonSlug && (
+          <Link
+            href={`/week/${meta.seasonSlug}/${meta.week}`}
+            className="text-sm font-heading text-navy/50 uppercase tracking-wider hover:text-red-600 transition-colors"
+          >
             Season {meta.season} &middot; Week {meta.week}
-          </p>
+          </Link>
         )}
       </header>
 

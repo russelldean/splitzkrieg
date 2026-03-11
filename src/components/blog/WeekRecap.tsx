@@ -110,6 +110,19 @@ export async function WeekRecap({ season, seasonSlug, week }: WeekRecapProps) {
           compact
         />
       </div>
+
+      {/* Next League Night */}
+      {(() => {
+        const nextWeekSchedule = allSchedule.find(s => s.week === weekNum + 1);
+        if (!nextWeekSchedule?.matchDate) return null;
+        const date = new Date(nextWeekSchedule.matchDate);
+        const formatted = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
+        return (
+          <p className="font-body text-navy/80 text-center text-lg mt-4">
+            See you on {formatted}.
+          </p>
+        );
+      })()}
     </div>
   );
 }
