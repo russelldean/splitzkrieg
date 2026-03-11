@@ -8,7 +8,7 @@ interface Props {
   week: number | string;
 }
 
-function LeaderCard({ title, leaders, playoffCutoff }: { title: string; leaders: SeasonLeaderEntry[]; playoffCutoff: number }) {
+function LeaderCard({ title, leaders, playoffCutoff, isAvg = false }: { title: string; leaders: SeasonLeaderEntry[]; playoffCutoff: number; isAvg?: boolean }) {
   if (leaders.length === 0) return null;
 
   // Expand ties at the cutoff
@@ -47,7 +47,7 @@ function LeaderCard({ title, leaders, playoffCutoff }: { title: string; leaders:
                 </Link>
               </span>
               <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>
-                {entry.value}
+                {isAvg ? entry.value.toFixed(1) : entry.value}
               </span>
             </div>
           );
@@ -80,9 +80,9 @@ export async function LeaderboardSnapshot({ seasonSlug, week }: Props) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <LeaderCard title="Men's Scratch Avg" leaders={mensScratch} playoffCutoff={8} />
-      <LeaderCard title="Women's Scratch Avg" leaders={womensScratch} playoffCutoff={8} />
-      <LeaderCard title="Handicap Avg" leaders={hcpAvg} playoffCutoff={8} />
+      <LeaderCard title="Men's Scratch Avg" leaders={mensScratch} playoffCutoff={8} isAvg />
+      <LeaderCard title="Women's Scratch Avg" leaders={womensScratch} playoffCutoff={8} isAvg />
+      <LeaderCard title="Handicap Avg" leaders={hcpAvg} playoffCutoff={8} isAvg />
     </div>
   );
 }
