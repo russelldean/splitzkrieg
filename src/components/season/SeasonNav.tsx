@@ -23,7 +23,8 @@ export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) 
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            Season {prev.romanNumeral}
+            Season {prev.romanNumeral}{' '}
+              <span className="text-navy/40">({prev.displayName})</span>
           </Link>
         ) : <span />}
       </div>
@@ -39,7 +40,8 @@ export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) 
             href={`${basePath}/${next.slug}`}
             className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
           >
-            Season {next.romanNumeral}
+            Season {next.romanNumeral}{' '}
+              <span className="text-navy/40">({next.displayName})</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>

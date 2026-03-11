@@ -74,7 +74,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                 >
                   <div className="flex items-center gap-2">
                     <Link href={`/season/${season.seasonSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
-                      {season.seasonName}
+                      {season.seasonName} <span className="text-navy/40">({season.romanNumeral})</span>
                     </Link>
                     {season.teamNameAtTime !== currentTeamName && (
                       <span className="text-sm text-navy/65 font-body">

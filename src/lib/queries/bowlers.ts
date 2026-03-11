@@ -249,6 +249,7 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
 export interface GameLogWeek {
   seasonID: number;
   displayName: string;
+  romanNumeral: string;
   seasonSlug: string;
   week: number;
   matchDate: Date | null;
@@ -266,6 +267,7 @@ const GET_BOWLER_GAME_LOG_SQL = `
   SELECT
     sc.seasonID,
     sn.displayName,
+    sn.romanNumeral,
     LOWER(REPLACE(sn.displayName, ' ', '-'))             AS seasonSlug,
     sc.week,
     sch.matchDate,
