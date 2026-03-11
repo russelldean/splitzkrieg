@@ -188,7 +188,7 @@ export default async function BowlerPage({
           <LastWeekHighlight week={lastWeek} delta={weekDelta} />
         )}
 
-        <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} />
+        <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} slug={slug} />
 
         {careerSummary && (
           <MilestoneWatch milestones={computePersonalMilestones(careerSummary)} />

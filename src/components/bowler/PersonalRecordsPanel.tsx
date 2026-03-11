@@ -4,9 +4,15 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { WeekDelta } from './LastWeekHighlight';
 
+/** One-off notes for bowlers with notable achievements outside regular season scores */
+const HIGH_GAME_NOTES: Record<string, string> = {
+  'geoffrey-berry': '300 game bowled during Fall 2022 Playoffs',
+};
+
 interface Props {
   careerSummary: BowlerCareerSummary | null;
   delta?: WeekDelta | null;
+  slug?: string;
 }
 
 function formatFirstNight(summary: BowlerCareerSummary): string {
@@ -17,7 +23,7 @@ function formatFirstNight(summary: BowlerCareerSummary): string {
   return '\u2014';
 }
 
-export function PersonalRecordsPanel({ careerSummary, delta }: Props) {
+export function PersonalRecordsPanel({ careerSummary, delta, slug }: Props) {
   if (!careerSummary) {
     return (
       <section>
@@ -54,6 +60,7 @@ export function PersonalRecordsPanel({ careerSummary, delta }: Props) {
             value={careerSummary.highGame}
             delta={delta?.newHighGame ? 'NEW' : undefined}
             deltaVariant="new"
+            note={slug ? HIGH_GAME_NOTES[slug] : undefined}
           />
           <RecordCard
             label="High Series"
@@ -82,11 +89,13 @@ function RecordCard({
   value,
   delta,
   deltaVariant = 'positive',
+  note,
 }: {
   label: string;
   value: string | number | null;
   delta?: string;
   deltaVariant?: 'positive' | 'negative' | 'new';
+  note?: string;
 }) {
   // Show X (bowling strike symbol) for zero counts
   const isStrike = value === 0;
@@ -111,6 +120,16 @@ function RecordCard({
         {delta && (
           <span className={`text-xs font-body ${deltaColors[deltaVariant]}`}>
             {delta}
+          </span>
+        )}
+        {note && (
+          <span className="relative group cursor-help">
+            <svg className="w-4 h-4 text-navy/30 hover:text-navy/60 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-navy text-cream text-xs font-body rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg">
+              {note}
+            </span>
           </span>
         )}
       </div>
