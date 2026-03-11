@@ -158,6 +158,41 @@ body {
   animation: border-glow 3s ease-in-out infinite;
 }
 
+/* ── Blog prose styling ──────────────────────────────── */
+.blog-prose {
+  @apply font-body text-navy/85 text-base sm:text-lg leading-relaxed;
+}
+.blog-prose p {
+  @apply mb-4;
+}
+.blog-prose ul {
+  @apply list-disc pl-6 mb-5 space-y-2;
+}
+.blog-prose li {
+  @apply pl-1;
+}
+.blog-prose > p a,
+.blog-prose > ul a,
+.blog-prose > ol a,
+.blog-prose > blockquote a {
+  @apply text-red-600 hover:text-red-700 underline underline-offset-2 transition-colors;
+}
+.blog-prose strong {
+  @apply text-navy font-semibold;
+}
+.blog-prose em {
+  @apply text-navy/70;
+}
+.blog-prose h2 {
+  @apply font-heading text-2xl text-navy mt-10 mb-4;
+}
+.blog-prose h3 {
+  @apply font-heading text-xl text-navy mt-8 mb-3;
+}
+.blog-prose blockquote {
+  @apply border-l-4 border-red/30 pl-4 italic text-navy/60 my-6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
   .animate-shimmer,

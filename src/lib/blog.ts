@@ -11,6 +11,8 @@ export interface PostMeta {
   season?: string;
   seasonSlug?: string;
   week?: number;
+  heroImage?: string;
+  heroFocalY?: number;
 }
 
 const BLOG_DIR = path.join(process.cwd(), 'content', 'blog');
@@ -35,6 +37,8 @@ export function getAllPosts(): PostMeta[] {
       ...(data.season ? { season: data.season } : {}),
       ...(data.seasonSlug ? { seasonSlug: data.seasonSlug } : {}),
       ...(data.week != null ? { week: data.week } : {}),
+      ...(data.heroImage ? { heroImage: data.heroImage } : {}),
+      ...(data.heroFocalY != null ? { heroFocalY: data.heroFocalY } : {}),
     } as PostMeta;
   });
 
