@@ -375,7 +375,7 @@ const GET_BOWLER_OF_THE_WEEK_SQL = `/* v2: week passed as param */
 `;
 
 export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
-  return cachedQuery('getBowlerOfTheWeek-v2', async () => {
+  return cachedQuery('getBowlerOfTheWeek-v3', async () => {
     const db = await getDb();
 
     // Resolve published season + week (try leagueSettings, fall back to MAX)

@@ -259,7 +259,7 @@ const SNAPSHOT_ALL_SQL = CURRENT_SEASON_SQL + SNAPSHOT_STATS_SQL + SNAPSHOT_TOP_
   + SNAPSHOT_HIGH_SERIES_SQL + SNAPSHOT_BOTW_SQL + SNAPSHOT_TOTW_SQL;
 
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
-  return cachedQuery('getCurrentSeasonSnapshot-v3', async () => {
+  return cachedQuery('getCurrentSeasonSnapshot-v4', async () => {
 
     const ctx = await getPublishedContext();
     if (!ctx || ctx.week === 0) return null;
@@ -340,7 +340,7 @@ const HIGHLIGHTS_SCORES_SQL = `
 `;
 
 export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
-  return cachedQuery('getWeeklyHighlights-v2', async () => {
+  return cachedQuery('getWeeklyHighlights-v3', async () => {
     const ctx = await getPublishedContext();
     if (!ctx || ctx.week === 0) return [];
 
