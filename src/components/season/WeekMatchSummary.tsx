@@ -72,7 +72,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week, com
     const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
     const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
     return (
-      <a key={idx} href={`#match-${idx}`} className="block bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      <div key={idx} className="block bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
         <div className={`flex items-center justify-between font-body ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'}`}>
           <div className={`flex-1 min-w-0 truncate ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
             {homeForfeit ? (
@@ -107,7 +107,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week, com
             </Link>
           </div>
         )}
-      </a>
+      </div>
     );
   };
 
