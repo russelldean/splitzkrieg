@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getAllSeasonsDirectory, getCurrentSeasonSlug } from '@/lib/queries';
 import { SeasonDirectory } from '@/components/season/SeasonDirectory';
+import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
   title: 'Seasons | Splitzkrieg',
@@ -15,12 +16,32 @@ export default async function SeasonsPage() {
   ]);
 
   return (
-    <SeasonDirectory
-      seasons={seasons}
-      currentSlug={currentSlug ?? null}
-      trailCurrent="/seasons"
-      heading="Seasons"
-      subheading={(count) => `${count} seasons of Splitzkrieg bowling history.`}
-    />
+    <>
+      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Village Lanes Bowl neon sign">
+        <ParallaxBg
+          src="/village-lanes-bowl-sign.jpg"
+          imgW={2048} imgH={1536}
+          focalY={0.4}
+          mobileSrc="/village-lanes-bowl-sign.jpg"
+          mobileFocalY={0.5}
+          mobileImgW={2048} mobileImgH={1536}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/80 to-navy/50" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
+          <div>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white">Seasons</h1>
+            <p className="font-body text-white/70 text-sm mt-1">{seasons.length} seasons of Splitzkrieg bowling</p>
+          </div>
+        </div>
+      </section>
+      <SeasonDirectory
+        seasons={seasons}
+        currentSlug={currentSlug ?? null}
+        trailCurrent="/seasons"
+        heading="Seasons"
+        subheading={(count) => `${count} seasons of Splitzkrieg bowling history.`}
+        hideHeading
+      />
+    </>
   );
 }
