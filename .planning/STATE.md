@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 06-blog-and-weekly-automation
-current_plan: 3 of 3
-status: completed
-last_updated: "2026-03-10T22:11:00Z"
+current_phase: 07-homepage-personality-and-portfolio-polish
+current_plan: 1 of 5
+status: in-progress
+last_updated: "2026-03-12T03:16:00Z"
 progress:
-  total_phases: 10
-  completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 5
+  completed_plans: 3
 ---
 
 # Session State
@@ -22,9 +22,9 @@ See: .planning/PROJECT.md
 ## Position
 
 **Milestone:** v1.0 milestone
-**Current phase:** 06-blog-and-weekly-automation
-**Current plan:** 3 of 3
-**Status:** Complete
+**Current phase:** 07-homepage-personality-and-portfolio-polish
+**Current plan:** 1 of 5
+**Status:** In Progress
 
 ## Session Log
 
@@ -39,6 +39,7 @@ See: .planning/PROJECT.md
 - 2026-03-08: Phase 5 Plan 02 — Team H2H with real matchResults data, summary table + drill-down
 - 2026-03-10: Phase 6 Plan 01 — MDX blog infrastructure, /blog and /blog/[slug] pages, nav integration
 - 2026-03-10: Phase 6 Plan 03 — Publish gate (leagueSettings), email script (Resend), weekly runbook
+- 2026-03-12: Phase 7 Plan 01 — Shared SVG icons, homepage pill nav, league-specific tagline
 
 ## Decisions
 
@@ -59,6 +60,8 @@ See: .planning/PROJECT.md
 - **[Phase 06-03]** HIGHLIGHTS query uses publishedSeasonID + publishedWeek instead of MAX(week) ORDER BY
 - **[Phase 06-03]** Email script uses inline HTML (not templates) with navy/cream/red palette
 - **[Phase 06-03]** Runbook includes match results step between import and patches
+- **[Phase 07-01]** Tagline: "Since 2007. 100+ bowlers. One very specific website." -- dry/understated tone
+- **[Phase 07-01]** SVG icons exported as JSX elements from shared icons.tsx, not component functions
 
 ## Pending Todos
 
