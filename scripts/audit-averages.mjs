@@ -14,6 +14,10 @@
  *   node scripts/audit-averages.mjs                  # Full audit, threshold 3
  *   node scripts/audit-averages.mjs --threshold=5    # Only flag >= 5 pin diff
  *   node scripts/audit-averages.mjs --csv            # Output as CSV for review
+ *
+ * Exclusions:
+ *   - Spring 2007 & Fall 2008: different formula era (200 base), incomplete data
+ *   - Denis Webb: avg was manually reset after injury (legitimate league override)
  */
 import sql from 'mssql';
 import { readFileSync } from 'fs';
@@ -64,10 +68,27 @@ async function main() {
     ORDER BY sc.bowlerID, sn.year, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END, sc.week
   `);
 
-  const rows = result.recordset;
-  console.error(`Loaded ${rows.length} score rows. Processing...`);
+  // Exclude Seasons I-III (Spring 2007, Fall 2008, Spring 2009): different formula era
+  // in S1/S2, and S3 rolling window still contains S1/S2 discrepancies
+  // Exclude Denis Webb: avg was manually reset after injury (legitimate league override)
+  const excludedSeasonIDs = new Set();
+  const excludedBowlerSlugs = new Set(['denis-webb']);
 
-  // Group by bowler
+  for (const row of result.recordset) {
+    if (
+      (row.year === 2007 && row.periodOrd === 1) ||
+      (row.year === 2008 && row.periodOrd === 2) ||
+      (row.year === 2009 && row.periodOrd === 1)
+    ) {
+      excludedSeasonIDs.add(row.seasonID);
+    }
+  }
+
+  const rows = result.recordset;
+  const excludedCount = rows.filter(r => excludedSeasonIDs.has(r.seasonID) || excludedBowlerSlugs.has(r.slug)).length;
+  console.error(`Loaded ${rows.length} score rows, will skip flagging ${excludedCount} (Seasons I-III, Denis Webb). Processing...`);
+
+  // Group by bowler (include ALL rows so rolling window is accurate)
   const bowlerMap = new Map();
   for (const row of rows) {
     if (!bowlerMap.has(row.bowlerID)) {
@@ -91,9 +112,14 @@ async function main() {
     }
 
     // For each non-penalty row with incomingAvg, recompute
+    // Skip flagging entirely for excluded bowlers
+    if (excludedBowlerSlugs.has(bowlerRows[0]?.slug)) continue;
+
     for (const row of bowlerRows) {
       if (row.isPenalty) continue;
       if (row.incomingAvg == null) continue;
+      // Skip flagging for excluded seasons (but games are still in rolling window above)
+      if (excludedSeasonIDs.has(row.seasonID)) continue;
 
       const storedAvg = parseFloat(row.incomingAvg);
 
@@ -121,25 +147,21 @@ async function main() {
       const diff = computedAvg != null ? storedAvg - computedAvg : null;
       const absDiff = diff != null ? Math.abs(diff) : null;
 
-      // Determine if this is early career (few games, rounding expected)
-      const isEarlyCareer = gameCount < 9; // less than 3 weeks of data
+      // Skip early career (< 9 games / first 2 weeks) — bowler may have prior
+      // league games not in our data that legitimately affect their reported avg
+      if (gameCount < 9) continue;
 
       // Flag conditions:
       // - Impossible avg (>300 or <0): always flag
       // - Negative handicap (>225): always flag
-      // - Big diff from recomputed AND not early career: flag if >= threshold
-      // - Big diff from recomputed AND early career: flag only if >= threshold * 3
-      const earlyThreshold = threshold * 3;
-
+      // - Diff from recomputed >= threshold: flag
       let reason = null;
       if (impossibleAvg) {
         reason = `impossible avg (${storedAvg})`;
       } else if (negativeHcp) {
         reason = `avg > 225 → negative hcp (avg=${storedAvg})`;
-      } else if (absDiff != null && !isEarlyCareer && absDiff >= threshold) {
-        reason = `diff ${diff > 0 ? '+' : ''}${diff.toFixed(1)} (stored=${storedAvg}, computed=${computedAvg}, ${gameCount} games)`;
-      } else if (absDiff != null && isEarlyCareer && absDiff >= earlyThreshold) {
-        reason = `early-career diff ${diff > 0 ? '+' : ''}${diff.toFixed(1)} (stored=${storedAvg}, computed=${computedAvg}, ${gameCount} games)`;
+      } else if (absDiff != null && absDiff >= threshold) {
+        reason = `diff ${diff > 0 ? '+' : ''}${diff.toFixed(1)} (stored=${storedAvg}, computed=${computedAvg})`;
       }
 
       if (reason) {
