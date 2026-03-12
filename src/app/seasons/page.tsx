@@ -26,7 +26,8 @@ export default async function SeasonsPage() {
           mobileFocalY={0.5}
           mobileImgW={1512} mobileImgH={604}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/80 to-navy/50" />
+        <div className="absolute inset-0 bg-navy/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/70 via-transparent to-navy/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white">Seasons</h1>
