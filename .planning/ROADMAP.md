@@ -12,7 +12,7 @@ A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 19 
 - [x] **Phase 4: Teams and Seasons** — Team profiles, season pages, three-entity graph (completed 2026-03-06)
 - [x] **Phase 5: Polish and Team H2H** — Parallax, standings, match legend, H2H data (completed 2026-03-08)
 - [ ] **Phase 6: Blog and Weekly Automation** — Blog infrastructure, first post, automated weekly pipeline
-- [ ] **Phase 7: Homepage Personality and Portfolio Polish** — Reduce "AI-made" feel, visual warmth, portfolio readiness
+- [x] **Phase 7: Homepage Personality and Portfolio Polish** — Reduce "AI-made" feel, visual warmth, portfolio readiness (completed 2026-03-12)
 - [ ] **Phase 8: Admin Tools** — Score entry UI, lineup submission, season management
 - [ ] **Phase 9: Data Backfill and Tooling** — Old schedule imports, division data, reusable backfill scripts
 - [ ] **Phase 10: Profile Depth** — Top-ten finishes, streaks, frequent partners, enhanced week reports
@@ -68,10 +68,10 @@ Plans:
   2. No page triggers "AI-made" pattern recognition
   3. Site demonstrates full-stack skills clearly (data pipeline, SSG, responsive design, data viz)
   4. Someone unfamiliar with the league understands what it is within 5 seconds of landing
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 07-01-PLAN.md — Extract shared icons, homepage card grid redesign, tagline voice
-- [ ] 07-02-PLAN.md — Directory page parallax heroes, visual checkpoint
+- [x] 07-01-PLAN.md — Extract shared icons, homepage card grid redesign, tagline voice
+- [x] 07-02-PLAN.md — Directory page parallax heroes, visual checkpoint
 
 ### Phase 8: Admin Tools
 **Goal**: The commissioner can manage scores, lineups, and seasons through the site instead of spreadsheets and Google Forms
@@ -144,7 +144,7 @@ Items to build when the time is right, not tied to a specific phase:
 | 4. Teams and Seasons | Complete | 2026-03-06 |
 | 5. Polish and Team H2H | Complete | 2026-03-08 |
 | 6. Blog and Weekly Automation | Complete | 2026-03-10 |
-| 7. Homepage Personality and Portfolio Polish | Not started | - |
+| 7. Homepage Personality and Portfolio Polish | Complete | 2026-03-12 |
 | 8. Admin Tools | Not started | - |
 | 9. Data Backfill and Tooling | Not started | - |
 | 10. Profile Depth | Not started | - |

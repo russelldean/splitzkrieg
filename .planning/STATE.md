@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 07-homepage-personality-and-portfolio-polish
-current_plan: 1 of 5
-status: in-progress
-last_updated: "2026-03-12T03:16:00Z"
+current_plan: 2 of 5
+status: phase-complete
+last_updated: "2026-03-12T04:12:04.737Z"
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Session State
@@ -23,7 +23,7 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.0 milestone
 **Current phase:** 07-homepage-personality-and-portfolio-polish
-**Current plan:** 1 of 5
+**Current plan:** 2 of 5
 **Status:** In Progress
 
 ## Session Log
@@ -40,6 +40,7 @@ See: .planning/PROJECT.md
 - 2026-03-10: Phase 6 Plan 01 — MDX blog infrastructure, /blog and /blog/[slug] pages, nav integration
 - 2026-03-10: Phase 6 Plan 03 — Publish gate (leagueSettings), email script (Resend), weekly runbook
 - 2026-03-12: Phase 7 Plan 01 — Shared SVG icons, homepage pill nav, league-specific tagline
+- 2026-03-12: Phase 7 Plan 02 — Directory parallax heroes shipped; homepage changes reverted per user feedback
 
 ## Decisions
 
@@ -62,6 +63,7 @@ See: .planning/PROJECT.md
 - **[Phase 06-03]** Runbook includes match results step between import and patches
 - **[Phase 07-01]** Tagline: "Since 2007. 100+ bowlers. One very specific website." -- dry/understated tone
 - **[Phase 07-01]** SVG icons exported as JSX elements from shared icons.tsx, not component functions
+- **[Phase 07-02]** User rejected homepage pill nav and tagline -- reverted to original layout; directory parallax heroes approved
 
 ## Pending Todos
 
