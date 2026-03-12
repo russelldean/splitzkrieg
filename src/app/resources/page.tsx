@@ -55,7 +55,7 @@ const resources: ResourceCategory[] = [
       {
         label: 'Facebook Group',
         href: 'https://www.facebook.com/groups/27865497820',
-        description: 'Join the conversation',
+        description: 'Follow the league on Facebook',
       },
     ],
   },
