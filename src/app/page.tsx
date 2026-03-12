@@ -19,19 +19,20 @@ import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 import { TickerCountdownPill } from '@/components/layout/TickerCountdownPill';
 import { CountdownClock } from '@/components/home/CountdownClock';
+import { leagueNightsIcon, seasonsIcon, statsIcon, bowlersIcon, teamsIcon, blogIcon } from '@/components/ui/icons';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
-  description: 'Stats, records, and history for the Splitzkrieg Bowling League. Since 2007.',
+  description: 'Since 2007. 100+ bowlers. One very specific website.',
 };
 
 const quickLinks = [
-  { label: 'League Nights', href: '/week', description: 'Weekly matchups and scores', icon: '🎳', accent: 'border-l-red-600/40' },
-  { label: 'Seasons', href: '/seasons', description: 'Every season since 2007', icon: '📅', accent: 'border-l-navy/30' },
-  { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings', icon: '🏆', accent: 'border-l-red-600/40' },
-  { label: 'Bowlers', href: '/bowlers?filter=current', description: 'Current season roster', icon: '👤', accent: 'border-l-navy/30' },
-  { label: 'Teams', href: '/teams?filter=current', description: 'Current season teams', icon: '👥', accent: 'border-l-red-600/40' },
-  { label: 'Blog', href: '/blog', description: 'Weekly recaps and league news', icon: '\u{1F4DD}', accent: 'border-l-navy/30' },
+  { label: 'League Nights', href: '/week', icon: leagueNightsIcon, accent: 'border-l-red-600/40' },
+  { label: 'Seasons', href: '/seasons', icon: seasonsIcon, accent: 'border-l-navy/30' },
+  { label: 'The Stats', href: '/stats', icon: statsIcon, accent: 'border-l-red-600/40' },
+  { label: 'Bowlers', href: '/bowlers?filter=current', icon: bowlersIcon, accent: 'border-l-navy/30' },
+  { label: 'Teams', href: '/teams?filter=current', icon: teamsIcon, accent: 'border-l-red-600/40' },
+  { label: 'Blog', href: '/blog', icon: blogIcon, accent: 'border-l-navy/30' },
 ];
 
 export default async function Home() {
@@ -106,7 +107,7 @@ export default async function Home() {
               priority
             />
             <p className="font-body text-sm sm:text-base text-navy/65 -mt-4 sm:-mt-6">
-              Stats, records, and {new Date().getFullYear() - 2007} years of league history
+              Since 2007. 100+ bowlers. One very specific website.
             </p>
           </div>
 
@@ -143,33 +144,23 @@ export default async function Home() {
             </Link>
           )}
 
-          {/* Explore Cards */}
-          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-            {quickLinks.map((link) =>
+          {/* Quick Links */}
+          <div className="flex flex-wrap gap-2 mt-6 sm:mt-8">
+            {quickLinks.map((link) => (
               <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`group bg-white rounded-xl border border-navy/10 border-l-4 ${link.accent} p-4 hover:border-navy/20 hover:shadow-sm transition-all`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg" aria-hidden="true">{link.icon}</span>
-                    <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
-                      {link.label}
-                    </div>
-                  </div>
-                  <div className="font-body text-xs text-navy/65 mt-1 leading-relaxed pl-7">
-                    {link.description}
-                  </div>
-                </Link>
-            )}
+                key={link.href}
+                href={link.href}
+                className={`inline-flex items-center gap-2 bg-white rounded-lg border border-navy/10 border-l-4 ${link.accent} px-4 py-2.5 hover:border-navy/20 hover:shadow-sm transition-all group`}
+              >
+                <span className="text-navy/50 group-hover:text-red transition-colors">{link.icon}</span>
+                <span className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
+                  {link.label}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
-
-      {/* Gradient Divider */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent" />
-      </div>
 
       {/* Content Grid */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
