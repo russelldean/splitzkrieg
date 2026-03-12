@@ -63,7 +63,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
               Standings
             </Link>
             <Link
-              href={`/week/${currentStanding.seasonSlug}`}
+              href={`/week#season-${currentStanding.seasonSlug}`}
               className="text-xs font-body font-semibold text-navy/55 hover:text-red-600 transition-colors"
             >
               League Nights

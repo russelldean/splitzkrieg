@@ -84,7 +84,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                     Leaderboards &rarr;
                   </Link>
                   <Link
-                    href={`/week/${current.slug}`}
+                    href={`/week#season-${current.slug}`}
                     className="text-sm font-medium text-navy/40 hover:text-navy transition-colors"
                   >
                     League Nights &rarr;
@@ -148,7 +148,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                         Stats
                       </Link>
                       <Link
-                        href={`/week/${season.slug}`}
+                        href={`/week#season-${season.slug}`}
                         className="text-xs font-body font-medium text-navy/35 hover:text-navy transition-colors"
                       >
                         Nights
