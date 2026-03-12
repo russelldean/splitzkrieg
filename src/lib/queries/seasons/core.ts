@@ -142,10 +142,10 @@ const TOTAL_PINS_SQL = `SELECT SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT)
   FROM scores WHERE isPenalty = 0`;
 
 export const getTotalPinsKnockedDown = cache(async (): Promise<number> => {
-  const rows = await cachedQuery<{ totalPins: number }>('getTotalPinsKnockedDown', async () => {
+  const rows = await cachedQuery<{ totalPins: number }[]>('getTotalPinsKnockedDown', async () => {
     const db = await getDb();
     const result = await db.request().query<{ totalPins: number }>(TOTAL_PINS_SQL);
-    return result.recordset;
+    return [...result.recordset];
   }, [], { sql: TOTAL_PINS_SQL });
   return rows[0]?.totalPins ?? 0;
 });
