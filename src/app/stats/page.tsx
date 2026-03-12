@@ -18,11 +18,11 @@ export default async function StatsIndexPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Holographic Splitzkrieg bumper sticker">
+      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Blue chairs at Village Lanes">
         <ParallaxBg
-          src="/splitzkrieg-bumper-sticker.jpg"
-          imgW={2016} imgH={1512}
-          focalY={0.5}
+          src="/village-lanes-chairs.jpg"
+          imgW={2048} imgH={1536}
+          focalY={0.4}
           mobileSrc="/village-lanes-chairs.jpg"
           mobileFocalY={0.4}
           mobileImgW={2048} mobileImgH={1536}
