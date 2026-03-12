@@ -22,9 +22,9 @@ export default async function SeasonsPage() {
           src="/splitzkrieg-scoreboards.jpg"
           imgW={1512} imgH={604}
           focalY={0.5}
-          mobileSrc="/splitzkrieg-scoreboards.jpg"
-          mobileFocalY={0.5}
-          mobileImgW={1512} mobileImgH={604}
+          mobileSrc="/splitzkrieg-champions-trophy.jpg"
+          mobileFocalY={0.35}
+          mobileImgW={1536} mobileImgH={2048}
         />
         <div className="absolute inset-0 bg-navy/15" />
         <div className="absolute inset-0 bg-gradient-to-r from-navy/70 via-transparent to-navy/70" />
