@@ -17,11 +17,11 @@ export default async function SeasonsPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Party Zone neon sign at Village Lanes">
+      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Colorful bowling balls in ball return">
         <ParallaxBg
-          src="/village-lanes-party-zone.jpg"
-          imgW={1293} imgH={621}
-          focalY={0.45}
+          src="/bowling-balls-return.jpg"
+          imgW={1200} imgH={800}
+          focalY={0.6}
           mobileSrc="/splitzkrieg-champions-trophy.jpg"
           mobileFocalY={0.35}
           mobileImgW={1536} mobileImgH={2048}
