@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
-import { TrailNav } from '@/components/ui/TrailNav';
+
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
 import updates from '../../../content/updates';
 
@@ -92,17 +93,26 @@ function ExternalLinkIcon() {
 export default async function ResourcesPage() {
   return (
     <div className="min-h-screen bg-cream">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <TrailNav current="/resources" position="top" />
-        {/* Page Header */}
-        <div className="mb-10">
-          <h1 className="font-heading text-3xl sm:text-4xl text-navy">
-            Resources &amp; Quick Links
-          </h1>
-          <p className="font-body text-navy/65 mt-2 text-lg">
-            Everything you need, all in one place. No more hunting through emails.
-          </p>
+      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Splitzkrieg CRASH parade truck with bowling pins">
+        <ParallaxBg
+          src="/splitzkrieg-crash-truck.jpg"
+          imgW={960} imgH={720}
+          focalY={0.4}
+          maxW={960}
+          mobileSrc="/splitzkrieg-crash-truck.jpg"
+          mobileFocalY={0.5}
+          mobileImgW={960} mobileImgH={720}
+        />
+        <div className="absolute inset-0 bg-navy/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
+          <div>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white">Resources &amp; Quick Links</h1>
+            <p className="font-body text-white/70 text-sm mt-1">Everything you need, all in one place.</p>
+          </div>
         </div>
+      </section>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Site Updates */}
         <SiteUpdates updates={updates} />
@@ -182,7 +192,6 @@ export default async function ResourcesPage() {
           ))}
         </div>
 
-        <TrailNav current="/resources" />
       </div>
     </div>
   );

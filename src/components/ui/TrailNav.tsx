@@ -14,7 +14,7 @@ function getTrail(seasonSlug?: string, weekNumber?: number, weekFallbackAnchor?:
     { label: seasonSlug ? `Stats${s}` : 'The Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
     { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
     { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
-    { label: 'Resources', href: '/resources', key: '/resources' },
+    { label: 'Blog', href: '/blog', key: '/blog' },
   ];
 }
 

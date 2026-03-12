@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSnapshot } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { BackToTop } from '@/components/ui/BackToTop';
+import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { formatMatchDate } from '@/lib/bowling-time';
 
 export const metadata: Metadata = {
@@ -36,12 +37,27 @@ export default async function WeeksIndexPage() {
   }
 
   return (
+    <>
+      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Bowling balls and shoes on retro red chairs">
+        <ParallaxBg
+          src="/splitzkrieg-balls-shoes.jpg"
+          imgW={1440} imgH={1440}
+          focalY={0.5}
+          mobileSrc="/splitzkrieg-balls-shoes.jpg"
+          mobileFocalY={0.5}
+          mobileImgW={1440} mobileImgH={1440}
+        />
+        <div className="absolute inset-0 bg-navy/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
+          <div>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white">League Nights</h1>
+            <p className="font-body text-white/70 text-sm mt-1">Every bowling night, every season.</p>
+          </div>
+        </div>
+      </section>
     <main id="top" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <TrailNav current="/week" position="top" />
-      <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-2">League Nights</h1>
-      <p className="font-body text-navy/65 mb-8">
-        Every bowling night, every season.
-      </p>
 
       {allSeasons.map((season, i) => {
         const summaries = summariesBySeasonID.get(season.seasonID) ?? [];
@@ -140,5 +156,6 @@ export default async function WeeksIndexPage() {
 
       <TrailNav current="/week" />
     </main>
+    </>
   );
 }

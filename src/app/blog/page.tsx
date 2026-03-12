@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/blog';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { TrailNav } from '@/components/ui/TrailNav';
 
 export const metadata: Metadata = {
   title: 'Blog | Splitzkrieg',
@@ -42,6 +43,7 @@ export default function BlogPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <TrailNav current="/blog" position="top" />
         {posts.length === 0 ? (
           <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-navy/30 px-8 py-12 shadow-sm text-center">
             <p className="font-body text-lg text-navy/70 leading-relaxed">
