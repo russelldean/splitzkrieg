@@ -41,12 +41,12 @@ export default async function BowlersPage() {
           mobileFocalY={0.5}
           mobileImgW={2048} mobileImgH={1536}
         />
-        <div className="absolute inset-0 bg-navy/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/60 via-transparent to-navy/60 sm:from-navy/80 sm:via-transparent sm:to-navy/80" />
+        <div className="absolute inset-0 z-[1] bg-navy/15" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-navy/60 via-transparent to-navy/60 sm:from-navy/80 sm:via-transparent sm:to-navy/80" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white">Bowlers</h1>
-            <p className="font-body text-white/70 text-sm mt-1">{bowlers.length} bowlers through {new Date().getFullYear() - 2007} years of Splitzkrieg.</p>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">Bowlers</h1>
+            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">{bowlers.length} bowlers through {new Date().getFullYear() - 2007} years of Splitzkrieg.</p>
           </div>
         </div>
       </section>

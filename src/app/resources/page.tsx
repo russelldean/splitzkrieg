@@ -103,12 +103,12 @@ export default async function ResourcesPage() {
           mobileFocalY={0.5}
           mobileImgW={960} mobileImgH={720}
         />
-        <div className="absolute inset-0 bg-navy/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
+        <div className="absolute inset-0 z-[1] bg-navy/15" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white">Resources &amp; Quick Links</h1>
-            <p className="font-body text-white/70 text-sm mt-1">Site updates, social links, potpourri.</p>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">Resources &amp; Quick Links</h1>
+            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">Site updates, social links, potpourri.</p>
           </div>
         </div>
       </section>

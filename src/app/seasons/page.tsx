@@ -26,12 +26,12 @@ export default async function SeasonsPage() {
           mobileFocalY={0.35}
           mobileImgW={1536} mobileImgH={2048}
         />
-        <div className="absolute inset-0 bg-red-900/10 sm:bg-navy/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-red-900/35 via-transparent to-red-900/35 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
+        <div className="absolute inset-0 z-[1] bg-black/15 sm:bg-navy/15" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-black/30 via-transparent to-black/30 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white">Seasons</h1>
-            <p className="font-body text-white/70 text-sm mt-1">{seasons.length} seasons. We've almost caught the Simpsons.</p>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">Seasons</h1>
+            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">{seasons.length} seasons. We've almost caught the Simpsons.</p>
           </div>
         </div>
       </section>

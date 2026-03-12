@@ -50,12 +50,12 @@ export default async function WeeksIndexPage() {
           mobileFocalY={0.5}
           mobileImgW={1440} mobileImgH={1440}
         />
-        <div className="absolute inset-0 bg-navy/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
+        <div className="absolute inset-0 z-[1] bg-navy/15" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white">League Nights</h1>
-            <p className="font-body text-white/70 text-sm mt-1">{totalNights} bowling nights and counting.</p>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">League Nights</h1>
+            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">{totalNights} bowling nights and counting.</p>
           </div>
         </div>
       </section>

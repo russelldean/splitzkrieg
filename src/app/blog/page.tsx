@@ -36,7 +36,7 @@ export default function BlogPage() {
           <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">
             The Weekly Email
           </h1>
-          <p className="font-body text-sm text-white/60 mt-1">
+          <p className="font-body text-sm text-white/85 mt-1 drop-shadow">
             Recaps from the league nights, not strictly emailed anymore.
           </p>
         </div>
