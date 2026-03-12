@@ -108,7 +108,7 @@ export default async function ResourcesPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white">Resources &amp; Quick Links</h1>
-            <p className="font-body text-white/70 text-sm mt-1">Everything you need, all in one place.</p>
+            <p className="font-body text-white/70 text-sm mt-1">Site updates, social links, potpourri.</p>
           </div>
         </div>
       </section>
