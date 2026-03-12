@@ -55,6 +55,7 @@ Plans:
 **Goal**: The site feels authored, not generated. A hiring manager lands on it and sees craft. League members feel warmth and community, not a clinical data portal.
 **Depends on**: Phase 6
 **Timeline**: Two weeks (by 2026-03-24)
+**Requirements:** [HOME-PERSONALITY, DIR-HEROES, AI-AUDIT]
 **The problem**: Two league members said "this looks like a site Claude made." The homepage is pretty but clinical — it lacks voice, personality, and opinionated design choices.
 **What to address**:
   - Homepage card grid — ditch the descriptive text under nav cards, reduce "template" feel
@@ -67,7 +68,10 @@ Plans:
   2. No page triggers "AI-made" pattern recognition
   3. Site demonstrates full-stack skills clearly (data pipeline, SSG, responsive design, data viz)
   4. Someone unfamiliar with the league understands what it is within 5 seconds of landing
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 07-01-PLAN.md — Extract shared icons, homepage card grid redesign, tagline voice
+- [ ] 07-02-PLAN.md — Directory page parallax heroes, visual checkpoint
 
 ### Phase 8: Admin Tools
 **Goal**: The commissioner can manage scores, lineups, and seasons through the site instead of spreadsheets and Google Forms
