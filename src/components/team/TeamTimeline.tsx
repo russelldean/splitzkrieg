@@ -85,7 +85,7 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
     <section className="mt-12">
       <SectionHeading className="mb-2">League Timeline</SectionHeading>
       <p className="font-body text-sm text-navy/65 mb-4">
-        {teams.length} teams across {seasons.length} seasons of Splitzkrieg history.
+        All teams shown across the Splitzkrieg timeline.
       </p>
 
       {/* Legend */}

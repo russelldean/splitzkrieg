@@ -137,3 +137,15 @@ export async function getCurrentSeasonSlug(): Promise<string | undefined> {
   const seasons = await getAllSeasonNavList();
   return seasons[0]?.slug;
 }
+
+const TOTAL_PINS_SQL = `SELECT SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT) + CAST(game3 AS BIGINT)) as totalPins
+  FROM scores WHERE isPenalty = 0`;
+
+export const getTotalPinsKnockedDown = cache(async (): Promise<number> => {
+  const rows = await cachedQuery<{ totalPins: number }>('getTotalPinsKnockedDown', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{ totalPins: number }>(TOTAL_PINS_SQL);
+    return result.recordset;
+  }, [], { sql: TOTAL_PINS_SQL });
+  return rows[0]?.totalPins ?? 0;
+});

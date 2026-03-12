@@ -46,7 +46,7 @@ export default async function BowlersPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white">Bowlers</h1>
-            <p className="font-body text-white/70 text-sm mt-1">{bowlers.length} bowlers across {new Date().getFullYear() - 2007} years of Splitzkrieg history</p>
+            <p className="font-body text-white/70 text-sm mt-1">{bowlers.length} bowlers through {new Date().getFullYear() - 2007} years of Splitzkrieg.</p>
           </div>
         </div>
       </section>

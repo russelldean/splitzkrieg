@@ -31,7 +31,7 @@ export default async function SeasonsPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white">Seasons</h1>
-            <p className="font-body text-white/70 text-sm mt-1">{seasons.length} seasons of Splitzkrieg bowling</p>
+            <p className="font-body text-white/70 text-sm mt-1">{seasons.length} seasons. We've almost caught the Simpsons.</p>
           </div>
         </div>
       </section>

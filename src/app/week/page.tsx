@@ -36,6 +36,9 @@ export default async function WeeksIndexPage() {
     );
   }
 
+  // +2 for missing Week 9 data: Season V (Spring 2010), Season XVIII (Fall 2016)
+  const totalNights = Array.from(summariesBySeasonID.values()).reduce((sum, s) => sum + s.length, 0) + 2;
+
   return (
     <>
       <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Bowling balls and shoes on retro red chairs">
@@ -52,7 +55,7 @@ export default async function WeeksIndexPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white">League Nights</h1>
-            <p className="font-body text-white/70 text-sm mt-1">Every bowling night, every season.</p>
+            <p className="font-body text-white/70 text-sm mt-1">{totalNights} bowling nights and counting.</p>
           </div>
         </div>
       </section>

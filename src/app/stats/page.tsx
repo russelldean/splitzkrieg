@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getAllSeasonsDirectory, getCurrentSeasonSlug } from '@/lib/queries';
+import { getAllSeasonsDirectory, getCurrentSeasonSlug, getTotalPinsKnockedDown } from '@/lib/queries';
 import { SeasonDirectory } from '@/components/season/SeasonDirectory';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
@@ -10,9 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function StatsIndexPage() {
-  const [seasons, currentSlug] = await Promise.all([
+  const [seasons, currentSlug, totalPins] = await Promise.all([
     getAllSeasonsDirectory(),
     getCurrentSeasonSlug(),
+    getTotalPinsKnockedDown(),
   ]);
 
   return (
@@ -31,7 +32,7 @@ export default async function StatsIndexPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white">Season Stats</h1>
-            <p className="font-body text-white/70 text-sm mt-1">Leaderboards and records for {seasons.length} seasons.</p>
+            <p className="font-body text-white/70 text-sm mt-1">{new Intl.NumberFormat('en-US').format(totalPins)} pins across leaderboards and stat tables.</p>
           </div>
         </div>
       </section>
