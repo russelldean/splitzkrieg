@@ -21,14 +21,14 @@ export default async function TeamsPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Splitzkrieg bowling league group photo">
+      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Splitzkrieg CRASH parade truck with bowling pins">
         <ParallaxBg
-          src="/village-lanes-group-photo.jpg"
-          imgW={2048} imgH={1365}
-          focalY={0.4}
-          mobileSrc="/village-lanes-group-photo.jpg"
+          src="/splitzkrieg-crash-truck.jpg"
+          imgW={960} imgH={720}
+          focalY={0.7}
+          mobileSrc="/splitzkrieg-crash-truck.jpg"
           mobileFocalY={0.5}
-          mobileImgW={2048} mobileImgH={1365}
+          mobileImgW={960} mobileImgH={720}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-navy/80 to-navy/50" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">

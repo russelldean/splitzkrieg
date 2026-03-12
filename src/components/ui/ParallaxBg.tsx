@@ -10,6 +10,8 @@ interface ParallaxBgProps {
   imgW?: number;
   /** Native image height for positioning math. Default 478 */
   imgH?: number;
+  /** Cap image width (px) so it doesn't stretch edge-to-edge. Centered, dark bg fills sides. */
+  maxW?: number;
   /** Optional mobile-specific image source + dimensions */
   mobileSrc?: string;
   mobileFocalY?: number;
@@ -29,7 +31,7 @@ interface ParallaxBgProps {
  *   <div className="relative z-10">Content on top</div>
  * </div>
  */
-export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478, mobileSrc, mobileFocalY, mobileImgW, mobileImgH }: ParallaxBgProps) {
+export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478, maxW, mobileSrc, mobileFocalY, mobileImgW, mobileImgH }: ParallaxBgProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -46,10 +48,10 @@ export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478, mobileS
     const mFocalY = mobileSrc ? (mobileFocalY ?? focalY) : focalY;
     const mW = mobileSrc ? (mobileImgW ?? imgW) : imgW;
     const mH = mobileSrc ? (mobileImgH ?? imgH) : imgH;
-    return <MobileParallax ref={ref} src={mSrc} focalY={mFocalY} imgW={mW} imgH={mH} />;
+    return <MobileParallax ref={ref} src={mSrc} focalY={mFocalY} imgW={mW} imgH={mH} maxW={maxW} />;
   }
 
-  return <DesktopParallax ref={ref} src={src} focalY={focalY} imgW={imgW} imgH={imgH} />;
+  return <DesktopParallax ref={ref} src={src} focalY={focalY} imgW={imgW} imgH={imgH} maxW={maxW} />;
 }
 
 /* ── Desktop: bg-fixed approach ─────────────────────────────── */
@@ -60,12 +62,14 @@ function DesktopParallax({
   focalY,
   imgW,
   imgH,
+  maxW,
 }: {
   ref: React.RefObject<HTMLDivElement | null>;
   src: string;
   focalY: number;
   imgW: number;
   imgH: number;
+  maxW?: number;
 }) {
   const [style, setStyle] = useState<React.CSSProperties>({
     backgroundImage: `url(${src})`,
@@ -78,7 +82,9 @@ function DesktopParallax({
     function compute() {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
-      const scale = Math.max(rect.width / imgW, rect.height / imgH);
+      const fitW = maxW ? Math.min(rect.width, maxW) : rect.width;
+      const scale = Math.max(fitW / imgW, rect.height / imgH);
+      const scaledW = imgW * scale;
       const scaledH = imgH * scale;
       const excessY = scaledH - rect.height;
       const offsetY = excessY * focalY;
@@ -86,7 +92,7 @@ function DesktopParallax({
 
       setStyle({
         backgroundImage: `url(${src})`,
-        backgroundSize: `${imgW * scale}px ${scaledH}px`,
+        backgroundSize: `${scaledW}px ${scaledH}px`,
         backgroundPosition: `center ${bgPosY}px`,
         backgroundAttachment: 'fixed',
         backgroundRepeat: 'no-repeat',
@@ -95,7 +101,7 @@ function DesktopParallax({
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [src, focalY, ref]);
+  }, [src, focalY, ref, maxW]);
 
   return <div ref={ref} className="absolute inset-0" style={style} />;
 }
@@ -114,12 +120,14 @@ function MobileParallax({
   focalY,
   imgW,
   imgH,
+  maxW,
 }: {
   ref: React.RefObject<HTMLDivElement | null>;
   src: string;
   focalY: number;
   imgW: number;
   imgH: number;
+  maxW?: number;
 }) {
   const innerRef = useRef<HTMLDivElement>(null);
 
@@ -127,7 +135,8 @@ function MobileParallax({
     if (!ref.current || !innerRef.current) return;
     const rect = ref.current.getBoundingClientRect();
     const pageTop = rect.top + window.scrollY;
-    const scale = Math.max(rect.width / imgW, rect.height / imgH);
+    const fitW = maxW ? Math.min(rect.width, maxW) : rect.width;
+    const scale = Math.max(fitW / imgW, rect.height / imgH);
     const scaledW = imgW * scale;
     const scaledH = imgH * scale;
     const excessY = scaledH - rect.height;
@@ -135,7 +144,7 @@ function MobileParallax({
 
     innerRef.current.style.backgroundSize = `${scaledW}px ${scaledH}px`;
     innerRef.current.style.backgroundPosition = `center ${bgPosY}px`;
-  }, [ref, focalY]);
+  }, [ref, focalY, maxW]);
 
   useEffect(() => {
     computeLayout();
