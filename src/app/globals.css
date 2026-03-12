@@ -158,6 +158,18 @@ body {
   animation: border-glow 3s ease-in-out infinite;
 }
 
+@keyframes announcement-pulse {
+  0% { opacity: 0.7; }
+  25% { opacity: 1; }
+  50% { opacity: 0.7; }
+  75% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@utility animate-announcement {
+  animation: announcement-pulse 2s ease-in-out;
+}
+
 /* ── Blog prose styling ──────────────────────────────── */
 .blog-prose {
   @apply font-body text-navy/85 text-base sm:text-lg leading-relaxed;

@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { ConsoleGreeting } from "@/components/layout/ConsoleGreeting";
+import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 import { PostHogProvider } from "@/components/PostHogProvider";
 
 const dmSerif = DM_Serif_Display({
@@ -50,7 +51,10 @@ export default function RootLayout({
       <body className="bg-cream text-navy font-body">
         <PostHogProvider>
           <PageTransition />
-          <Header />
+          <div className="sticky top-0 z-50">
+            <AnnouncementBanner />
+            <Header />
+          </div>
           <main>
             {children}
           </main>
