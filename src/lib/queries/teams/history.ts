@@ -53,7 +53,6 @@ export interface TeamPlayoffFinish {
 }
 
 const GET_TEAM_SEASON_BY_SEASON_SQL = `
-  /* v2: S25 schedule added */
   SELECT
     sc.seasonID,
     sn.displayName                                     AS seasonName,

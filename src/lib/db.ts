@@ -86,6 +86,18 @@ const PUBLISHED_SEASON_ID = (() => {
   return m ? parseInt(m[1], 10) : 0;
 })();
 
+// Per-key cache invalidations: maps key prefixes to version strings.
+// To bust cache for a specific season/query, add an entry here and remove it
+// after the next deploy. Only the matching keys get re-queried.
+// Format: { 'getSeasonStandings-25': 'v2', 'getStandingsRaceData-25': 'v2' }
+let CACHE_INVALIDATIONS: Record<string, string> = {};
+try {
+  const raw = fs.readFileSync(path.join(process.cwd(), '.cache-invalidations.json'), 'utf-8');
+  CACHE_INVALIDATIONS = JSON.parse(raw);
+} catch {
+  // No invalidations file — nothing to bust
+}
+
 const VERSIONED_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
 const STABLE_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', 'stable');
 
@@ -173,7 +185,8 @@ export async function cachedQuery<T>(
     }
   }
 
-  const hashInput = [options?.sql ?? '', usePublishedTag ? PUBLISHED_TAG : ''].filter(Boolean).join('|');
+  const invalidationTag = CACHE_INVALIDATIONS[key] ?? '';
+  const hashInput = [options?.sql ?? '', usePublishedTag ? PUBLISHED_TAG : '', invalidationTag].filter(Boolean).join('|');
   const cacheKey = hashInput
     ? `${key}_${crypto.createHash('md5').update(hashInput).digest('hex').slice(0, 8)}`
     : key;

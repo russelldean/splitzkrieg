@@ -55,7 +55,6 @@ export interface RaceChartRow {
 }
 
 const GET_SEASON_STANDINGS_SQL = `
-  /* v2: S25 schedule+matchResults added */
   WITH teamAvgs AS (
     SELECT
       sc.teamID,
@@ -354,7 +353,6 @@ export async function getSeasonFullStats(seasonID: number): Promise<SeasonFullSt
 }
 
 const GET_STANDINGS_RACE_DATA_SQL = `
-  /* v2: S25 schedule+matchResults added */
   WITH weeklyPts AS (
     SELECT sch.week,
            sch.team1ID AS teamID,
