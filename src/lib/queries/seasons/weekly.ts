@@ -104,7 +104,7 @@ export async function getSeasonSchedule(seasonID: number): Promise<SeasonSchedul
       .input('seasonID', seasonID)
       .query<SeasonScheduleWeek>(GET_SEASON_SCHEDULE_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_SEASON_SCHEDULE_SQL });
+  }, [], { dependsOn: ['schedule'], sql: GET_SEASON_SCHEDULE_SQL, seasonID });
 }
 
 const GET_SEASON_WEEKLY_SCORES_SQL = `
