@@ -101,8 +101,10 @@ export default async function WeekPage({
   const matchDate = weekScores[0]?.matchDate ?? weekSchedule[0]?.matchDate ?? null;
   const dateStr = formatMatchDate(matchDate, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  // Detect future week (has schedule but no scores)
+  // Detect future week (has schedule but no scores, and season is current)
   const isFutureWeek = weekSchedule.length > 0 && weekScores.length === 0;
+  // Detect archived week with missing data (no scores, not a future week)
+  const isMissingData = weekScores.length === 0 && !isFutureWeek;
 
   // Fetch career milestones achieved this week (e.g., 50,000 career pins)
   const careerMilestones = isFutureWeek ? [] : await getWeekCareerMilestones(season.seasonID, weekNum);
@@ -217,7 +219,13 @@ export default async function WeekPage({
         </Link>
       )}
 
-      {isFutureWeek ? (
+      {isMissingData ? (
+        <div className="px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10">
+          <p className="font-body text-sm text-navy/65 italic">
+            Note: Week {weekNum} data missing from archive.
+          </p>
+        </div>
+      ) : isFutureWeek ? (
         /* Future week: show schedule with H2H records */
         <WeekSchedulePreview schedule={weekSchedule} h2hSummaries={h2hSummaries} />
       ) : (

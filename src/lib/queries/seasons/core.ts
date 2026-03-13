@@ -16,6 +16,7 @@ export interface Season {
   year: number;
   period: string;
   slug: string;
+  notes: string | null;
 }
 
 export interface DirectorySeason {
@@ -62,7 +63,8 @@ const GET_SEASON_BY_SLUG_SQL = `
     romanNumeral,
     year,
     period,
-    LOWER(REPLACE(displayName, ' ', '-')) AS slug
+    LOWER(REPLACE(displayName, ' ', '-')) AS slug,
+    notes
   FROM seasons
   WHERE LOWER(REPLACE(displayName, ' ', '-')) = @slug
 `;

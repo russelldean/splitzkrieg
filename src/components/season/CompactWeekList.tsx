@@ -45,6 +45,9 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
             const hasScores = !!summary;
             const rawDate = summary?.matchDate ?? scheduleDateMap.get(week) ?? null;
             const dateStr = formatMatchDate(rawDate);
+            // A week with no scores that has later weeks with scores is missing data, not upcoming
+            const maxScoreWeek = Math.max(...Array.from(summaryMap.keys()), 0);
+            const isMissingData = !hasScores && week <= maxScoreWeek;
 
             return (
               <Link
@@ -53,13 +56,16 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
                 className="flex items-center justify-between px-4 py-2.5 -mx-1 rounded-lg hover:bg-navy/[0.04] transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-heading text-base text-navy group-hover:text-red-600 transition-colors">
+                  <span className={`font-heading text-base group-hover:text-red-600 transition-colors ${isMissingData ? 'text-navy/40' : 'text-navy'}`}>
                     Week {week}
                   </span>
                   {dateStr && (
                     <span className="text-xs font-body text-navy/65">{dateStr}</span>
                   )}
-                  {!hasScores && !dateStr && (
+                  {isMissingData && (
+                    <span className="text-xs font-body text-navy/45 italic">Data missing from archive</span>
+                  )}
+                  {!hasScores && !isMissingData && !dateStr && (
                     <span className="text-xs font-body text-navy/60 italic">Upcoming</span>
                   )}
                 </div>

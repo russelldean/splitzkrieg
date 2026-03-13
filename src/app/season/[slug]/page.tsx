@@ -112,6 +112,14 @@ export default async function SeasonPage({
       {/* Prev/next season navigation */}
       <SeasonNav current={season} allSeasons={allSeasons} />
 
+      {season.notes && (
+        <div className="mt-4 px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10">
+          <p className="font-body text-sm text-navy/65 italic">
+            Note: {season.notes}
+          </p>
+        </div>
+      )}
+
       <div className="mt-8 space-y-12">
         <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} />
 
