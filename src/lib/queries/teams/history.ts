@@ -44,6 +44,7 @@ export interface TeamSeasonPresence {
   teamID: number;
   teamName: string;
   slug: string;
+  chronoNumber: number | null;
   seasonID: number;
   seasonSlug: string;
   romanNumeral: string;
@@ -227,6 +228,7 @@ const GET_TEAM_SEASON_PRESENCE_SQL = `
     t.teamID,
     t.teamName,
     t.slug,
+    t.chronoNumber,
     s.seasonID,
     LOWER(REPLACE(s.displayName, ' ', '-')) AS seasonSlug,
     s.romanNumeral
@@ -235,7 +237,7 @@ const GET_TEAM_SEASON_PRESENCE_SQL = `
   JOIN seasons s ON sc.seasonID = s.seasonID
   WHERE sc.isPenalty = 0
     AND sc.teamID IS NOT NULL
-  ORDER BY t.teamName, s.seasonID
+  ORDER BY t.chronoNumber, s.seasonID
 `;
 
 export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {

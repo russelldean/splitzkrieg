@@ -34,19 +34,20 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
     }
     const allSeasons = Array.from(seasonMap.values()).sort((a, b) => b.seasonID - a.seasonID);
 
-    // Unique teams sorted alphabetically
-    const teamMap = new Map<number, { teamID: number; teamName: string; slug: string }>();
+    // Unique teams sorted by chronoNumber (earliest teams first)
+    const teamMap = new Map<number, { teamID: number; teamName: string; slug: string; chronoNumber: number | null }>();
     for (const row of presenceData) {
       if (!teamMap.has(row.teamID)) {
         teamMap.set(row.teamID, {
           teamID: row.teamID,
           teamName: row.teamName,
           slug: row.slug,
+          chronoNumber: row.chronoNumber,
         });
       }
     }
     const allTeams = Array.from(teamMap.values()).sort((a, b) =>
-      a.teamName.localeCompare(b.teamName)
+      (a.chronoNumber ?? 999) - (b.chronoNumber ?? 999)
     );
 
     // Build presence lookup set: "teamID-seasonID"
