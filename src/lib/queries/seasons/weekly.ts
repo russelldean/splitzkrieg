@@ -74,6 +74,7 @@ export interface WeekSummary {
 }
 
 const GET_SEASON_SCHEDULE_SQL = `
+  /* v2: S25 schedule added */
   SELECT
     sch.week,
     sch.matchDate,
