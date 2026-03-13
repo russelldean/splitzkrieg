@@ -127,7 +127,7 @@ export async function getTeamH2H(teamID: number): Promise<TeamH2HMatchup[]> {
       .input('teamID', teamID)
       .query<TeamH2HMatchup>(GET_TEAM_H2H_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_H2H_SQL });
+  }, [], { sql: GET_TEAM_H2H_SQL, allSeasons: true });
 }
 
 const GET_GHOST_TEAM_H2H_SQL = `

@@ -1,5 +1,34 @@
 import sql from 'mssql';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, unlinkSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(__dirname, '..');
+
+function bumpDataVersion(seasonID) {
+  const filePath = resolve(PROJECT_ROOT, '.data-versions.json');
+  let versions = {};
+  try { versions = JSON.parse(readFileSync(filePath, 'utf8')); } catch {}
+  const key = String(seasonID);
+  versions[key] = (versions[key] || 1) + 1;
+  writeFileSync(filePath, JSON.stringify(versions, null, 2) + '\n');
+  console.log(`\nBumped .data-versions.json: season ${seasonID} → v${versions[key]}`);
+}
+
+function clearLocalCache(seasonID) {
+  const cacheDir = resolve(PROJECT_ROOT, '.next', 'cache', 'sql', 'v1');
+  let deleted = 0;
+  try {
+    for (const f of readdirSync(cacheDir)) {
+      if (f.includes(`-${seasonID}_`) || f.includes(`-${seasonID}-`)) {
+        unlinkSync(resolve(cacheDir, f));
+        deleted++;
+      }
+    }
+  } catch { /* cache dir may not exist */ }
+  if (deleted > 0) console.log(`Cleared ${deleted} local cache files for season ${seasonID}`);
+}
 
 const envContent = readFileSync('.env.local', 'utf8');
 for (const line of envContent.split('\n')) {
@@ -214,6 +243,10 @@ async function main() {
     }
 
     console.log(`  ${seasonInserted} inserted, ${seasonSkipped} skipped (incomplete bowler data)`);
+    if (!dryRun && seasonInserted > 0) {
+      bumpDataVersion(sid);
+      clearLocalCache(sid);
+    }
     totalInserted += seasonInserted;
   }
 

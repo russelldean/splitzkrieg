@@ -147,5 +147,5 @@ export async function getTeamAllTimeRoster(teamID: number): Promise<AllTimeRoste
       .input('teamID', teamID)
       .query<AllTimeRosterMember>(GET_TEAM_ALL_TIME_ROSTER_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_ALL_TIME_ROSTER_SQL });
+  }, [], { sql: GET_TEAM_ALL_TIME_ROSTER_SQL, allSeasons: true });
 }

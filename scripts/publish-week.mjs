@@ -11,12 +11,36 @@
  */
 
 import sql from 'mssql';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, unlinkSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
+
+function bumpDataVersion(seasonID) {
+  const filePath = resolve(PROJECT_ROOT, '.data-versions.json');
+  let versions = {};
+  try { versions = JSON.parse(readFileSync(filePath, 'utf8')); } catch {}
+  const key = String(seasonID);
+  versions[key] = (versions[key] || 1) + 1;
+  writeFileSync(filePath, JSON.stringify(versions, null, 2) + '\n');
+  console.log(`Bumped .data-versions.json: season ${seasonID} → v${versions[key]}`);
+}
+
+function clearLocalCache(seasonID) {
+  const cacheDir = resolve(PROJECT_ROOT, '.next', 'cache', 'sql', 'v1');
+  let deleted = 0;
+  try {
+    for (const f of readdirSync(cacheDir)) {
+      if (f.includes(`-${seasonID}_`) || f.includes(`-${seasonID}-`)) {
+        unlinkSync(resolve(cacheDir, f));
+        deleted++;
+      }
+    }
+  } catch { /* cache dir may not exist */ }
+  if (deleted > 0) console.log(`Cleared ${deleted} local cache files for season ${seasonID}`);
+}
 
 // Load env
 const envContent = readFileSync(resolve(PROJECT_ROOT, '.env.local'), 'utf8');
@@ -91,6 +115,10 @@ async function main() {
   const tag = `s${seasonID}-w${weekNum}`;
   const tagPath = resolve(PROJECT_ROOT, '.published-week');
   writeFileSync(tagPath, tag + '\n');
+  // Bump data version + clear local cache for the published season
+  bumpDataVersion(seasonID);
+  clearLocalCache(seasonID);
+
   console.log('');
   console.log('Wrote .published-week: ' + tag);
   console.log('All non-stable query caches will auto-invalidate on next build.');

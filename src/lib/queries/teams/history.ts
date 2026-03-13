@@ -100,7 +100,7 @@ export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonR
       .input('teamID', teamID)
       .query<TeamSeasonRow>(GET_TEAM_SEASON_BY_SEASON_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_SEASON_BY_SEASON_SQL });
+  }, [], { sql: GET_TEAM_SEASON_BY_SEASON_SQL, allSeasons: true });
 }
 
 const GET_TEAM_FRANCHISE_HISTORY_SQL = `

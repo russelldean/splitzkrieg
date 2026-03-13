@@ -17,18 +17,21 @@ The #1 source of bugs and wasted time. Read this every time.
 - All ~40 query functions use `cachedQuery()` — disk cache in `.next/cache/sql/`
 - Vercel preserves `.next/cache/` between deploys — subsequent builds skip DB entirely
 - `cachedQuery()` hashes the SQL string (MD5) into the cache key
+- Per-season data versions in `.data-versions.json` — included in hash for season-scoped queries
+- Cross-season queries (team H2H, all-time roster, season-by-season) use `allSeasons: true` — hash of ALL versions
 
 ### When you change a query's SQL text
 - **Nothing to do.** The hash changes automatically and the old cache is missed.
 
 ### When data changes but the query doesn't (e.g., new scores imported)
-- Add a version comment to the SQL: `/* v2: added week 4 */` — changes the hash, invalidates just that query
-- Or delete specific cache files: `find .next/cache/sql/ -name "*queryName-{seasonID}*" -delete`
+- **Import scripts auto-bump** `.data-versions.json` for the affected season — no manual work needed
+- The version is included in the cache hash, so only that season's queries re-run
+- Cross-season team queries also re-run (they hash all versions)
 
 ### NEVER DO THESE
 - **NEVER** use `vercel --prod --force` — nukes ALL cache, causes 15+ minute full rebuilds
 - **NEVER** bump `DB_CACHE_VERSION` — same effect as force, full rebuild
-- **NEVER** add `/* vN */` comments to queries used by `generateStaticParams` — these run for ALL seasons, busting cache across every season. Delete specific cache files instead.
+- **NEVER** add `/* vN */` comments to queries used by `generateStaticParams` — these run for ALL seasons, busting cache across every season.
 
 ### Hybrid queries (SQL + TypeScript config)
 - If a `cachedQuery` uses TypeScript config (thresholds, filters) inside the callback, include `JSON.stringify(config)` in the `sql` option so config changes auto-invalidate the hash.

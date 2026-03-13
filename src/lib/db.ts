@@ -63,8 +63,9 @@ export async function closeDb(): Promise<void> {
  * on the first build or after a cache bust.
  *
  * Cache busting:
- *   - Set DB_CACHE_VERSION env var (default: "1")
- *   - Or use Vercel's "Redeploy without cache" option
+ *   - Per-season: bump version in .data-versions.json (auto-done by import scripts)
+ *   - Per-week: .published-week tag (auto-done by publish-week.mjs)
+ *   - Nuclear: set DB_CACHE_VERSION env var (avoid — rebuilds everything)
  * ───────────────────────────────────────────────────────── */
 
 const CACHE_VERSION = process.env.DB_CACHE_VERSION ?? '1';
@@ -86,17 +87,25 @@ const PUBLISHED_SEASON_ID = (() => {
   return m ? parseInt(m[1], 10) : 0;
 })();
 
-// Per-key cache invalidations: maps key prefixes to version strings.
-// To bust cache for a specific season/query, add an entry here and remove it
-// after the next deploy. Only the matching keys get re-queried.
-// Format: { 'getSeasonStandings-25': 'v2', 'getStandingsRaceData-25': 'v2' }
-let CACHE_INVALIDATIONS: Record<string, string> = {};
+// Per-season data versions: maps seasonID → version number.
+// Bumped automatically by import scripts when data changes.
+// cachedQuery includes the relevant version(s) in the hash so only
+// affected queries re-run. Default version is 1 for unlisted seasons.
+let DATA_VERSIONS: Record<string, number> = {};
 try {
-  const raw = fs.readFileSync(path.join(process.cwd(), '.cache-invalidations.json'), 'utf-8');
-  CACHE_INVALIDATIONS = JSON.parse(raw);
+  const raw = fs.readFileSync(path.join(process.cwd(), '.data-versions.json'), 'utf-8');
+  DATA_VERSIONS = JSON.parse(raw);
 } catch {
-  // No invalidations file — nothing to bust
+  // No data versions file — all seasons default to version 1
 }
+
+// Pre-compute a hash of ALL data versions for cross-season queries
+// (e.g., getTeamSeasonByseason which spans every season for a team).
+const ALL_VERSIONS_HASH = crypto
+  .createHash('md5')
+  .update(JSON.stringify(DATA_VERSIONS))
+  .digest('hex')
+  .slice(0, 8);
 
 const VERSIONED_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
 const STABLE_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', 'stable');
@@ -165,7 +174,7 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
-  options?: { stable?: boolean; sql?: string; seasonID?: number },
+  options?: { stable?: boolean; sql?: string; seasonID?: number; allSeasons?: boolean },
 ): Promise<T> {
   const stable = options?.stable;
 
@@ -185,8 +194,20 @@ export async function cachedQuery<T>(
     }
   }
 
-  const invalidationTag = CACHE_INVALIDATIONS[key] ?? '';
-  const hashInput = [options?.sql ?? '', usePublishedTag ? PUBLISHED_TAG : '', invalidationTag].filter(Boolean).join('|');
+  // Data version tag: include per-season or all-seasons version in the hash
+  // so data imports automatically invalidate the right queries.
+  let dataVersionTag = '';
+  if (!stable) {
+    if (options?.allSeasons) {
+      // Cross-season queries (e.g., getTeamSeasonByseason): hash of ALL versions
+      dataVersionTag = ALL_VERSIONS_HASH;
+    } else if (options?.seasonID != null) {
+      // Season-scoped: include that season's data version
+      dataVersionTag = `dv${DATA_VERSIONS[String(options.seasonID)] ?? 1}`;
+    }
+  }
+
+  const hashInput = [options?.sql ?? '', usePublishedTag ? PUBLISHED_TAG : '', dataVersionTag].filter(Boolean).join('|');
   const cacheKey = hashInput
     ? `${key}_${crypto.createHash('md5').update(hashInput).digest('hex').slice(0, 8)}`
     : key;
