@@ -9,9 +9,10 @@ interface Props {
   seasons: TeamSeasonRow[];
   bowlersBySeason: Record<number, TeamSeasonBowler[]>;
   currentTeamName: string;
+  isActive?: boolean;
 }
 
-export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }: Props) {
+export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, isActive = false }: Props) {
   const [openSeasons, setOpenSeasons] = useState<Set<number>>(
     new Set(seasons[0] ? [seasons[0].seasonID] : [])
   );
@@ -81,7 +82,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName }
                         as {season.teamNameAtTime}
                       </span>
                     )}
-                    {idx === 0 && (
+                    {idx === 0 && isActive && (
                       <span className="text-[10px] font-body font-semibold uppercase tracking-wider text-green-700 bg-green-100 px-1.5 py-0.5 rounded">Current</span>
                     )}
                     {season.isChampion && (

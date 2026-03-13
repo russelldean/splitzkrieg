@@ -1,4 +1,5 @@
 'use client';
+import { useRef, useState, useCallback } from 'react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -9,11 +10,13 @@ import {
   ReferenceDot,
   ReferenceLine,
 } from 'recharts';
+import { toPng } from 'html-to-image';
 import type { RollingAvgPoint } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface Props {
   history: RollingAvgPoint[];
+  bowlerName?: string;
 }
 
 interface ChartPoint {
@@ -24,7 +27,44 @@ interface ChartPoint {
   displayName: string;
 }
 
-export function AverageProgressionChart({ history }: Props) {
+export function AverageProgressionChart({ history, bowlerName }: Props) {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = useCallback(async () => {
+    if (!chartRef.current) return;
+    setSharing(true);
+    try {
+      const dataUrl = await toPng(chartRef.current, {
+        backgroundColor: '#FFFFFF',
+        pixelRatio: 2,
+      });
+
+      const blob = await (await fetch(dataUrl)).blob();
+      const fileName = bowlerName
+        ? `${bowlerName.toLowerCase().replace(/\s+/g, '-')}-avg-progression.png`
+        : 'avg-progression.png';
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      const shareData = { files: [file], title: `${bowlerName ?? ''} Average Progression` };
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch {
+      // User cancelled share or something failed
+    } finally {
+      setSharing(false);
+    }
+  }, [bowlerName]);
   if (history.length < 6) return null;
 
   // Skip the first league night (often outlier data that changes immediately)
@@ -74,8 +114,28 @@ export function AverageProgressionChart({ history }: Props) {
   const labelMap = new Map(seasonLabels.map(sl => [sl.index, sl.label]));
 
   return (
-    <div className="bg-white rounded-lg border border-navy/10 p-6">
-      <SectionHeading className="mb-6">Average Progression</SectionHeading>
+    <div className="bg-white rounded-lg border border-navy/10 p-6" ref={chartRef}>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          {bowlerName && (
+            <p className="text-sm font-body text-navy/50 mb-0.5">{bowlerName}</p>
+          )}
+          <SectionHeading className="mb-0">Average Progression</SectionHeading>
+        </div>
+        <button
+          onClick={handleShare}
+          disabled={sharing}
+          className="inline-flex items-center gap-1.5 text-sm font-body text-navy/50 hover:text-navy transition-colors disabled:opacity-50 mt-1"
+          aria-label="Share chart"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+            <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          {sharing ? 'Saving...' : 'Share'}
+        </button>
+      </div>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
           <XAxis

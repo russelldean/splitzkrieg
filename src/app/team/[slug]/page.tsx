@@ -200,6 +200,7 @@ export default async function TeamPage({
             seasons={teamSeasons}
             bowlersBySeason={bowlersBySeason}
             currentTeamName={team.teamName}
+            isActive={currentRoster.length > 0}
           />
         )}
 

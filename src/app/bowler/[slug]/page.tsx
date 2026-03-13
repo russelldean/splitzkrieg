@@ -195,7 +195,7 @@ export default async function BowlerPage({
         )}
 
         {rollingAvgHistory.length >= 6 && (
-          <AverageProgressionChart history={rollingAvgHistory} />
+          <AverageProgressionChart history={rollingAvgHistory} bowlerName={bowler.bowlerName} />
         )}
 
         <SeasonStatsTable seasons={seasonStats} />
