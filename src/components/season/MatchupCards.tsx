@@ -4,6 +4,14 @@ import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '
 import { findMatchMVP } from '@/lib/week-utils';
 import { TeamName } from './TeamBoxScore';
 
+const GHOST_TEAM_NAME = 'Ghost Team';
+const GHOST_TEAM_SLUG = 'ghost-team';
+
+/** Detect forfeit: all bowlers for a team are penalty rows. */
+function isForfeitTeam(bowlers: WeeklyMatchScore[]): boolean {
+  return bowlers.length > 0 && bowlers.every(b => b.isPenalty);
+}
+
 /** Color class for game-by-game win/loss in matchup summary. */
 function gameWinClass(myScore: number | null, oppScore: number | null): string {
   if (myScore == null || oppScore == null) return '';
@@ -97,11 +105,17 @@ export function WeeklySummaryTable({
     const mr = mrIndex.get(`${week}-${matchup.homeTeamID}-${matchup.awayTeamID}`);
     const homeBowlers = teamScores?.get(matchup.homeTeamID) ?? [];
     const awayBowlers = teamScores?.get(matchup.awayTeamID) ?? [];
+    const homeForfeit = isForfeitTeam(homeBowlers);
+    const awayForfeit = isForfeitTeam(awayBowlers);
+    const homeTeamName = homeForfeit ? GHOST_TEAM_NAME : matchup.homeTeamName;
+    const awayTeamName = awayForfeit ? GHOST_TEAM_NAME : matchup.awayTeamName;
+    const homeTeamSlug = homeForfeit ? GHOST_TEAM_SLUG : matchup.homeTeamSlug;
+    const awayTeamSlug = awayForfeit ? GHOST_TEAM_SLUG : matchup.awayTeamSlug;
     const mvpID = findMatchMVP(homeBowlers, awayBowlers);
     const mvpBowler = [...homeBowlers, ...awayBowlers].find(b => b.bowlerID === mvpID);
     const t1Pts = mr ? (mr.team1GamePts ?? 0) + (mr.team1BonusPts ?? 0) : null;
     const t2Pts = mr ? (mr.team2GamePts ?? 0) + (mr.team2BonusPts ?? 0) : null;
-    return { matchup, t1Pts, t2Pts, mvpBowler };
+    return { matchup, homeTeamName, awayTeamName, homeTeamSlug, awayTeamSlug, t1Pts, t2Pts, mvpBowler };
   });
 
   if (rows.every(r => r.t1Pts === null)) return null;
@@ -118,14 +132,14 @@ export function WeeklySummaryTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ matchup, t1Pts, t2Pts, mvpBowler }, idx) => {
+          {rows.map(({ homeTeamName, awayTeamName, homeTeamSlug, awayTeamSlug, t1Pts, t2Pts, mvpBowler }, idx) => {
             const homeWon = t1Pts != null && t2Pts != null && t1Pts > t2Pts;
             const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
             return (
               <tr key={idx} className="border-b border-navy/5">
                 <td className={`py-1.5 pl-2 ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
-                    <TeamName name={matchup.homeTeamName} />
+                  <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+                    <TeamName name={homeTeamName} />
                   </Link>
                 </td>
                 <td className="text-center tabular-nums py-1.5">
@@ -134,8 +148,8 @@ export function WeeklySummaryTable({
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
                 </td>
                 <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
-                    <TeamName name={matchup.awayTeamName} />
+                  <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+                    <TeamName name={awayTeamName} />
                   </Link>
                 </td>
                 <td className="hidden sm:table-cell pl-4 py-1.5 text-amber-800">
