@@ -171,11 +171,6 @@ async function main() {
       FROM scores sc
       WHERE sc.isPenalty = 0
         AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-        AND EXISTS (
-          SELECT 1 FROM scores sc3
-          WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
-            AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-        )
         ${weeklyAnd}
     ) x WHERE x.rn = 1
   `, 'Bowler of the Week');
