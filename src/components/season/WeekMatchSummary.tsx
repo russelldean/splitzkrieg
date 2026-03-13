@@ -85,7 +85,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week, com
           </div>
           <div className={`tabular-nums text-center shrink-0 ${compact ? 'px-1' : 'px-3'}`}>
             <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
-            <span className="text-navy/30 mx-1">&ndash;</span>
+            <span className="text-navy/30 mx-1">-</span>
             <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
           </div>
           <div className={`flex-1 min-w-0 truncate text-right ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
@@ -113,7 +113,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week, com
 
   const forfeitNote = forfeitTeamNames.length > 0 && (
     <div className="px-3 py-2 bg-navy/[0.02] rounded-lg text-xs font-body text-navy/55">
-      {'👻'} Forfeit &mdash;{' '}
+      {'👻'} Forfeit -{' '}
       {forfeitTeamNames.map((name, i) => (
         <span key={i}>
           {i > 0 && ', '}

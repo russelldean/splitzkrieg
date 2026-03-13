@@ -31,7 +31,7 @@ export async function MilestonesBlock({ season, week }: MilestonesBlockProps) {
                 <Link href={`/bowler/${m.slug}`} className="text-navy font-semibold hover:text-red-600 transition-colors">
                   {m.bowlerName}
                 </Link>
-                <span className="text-navy/70"> &mdash; {m.achievement}</span>
+                <span className="text-navy/70"> - {m.achievement}</span>
               </span>
             </li>
           ))}

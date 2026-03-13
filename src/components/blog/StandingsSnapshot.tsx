@@ -32,7 +32,7 @@ function MovementArrow({ current, previous }: { current: number; previous: numbe
       </span>
     );
   }
-  return <span className="text-navy/30">&mdash;</span>;
+  return <span className="text-navy/30">-</span>;
 }
 
 export async function StandingsSnapshot({ season, week }: StandingsSnapshotProps) {

@@ -4,7 +4,7 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
   title: 'Village Lanes | Splitzkrieg',
-  description: 'Village Lanes — home of Splitzkrieg Bowling League since 2007.',
+  description: 'Village Lanes - home of Splitzkrieg Bowling League since 2007.',
 };
 
 export default function VillageLanesPage() {

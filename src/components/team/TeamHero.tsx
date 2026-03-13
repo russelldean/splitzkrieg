@@ -32,7 +32,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
         )}
         </div>
         <div className="shrink-0 pt-2">
-          <ShareButton url={shareUrl} title={`${team.teamName} – Splitzkrieg`} label="Share Team Profile" />
+          <ShareButton url={shareUrl} title={`${team.teamName} - Splitzkrieg`} label="Share Team Profile" />
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
           <div className="border-l border-navy/10 pl-4 flex-1">
             <div className="font-body text-xs text-navy/50 uppercase tracking-wide">Record</div>
             <div className="font-body text-sm text-navy font-semibold tabular-nums mt-0.5">
-              {currentStanding.wins} &ndash; {currentStanding.losses}
+              {currentStanding.wins} - {currentStanding.losses}
             </div>
           </div>
           <div className="flex flex-col gap-1.5 shrink-0 border-l border-navy/10 pl-4">

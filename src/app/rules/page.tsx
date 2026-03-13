@@ -49,7 +49,7 @@ export default function RulesPage() {
               This is a deliberate choice to rely solely on the math and not dig through
               every email to recreate what was reported at the time. This means everything
               is measured consistently against the same yardstick and you can compare
-              confidently across eras. The side-effect is some results may look wacky &mdash;
+              confidently across eras. The side-effect is some results may look wacky -
               even a little change can have ripple effects when there are games decided by
               a pin or two, or playoff races decided by a game or two. This does not mean
               the original results were a mistake; it&rsquo;s just a remnant of 19 years
@@ -93,13 +93,13 @@ export default function RulesPage() {
                 and Handicap playoffs. For the first 7 seasons, the Women&rsquo;s
                 Scratch playoff was not held. In practice, not
                 everyone who qualified could always make it to playoff night, and
-                alternates would step in &mdash; but for record-keeping purposes,
+                alternates would step in - but for record-keeping purposes,
                 the top 8 in each category are recorded as making the playoffs.
               </li>
               <li>
                 <strong className="text-navy">My data management.</strong>{' '}
                 I started out with an abacus, then moved to a Commodore 64, and I&rsquo;ve
-                finally got a word processor &mdash; getting a little better every day.
+                finally got a word processor - getting a little better every day.
               </li>
             </ul>
           </div>

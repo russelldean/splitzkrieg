@@ -61,7 +61,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
               {hasResults ? (
                 <div className="text-center px-2 tabular-nums text-xs sm:text-sm shrink-0">
                   <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/60'}>{t1Pts ?? '-'}</span>
-                  <span className="text-navy/25 mx-1">–</span>
+                  <span className="text-navy/25 mx-1">-</span>
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/60'}>{t2Pts ?? '-'}</span>
                 </div>
               ) : (

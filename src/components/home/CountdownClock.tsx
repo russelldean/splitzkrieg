@@ -228,7 +228,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
         {phase === 'results' && (
           <div className="bg-white rounded-xl border border-navy/10 px-4 py-3 flex items-center justify-center text-center">
             <p className="font-body text-sm text-navy/60">
-              Week {weekNumber || '?'} results pending — check back soon
+              Week {weekNumber || '?'} results pending - check back soon
             </p>
           </div>
         )}

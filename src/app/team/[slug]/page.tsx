@@ -82,7 +82,7 @@ function GhostTeamExplainer() {
       <SectionHeading>About the Ghost Team</SectionHeading>
       <div className="bg-white border border-navy/10 rounded-xl p-5 space-y-3 font-body text-navy/75 text-base leading-relaxed">
         <p>
-          When a team forfeits (or there&rsquo;s an odd number of teams in the league), they receive no points &mdash; but
+          When a team forfeits (or there&rsquo;s an odd number of teams in the league), they receive no points - but
           the opposing team doesn&rsquo;t automatically get three free wins. They bowl against the
           dreaded <span className="font-semibold text-navy">Ghost Team</span>.
         </p>

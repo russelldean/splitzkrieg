@@ -51,7 +51,7 @@ export default function AboutPage() {
             <div className="rounded-xl overflow-hidden shadow-md">
               <Image
                 src="/village-lanes-console.jpg"
-                alt="The original Village Lanes scoring console — NO FOOD, DRINKS, CIGARETTES OR ASHTRAYS ALLOWED ON SCORING CONSOLE"
+                alt="The original Village Lanes scoring console - NO FOOD, DRINKS, CIGARETTES OR ASHTRAYS ALLOWED ON SCORING CONSOLE"
                 width={2048}
                 height={1536}
                 className="w-full h-auto"

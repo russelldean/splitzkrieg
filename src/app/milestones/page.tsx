@@ -12,7 +12,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 export const metadata: Metadata = {
   title: 'Milestone Watch | Splitzkrieg',
   description:
-    'Track career milestones across the Splitzkrieg Bowling League — approaching and recently achieved.',
+    'Track career milestones across the Splitzkrieg Bowling League - approaching and recently achieved.',
 };
 
 const CATEGORY_ORDER: MilestoneCategory[] = [

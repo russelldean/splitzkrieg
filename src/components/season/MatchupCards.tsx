@@ -130,7 +130,7 @@ export function WeeklySummaryTable({
                 </td>
                 <td className="text-center tabular-nums py-1.5">
                   <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
-                  <span className="text-navy/30 mx-1">–</span>
+                  <span className="text-navy/30 mx-1">-</span>
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
                 </td>
                 <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>

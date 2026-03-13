@@ -323,6 +323,7 @@ const HIGHLIGHTS_SCORES_SQL = `
   SELECT
     b.bowlerName,
     b.slug,
+    b.chronoNumber,
     sc.game1,
     sc.game2,
     sc.game3,
@@ -362,6 +363,7 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
       .query<{
         bowlerName: string;
         slug: string;
+        chronoNumber: number | null;
         game1: number | null;
         game2: number | null;
         game3: number | null;
@@ -379,7 +381,7 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
       // Debut
       if (row.isFirstNight === 1) {
         items.push({
-          text: `${row.bowlerName} made their Splitzkrieg debut!`,
+          text: `${row.bowlerName} made their Splitzkrieg debut${row.chronoNumber ? ` - Bowler #${row.chronoNumber}` : ''}!`,
           href,
           icon: 'debut',
         });
@@ -394,7 +396,7 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
       );
       if (row.priorBestGame !== null && bestGameThisWeek > row.priorBestGame) {
         items.push({
-          text: `${row.bowlerName}: New High Game — ${bestGameThisWeek}`,
+          text: `${row.bowlerName}: New High Game - ${bestGameThisWeek}`,
           href,
           icon: 'trophy',
         });
@@ -403,7 +405,7 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
       // All-time high series
       if (row.priorBestSeries !== null && row.scratchSeries > row.priorBestSeries) {
         items.push({
-          text: `${row.bowlerName}: New High Series — ${row.scratchSeries}`,
+          text: `${row.bowlerName}: New High Series - ${row.scratchSeries}`,
           href,
           icon: 'star',
         });
