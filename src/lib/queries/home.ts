@@ -75,7 +75,7 @@ export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
     const db = await getDb();
     const result = await db.request().query<Milestone>(GET_RECENT_MILESTONES_SQL);
     return result.recordset;
-  }, [], { sql: GET_RECENT_MILESTONES_SQL, allSeasons: true });
+  }, [], { sql: GET_RECENT_MILESTONES_SQL, dependsOn: ['scores'] });
 });
 
 // ── Published week resolver ─────────────────────────────────

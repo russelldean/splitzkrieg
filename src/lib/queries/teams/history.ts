@@ -142,7 +142,7 @@ export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonR
       .input('teamID', teamID)
       .query<TeamSeasonRow>(GET_TEAM_SEASON_BY_SEASON_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_SEASON_BY_SEASON_SQL, allSeasons: true });
+  }, [], { sql: GET_TEAM_SEASON_BY_SEASON_SQL, dependsOn: ['scores', 'schedule'] });
 }
 
 const GET_TEAM_FRANCHISE_HISTORY_SQL = `
@@ -219,7 +219,7 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
     const db = await getDb();
     const result = await db.request().query<DirectoryTeam>(GET_ALL_TEAMS_DIRECTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_TEAMS_DIRECTORY_SQL, allSeasons: true });
+  }, [], { sql: GET_ALL_TEAMS_DIRECTORY_SQL, dependsOn: ['scores'] });
 });
 
 const GET_TEAM_SEASON_PRESENCE_SQL = `

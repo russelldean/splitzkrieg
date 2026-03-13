@@ -18,14 +18,15 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
 
-function bumpDataVersion(seasonID) {
+function bumpDataVersion(channel, seasonID) {
   const filePath = resolve(PROJECT_ROOT, '.data-versions.json');
   let versions = {};
   try { versions = JSON.parse(readFileSync(filePath, 'utf8')); } catch {}
+  if (!versions[channel]) versions[channel] = {};
   const key = String(seasonID);
-  versions[key] = (versions[key] || 1) + 1;
+  versions[channel][key] = (versions[channel][key] || 1) + 1;
   writeFileSync(filePath, JSON.stringify(versions, null, 2) + '\n');
-  console.log(`Bumped .data-versions.json: season ${seasonID} → v${versions[key]}`);
+  console.log(`Bumped .data-versions.json: ${channel}.${seasonID} → v${versions[channel][key]}`);
 }
 
 function clearLocalCache(seasonID) {
@@ -116,7 +117,7 @@ async function main() {
   const tagPath = resolve(PROJECT_ROOT, '.published-week');
   writeFileSync(tagPath, tag + '\n');
   // Bump data version + clear local cache for the published season
-  bumpDataVersion(seasonID);
+  bumpDataVersion('scores', seasonID);
   clearLocalCache(seasonID);
 
   console.log('');

@@ -87,20 +87,39 @@ const PUBLISHED_SEASON_ID = (() => {
   return m ? parseInt(m[1], 10) : 0;
 })();
 
-// Per-season data versions: maps seasonID → version number.
+// Per-channel, per-season data versions: { "scores": { "35": 4 }, "schedule": { "17": 3 } }
 // Bumped automatically by import scripts when data changes.
-// cachedQuery includes the relevant version(s) in the hash so only
+// cachedQuery includes the relevant channel version(s) in the hash so only
 // affected queries re-run. Default version is 1 for unlisted seasons.
-let DATA_VERSIONS: Record<string, number> = {};
+let DATA_VERSIONS: Record<string, Record<string, number>> = {};
 try {
   const raw = fs.readFileSync(path.join(process.cwd(), '.data-versions.json'), 'utf-8');
-  DATA_VERSIONS = JSON.parse(raw);
+  const parsed = JSON.parse(raw);
+  // Support both old flat format { "17": 3 } and new channel format { "scores": { "17": 3 } }
+  const firstValue = Object.values(parsed)[0];
+  if (typeof firstValue === 'number') {
+    // Legacy flat format — treat all as "scores" channel
+    DATA_VERSIONS = { scores: parsed };
+  } else {
+    DATA_VERSIONS = parsed;
+  }
 } catch {
   // No data versions file — all seasons default to version 1
 }
 
-// Pre-compute a hash of ALL data versions for cross-season queries
-// (e.g., getTeamSeasonByseason which spans every season for a team).
+// Pre-compute a hash per channel for cross-season queries.
+// Queries declare dependsOn: ['scores'] or ['schedule'] or both,
+// so only the relevant channel hash is included.
+const CHANNEL_HASHES: Record<string, string> = {};
+for (const [channel, versions] of Object.entries(DATA_VERSIONS)) {
+  CHANNEL_HASHES[channel] = crypto
+    .createHash('md5')
+    .update(JSON.stringify(versions))
+    .digest('hex')
+    .slice(0, 8);
+}
+
+// Legacy: combined hash of ALL channels for backward compat (allSeasons: true)
 const ALL_VERSIONS_HASH = crypto
   .createHash('md5')
   .update(JSON.stringify(DATA_VERSIONS))
@@ -174,7 +193,7 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
-  options?: { stable?: boolean; sql?: string; seasonID?: number; allSeasons?: boolean },
+  options?: { stable?: boolean; sql?: string; seasonID?: number; allSeasons?: boolean; dependsOn?: string[] },
 ): Promise<T> {
   const stable = options?.stable;
 
@@ -198,12 +217,21 @@ export async function cachedQuery<T>(
   // so data imports automatically invalidate the right queries.
   let dataVersionTag = '';
   if (!stable) {
-    if (options?.allSeasons) {
-      // Cross-season queries (e.g., getTeamSeasonByseason): hash of ALL versions
+    if (options?.dependsOn) {
+      // Channel-specific: only hash the channels this query actually reads
+      const channelParts = options.dependsOn
+        .map(ch => CHANNEL_HASHES[ch] ?? '0')
+        .join('-');
+      dataVersionTag = channelParts;
+    } else if (options?.allSeasons) {
+      // Legacy fallback: hash of ALL versions
       dataVersionTag = ALL_VERSIONS_HASH;
     } else if (options?.seasonID != null) {
-      // Season-scoped: include that season's data version
-      dataVersionTag = `dv${DATA_VERSIONS[String(options.seasonID)] ?? 1}`;
+      // Season-scoped: combine all channel versions for this season
+      const parts = Object.entries(DATA_VERSIONS)
+        .map(([ch, versions]) => `${ch}${versions[String(options.seasonID)] ?? 1}`)
+        .join('-');
+      dataVersionTag = parts || `dv1`;
     }
   }
 
