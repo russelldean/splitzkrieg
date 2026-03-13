@@ -196,7 +196,7 @@ export async function getGhostTeamH2H(): Promise<GhostTeamMatchup[]> {
       .request()
       .query<GhostTeamMatchup>(GET_GHOST_TEAM_H2H_SQL);
     return result.recordset;
-  }, [], { sql: GET_GHOST_TEAM_H2H_SQL });
+  }, [], { sql: GET_GHOST_TEAM_H2H_SQL, allSeasons: true });
 }
 
 const GET_ACTIVE_TEAM_IDS_SQL = `
@@ -303,5 +303,5 @@ export async function getPairwiseH2H(
     }
 
     return Array.from(map.values());
-  }, [], { sql: PAIRWISE_H2H_SQL_TEMPLATE });
+  }, [], { sql: PAIRWISE_H2H_SQL_TEMPLATE, allSeasons: true });
 }

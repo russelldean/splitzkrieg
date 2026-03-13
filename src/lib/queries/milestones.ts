@@ -206,7 +206,7 @@ export const getLeagueMilestones = cache(async (): Promise<LeagueMilestones> => 
       return computeLeagueMilestones(statsResult.recordset, contribResult.recordset);
     },
     { approaching: [], achieved: [] },
-    { sql: COMBINED_SQL },
+    { sql: COMBINED_SQL, allSeasons: true },
   );
 });
 

@@ -163,7 +163,7 @@ export const getBowlerCareerSummary = cache(async (bowlerID: number): Promise<Bo
       .input('bowlerID', bowlerID)
       .query<BowlerCareerSummary>(GET_BOWLER_CAREER_SUMMARY_SQL);
     return result.recordset[0] ?? null;
-  }, null, { sql: GET_BOWLER_CAREER_SUMMARY_SQL });
+  }, null, { sql: GET_BOWLER_CAREER_SUMMARY_SQL, allSeasons: true });
 });
 
 export interface BowlerSeasonStats {
@@ -243,7 +243,7 @@ export async function getBowlerSeasonStats(bowlerID: number): Promise<BowlerSeas
       .input('bowlerID', bowlerID)
       .query<BowlerSeasonStats>(BOWLER_SEASON_STATS_SQL);
     return result.recordset;
-  }, [], { sql: BOWLER_SEASON_STATS_SQL });
+  }, [], { sql: BOWLER_SEASON_STATS_SQL, allSeasons: true });
 }
 
 export interface GameLogWeek {
@@ -312,7 +312,7 @@ export async function getBowlerGameLog(bowlerID: number): Promise<GameLogWeek[]>
       .input('bowlerID', bowlerID)
       .query<GameLogWeek>(GET_BOWLER_GAME_LOG_SQL);
     return result.recordset;
-  }, [], { sql: GET_BOWLER_GAME_LOG_SQL });
+  }, [], { sql: GET_BOWLER_GAME_LOG_SQL, allSeasons: true });
 }
 
 export interface RollingAvgPoint {
@@ -347,7 +347,7 @@ export async function getBowlerRollingAvgHistory(bowlerID: number): Promise<Roll
       .input('bowlerID', bowlerID)
       .query<RollingAvgPoint>(GET_BOWLER_ROLLING_AVG_HISTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_BOWLER_ROLLING_AVG_HISTORY_SQL });
+  }, [], { sql: GET_BOWLER_ROLLING_AVG_HISTORY_SQL, allSeasons: true });
 }
 
 const GET_CURRENT_SEASON_ID_SQL = `
@@ -470,7 +470,7 @@ export async function getBowlerPatches(bowlerID: number): Promise<BowlerPatch[]>
       .input('bowlerID', bowlerID)
       .query<BowlerPatch>(GET_BOWLER_PATCHES_SQL);
     return result.recordset;
-  }, [], { sql: GET_BOWLER_PATCHES_SQL });
+  }, [], { sql: GET_BOWLER_PATCHES_SQL, allSeasons: true });
 }
 
 export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarStats> {
@@ -512,5 +512,5 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
       scratchChampionships: counts.get('scratchChampion') ?? 0,
       hcpChampionships: counts.get('hcpChampion') ?? 0,
     };
-  }, empty, { sql: GET_BOWLER_STAR_STATS_SQL });
+  }, empty, { sql: GET_BOWLER_STAR_STATS_SQL, allSeasons: true });
 }

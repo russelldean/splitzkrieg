@@ -113,7 +113,7 @@ export async function getTeamCurrentStanding(teamID: number): Promise<TeamCurren
       .input('teamID', teamID)
       .query<TeamCurrentStanding>(GET_TEAM_CURRENT_STANDING_SQL);
     return result.recordset[0] ?? null;
-  }, null, { sql: GET_TEAM_CURRENT_STANDING_SQL });
+  }, null, { sql: GET_TEAM_CURRENT_STANDING_SQL, allSeasons: true });
 }
 
 const GET_ALL_TEAM_SLUGS_SQL = `

@@ -16,6 +16,9 @@ export interface TeamSeasonRow {
   rosterSize: number;
   hasScheduleData: boolean;
   isChampion: boolean;
+  wins: number | null;
+  losses: number | null;
+  ties: number | null;
 }
 
 export interface FranchiseNameEntry {
@@ -53,6 +56,40 @@ export interface TeamPlayoffFinish {
 }
 
 const GET_TEAM_SEASON_BY_SEASON_SQL = `
+  WITH teamGameResults AS (
+    SELECT sch.seasonID,
+      CASE WHEN mr.team1Game1 > mr.team2Game1 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team1Game2 > mr.team2Game2 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team1Game3 > mr.team2Game3 THEN 1 ELSE 0 END AS wins,
+      CASE WHEN mr.team1Game1 < mr.team2Game1 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team1Game2 < mr.team2Game2 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team1Game3 < mr.team2Game3 THEN 1 ELSE 0 END AS losses,
+      CASE WHEN mr.team1Game1 = mr.team2Game1 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team1Game2 = mr.team2Game2 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team1Game3 = mr.team2Game3 THEN 1 ELSE 0 END AS ties
+    FROM matchResults mr
+    JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+    WHERE sch.team1ID = @teamID
+    UNION ALL
+    SELECT sch.seasonID,
+      CASE WHEN mr.team2Game1 > mr.team1Game1 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team2Game2 > mr.team1Game2 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team2Game3 > mr.team1Game3 THEN 1 ELSE 0 END AS wins,
+      CASE WHEN mr.team2Game1 < mr.team1Game1 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team2Game2 < mr.team1Game2 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team2Game3 < mr.team1Game3 THEN 1 ELSE 0 END AS losses,
+      CASE WHEN mr.team2Game1 = mr.team1Game1 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team2Game2 = mr.team1Game2 THEN 1 ELSE 0 END
+        + CASE WHEN mr.team2Game3 = mr.team1Game3 THEN 1 ELSE 0 END AS ties
+    FROM matchResults mr
+    JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+    WHERE sch.team2ID = @teamID
+  ),
+  seasonRecord AS (
+    SELECT seasonID, SUM(wins) AS wins, SUM(losses) AS losses, SUM(ties) AS ties
+    FROM teamGameResults
+    GROUP BY seasonID
+  )
   SELECT
     sc.seasonID,
     sn.displayName                                     AS seasonName,
@@ -74,19 +111,24 @@ const GET_TEAM_SEASON_BY_SEASON_SQL = `
       WHERE ch.winnerTeamID = @teamID
         AND ch.seasonID = sc.seasonID
         AND ch.championshipType = 'Team'
-    ) THEN 1 ELSE 0 END AS BIT)                       AS isChampion
+    ) THEN 1 ELSE 0 END AS BIT)                       AS isChampion,
+    sr.wins,
+    sr.losses,
+    sr.ties
   FROM scores sc
   JOIN seasons sn ON sc.seasonID = sn.seasonID
   JOIN teams t ON t.teamID = @teamID
   LEFT JOIN teamNameHistory tnh
     ON  tnh.seasonID = sc.seasonID
     AND tnh.teamID   = @teamID
+  LEFT JOIN seasonRecord sr ON sr.seasonID = sc.seasonID
   WHERE sc.teamID = @teamID
     AND sc.isPenalty = 0
   GROUP BY
     sc.seasonID, sn.displayName, sn.romanNumeral,
     sn.year, sn.period,
-    COALESCE(tnh.teamName, t.teamName)
+    COALESCE(tnh.teamName, t.teamName),
+    sr.wins, sr.losses, sr.ties
   ORDER BY
     sn.year DESC,
     CASE sn.period WHEN 'Fall' THEN 1 ELSE 2 END ASC
@@ -177,7 +219,7 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
     const db = await getDb();
     const result = await db.request().query<DirectoryTeam>(GET_ALL_TEAMS_DIRECTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_TEAMS_DIRECTORY_SQL });
+  }, [], { sql: GET_ALL_TEAMS_DIRECTORY_SQL, allSeasons: true });
 });
 
 const GET_TEAM_SEASON_PRESENCE_SQL = `

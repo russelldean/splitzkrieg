@@ -69,5 +69,5 @@ export async function getAllTimeLeaderboard(): Promise<AllTimeLeaderRow[]> {
     const db = await getDb();
     const result = await db.request().query<AllTimeLeaderRow>(GET_ALL_TIME_LEADERBOARD_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_TIME_LEADERBOARD_SQL });
+  }, [], { sql: GET_ALL_TIME_LEADERBOARD_SQL, allSeasons: true });
 }

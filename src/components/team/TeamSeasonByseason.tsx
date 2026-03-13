@@ -100,9 +100,11 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, 
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm font-body text-navy/65">
-                    <span className="hidden sm:inline">
-                      {season.totalGames} games
-                    </span>
+                    {season.wins != null && (
+                      <span className="hidden sm:inline tabular-nums">
+                        {season.wins}-{season.losses}{season.ties ? `-${season.ties}` : ''}
+                      </span>
+                    )}
                     <span>
                       {season.teamAverage?.toFixed(1) ?? '\u2014'} avg
                     </span>

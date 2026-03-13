@@ -110,7 +110,7 @@ export const getAllSeasonsDirectory = cache(async (): Promise<DirectorySeason[]>
     const db = await getDb();
     const result = await db.request().query<DirectorySeason>(GET_ALL_SEASONS_DIRECTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_SEASONS_DIRECTORY_SQL });
+  }, [], { sql: GET_ALL_SEASONS_DIRECTORY_SQL, allSeasons: true });
 });
 
 const GET_ALL_SEASON_NAV_LIST_SQL = `
@@ -146,6 +146,6 @@ export const getTotalPinsKnockedDown = cache(async (): Promise<number> => {
     const db = await getDb();
     const result = await db.request().query<{ totalPins: number }>(TOTAL_PINS_SQL);
     return [...result.recordset];
-  }, [], { sql: TOTAL_PINS_SQL });
+  }, [], { sql: TOTAL_PINS_SQL, allSeasons: true });
   return rows[0]?.totalPins ?? 0;
 });
