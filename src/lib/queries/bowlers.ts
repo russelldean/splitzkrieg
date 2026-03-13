@@ -369,11 +369,6 @@ const GET_BOWLER_OF_THE_WEEK_SQL = `/* v2: week passed as param */
   WHERE sc.isPenalty = 0
     AND sc.seasonID = @seasonID
     AND sc.week = @week
-    AND EXISTS (
-      SELECT 1 FROM scores sc3
-      WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
-        AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-    )
   ORDER BY sc.handSeries DESC
 `;
 
