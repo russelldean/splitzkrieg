@@ -44,17 +44,23 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week, com
     return { matchup, t1Pts, t2Pts, mvpBowler };
   });
 
-  // Detect forfeits: scheduled non-ghost teams with no bowler scores in a week that has results
+  // Detect forfeits: teams where all bowlers are penalty rows, or no scores at all
   const hasResults = rows.some(r => r.t1Pts !== null);
   const forfeitTeamIDs = new Set<number>();
   const forfeitTeamNames: string[] = [];
   if (hasResults) {
     for (const matchup of matchups) {
-      if (matchup.homeTeamName !== GHOST_TEAM_NAME && (teamScores?.get(matchup.homeTeamID) ?? []).length === 0) {
+      const homeBowlers = teamScores?.get(matchup.homeTeamID) ?? [];
+      const awayBowlers = teamScores?.get(matchup.awayTeamID) ?? [];
+      const homeForfeit = matchup.homeTeamName !== GHOST_TEAM_NAME &&
+        (homeBowlers.length === 0 || homeBowlers.every(b => b.isPenalty));
+      const awayForfeit = matchup.awayTeamName !== GHOST_TEAM_NAME &&
+        (awayBowlers.length === 0 || awayBowlers.every(b => b.isPenalty));
+      if (homeForfeit) {
         forfeitTeamIDs.add(matchup.homeTeamID);
         forfeitTeamNames.push(matchup.homeTeamName);
       }
-      if (matchup.awayTeamName !== GHOST_TEAM_NAME && (teamScores?.get(matchup.awayTeamID) ?? []).length === 0) {
+      if (awayForfeit) {
         forfeitTeamIDs.add(matchup.awayTeamID);
         forfeitTeamNames.push(matchup.awayTeamName);
       }
