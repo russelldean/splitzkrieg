@@ -30,6 +30,14 @@ function getWeekDate(
   return schedDate ?? null;
 }
 
+/** Detect forfeit: all bowlers for a team are penalty rows. */
+function isForfeitTeam(bowlers: WeeklyMatchScore[]): boolean {
+  return bowlers.length > 0 && bowlers.every(b => b.isPenalty);
+}
+
+const GHOST_TEAM_NAME = 'Ghost Team';
+const GHOST_TEAM_SLUG = 'ghost-team';
+
 export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks, detailOnly }: Props) {
   const weekData = useMemo(() => organizeByWeek(weeklyScores), [weeklyScores]);
   const mrIndex = useMemo(() => indexMatchResults(matchResults), [matchResults]);
@@ -84,6 +92,12 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
             return matchups.map((matchup, idx) => {
               const homeBowlers = teamScores?.get(matchup.homeTeamID) ?? [];
               const awayBowlers = teamScores?.get(matchup.awayTeamID) ?? [];
+              const homeForfeit = isForfeitTeam(homeBowlers);
+              const awayForfeit = isForfeitTeam(awayBowlers);
+              const homeTeamName = homeForfeit ? GHOST_TEAM_NAME : matchup.homeTeamName;
+              const awayTeamName = awayForfeit ? GHOST_TEAM_NAME : matchup.awayTeamName;
+              const homeTeamSlug = homeForfeit ? GHOST_TEAM_SLUG : matchup.homeTeamSlug;
+              const awayTeamSlug = awayForfeit ? GHOST_TEAM_SLUG : matchup.awayTeamSlug;
               const mvpID = findMatchMVP(homeBowlers, awayBowlers);
               const mr = mrIndex.get(`${week}-${matchup.homeTeamID}-${matchup.awayTeamID}`);
               return (
@@ -91,28 +105,28 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                   {mr ? (
                     <MatchupSummary
                       mr={mr}
-                      homeTeamName={matchup.homeTeamName}
-                      awayTeamName={matchup.awayTeamName}
-                      homeTeamSlug={matchup.homeTeamSlug}
-                      awayTeamSlug={matchup.awayTeamSlug}
+                      homeTeamName={homeTeamName}
+                      awayTeamName={awayTeamName}
+                      homeTeamSlug={homeTeamSlug}
+                      awayTeamSlug={awayTeamSlug}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mb-2 text-sm font-heading text-navy/60">
-                      <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600">
-                        {matchup.homeTeamName}
+                      <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600">
+                        {homeTeamName}
                       </Link>
                       <span className="text-navy/30">vs</span>
-                      <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600">
-                        {matchup.awayTeamName}
+                      <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600">
+                        {awayTeamName}
                       </Link>
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-3">
                     {homeBowlers.length > 0 && (
-                      <TeamBoxScore teamName={matchup.homeTeamName} teamSlug={matchup.homeTeamSlug} bowlers={homeBowlers} mvpBowlerID={mvpID} />
+                      <TeamBoxScore teamName={homeTeamName} teamSlug={homeTeamSlug} bowlers={homeBowlers} mvpBowlerID={mvpID} />
                     )}
                     {awayBowlers.length > 0 && (
-                      <TeamBoxScore teamName={matchup.awayTeamName} teamSlug={matchup.awayTeamSlug} bowlers={awayBowlers} mvpBowlerID={mvpID} />
+                      <TeamBoxScore teamName={awayTeamName} teamSlug={awayTeamSlug} bowlers={awayBowlers} mvpBowlerID={mvpID} />
                     )}
                   </div>
                 </div>
@@ -198,6 +212,12 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                     matchups.map((matchup, idx) => {
                       const homeBowlers = teamScores?.get(matchup.homeTeamID) ?? [];
                       const awayBowlers = teamScores?.get(matchup.awayTeamID) ?? [];
+                      const homeForfeit = isForfeitTeam(homeBowlers);
+                      const awayForfeit = isForfeitTeam(awayBowlers);
+                      const homeTeamName = homeForfeit ? GHOST_TEAM_NAME : matchup.homeTeamName;
+                      const awayTeamName = awayForfeit ? GHOST_TEAM_NAME : matchup.awayTeamName;
+                      const homeTeamSlug = homeForfeit ? GHOST_TEAM_SLUG : matchup.homeTeamSlug;
+                      const awayTeamSlug = awayForfeit ? GHOST_TEAM_SLUG : matchup.awayTeamSlug;
                       const mvpID = findMatchMVP(homeBowlers, awayBowlers);
                       const mr = mrIndex.get(`${week}-${matchup.homeTeamID}-${matchup.awayTeamID}`);
                       return (
@@ -205,35 +225,35 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
                           {mr ? (
                             <MatchupSummary
                               mr={mr}
-                              homeTeamName={matchup.homeTeamName}
-                              awayTeamName={matchup.awayTeamName}
-                              homeTeamSlug={matchup.homeTeamSlug}
-                              awayTeamSlug={matchup.awayTeamSlug}
+                              homeTeamName={homeTeamName}
+                              awayTeamName={awayTeamName}
+                              homeTeamSlug={homeTeamSlug}
+                              awayTeamSlug={awayTeamSlug}
                             />
                           ) : (
                             <div className="flex items-center gap-2 mb-2 text-sm font-heading text-navy/60">
-                              <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600">
-                                <TeamName name={matchup.homeTeamName} />
+                              <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600">
+                                <TeamName name={homeTeamName} />
                               </Link>
                               <span className="text-navy/30">vs</span>
-                              <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600">
-                                <TeamName name={matchup.awayTeamName} />
+                              <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600">
+                                <TeamName name={awayTeamName} />
                               </Link>
                             </div>
                           )}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {homeBowlers.length > 0 && (
                               <TeamBoxScore
-                                teamName={matchup.homeTeamName}
-                                teamSlug={matchup.homeTeamSlug}
+                                teamName={homeTeamName}
+                                teamSlug={homeTeamSlug}
                                 bowlers={homeBowlers}
                                 mvpBowlerID={mvpID}
                               />
                             )}
                             {awayBowlers.length > 0 && (
                               <TeamBoxScore
-                                teamName={matchup.awayTeamName}
-                                teamSlug={matchup.awayTeamSlug}
+                                teamName={awayTeamName}
+                                teamSlug={awayTeamSlug}
                                 bowlers={awayBowlers}
                                 mvpBowlerID={mvpID}
                               />

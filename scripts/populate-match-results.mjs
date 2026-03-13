@@ -136,10 +136,52 @@ async function main() {
       scoreMap.set(`${row.week}-${row.teamID}`, row);
     }
 
+    // Detect forfeit teams: all 4 rows are isPenalty=1
+    const forfeitData = await pool.request()
+      .input('sid', sql.Int, sid)
+      .query(`
+        SELECT week, teamID
+        FROM scores
+        WHERE seasonID = @sid AND isPenalty = 1
+        GROUP BY week, teamID
+        HAVING COUNT(*) = 4
+          AND COUNT(*) = (SELECT COUNT(*) FROM scores s2
+                          WHERE s2.seasonID = @sid AND s2.week = scores.week
+                            AND s2.teamID = scores.teamID)
+      `);
+    const forfeitSet = new Set();
+    for (const row of forfeitData.recordset) {
+      forfeitSet.add(`${row.week}-${row.teamID}`);
+    }
+    if (forfeitSet.size > 0) {
+      console.log(`  Forfeits detected: ${forfeitData.recordset.map(r => `W${r.week} team ${r.teamID}`).join(', ')}`);
+    }
+
+    // Get scratch game totals + team averages for ghost team scoring
+    // (needed when opponent bowls against a forfeiting team)
+    const scratchData = await pool.request()
+      .input('sid', sql.Int, sid)
+      .query(`
+        SELECT
+          week, teamID,
+          SUM(game1) AS sg1,
+          SUM(game2) AS sg2,
+          SUM(game3) AS sg3,
+          SUM(incomingAvg) AS teamAvg
+        FROM scores
+        WHERE seasonID = @sid AND isPenalty = 0
+        GROUP BY week, teamID
+      `);
+    const scratchMap = new Map();
+    for (const row of scratchData.recordset) {
+      scratchMap.set(`${row.week}-${row.teamID}`, row);
+    }
+
     // Get all team series for bonus point calculation (ranked per week)
+    // Forfeit teams are excluded from XP rankings
     const weekTeams = new Map();
     for (const row of teamScores.recordset) {
-      if (row.bowlerCount === 4) {
+      if (row.bowlerCount === 4 && !forfeitSet.has(`${row.week}-${row.teamID}`)) {
         if (!weekTeams.has(row.week)) weekTeams.set(row.week, []);
         weekTeams.get(row.week).push({ teamID: row.teamID, series: row.series });
       }
@@ -191,16 +233,47 @@ async function main() {
         continue;
       }
 
-      // Game points: compare each game, winner gets 2, tie = 1 each, loser = 0
+      const t1Forfeit = forfeitSet.has(`${match.week}-${match.team1ID}`);
+      const t2Forfeit = forfeitSet.has(`${match.week}-${match.team2ID}`);
+
       let t1GamePts = 0, t2GamePts = 0;
-      for (const game of ['g1', 'g2', 'g3']) {
-        if (t1[game] > t2[game]) { t1GamePts += 2; }
-        else if (t1[game] < t2[game]) { t2GamePts += 2; }
-        else { t1GamePts += 1; t2GamePts += 1; }
+      const GHOST_THRESHOLD = 20;
+
+      if (t1Forfeit || t2Forfeit) {
+        // Ghost team match: opponent wins a game when their scratch total
+        // comes within 20 pins of their combined team average.
+        // Ghost team gets 0 game points per game, opponent earns 0 or 2.
+        const opponentKey = t1Forfeit
+          ? `${match.week}-${match.team2ID}`
+          : `${match.week}-${match.team1ID}`;
+        const opp = scratchMap.get(opponentKey);
+
+        if (opp) {
+          for (const game of ['sg1', 'sg2', 'sg3']) {
+            const scratchTotal = opp[game];
+            const threshold = opp.teamAvg - GHOST_THRESHOLD;
+            // Opponent wins if scratch >= threshold (within 20 of avg)
+            const oppWins = scratchTotal >= threshold;
+            if (t1Forfeit) {
+              t2GamePts += oppWins ? 2 : 0;
+            } else {
+              t1GamePts += oppWins ? 2 : 0;
+            }
+          }
+        }
+        // Forfeit team always gets 0 game points (already initialized to 0)
+      } else {
+        // Normal match: compare each game, winner gets 2, tie = 1 each, loser = 0
+        for (const game of ['g1', 'g2', 'g3']) {
+          if (t1[game] > t2[game]) { t1GamePts += 2; }
+          else if (t1[game] < t2[game]) { t2GamePts += 2; }
+          else { t1GamePts += 1; t2GamePts += 1; }
+        }
       }
 
-      const t1Bonus = bonusMap.get(`${match.week}-${match.team1ID}`) ?? 0;
-      const t2Bonus = bonusMap.get(`${match.week}-${match.team2ID}`) ?? 0;
+      // Forfeit teams get 0 bonus points
+      const t1Bonus = t1Forfeit ? 0 : (bonusMap.get(`${match.week}-${match.team1ID}`) ?? 0);
+      const t2Bonus = t2Forfeit ? 0 : (bonusMap.get(`${match.week}-${match.team2ID}`) ?? 0);
 
       if (!dryRun) {
         await pool.request()
