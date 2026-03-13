@@ -37,10 +37,20 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, 
     });
   }
 
-  // Find the boundary: seasons without schedule data that are old (pre-XXVI era)
-  // We show one note row for all old seasons instead of per-row blanks
-  const oldSeasonBoundaryIndex = seasons.findIndex(s => !s.hasScheduleData);
+  // Find the contiguous block of old seasons without schedule data at the end of the list.
+  // Walk backwards from the end to find where the block starts.
+  let oldSeasonBoundaryIndex = -1;
+  for (let i = seasons.length - 1; i >= 0; i--) {
+    if (!seasons[i].hasScheduleData) {
+      oldSeasonBoundaryIndex = i;
+    } else {
+      break;
+    }
+  }
   const hasOldSeasons = oldSeasonBoundaryIndex !== -1;
+  const firstOldSeasonNumeral = hasOldSeasons
+    ? seasons[oldSeasonBoundaryIndex].romanNumeral
+    : null;
 
   return (
     <section>
@@ -65,7 +75,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, 
             <div key={season.seasonID}>
               {showOldSeasonNote && (
                 <div className="px-4 py-3 mb-1 bg-navy/[0.02] border border-navy/10 rounded-lg text-sm font-body text-navy/65 italic">
-                  Detailed team records before Season XXVI are coming soon. Individual bowler stats are shown below.
+                  Detailed team records from Season {firstOldSeasonNumeral ?? 'XXVI'} and earlier are coming soon. Individual bowler stats are shown below.
                 </div>
               )}
               <div className="border border-navy/10 rounded-lg overflow-hidden">

@@ -36,6 +36,8 @@ const csvPath = args.find(a => !a.startsWith('--'));
 const dryRun = args.includes('--dry-run');
 const wipe = args.includes('--wipe');
 const seasonArg = args.find(a => a.startsWith('--season='));
+const maxWeekArg = args.find(a => a.startsWith('--max-week='));
+const maxWeek = maxWeekArg ? parseInt(maxWeekArg.split('=')[1]) : null;
 
 if (!csvPath) {
   console.error('Usage: node scripts/import-schedule-csv.mjs <csv-path> [--season=XXII] [--dry-run] [--wipe]');
@@ -311,9 +313,14 @@ async function main() {
 
     // Parse CSV
     const year = getYearFromSeason(displayName);
-    const weeks = parseScheduleCSV(csvText, year);
+    let weeks = parseScheduleCSV(csvText, year);
 
-    console.log(`\nParsed ${weeks.length} weeks from CSV`);
+    if (maxWeek) {
+      weeks = weeks.slice(0, maxWeek);
+      console.log(`\nParsed ${weeks.length} weeks from CSV (limited to --max-week=${maxWeek})`);
+    } else {
+      console.log(`\nParsed ${weeks.length} weeks from CSV`);
+    }
 
     // Validate team names
     const allTeamNames = new Set();

@@ -28,11 +28,6 @@ const resources: ResourceCategory[] = [
     category: 'League Documents',
     links: [
 {
-        label: 'Master Database',
-        href: 'https://docs.google.com/spreadsheets/d/1DJUexHWdj3QPLzQtM2wXC5UvHZ97gbDYNmlFUsI3BUI/edit?usp=sharing',
-        description: 'Complete league stats and history',
-      },
-{
         label: 'Lineup Submission Form',
         href: 'https://docs.google.com/forms/d/e/1FAIpQLSdsL0IXbCB97O0VlbFNKY1XdCl8502VsxXt3j-oIYFBJRBgSw/viewform',
         description: 'Commissioners: submit weekly lineups here',
