@@ -209,7 +209,7 @@ export default async function TeamPage({
         {isGhostTeam ? (
           <GhostTeamH2H matchups={ghostH2H} />
         ) : (
-          <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} />
+          <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} isActive={currentRoster.length > 0} />
         )}
       </div>
 

@@ -62,9 +62,10 @@ interface Props {
   matchups: TeamH2HMatchup[];
   activeTeams: TeamH2HActiveTeam[];
   currentTeamID: number;
+  isActive?: boolean;
 }
 
-export function HeadToHead({ matchups, activeTeams, currentTeamID }: Props) {
+export function HeadToHead({ matchups, activeTeams, currentTeamID, isActive = true }: Props) {
   const [openOpponents, setOpenOpponents] = useState<Set<number>>(new Set());
 
   const summaries = useMemo(() => {
@@ -158,7 +159,7 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID }: Props) {
         </div>
       </div>
 
-      {notYetFaced.length > 0 && (
+      {isActive && notYetFaced.length > 0 && (
         <p className="mt-4 text-sm font-body text-navy/55">
           <span className="font-medium text-navy/70">Have not yet faced: </span>
           {notYetFaced.map((t, i) => (

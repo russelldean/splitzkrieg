@@ -5,7 +5,9 @@ export interface Update {
 }
 
 const updates: Update[] = [
+  { date: '2026-03-12', text: 'Added Season XXV, XVII, XVI schedule data and calculated dependent stats', tag: 'feat' },
   { date: '2026-03-12', text: 'Announcement banner for league-wide notices (snow makeups, etc.)', tag: 'feat' },
+  { date: '2026-03-12', text: 'Added share button to average progression chart', tag: 'feat' },
   { date: '2026-03-12', text: 'Photo headers on most index pages', tag: 'feat' },
   { date: '2026-03-11', text: 'Corrected 150+ historical average blips and recalculated affected stats', tag: 'fix' },
   { date: '2026-03-11', text: 'Added two ??? to user profiles', tag: 'feat' },
