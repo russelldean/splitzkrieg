@@ -208,9 +208,19 @@ function parseTwoColumnCSV(csvText, yearHint) {
     const rightTeam2 = cols[layout.rightTeam2]?.trim();
 
     if (leftDate && leftDate.match(/^\d{1,2}-[A-Za-z]{3}$/)) {
+      // Flush previous left-side week if we hit a new date without a blank line
+      if (leftMatches.length > 0) {
+        weeks.push({ date: currentLeftDate, matches: leftMatches });
+        leftMatches = [];
+      }
       currentLeftDate = leftDate;
     }
     if (rightDate && rightDate.match(/^\d{1,2}-[A-Za-z]{3}$/)) {
+      // Flush previous right-side week if we hit a new date without a blank line
+      if (rightMatches.length > 0) {
+        weeks.push({ date: currentRightDate, matches: rightMatches });
+        rightMatches = [];
+      }
       currentRightDate = rightDate;
     }
 
