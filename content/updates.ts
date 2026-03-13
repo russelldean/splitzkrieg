@@ -5,6 +5,7 @@ export interface Update {
 }
 
 const updates: Update[] = [
+  { date: '2026-03-12', text: 'Search now finds both bowlers and teams', tag: 'feat' },
   { date: '2026-03-12', text: 'Added Season XXV, XVII, XVI schedule data and calculated dependent stats', tag: 'feat' },
   { date: '2026-03-12', text: 'Announcement banner for league-wide notices (snow makeups, etc.)', tag: 'feat' },
   { date: '2026-03-12', text: 'Added share button to average progression chart', tag: 'feat' },

@@ -61,7 +61,7 @@ export function SearchBar() {
       inputRef.current?.blur();
       setQuery('');
       setIsFocused(false);
-      router.push(`/bowler/${entry.slug}`);
+      router.push(entry.type === 'team' ? `/team/${entry.slug}` : `/bowler/${entry.slug}`);
     },
     [router]
   );
@@ -122,14 +122,14 @@ export function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
-          placeholder="Find a bowler..."
+          placeholder="Find a bowler or team..."
           className="w-full bg-white border border-navy/20 rounded-lg pl-9 pr-4 py-2 text-base sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors animate-search-glow"
           role="combobox"
           aria-expanded={isDropdownOpen}
           aria-autocomplete="list"
           aria-controls={listboxId}
           aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
-          aria-label="Search bowlers"
+          aria-label="Search bowlers and teams"
         />
       </div>
 
@@ -155,7 +155,9 @@ export function SearchBar() {
                 navigateToResult(result.item);
               }}
             >
-              <span className="font-body text-navy text-sm">{result.item.name}</span>
+              <span className={`font-body text-sm ${result.item.type === 'team' ? 'font-semibold text-navy' : 'text-navy'}`}>
+                {result.item.name}
+              </span>
               <span className="text-navy/65 text-xs ml-2">
                 {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
               </span>
@@ -168,7 +170,7 @@ export function SearchBar() {
       {showNoResults && (
         <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-navy/10 z-50 px-4 py-2.5">
           <span className="font-body text-sm text-navy/65">
-            No bowlers found for &ldquo;{query}&rdquo;
+            No results for &ldquo;{query}&rdquo;
           </span>
         </div>
       )}

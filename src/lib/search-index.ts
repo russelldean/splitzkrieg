@@ -14,6 +14,7 @@ export interface SearchEntry {
   name: string;
   slug: string;
   seasonsActive: number;
+  type: 'bowler' | 'team';
 }
 
 /**
@@ -31,28 +32,56 @@ export async function generateSearchIndex(): Promise<SearchEntry[]> {
   }
   try {
     const db = await getDb();
-    const result = await db.request().query<{
-      bowlerID: number;
-      bowlerName: string;
-      slug: string;
-      seasonsActive: number;
-    }>(`
-      SELECT
-        b.bowlerID,
-        b.bowlerName,
-        b.slug,
-        COUNT(DISTINCT r.seasonID) AS seasonsActive
-      FROM bowlers b
-      LEFT JOIN teamRosters r ON r.bowlerID = b.bowlerID
-      GROUP BY b.bowlerID, b.bowlerName, b.slug
-      ORDER BY b.bowlerName
-    `);
-    return result.recordset.map((row) => ({
+    const [bowlerResult, teamResult] = await Promise.all([
+      db.request().query<{
+        bowlerID: number;
+        bowlerName: string;
+        slug: string;
+        seasonsActive: number;
+      }>(`
+        SELECT
+          b.bowlerID,
+          b.bowlerName,
+          b.slug,
+          COUNT(DISTINCT r.seasonID) AS seasonsActive
+        FROM bowlers b
+        LEFT JOIN teamRosters r ON r.bowlerID = b.bowlerID
+        GROUP BY b.bowlerID, b.bowlerName, b.slug
+        ORDER BY b.bowlerName
+      `),
+      db.request().query<{
+        teamID: number;
+        teamName: string;
+        slug: string;
+        seasonsActive: number;
+      }>(`
+        SELECT
+          t.teamID,
+          t.teamName,
+          t.slug,
+          COUNT(DISTINCT h.seasonID) AS seasonsActive
+        FROM teams t
+        LEFT JOIN teamNameHistory h ON h.teamID = t.teamID
+        WHERE t.slug IS NOT NULL
+        GROUP BY t.teamID, t.teamName, t.slug
+        ORDER BY t.teamName
+      `),
+    ]);
+    const bowlers: SearchEntry[] = bowlerResult.recordset.map((row) => ({
       id: row.bowlerID,
       name: row.bowlerName,
       slug: row.slug,
       seasonsActive: row.seasonsActive,
+      type: 'bowler',
     }));
+    const teams: SearchEntry[] = teamResult.recordset.map((row) => ({
+      id: row.teamID,
+      name: row.teamName,
+      slug: row.slug,
+      seasonsActive: row.seasonsActive,
+      type: 'team',
+    }));
+    return [...bowlers, ...teams];
   } catch (err) {
     console.warn('generateSearchIndex: DB unavailable, returning empty list.', err);
     return [];
