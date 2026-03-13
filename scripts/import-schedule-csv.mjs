@@ -58,6 +58,11 @@ const TEAM_NAME_ALIASES = {
   'Valley Of The Balls': 'Valley of the Balls',
   'Valley Of the Balls': 'Valley of the Balls',
   'Smokeable Fernet': 'Smokeabowl Fernet',
+  'Boom Kings': 'The Boom Kings',
+  'Bowled and the Beautiful': 'The Bowled and the Beautiful',
+  'Bowled and': 'The Bowled and the Beautiful',
+  'Pinpricks': 'Pin Pricks',
+  'Pin Ups': 'Pin-Ups',
 };
 
 // --- Parse CLI args ---
