@@ -186,7 +186,10 @@ function parseTwoColumnCSV(csvText, yearHint) {
     const cols = line.split(',');
 
     // Skip header rows and blank lines
-    if (cols.every(c => !c.trim()) || line.includes('SPLITZKRIEG') || line.includes('Lane')) {
+    // Note: check cols[3]/cols[7] for "Lane" header, NOT line.includes('Lane')
+    // because team name "Blame It On The Lane" would false-positive
+    const isLaneHeader = (cols[3]?.trim() === 'Lane' || cols[7]?.trim() === 'Lane') && !cols[layout.leftTeam1]?.trim();
+    if (cols.every(c => !c.trim()) || line.includes('SPLITZKRIEG') || isLaneHeader) {
       if (leftMatches.length > 0) {
         weeks.push({ date: currentLeftDate, matches: leftMatches });
         leftMatches = [];

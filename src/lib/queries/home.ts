@@ -319,7 +319,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
  * Pulls from the most recent published week of the current season.
  */
 
-const HIGHLIGHTS_SCORES_SQL = `
+const HIGHLIGHTS_SCORES_SQL = `/* v2: add dependsOn scores channel */
   SELECT
     b.bowlerName,
     b.slug,
@@ -413,5 +413,5 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
     }
 
     return items;
-  }, [], { sql: HIGHLIGHTS_SCORES_SQL });
+  }, [], { sql: HIGHLIGHTS_SCORES_SQL, dependsOn: ['scores'] });
 });
