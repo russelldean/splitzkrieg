@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { SearchEntry } from '@/lib/search-index';
 
 
-export function SearchBar() {
+export function SearchBar({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const [query, setQuery] = useState('');
   const [entries, setEntries] = useState<SearchEntry[]>([]);
   const [isFocused, setIsFocused] = useState(false);
@@ -107,7 +107,7 @@ export function SearchBar() {
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/30 pointer-events-none"
+          className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${variant === 'dark' ? 'text-cream/40' : 'text-navy/30'}`}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2}
@@ -123,7 +123,11 @@ export function SearchBar() {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           placeholder="Find a bowler or team..."
-          className="w-full bg-white border border-navy/20 rounded-lg pl-9 pr-4 py-2 text-base sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 transition-colors animate-search-glow"
+          className={`w-full rounded-lg pl-9 pr-4 py-2 text-base sm:text-sm font-body focus:outline-none focus:ring-2 transition-colors ${
+            variant === 'dark'
+              ? 'bg-navy border border-navy shadow-lg text-cream placeholder:text-cream/40 focus:ring-red/40 focus:border-red/40'
+              : 'bg-white border border-navy/20 text-navy placeholder:text-navy/40 focus:ring-red/30 focus:border-red/30 animate-search-glow'
+          }`}
           role="combobox"
           aria-expanded={isDropdownOpen}
           aria-autocomplete="list"

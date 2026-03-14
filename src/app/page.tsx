@@ -17,22 +17,15 @@ import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
-import { TickerCountdownPill } from '@/components/layout/TickerCountdownPill';
 import { CountdownClock } from '@/components/home/CountdownClock';
+import { HomeNavBar } from '@/components/home/HomeNavBar';
+import { SearchBar } from '@/components/layout/SearchBar';
+import { getAllPosts } from '@/lib/blog';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
   description: 'Stats, records, and history for the Splitzkrieg Bowling League. Since 2007.',
 };
-
-const quickLinks = [
-  { label: 'League Nights', href: '/week', description: 'Weekly matchups and scores', icon: '🎳', accent: 'border-l-red-600/40' },
-  { label: 'Seasons', href: '/seasons', description: 'Every season since 2007', icon: '📅', accent: 'border-l-navy/30' },
-  { label: 'The Stats', href: '/stats', description: 'Leaderboards and rankings', icon: '🏆', accent: 'border-l-red-600/40' },
-  { label: 'Bowlers', href: '/bowlers?filter=current', description: 'Current season roster', icon: '👤', accent: 'border-l-navy/30' },
-  { label: 'Teams', href: '/teams?filter=current', description: 'Current season teams', icon: '👥', accent: 'border-l-red-600/40' },
-  { label: 'Blog', href: '/blog', description: 'Weekly recaps and league news', icon: '\u{1F4DD}', accent: 'border-l-navy/30' },
-];
 
 export default async function Home() {
   const [seasonSnapshot, weeklyHighlights, nextBowlingNight, leagueMilestones] = await Promise.all([
@@ -82,12 +75,19 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Milestone Ticker */}
+      {/* Milestone Ticker with Search Bar overlay */}
       <div className="relative">
-        <MilestoneTicker items={allTickerItems} />
-        {nextBowlingNight && (
-          <TickerCountdownPill targetDate={nextBowlingNight} />
-        )}
+        <MilestoneTicker items={allTickerItems} variant="dark" />
+        {/* Search bar floats centered over the ticker on desktop */}
+        <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none z-10">
+          <div className="relative flex items-center">
+            <div className="absolute -left-12 w-12 h-full bg-gradient-to-r from-transparent to-navy" />
+            <div className="absolute -right-12 w-12 h-full bg-gradient-to-l from-transparent to-navy" />
+            <div className="relative pointer-events-auto w-80">
+              <SearchBar />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Hero Section */}
@@ -143,26 +143,32 @@ export default async function Home() {
             </Link>
           )}
 
-          {/* Explore Cards */}
-          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-            {quickLinks.map((link) =>
-              <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`group bg-white rounded-xl border border-navy/10 border-l-4 ${link.accent} p-4 hover:border-navy/20 hover:shadow-sm transition-all`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg" aria-hidden="true">{link.icon}</span>
-                    <div className="font-body text-sm font-medium text-navy group-hover:text-red transition-colors">
-                      {link.label}
-                    </div>
-                  </div>
-                  <div className="font-body text-xs text-navy/65 mt-1 leading-relaxed pl-7">
-                    {link.description}
-                  </div>
-                </Link>
-            )}
-          </div>
+          {/* Explore Nav Bar */}
+          <HomeNavBar items={[
+            { label: 'League Nights', href: '/week', links: [
+              ...(seasonSnapshot ? [{ href: `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`, label: 'This Week' }] : []),
+              { href: '/week', label: 'All Weeks' },
+            ]},
+            { label: 'Seasons', href: '/seasons', links: [
+              ...(seasonSnapshot ? [{ href: `/season/${seasonSnapshot.slug}`, label: 'Current Season' }] : []),
+              { href: '/seasons', label: 'All Seasons' },
+            ]},
+            { label: 'The Stats', href: '/stats', links: [
+              ...(seasonSnapshot ? [{ href: `/stats/${seasonSnapshot.slug}`, label: 'Current Season Stats' }] : []),
+              { href: '/stats', label: 'All Season Stats' },
+              { href: '/stats/all-time', label: 'All-Time' },
+              { href: '/milestones', label: 'Milestone Watch' },
+            ]},
+            { label: 'Bowlers', href: '/bowlers?filter=current', links: [
+              { href: '/bowlers?filter=current', label: 'Current Bowlers' },
+              { href: '/bowlers', label: 'All Bowlers' },
+            ]},
+            { label: 'Teams', href: '/teams?filter=current', links: [
+              { href: '/teams?filter=current', label: 'Current Teams' },
+              { href: '/teams', label: 'All Teams' },
+            ]},
+            { label: 'Blog', href: '/blog', links: [], newBadgeKey: getAllPosts()[0]?.slug ?? undefined },
+          ]} />
         </div>
       </section>
 

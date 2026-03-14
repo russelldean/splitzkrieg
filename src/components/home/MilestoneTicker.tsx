@@ -3,6 +3,7 @@ import type { TickerItem } from '@/lib/queries';
 
 interface MilestoneTickerProps {
   items: TickerItem[];
+  variant?: 'light' | 'dark';
 }
 
 function TickerIcon({ icon }: { icon: TickerItem['icon'] }) {
@@ -44,7 +45,8 @@ const EASTER_EGGS: TickerItem[] = [
   { text: "Your team might be waiting for you to bowl.", icon: 'star', href: '/' },
 ];
 
-export function MilestoneTicker({ items = [] }: MilestoneTickerProps) {
+export function MilestoneTicker({ items = [], variant = 'light' }: MilestoneTickerProps) {
+  const isDark = variant === 'dark';
   if (items.length === 0) return null;
 
   // Build cycle: two full passes of items between each easter egg
@@ -59,7 +61,7 @@ export function MilestoneTicker({ items = [] }: MilestoneTickerProps) {
   const duration = Math.round((cycle.length / items.length) * 60);
 
   return (
-    <div className="w-full border-y border-navy/10 bg-cream overflow-hidden shadow-sm">
+    <div className={`w-full overflow-hidden shadow-sm ${isDark ? 'bg-navy border-y border-white/10' : 'bg-cream border-y border-navy/10'}`}>
       <div
         className="flex items-center gap-8 py-3 whitespace-nowrap motion-safe:animate-ticker"
         style={{ width: 'max-content', animationDuration: `${duration}s` }}
@@ -68,10 +70,10 @@ export function MilestoneTicker({ items = [] }: MilestoneTickerProps) {
           <Link
             key={`${item.href}-${item.icon}-${i}`}
             href={item.href}
-            className="inline-flex items-center gap-2 text-sm font-body hover:text-red transition-colors"
+            className={`inline-flex items-center gap-2 text-sm font-body hover:text-red transition-colors`}
           >
             <TickerIcon icon={item.icon} />
-            <span className="text-navy/70">{item.text}</span>
+            <span className={isDark ? 'text-cream/70' : 'text-navy/70'}>{item.text}</span>
           </Link>
         ))}
       </div>

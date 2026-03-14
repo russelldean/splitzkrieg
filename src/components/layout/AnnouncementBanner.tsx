@@ -6,7 +6,7 @@ import announcements from '../../../content/announcements';
 const STORAGE_PREFIX = 'sz-dismissed-';
 
 const typeStyles = {
-  info: 'bg-navy text-cream',
+  info: 'bg-amber-50 text-navy border-b border-amber-300/50 shadow-sm',
   urgent: 'bg-red text-white',
   celebration: 'bg-gold text-navy',
 };
@@ -63,16 +63,14 @@ export function AnnouncementBanner() {
           className={`${typeStyles[a.type]} text-sm font-body`}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-center gap-3 animate-announcement">
-            <span className="shrink-0">{typeIcons[a.type]}</span>
+            <span className="shrink-0 animate-pulse">{typeIcons[a.type]}</span>
             <p className="text-center font-medium">{a.message}</p>
             <button
               onClick={() => dismiss(a.id)}
-              className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+              className="shrink-0 px-2 py-0.5 text-xs font-semibold uppercase rounded bg-navy/10 hover:bg-navy/20 transition-colors"
               aria-label="Dismiss announcement"
             >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-              </svg>
+              Got it
             </button>
           </div>
         </div>

@@ -2,11 +2,16 @@ import Link from 'next/link';
 import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
-import { getCurrentSeasonSnapshot } from '@/lib/queries';
+import { DesktopNav, HeaderSearchWrapper } from './DesktopNav';
+import { getCurrentSeasonSnapshot, getNextBowlingNight } from '@/lib/queries';
+import { HomeHeaderCountdown } from './HomeHeaderCountdown';
 import { bowlersIcon, teamsIcon, seasonsIcon, leagueNightsIcon, blogIcon, statsIcon } from '@/components/ui/icons';
 
 export async function Header() {
-  const snapshot = await getCurrentSeasonSnapshot();
+  const [snapshot, nextBowlingNight] = await Promise.all([
+    getCurrentSeasonSnapshot(),
+    getNextBowlingNight(),
+  ]);
   const currentSeasonSlug = snapshot?.slug ?? null;
   const currentSeasonLabel = snapshot
     ? `Current Season`
@@ -56,7 +61,7 @@ export async function Header() {
   return (
     <header className="bg-cream border-b border-navy/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 gap-4">
+          <div className="relative flex items-center h-16 gap-4">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link
@@ -72,13 +77,16 @@ export async function Header() {
               </Link>
             </div>
 
-            {/* Search Bar — center */}
-            <div className="flex-1 max-w-md mx-auto">
+            {/* Search Bar — center (hidden on homepage, moves to ticker area) */}
+            <HeaderSearchWrapper>
               <SearchBar />
-            </div>
+            </HeaderSearchWrapper>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-6 flex-shrink-0">
+            {/* Homepage countdown — shows in header when search bar moves to ticker */}
+            <HomeHeaderCountdown targetDate={nextBowlingNight} />
+
+            {/* Desktop Nav — hidden on homepage where HomeNavBar replaces it */}
+            <DesktopNav>
               <NavDropdown
                 label="League Nights"
                 icon={leagueNightsIcon}
@@ -130,7 +138,7 @@ export async function Header() {
                 </svg>
                 Blog
               </Link>
-            </nav>
+            </DesktopNav>
 
             {/* Mobile Nav */}
             <div className="md:hidden flex-shrink-0">
