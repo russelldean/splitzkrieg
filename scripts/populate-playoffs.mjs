@@ -9,13 +9,25 @@
  */
 
 import sql from 'mssql';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(__dirname, '..');
 const DRY_RUN = process.argv.includes('--dry-run');
 const WIPE = process.argv.includes('--wipe');
+
+function bumpDataVersion(channel, seasonID) {
+  const filePath = resolve(PROJECT_ROOT, '.data-versions.json');
+  let versions = {};
+  try { versions = JSON.parse(readFileSync(filePath, 'utf8')); } catch {}
+  if (!versions[channel]) versions[channel] = {};
+  const key = String(seasonID);
+  versions[channel][key] = (versions[channel][key] || 1) + 1;
+  writeFileSync(filePath, JSON.stringify(versions, null, 2) + '\n');
+  console.log(`Bumped .data-versions.json: ${channel}.${seasonID} → v${versions[channel][key]}`);
+}
 
 const config = {
   server: process.env.AZURE_SQL_SERVER,
@@ -189,6 +201,12 @@ async function main() {
     const v1 = await pool.query("SELECT COUNT(*) as cnt FROM seasonChampions WHERE championshipType = 'team'");
     const v2 = await pool.query("SELECT COUNT(*) as cnt FROM playoffResults WHERE playoffType = 'team'");
     console.log(`\nVerification: ${v1.recordset[0].cnt} seasonChampions, ${v2.recordset[0].cnt} playoffResults`);
+
+    // Bump data versions for all affected seasons so queries invalidate
+    const affectedSeasons = new Set(rows.map(r => r.seasonID));
+    for (const sid of affectedSeasons) {
+      bumpDataVersion('schedule', sid);
+    }
   }
 
   await pool.close();

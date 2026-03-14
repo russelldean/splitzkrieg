@@ -8,13 +8,25 @@
  */
 
 import sql from 'mssql';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(__dirname, '..');
 const DRY_RUN = process.argv.includes('--dry-run');
 const WIPE = process.argv.includes('--wipe');
+
+function bumpDataVersion(channel, seasonID) {
+  const filePath = resolve(PROJECT_ROOT, '.data-versions.json');
+  let versions = {};
+  try { versions = JSON.parse(readFileSync(filePath, 'utf8')); } catch {}
+  if (!versions[channel]) versions[channel] = {};
+  const key = String(seasonID);
+  versions[channel][key] = (versions[channel][key] || 1) + 1;
+  writeFileSync(filePath, JSON.stringify(versions, null, 2) + '\n');
+  console.log(`Bumped .data-versions.json: ${channel}.${seasonID} → v${versions[channel][key]}`);
+}
 
 // Load env
 const envContent = readFileSync(resolve(__dirname, '../.env.local'), 'utf8');
@@ -264,6 +276,12 @@ async function main() {
     console.log('\nVerification:');
     for (const r of v.recordset) {
       console.log(`  ${r.championshipType}: ${r.cnt} rows`);
+    }
+
+    // Bump data versions for all affected seasons so queries invalidate
+    const affectedSeasons = new Set(rows.map(r => resolveSeasonID(r.year, r.period)).filter(Boolean));
+    for (const sid of affectedSeasons) {
+      bumpDataVersion('scores', sid);
     }
   }
 

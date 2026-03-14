@@ -247,7 +247,7 @@ export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
       .request()
       .query<TeamSeasonPresence>(GET_TEAM_SEASON_PRESENCE_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_TEAM_SEASON_PRESENCE_SQL });
+  }, [], { sql: GET_TEAM_SEASON_PRESENCE_SQL, dependsOn: ['scores'] });
 }
 
 const GET_TEAM_PLAYOFF_FINISHES_SQL = `
@@ -269,5 +269,5 @@ export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[
     const db = await getDb();
     const result = await db.request().query<TeamPlayoffFinish>(GET_TEAM_PLAYOFF_FINISHES_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_TEAM_PLAYOFF_FINISHES_SQL });
+  }, [], { sql: GET_TEAM_PLAYOFF_FINISHES_SQL, dependsOn: ['schedule'] });
 });

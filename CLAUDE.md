@@ -11,61 +11,60 @@
 
 ## Cache System — FOLLOW THIS EXACTLY
 
-The #1 source of bugs and wasted time. Read this every time.
+The #1 source of bugs and wasted time. Full details in `memory/caching.md` and `memory/feedback_cache_rules.md`.
 
-### How it works
-- All ~40 query functions use `cachedQuery()` — disk cache in `.next/cache/sql/`
-- Vercel preserves `.next/cache/` between deploys — subsequent builds skip DB entirely
+- All ~55 query functions use `cachedQuery()` — disk cache in `.next/cache/sql/`
 - `cachedQuery()` hashes the SQL string (MD5) into the cache key
-- Per-season data versions in `.data-versions.json` — included in hash for season-scoped queries
-- Cross-season queries (team H2H, all-time roster, season-by-season) use `allSeasons: true` — hash of ALL versions
-
-### When you change a query's SQL text
-- **Nothing to do.** The hash changes automatically and the old cache is missed.
-
-### When data changes but the query doesn't (e.g., new scores imported)
-- **Import scripts auto-bump** `.data-versions.json` for the affected season — no manual work needed
-- The version is included in the cache hash, so only that season's queries re-run
-- Cross-season team queries also re-run (they hash all versions)
+- Per-season data versions in `.data-versions.json` — included in hash
+- Import scripts auto-bump `.data-versions.json` — no manual cache work needed
+- Run `node scripts/check-cache-invariants.mjs` before pushing query changes
 
 ### NEVER DO THESE
 - **NEVER** use `vercel --prod --force` — nukes ALL cache, causes 15+ minute full rebuilds
 - **NEVER** bump `DB_CACHE_VERSION` — same effect as force, full rebuild
-- **NEVER** add `/* vN */` comments to queries used by `generateStaticParams` — these run for ALL seasons, busting cache across every season.
+- **NEVER** add `/* vN */` comments to queries used by `generateStaticParams`
+- **NEVER** mark a query `stable: true` if it reads from a mutable table
+- **NEVER** bust >20 query caches in one deploy (Azure SQL 30-connection limit)
 
-### Hybrid queries (SQL + TypeScript config)
-- If a `cachedQuery` uses TypeScript config (thresholds, filters) inside the callback, include `JSON.stringify(config)` in the `sql` option so config changes auto-invalidate the hash.
+## Data Fix Cascade — FOLLOW EVERY TIME
 
-## Debugging Display Issues — CHECKLIST
+Full checklist in `memory/feedback_data_operations.md`.
 
-When something isn't showing on the site:
+**Quick version:** `node scripts/fix-rebuild.mjs --season=N` (handles matchResults + patches + cache bust)
+
+When inserting/shifting score data manually, check ALL downstream:
+1. scores 2. incomingAvg 3. seasons.notes 4. matchResults 5. bowlerPatches 6. bowlerMilestones 7. Cache channels 8. Stable queries
+
+## Pre-Work Checklists
+
+- **Before writing SQL:** Read `memory/db-schema.md`. Never guess column names.
+- **Before DB operations:** Check `scripts/` for existing scripts. Copy their env-loading pattern.
+- **Before reading files:** Verify paths with Glob. Don't guess.
+- **Before touching error-prone areas:** Check `memory/errors.md`.
+- **After visible changes:** Remind Russ to update `content/updates.ts`.
+
+## Debugging Display Issues
+
 1. **Check the DB first** — run a quick `node -e` query to verify data exists
-2. **If data exists** → it's a cache issue. Delete specific cache files, redeploy.
-3. **If data is missing** → check source CSVs in `docs/data/`, scripts in `scripts/`, related tables
+2. **If data exists** -> it's a cache issue. Delete specific cache files, redeploy.
+3. **If data is missing** -> check source CSVs in `docs/data/`, scripts in `scripts/`
 4. **Never assume the data is missing** — the DB is usually complete
 
 ## Error Discipline
 
 - When the same error occurs twice, STOP. Don't patch around it.
 - Log the error, root cause, and fix in `memory/errors.md` before continuing.
-- Check `memory/errors.md` at the start of tasks that touch areas with prior errors.
 
 ## Bash Inline JS
 
 - ALWAYS use single quotes for `node -e '...'` — zsh expands `!` inside double quotes
 - If the JS contains single quotes, use a heredoc or write to a temp file
 
-## AskUserQuestion Verification
-
-- After calling AskUserQuestion, verify the user's actual response is in the conversation before proceeding
-- If unsure whether the user answered, ask again in plain text
-
 ## Workflow
 
 - Skip `next build` locally — user checks via `next dev`. Vercel builds on push.
 - Commit frequently at natural stopping points
 - Local full builds overwhelm Azure SQL (30 concurrent requests, 7 parallel workers)
-- `scripts/warm-cache.mjs` pre-populates disk cache sequentially (safe for Azure SQL)
 
 ## User Preferences
 
@@ -74,14 +73,7 @@ When something isn't showing on the site:
 - No score color formatting on personal records (keep in game logs only)
 - Strike X styling (red/bold at 60% opacity) — hero headings only, not lists/tables
 - Zero values show "X" (strike symbol) in records panel
-
-## Docs Folder Structure
-
-- `docs/data/` — CSVs, TSVs (source data for imports)
-- `docs/images/` — Photos used by the site
-- `docs/leaguepals/` — LeaguePals PDFs
-- `docs/reference/` — Original site plan, schema SQL, data model docs
-- `docs/pending/` — Files staged for processing
+- **NO em dashes anywhere on the site** — sweep all `&mdash;`, `---`, and `\u2014` from every file. Never introduce them in new code.
 
 ## Key Formulas
 

@@ -412,7 +412,7 @@ export const getAllBowlersDirectory = cache(async (): Promise<DirectoryBowler[]>
     const db = await getDb();
     const result = await db.request().query<DirectoryBowler>(GET_ALL_BOWLERS_DIRECTORY_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_ALL_BOWLERS_DIRECTORY_SQL });
+  }, [], { sql: GET_ALL_BOWLERS_DIRECTORY_SQL, dependsOn: ['scores'] });
 });
 
 /* ───────────────────────────────────────────────────────────

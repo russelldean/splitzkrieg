@@ -201,7 +201,7 @@ export async function getActiveTeamIDs(): Promise<TeamH2HActiveTeam[]> {
     const db = await getDb();
     const result = await db.request().query<TeamH2HActiveTeam>(GET_ACTIVE_TEAM_IDS_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_ACTIVE_TEAM_IDS_SQL });
+  }, [], { sql: GET_ACTIVE_TEAM_IDS_SQL, dependsOn: ['scores'] });
 }
 
 /**
@@ -269,7 +269,7 @@ export async function getTeamPlayoffH2H(teamID: number): Promise<PlayoffH2HMatch
       .input('teamID', teamID)
       .query<PlayoffH2HMatchup>(GET_TEAM_PLAYOFF_H2H_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_TEAM_PLAYOFF_H2H_SQL });
+  }, [], { sql: GET_TEAM_PLAYOFF_H2H_SQL, dependsOn: ['schedule'] });
 }
 
 export async function getPairwiseH2H(

@@ -200,4 +200,5 @@ if (dryRun) {
   console.log('  1. git add . && git commit');
   console.log('  2. git push (Vercel redeploys automatically)');
   console.log('  3. Or run `node scripts/warm-cache.mjs` to pre-fill cache before deploy');
+  console.log('  4. Update content/updates.ts if this fix has user-visible changes');
 }

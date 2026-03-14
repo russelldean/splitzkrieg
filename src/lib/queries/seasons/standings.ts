@@ -163,7 +163,7 @@ export const getPlayoffTeamIDs = cache(async (seasonID: number): Promise<Set<num
       .query<{ teamID: number }>(GET_PLAYOFF_TEAM_IDS_SQL);
     if (result.recordset.length === 0) return null;
     return result.recordset.map(r => r.teamID);
-  }, null, { stable: true, sql: GET_PLAYOFF_TEAM_IDS_SQL });
+  }, null, { sql: GET_PLAYOFF_TEAM_IDS_SQL, seasonID, dependsOn: ['schedule'] });
   return ids ? new Set(ids) : null;
 });
 

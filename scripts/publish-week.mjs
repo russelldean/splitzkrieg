@@ -124,6 +124,8 @@ async function main() {
   console.log('Wrote .published-week: ' + tag);
   console.log('All non-stable query caches will auto-invalidate on next build.');
   console.log('Commit and push to trigger a Vercel redeploy.');
+  console.log('');
+  console.log('Reminder: update content/updates.ts if this week has user-visible changes.');
 }
 
 main().catch(e => {
