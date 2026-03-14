@@ -63,6 +63,8 @@ const TEAM_NAME_ALIASES = {
   'Bowled and': 'The Bowled and the Beautiful',
   'Pinpricks': 'Pin Pricks',
   'Pin Ups': 'Pin-Ups',
+  'Spare Club For Men': 'Spare Club for Men',
+  'Gutteryglory': 'Gutterglory',
 };
 
 // --- Parse CLI args ---
