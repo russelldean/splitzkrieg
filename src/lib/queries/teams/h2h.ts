@@ -91,7 +91,7 @@ const GET_TEAM_H2H_SQL = `
   )
   SELECT
     m.opponentID,
-    COALESCE(tnh_latest.teamName, t.teamName) AS opponentName,
+    t.teamName AS opponentName,
     t.slug AS opponentSlug,
     m.seasonID,
     sn.displayName AS seasonName,
@@ -109,13 +109,6 @@ const GET_TEAM_H2H_SQL = `
   FROM matchups m
   JOIN teams t ON m.opponentID = t.teamID
   JOIN seasons sn ON m.seasonID = sn.seasonID
-  OUTER APPLY (
-    SELECT TOP 1 tnh.teamName
-    FROM teamNameHistory tnh
-    JOIN seasons sn2 ON tnh.seasonID = sn2.seasonID
-    WHERE tnh.teamID = m.opponentID
-    ORDER BY sn2.year DESC, CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
-  ) tnh_latest
   ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, m.week DESC
 `;
 
@@ -164,7 +157,7 @@ const GET_GHOST_TEAM_H2H_SQL = `
   )
   SELECT
     os.opponentID,
-    COALESCE(tnh_latest.teamName, t.teamName) AS opponentName,
+    t.teamName AS opponentName,
     t.slug AS opponentSlug,
     os.seasonID,
     sn.displayName AS seasonName,
@@ -179,13 +172,6 @@ const GET_GHOST_TEAM_H2H_SQL = `
   FROM oppScores os
   JOIN teams t ON os.opponentID = t.teamID
   JOIN seasons sn ON os.seasonID = sn.seasonID
-  OUTER APPLY (
-    SELECT TOP 1 tnh.teamName
-    FROM teamNameHistory tnh
-    JOIN seasons sn2 ON tnh.seasonID = sn2.seasonID
-    WHERE tnh.teamID = os.opponentID
-    ORDER BY sn2.year DESC, CASE sn2.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
-  ) tnh_latest
   ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC, os.week DESC
 `;
 

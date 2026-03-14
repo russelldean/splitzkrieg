@@ -69,7 +69,7 @@ const PLAYOFF_SEMI_SQL = `
   ORDER BY pr.playoffID
 `;
 
-const PLAYOFF_ALL_SQL = PLAYOFF_FINAL_SQL + PLAYOFF_SEMI_SQL + '/* v2: infer semi winners from final */';
+const PLAYOFF_ALL_SQL = PLAYOFF_FINAL_SQL + PLAYOFF_SEMI_SQL + '/* v3: fix cross-division semi matchups */';
 
 export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<SeasonPlayoffBracket | null> => {
   return cachedQuery(`getSeasonPlayoffBracket-${seasonID}`, async () => {
@@ -199,7 +199,7 @@ export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => 
     const db = await getDb();
     const result = await db.request().query<PlayoffSeason>(GET_ALL_PLAYOFF_HISTORY_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_ALL_PLAYOFF_HISTORY_SQL });
+  }, [], { stable: true, sql: GET_ALL_PLAYOFF_HISTORY_SQL + '/* v2: fix cross-division semi matchups */' });
 });
 
 export interface IndividualChampionSeason {
