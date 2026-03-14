@@ -12,6 +12,8 @@ interface Props {
   weekNumber?: number | null;
   /** Blog mode: side-by-side division cards, no avg columns */
   compact?: boolean;
+  /** Show (+x) last-week delta on points. Defaults to true. */
+  showDelta?: boolean;
 }
 
 /**
@@ -63,10 +65,12 @@ function StandingsTable({
   rows,
   startRank,
   playoffTeamIDs,
+  showDelta = true,
 }: {
   rows: StandingsRow[];
   startRank: number;
   playoffTeamIDs: Set<number>;
+  showDelta?: boolean;
 }) {
   return (
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
@@ -105,7 +109,7 @@ function StandingsTable({
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-navy">
                   {row.totalPts}
-                  {row.lastWeekPts != null && (
+                  {showDelta && row.lastWeekPts != null && (
                     <span className="text-xs font-normal text-navy/65 ml-1">
                       (+{row.lastWeekPts})
                     </span>
@@ -134,10 +138,12 @@ function CompactStandingsCard({
   divName,
   rows,
   playoffTeamIDs,
+  showDelta = true,
 }: {
   divName: string;
   rows: StandingsRow[];
   playoffTeamIDs: Set<number>;
+  showDelta?: boolean;
 }) {
   return (
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
@@ -174,7 +180,7 @@ function CompactStandingsCard({
                 </td>
                 <td className="px-3 py-1.5 text-right tabular-nums font-semibold text-navy">
                   {row.totalPts}
-                  {row.lastWeekPts != null && (
+                  {showDelta && row.lastWeekPts != null && (
                     <span className="text-xs font-normal text-navy/65 ml-1">
                       (+{row.lastWeekPts})
                     </span>
@@ -190,7 +196,7 @@ function CompactStandingsCard({
   );
 }
 
-export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber, compact }: Props) {
+export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber, compact, showDelta = true }: Props) {
   if (standings.length === 0) {
     return (
       <section id="standings">
@@ -220,7 +226,7 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
                 divisions.get(div)!.push(row);
               }
               return Array.from(divisions.entries()).map(([divName, rows]) => (
-                <CompactStandingsCard key={divName} divName={divName} rows={rows} playoffTeamIDs={playoffTeamIDs} />
+                <CompactStandingsCard key={divName} divName={divName} rows={rows} playoffTeamIDs={playoffTeamIDs} showDelta={showDelta} />
               ));
             })()}
           </div>
@@ -236,14 +242,14 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
             return Array.from(divisions.entries()).map(([divName, rows]) => (
               <div key={divName}>
                 <h3 className="font-heading text-lg text-navy/70 mb-3">{divName}</h3>
-                <StandingsTable rows={rows} startRank={1} playoffTeamIDs={playoffTeamIDs} />
+                <StandingsTable rows={rows} startRank={1} playoffTeamIDs={playoffTeamIDs} showDelta={showDelta} />
               </div>
             ));
           })()}
         </div>
         )
       ) : (
-        <StandingsTable rows={standings} startRank={1} playoffTeamIDs={playoffTeamIDs} />
+        <StandingsTable rows={standings} startRank={1} playoffTeamIDs={playoffTeamIDs} showDelta={showDelta} />
       )}
       {!compact && (
         <p className="text-xs font-body text-navy/65 mt-2 flex items-center gap-1.5">

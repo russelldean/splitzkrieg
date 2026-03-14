@@ -23,6 +23,7 @@ import {
   getStandingsRaceData,
   getAllSeasonNavList,
   getSeasonWeekSummaries,
+  getCurrentSeasonID,
 } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SeasonHero } from '@/components/season/SeasonHero';
@@ -79,7 +80,7 @@ export default async function SeasonPage({
   const season = await getSeasonBySlug(slug);
   if (!season) notFound();
 
-  const [standings, heroStats, bracket, weeklyScores, schedule, raceData, allSeasons, weekSummaries, playoffTeams] = await Promise.all([
+  const [standings, heroStats, bracket, weeklyScores, schedule, raceData, allSeasons, weekSummaries, playoffTeams, currentSeasonID] = await Promise.all([
     getSeasonStandings(season.seasonID),
     getSeasonHeroStats(season.seasonID),
     getSeasonPlayoffBracket(season.seasonID),
@@ -89,8 +90,10 @@ export default async function SeasonPage({
     getAllSeasonNavList(),
     getSeasonWeekSummaries(season.seasonID),
     getPlayoffTeamIDs(season.seasonID),
+    getCurrentSeasonID(),
   ]);
 
+  const isCurrentSeason = season.seasonID === currentSeasonID;
   const hasDivisions = standings.some((row) => row.divisionName !== null);
   const hasScheduleData = schedule.length > 0;
 
@@ -121,7 +124,7 @@ export default async function SeasonPage({
       )}
 
       <div className="mt-8 space-y-12">
-        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} />
+        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} />
 
         {hasScheduleData && raceData.length > 0 && (
           <CollapsibleSection title="Standings Race">
