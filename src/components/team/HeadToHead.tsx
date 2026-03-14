@@ -125,6 +125,13 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID, isActive = tr
     );
   }
 
+  const totals = useMemo(() => {
+    let w = 0, l = 0, t = 0;
+    for (const s of summaries) { w += s.wins; l += s.losses; t += s.ties; }
+    const total = w + l + t;
+    return { w, l, t, pct: total > 0 ? (w / total) * 100 : 0 };
+  }, [summaries]);
+
   return (
     <section>
       <SectionHeading>Head-to-Head Records</SectionHeading>
@@ -155,6 +162,16 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID, isActive = tr
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr className="border-t border-navy/10 bg-navy/[0.03] font-medium">
+                <td className="px-4 py-2.5 text-navy/70">Lifetime</td>
+                <td className="text-right px-3 py-2.5 tabular-nums text-navy/70">{summaries.reduce((a, s) => a + s.totalMatchups, 0)}</td>
+                <td className="text-right px-3 py-2.5 tabular-nums text-green-600 font-semibold">{totals.w}</td>
+                <td className="text-right px-3 py-2.5 tabular-nums text-navy/65">{totals.l}</td>
+                <td className="text-right px-3 py-2.5 tabular-nums text-amber-600">{totals.t}</td>
+                <td className="text-right px-4 py-2.5 tabular-nums font-semibold text-navy">{totals.pct.toFixed(1)}%</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>

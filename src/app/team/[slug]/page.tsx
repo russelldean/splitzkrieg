@@ -23,6 +23,7 @@ import {
   getTeamH2H,
   getActiveTeamIDs,
   getGhostTeamH2H,
+  getTeamPlayoffH2H,
   getCurrentSeasonSlug,
   type TeamSeasonBowler,
 } from '@/lib/queries';
@@ -32,6 +33,7 @@ import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
 import { AllTimeRoster } from '@/components/team/AllTimeRoster';
 import { HeadToHead } from '@/components/team/HeadToHead';
 import { GhostTeamH2H } from '@/components/team/GhostTeamH2H';
+import { PlayoffH2H } from '@/components/team/PlayoffH2H';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { GhostTeamMatchup } from '@/lib/queries';
@@ -139,7 +141,7 @@ export default async function TeamPage({
   const isGhostTeam = team.teamID === 45;
 
   // Parallel build-time data fetching
-  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug, h2hMatchups, activeTeams, ghostH2H] = await Promise.all([
+  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug, h2hMatchups, activeTeams, ghostH2H, playoffH2H] = await Promise.all([
     getTeamCurrentRoster(team.teamID),
     getTeamSeasonByseason(team.teamID),
     getTeamAllTimeRoster(team.teamID),
@@ -149,6 +151,7 @@ export default async function TeamPage({
     isGhostTeam ? Promise.resolve([]) : getTeamH2H(team.teamID),
     getActiveTeamIDs(),
     isGhostTeam ? getGhostTeamH2H() : Promise.resolve([]),
+    isGhostTeam ? Promise.resolve([]) : getTeamPlayoffH2H(team.teamID),
   ]);
 
   // Pre-fetch bowler data for all seasons (static build handles the load)
@@ -209,7 +212,10 @@ export default async function TeamPage({
         {isGhostTeam ? (
           <GhostTeamH2H matchups={ghostH2H} />
         ) : (
-          <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} isActive={currentRoster.length > 0} />
+          <>
+            <HeadToHead matchups={h2hMatchups} activeTeams={activeTeams} currentTeamID={team.teamID} isActive={currentRoster.length > 0} />
+            <PlayoffH2H matchups={playoffH2H} />
+          </>
         )}
       </div>
 
