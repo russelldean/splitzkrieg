@@ -31,6 +31,29 @@ const config: sql.config = {
 
 let pool: sql.ConnectionPool | null = null;
 
+// Semaphore to limit concurrent DB queries during builds.
+// Azure SQL has a 30-connection limit; Vercel runs 7 parallel workers,
+// each potentially firing multiple queries. This prevents overload.
+const MAX_CONCURRENT_QUERIES = 8;
+let activeQueries = 0;
+const queryQueue: (() => void)[] = [];
+
+function acquireSlot(): Promise<void> {
+  if (activeQueries < MAX_CONCURRENT_QUERIES) {
+    activeQueries++;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    queryQueue.push(() => { activeQueries++; resolve(); });
+  });
+}
+
+function releaseSlot(): void {
+  activeQueries--;
+  const next = queryQueue.shift();
+  if (next) next();
+}
+
 export async function getDb(): Promise<sql.ConnectionPool> {
   if (pool) return pool;
   const maxRetries = 3;
@@ -247,7 +270,8 @@ export async function cachedQuery<T>(
   // 2. If no DB configured, return fallback
   if (!process.env.AZURE_SQL_SERVER) return fallback as T;
 
-  // 3. Run query with retry
+  // 3. Run query with retry (concurrency-limited)
+  await acquireSlot();
   try {
     const result = await withRetry(fn, cacheKey);
     // 4. Cache successful result
@@ -256,5 +280,7 @@ export async function cachedQuery<T>(
   } catch (err) {
     console.warn(`${cacheKey}: DB unavailable`, err);
     return fallback as T;
+  } finally {
+    releaseSlot();
   }
 }
