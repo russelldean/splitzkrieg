@@ -233,6 +233,38 @@ const GET_ALL_INDIVIDUAL_CHAMPIONS_SQL = `
   ORDER BY s.seasonID DESC
 `;
 
+export interface SeasonIndividualChampions {
+  mensScratchBowlerID: number | null;
+  womensScratchBowlerID: number | null;
+  handicapBowlerID: number | null;
+}
+
+const GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL = `
+  SELECT
+    cm.winnerBowlerID AS mensScratchBowlerID,
+    cw.winnerBowlerID AS womensScratchBowlerID,
+    ch.winnerBowlerID AS handicapBowlerID
+  FROM seasons s
+  LEFT JOIN seasonChampions cm ON cm.seasonID = s.seasonID AND cm.championshipType = 'MensScratch'
+  LEFT JOIN seasonChampions cw ON cw.seasonID = s.seasonID AND cw.championshipType = 'WomensScratch'
+  LEFT JOIN seasonChampions ch ON ch.seasonID = s.seasonID AND ch.championshipType = 'Handicap'
+  WHERE s.seasonID = @seasonID
+`;
+
+export const getSeasonIndividualChampions = cache(async (seasonID: number): Promise<SeasonIndividualChampions | null> => {
+  return cachedQuery(`getSeasonIndividualChampions-${seasonID}`, async () => {
+    const db = await getDb();
+    const result = await db.request()
+      .input('seasonID', seasonID)
+      .query<SeasonIndividualChampions>(GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL);
+    if (result.recordset.length === 0) return null;
+    const row = result.recordset[0];
+    // If no champions at all, return null
+    if (!row.mensScratchBowlerID && !row.womensScratchBowlerID && !row.handicapBowlerID) return null;
+    return row;
+  }, null, { stable: true, sql: GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL });
+});
+
 export const getAllIndividualChampions = cache(async (): Promise<IndividualChampionSeason[]> => {
   return cachedQuery('getAllIndividualChampions', async () => {
     const db = await getDb();

@@ -21,16 +21,23 @@ function UpdateRow({ update }: { update: Update }) {
   );
 }
 
-export function SiteUpdates({ updates }: { updates: Update[] }) {
+export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastUpdated?: string }) {
   const [expanded, setExpanded] = useState(false);
   const hasMore = updates.length > COLLAPSED_COUNT;
   const visible = expanded ? updates : updates.slice(0, COLLAPSED_COUNT);
 
   return (
     <section className="mb-10">
-      <h2 className="font-heading text-xl text-navy mb-4">
-        Site Updates
-      </h2>
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="font-heading text-xl text-navy">
+          Site Updates
+        </h2>
+        {lastUpdated && (
+          <span className="font-body text-xs text-navy/40">
+            Updated {new Date(lastUpdated + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
+        )}
+      </div>
       <div className="bg-white rounded-lg border border-navy/10">
         <div className={`divide-y divide-navy/5 ${expanded ? 'max-h-96 overflow-y-auto' : ''}`}>
           {visible.map((update, i) => (

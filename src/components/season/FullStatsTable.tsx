@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import type { SeasonFullStatsRow } from '@/lib/queries';
+import type { SeasonFullStatsRow, SeasonIndividualChampions } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { ScrollableTable } from '@/components/ui/ScrollableTable';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -10,6 +10,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 interface Props {
   stats: SeasonFullStatsRow[];
   minGames: number;
+  champions: SeasonIndividualChampions | null;
 }
 
 type SortColumn =
@@ -56,7 +57,26 @@ function SortArrow({ direction }: { direction: SortDirection }) {
   );
 }
 
-export function FullStatsTable({ stats, minGames }: Props) {
+function getChampionTitles(champions: SeasonIndividualChampions | null): Map<number, string[]> {
+  const map = new Map<number, string[]>();
+  if (!champions) return map;
+  const entries: [number | null, string][] = [
+    [champions.mensScratchBowlerID, "Men's Scratch Champion"],
+    [champions.womensScratchBowlerID, "Women's Scratch Champion"],
+    [champions.handicapBowlerID, 'Handicap Champion'],
+  ];
+  for (const [id, title] of entries) {
+    if (id) {
+      const existing = map.get(id) ?? [];
+      existing.push(title);
+      map.set(id, existing);
+    }
+  }
+  return map;
+}
+
+export function FullStatsTable({ stats, minGames, champions }: Props) {
+  const championTitles = useMemo(() => getChampionTitles(champions), [champions]);
   const [genderTab, setGenderTab] = useState<GenderTab>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('scratchAvg');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -185,6 +205,14 @@ export function FullStatsTable({ stats, minGames }: Props) {
                     >
                       {row.bowlerName}
                     </Link>
+                    {championTitles.has(row.bowlerID) && (
+                      <span className="relative ml-1.5 cursor-default group/trophy">
+                        <span className="text-amber-500">&#x1F3C6;</span>
+                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs font-normal text-white bg-navy rounded shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover/trophy:opacity-100 transition-opacity z-50">
+                          {championTitles.get(row.bowlerID)!.join(', ')}
+                        </span>
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-navy/60 max-w-[120px] truncate">
                     {row.teamSlug ? (

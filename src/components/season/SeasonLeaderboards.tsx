@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { SeasonLeaderEntry } from '@/lib/queries';
+import type { SeasonLeaderEntry, SeasonIndividualChampions } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface LeaderboardCategory {
@@ -19,6 +19,7 @@ interface Props {
   hcpPlayoffIDs: Set<number>;
   hcpIneligibleIDs: Set<number>;
   minGames?: number;
+  champions: SeasonIndividualChampions | null;
 }
 
 type TabKey = 'mens' | 'womens' | 'handicap';
@@ -37,6 +38,8 @@ function LeaderboardTable({
   isAverage = false,
   ineligibleIDs,
   ineligibleLabel,
+  championID,
+  championLabel,
 }: {
   entries: SeasonLeaderEntry[];
   highlightIDs?: Set<number>;
@@ -45,6 +48,8 @@ function LeaderboardTable({
   isAverage?: boolean;
   ineligibleIDs?: Set<number>;
   ineligibleLabel?: string;
+  championID?: number | null;
+  championLabel?: string;
 }) {
   if (entries.length === 0) {
     return (
@@ -69,23 +74,32 @@ function LeaderboardTable({
           {entries.map((entry, i) => {
             const isHighlighted = showHighlight && (highlightIDs?.has(entry.bowlerID) ?? false);
             const isIneligible = ineligibleIDs?.has(entry.bowlerID) ?? false;
+            const isChampion = championID != null && entry.bowlerID === championID;
             return (
               <tr
                 key={`${entry.bowlerID}-${i}`}
                 className={`border-b border-navy/5 hover:bg-navy/[0.05] transition-colors ${
                   isHighlighted ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
-                } ${isIneligible ? 'opacity-40' : ''}`}
+                } ${isIneligible ? 'opacity-40' : ''} ${isChampion ? 'font-bold' : ''}`}
               >
                 <td className="px-4 py-2 text-navy/65 tabular-nums">
                   {i + 1}
                 </td>
-                <td className={`px-4 py-2 ${isHighlighted ? 'font-bold' : 'font-medium'}`}>
+                <td className={`px-4 py-2 ${isHighlighted || isChampion ? 'font-bold' : 'font-medium'}`}>
                   <Link
                     href={`/bowler/${entry.slug}`}
                     className="text-navy hover:text-red-600 transition-colors"
                   >
                     {entry.bowlerName}
                   </Link>
+                  {isChampion && championLabel && (
+                    <span className="relative ml-1.5 cursor-default group/trophy">
+                      <span className="text-amber-500">&#x1F3C6;</span>
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs font-normal text-white bg-navy rounded shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover/trophy:opacity-100 transition-opacity z-50">
+                        {championLabel}
+                      </span>
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-navy/60">
                   {entry.teamSlug ? (
@@ -142,6 +156,7 @@ export function SeasonLeaderboards({
   hcpPlayoffIDs,
   hcpIneligibleIDs,
   minGames,
+  champions,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>('mens');
 
@@ -163,10 +178,17 @@ export function SeasonLeaderboards({
     handicap: { ids: hcpIneligibleIDs, label: 'Bowlers in scratch playoffs ineligible for handicap playoffs' },
   };
 
+  const championMap: Record<TabKey, { id: number | null; label: string }> = {
+    mens: { id: champions?.mensScratchBowlerID ?? null, label: "Men's Scratch Champion" },
+    womens: { id: champions?.womensScratchBowlerID ?? null, label: "Women's Scratch Champion" },
+    handicap: { id: champions?.handicapBowlerID ?? null, label: 'Handicap Champion' },
+  };
+
   const categories = tabContent[activeTab];
   const allEmpty = categories.every(c => c.entries.length === 0);
   const highlight = highlightMap[activeTab];
   const ineligible = ineligibleMap[activeTab];
+  const champion = championMap[activeTab];
 
   return (
     <section id="leaderboards">
@@ -216,6 +238,8 @@ export function SeasonLeaderboards({
                   isAverage={isAvgCategory}
                   ineligibleIDs={ineligible?.ids}
                   ineligibleLabel={ineligible?.label}
+                  championID={champion.id}
+                  championLabel={champion.label}
                 />
                 {isLastAvgBeforeNonAvg && (
                   <p className="font-body text-xs text-navy/60 mt-4">

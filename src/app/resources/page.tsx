@@ -4,7 +4,7 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
-import updates from '../../../content/updates';
+import updates, { lastUpdated } from '../../../content/updates';
 
 export const metadata: Metadata = {
   title: 'Resources',
@@ -110,7 +110,7 @@ export default async function ResourcesPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Site Updates */}
-        <SiteUpdates updates={updates} />
+        <SiteUpdates updates={updates} lastUpdated={lastUpdated} />
 
         {/* Resource Categories */}
         <div className="space-y-10">

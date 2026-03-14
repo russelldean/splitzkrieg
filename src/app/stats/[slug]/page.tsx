@@ -13,7 +13,7 @@ import {
   getSeasonWeeklyScores,
   getMinGamesForWeek,
   getAllSeasonNavList,
-
+  getSeasonIndividualChampions,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
@@ -110,10 +110,11 @@ export default async function SeasonStatsPage({
   const season = await getSeasonBySlug(slug);
   if (!season) notFound();
 
-  const [fullStats, weeklyScores, allSeasons] = await Promise.all([
+  const [fullStats, weeklyScores, allSeasons, champions] = await Promise.all([
     getSeasonFullStats(season.seasonID),
     getSeasonWeeklyScores(season.seasonID),
     getAllSeasonNavList(),
+    getSeasonIndividualChampions(season.seasonID),
   ]);
 
   const currentWeek = weeklyScores.length > 0
@@ -177,10 +178,11 @@ export default async function SeasonStatsPage({
           hcpPlayoffIDs={hcpPlayoffIDs}
           hcpIneligibleIDs={hcpIneligibleIDs}
           minGames={minGames}
+          champions={champions}
         />
 
         <div id="stats">
-          <FullStatsTable stats={fullStats} minGames={minGames} />
+          <FullStatsTable stats={fullStats} minGames={minGames} champions={champions} />
         </div>
       </div>
 
