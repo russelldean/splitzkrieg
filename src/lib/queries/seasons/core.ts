@@ -140,6 +140,55 @@ export async function getCurrentSeasonSlug(): Promise<string | undefined> {
   return seasons[0]?.slug;
 }
 
+export interface DataCompleteness {
+  totalNights: number;
+  nightsWithData: number;
+  missingWeeks: string[];
+}
+
+const TOTAL_LEAGUE_NIGHTS_SQL = `
+  SELECT
+    (SELECT SUM(weekCount) FROM seasons WHERE isCurrentSeason = 0)
+    + (SELECT COUNT(*) FROM (
+        SELECT week FROM scores WHERE seasonID = (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
+          AND isPenalty = 0 GROUP BY week HAVING COUNT(*) >= 4
+      ) t)
+    AS totalNights,
+    (SELECT COUNT(*) FROM (
+      SELECT seasonID, week FROM scores WHERE isPenalty = 0
+      GROUP BY seasonID, week HAVING COUNT(*) >= 4
+    ) t) AS nightsWithData
+`;
+
+const MISSING_WEEKS_SQL = `
+  SELECT DISTINCT se.romanNumeral, sc.week
+  FROM schedule sc
+  JOIN seasons se ON sc.seasonID = se.seasonID
+  WHERE sc.team1ID IS NOT NULL
+    AND (SELECT COUNT(*) FROM scores s WHERE s.seasonID = sc.seasonID AND s.week = sc.week AND s.isPenalty = 0) < 4
+    AND NOT (se.isCurrentSeason = 1 AND sc.week > (
+      SELECT ISNULL(MAX(s2.week), 0) FROM scores s2
+      WHERE s2.seasonID = se.seasonID AND s2.isPenalty = 0
+    ))
+  ORDER BY se.romanNumeral, sc.week
+`;
+
+export const getDataCompleteness = cache(async (): Promise<DataCompleteness> => {
+  return cachedQuery('getDataCompleteness', async () => {
+    const db = await getDb();
+    const [stats, missing] = await Promise.all([
+      db.request().query<{ totalNights: number; nightsWithData: number }>(TOTAL_LEAGUE_NIGHTS_SQL),
+      db.request().query<{ romanNumeral: string; week: number }>(MISSING_WEEKS_SQL),
+    ]);
+    const row = stats.recordset[0];
+    return {
+      totalNights: row.totalNights,
+      nightsWithData: row.nightsWithData,
+      missingWeeks: missing.recordset.map(r => `Season ${r.romanNumeral} Week ${r.week}`),
+    };
+  }, { totalNights: 0, nightsWithData: 0, missingWeeks: [] }, { sql: TOTAL_LEAGUE_NIGHTS_SQL + MISSING_WEEKS_SQL, dependsOn: ['scores'] });
+});
+
 const TOTAL_PINS_SQL = `SELECT SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT) + CAST(game3 AS BIGINT)) as totalPins
   FROM scores WHERE isPenalty = 0`;
 

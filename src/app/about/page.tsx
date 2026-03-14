@@ -2,13 +2,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { getDataCompleteness } from '@/lib/queries/seasons/core';
 
 export const metadata: Metadata = {
   title: 'About | Splitzkrieg',
   description: 'About Splitzkrieg Bowling League - Durham, NC since 2007.',
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const data = await getDataCompleteness();
+
+  const weeksPct = data.totalNights > 0 ? ((data.nightsWithData / data.totalNights) * 100).toFixed(1) : '0';
+
   return (
     <main>
       {/* Parallax Hero — Village Lanes exterior */}
@@ -104,6 +109,25 @@ export default function AboutPage() {
             <Link href="/village-lanes" className="text-red-600 hover:text-red-700 transition-colors font-medium">Village Lanes</Link>,
             for being the star of the show for all those years.
           </p>
+        </div>
+
+        {/* Data Completeness */}
+        <div className="mt-12 pt-8 border-t border-navy/10">
+          <h2 className="font-heading text-2xl text-navy mb-4">Data Completeness</h2>
+          <div className="bg-navy/5 rounded-lg p-4 max-w-sm mb-6">
+            <div className="text-3xl font-heading text-navy">{data.nightsWithData}<span className="text-lg text-navy/40">/{data.totalNights}</span></div>
+            <div className="text-sm text-navy/50 mt-1">League nights with score data</div>
+            <div className="mt-2 w-full bg-navy/10 rounded-full h-2">
+              <div className="bg-red-600 h-2 rounded-full" style={{ width: `${weeksPct}%` }} />
+            </div>
+            <div className="text-xs text-navy/40 mt-1">{weeksPct}%</div>
+          </div>
+          {data.missingWeeks.length > 0 && (
+            <div className="text-sm text-navy/50">
+              <span className="font-medium text-navy/60">Missing from archive:</span>{' '}
+              {data.missingWeeks.join(', ')}
+            </div>
+          )}
         </div>
       </div>
     </main>

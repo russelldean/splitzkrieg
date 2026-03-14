@@ -3,7 +3,7 @@
  * Groups weeks by season with links to individual week pages.
  */
 import type { Metadata } from 'next';
-import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSnapshot } from '@/lib/queries';
+import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSnapshot, getDataCompleteness } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { BackToTop } from '@/components/ui/BackToTop';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
@@ -15,9 +15,10 @@ export const metadata: Metadata = {
 };
 
 export default async function WeeksIndexPage() {
-  const [allSeasons, snapshot] = await Promise.all([
+  const [allSeasons, snapshot, completeness] = await Promise.all([
     getAllSeasonNavList(),
     getCurrentSeasonSnapshot(),
+    getDataCompleteness(),
   ]);
   const currentSlug = snapshot?.slug;
 
@@ -35,8 +36,7 @@ export default async function WeeksIndexPage() {
     );
   }
 
-  // +2 for missing Week 9 data: Season V (Spring 2010), Season XVIII (Fall 2016)
-  const totalNights = Array.from(summariesBySeasonID.values()).reduce((sum, s) => sum + s.length, 0) + 2;
+  const totalNights = completeness.totalNights;
 
   return (
     <>
