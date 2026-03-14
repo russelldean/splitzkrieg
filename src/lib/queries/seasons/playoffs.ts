@@ -262,7 +262,7 @@ export const getSeasonIndividualChampions = cache(async (seasonID: number): Prom
     // If no champions at all, return null
     if (!row.mensScratchBowlerID && !row.womensScratchBowlerID && !row.handicapBowlerID) return null;
     return row;
-  }, null, { stable: true, sql: GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL });
+  }, null, { stable: true, sql: GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL + '/* v2: S34 champions */' });
 });
 
 export const getAllIndividualChampions = cache(async (): Promise<IndividualChampionSeason[]> => {
@@ -270,5 +270,5 @@ export const getAllIndividualChampions = cache(async (): Promise<IndividualChamp
     const db = await getDb();
     const result = await db.request().query<IndividualChampionSeason>(GET_ALL_INDIVIDUAL_CHAMPIONS_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL });
+  }, [], { stable: true, sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL + '/* v2: S34 champions */' });
 });
