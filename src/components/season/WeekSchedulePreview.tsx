@@ -12,16 +12,6 @@ function pairKey(a: number, b: number): string {
   return a < b ? `${a}-${b}` : `${b}-${a}`;
 }
 
-function getTeamPct(summary: PairH2HSummary | undefined, teamID: number): string | null {
-  if (!summary) return null;
-  const isTeam1 = summary.team1ID === teamID;
-  const w = isTeam1 ? summary.wins : summary.losses;
-  const t = summary.ties;
-  const total = w + (isTeam1 ? summary.losses : summary.wins) + t;
-  if (total === 0) return null;
-  return `${(((w + t * 0.5) / total) * 100).toFixed(1)}%`;
-}
-
 function getH2HRecord(summary: PairH2HSummary | undefined, teamID: number): string | null {
   if (!summary) return null;
   const isTeam1 = summary.team1ID === teamID;
@@ -45,8 +35,6 @@ export function WeekSchedulePreview({ schedule, h2hSummaries }: Props) {
       {schedule.map((matchup, idx) => {
         const isGhostMatch = matchup.homeTeamID === GHOST_TEAM_ID || matchup.awayTeamID === GHOST_TEAM_ID;
         const summary = h2hMap.get(pairKey(matchup.homeTeamID, matchup.awayTeamID));
-        const homePct = getTeamPct(summary, matchup.homeTeamID);
-        const awayPct = getTeamPct(summary, matchup.awayTeamID);
         const record = getH2HRecord(summary, matchup.homeTeamID);
         const hasHistory = summary && (summary.wins + summary.losses + summary.ties) > 0;
         const isFirstTime = !isGhostMatch && !hasHistory;
@@ -66,15 +54,9 @@ export function WeekSchedulePreview({ schedule, h2hSummaries }: Props) {
                   {matchup.homeTeamName}
                   {matchup.homeTeamID === GHOST_TEAM_ID && ' 👻'}
                 </Link>
-                {!isGhostMatch && homePct && (
-                  <span className="ml-2 text-sm tabular-nums text-navy/70">{homePct}</span>
-                )}
               </div>
               <div className="text-sm text-navy/50 px-3 shrink-0">vs</div>
               <div className="flex-1 min-w-0 text-right">
-                {!isGhostMatch && awayPct && (
-                  <span className="mr-2 text-sm tabular-nums text-navy/70">{awayPct}</span>
-                )}
                 <Link
                   href={`/team/${matchup.awayTeamSlug}`}
                   className="font-semibold text-navy hover:text-red-600 transition-colors"

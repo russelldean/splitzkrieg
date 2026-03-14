@@ -39,8 +39,10 @@ export default async function TeamsPage() {
           </div>
         </div>
       </section>
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12">
       <TrailNav current="/teams" position="top" />
+    </div>
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-12">
       <Suspense>
         <TeamsDirectory teams={teams} />
       </Suspense>
@@ -52,9 +54,10 @@ export default async function TeamsPage() {
           currentSeasonID={currentSeasonID ?? undefined}
         />
       )}
-
-      <TrailNav current="/teams" />
     </main>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-12">
+      <TrailNav current="/teams" />
+    </div>
     </>
   );
 }
