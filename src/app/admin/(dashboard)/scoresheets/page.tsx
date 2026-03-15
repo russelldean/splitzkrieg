@@ -7,6 +7,7 @@ interface PreviewBowler {
   side: 'home' | 'away';
   avg: number | null;
   hcp: number | null;
+  source: 'lineup' | 'lastweek' | null;
 }
 
 interface PreviewMatch {
@@ -253,9 +254,19 @@ export default function ScoresheetsPage() {
               <div className="p-4 grid grid-cols-2 gap-4">
                 {/* Home Team */}
                 <div>
-                  <p className="font-body text-xs font-semibold text-navy/50 mb-2 uppercase tracking-wider">
-                    {m.home}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="font-body text-xs font-semibold text-navy/50 uppercase tracking-wider">
+                      {m.home}
+                    </p>
+                    {(() => {
+                      const src = m.bowlers.find((b) => b.side === 'home')?.source;
+                      return src === 'lineup' ? (
+                        <span className="font-body text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded">submitted</span>
+                      ) : src === 'lastweek' ? (
+                        <span className="font-body text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">last week</span>
+                      ) : null;
+                    })()}
+                  </div>
                   <table className="w-full text-xs font-body">
                     <thead>
                       <tr className="text-navy/40 border-b border-navy/10">
@@ -293,9 +304,19 @@ export default function ScoresheetsPage() {
 
                 {/* Away Team */}
                 <div>
-                  <p className="font-body text-xs font-semibold text-navy/50 mb-2 uppercase tracking-wider">
-                    {m.away}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="font-body text-xs font-semibold text-navy/50 uppercase tracking-wider">
+                      {m.away}
+                    </p>
+                    {(() => {
+                      const src = m.bowlers.find((b) => b.side === 'away')?.source;
+                      return src === 'lineup' ? (
+                        <span className="font-body text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded">submitted</span>
+                      ) : src === 'lastweek' ? (
+                        <span className="font-body text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">last week</span>
+                      ) : null;
+                    })()}
+                  </div>
                   <table className="w-full text-xs font-body">
                     <thead>
                       <tr className="text-navy/40 border-b border-navy/10">

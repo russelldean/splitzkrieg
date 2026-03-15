@@ -19,6 +19,7 @@ export interface ScoresheetBowler {
   side: 'home' | 'away';
   incomingAvg: number | null;
   handicap: number | null;
+  rosterSource?: 'lineup' | 'lastweek';
 }
 
 export interface ScoresheetMatch {
@@ -80,39 +81,37 @@ export async function getMatchupsForWeek(
     const sched = scheduleResult.recordset[idx];
     const bowlers: ScoresheetBowler[] = [];
 
-    if (source === 'lineups') {
-      // Try lineup submissions first
-      const lineupResult = await db
-        .request()
-        .input('seasonID', sql.Int, seasonID)
-        .input('week', sql.Int, week)
-        .input('team1ID', sql.Int, sched.team1ID)
-        .input('team2ID', sql.Int, sched.team2ID)
-        .query<{
-          teamID: number;
-          bowlerID: number | null;
-          newBowlerName: string | null;
-          bowlerName: string | null;
-          position: number;
-        }>(
-          `SELECT ls.teamID, le.bowlerID, le.newBowlerName, b.bowlerName, le.position
-           FROM lineupSubmissions ls
-           JOIN lineupEntries le ON ls.id = le.submissionID
-           LEFT JOIN bowlers b ON le.bowlerID = b.bowlerID
-           WHERE ls.seasonID = @seasonID AND ls.week = @week
-             AND ls.teamID IN (@team1ID, @team2ID)
-           ORDER BY ls.teamID, le.position`,
-        );
+    // Load bowlers per team: lineup submission if available, else last week's scores
+    for (const teamID of [sched.team1ID, sched.team2ID]) {
+      const side: 'home' | 'away' = teamID === sched.team1ID ? 'home' : 'away';
+      let teamBowlers: ScoresheetBowler[] = [];
 
-      if (lineupResult.recordset.length > 0) {
+      // Try lineup submission for this team
+      if (source === 'lineups') {
+        const lineupResult = await db
+          .request()
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .input('teamID', sql.Int, teamID)
+          .query<{
+            bowlerID: number | null;
+            newBowlerName: string | null;
+            bowlerName: string | null;
+            position: number;
+          }>(
+            `SELECT le.bowlerID, le.newBowlerName, b.bowlerName, le.position
+             FROM lineupSubmissions ls
+             JOIN lineupEntries le ON ls.id = le.submissionID
+             LEFT JOIN bowlers b ON le.bowlerID = b.bowlerID
+             WHERE ls.seasonID = @seasonID AND ls.week = @week AND ls.teamID = @teamID
+             ORDER BY le.position`,
+          );
+
         for (const row of lineupResult.recordset) {
           const name = row.bowlerID
             ? (row.bowlerName || 'TBD')
             : row.newBowlerName || 'TBD';
-          const side: 'home' | 'away' =
-            row.teamID === sched.team1ID ? 'home' : 'away';
 
-          // Get incoming average for known bowlers
           let avg: number | null = null;
           if (row.bowlerID) {
             const avgResult = await db
@@ -129,51 +128,45 @@ export async function getMatchupsForWeek(
             avg = avgResult.recordset[0]?.incomingAvg ?? null;
           }
 
-          bowlers.push({
-            name,
-            side,
-            incomingAvg: avg,
-            handicap: calcHandicap(avg),
-          });
+          teamBowlers.push({ name, side, incomingAvg: avg, handicap: calcHandicap(avg), rosterSource: 'lineup' });
         }
       }
-    }
 
-    // Fallback: use last week's scores for roster
-    if (bowlers.length === 0) {
-      const prevWeek = week - 1;
-      if (prevWeek >= 1) {
-        const prevResult = await db
-          .request()
-          .input('seasonID', sql.Int, seasonID)
-          .input('prevWeek', sql.Int, prevWeek)
-          .input('team1ID', sql.Int, sched.team1ID)
-          .input('team2ID', sql.Int, sched.team2ID)
-          .query<{
-            bowlerID: number;
-            teamID: number;
-            bowlerName: string;
-            incomingAvg: number | null;
-          }>(
-            `SELECT s.bowlerID, s.teamID, b.bowlerName, s.incomingAvg
-             FROM scores s
-             JOIN bowlers b ON s.bowlerID = b.bowlerID
-             WHERE s.seasonID = @seasonID AND s.week = @prevWeek
-               AND s.teamID IN (@team1ID, @team2ID) AND s.isPenalty = 0
-             ORDER BY s.teamID, b.bowlerName`,
-          );
+      // Fallback: use last week's scores for this team
+      if (teamBowlers.length === 0) {
+        const prevWeek = week - 1;
+        if (prevWeek >= 1) {
+          const prevResult = await db
+            .request()
+            .input('seasonID', sql.Int, seasonID)
+            .input('prevWeek', sql.Int, prevWeek)
+            .input('teamID', sql.Int, teamID)
+            .query<{
+              bowlerID: number;
+              bowlerName: string;
+              incomingAvg: number | null;
+            }>(
+              `SELECT s.bowlerID, b.bowlerName, s.incomingAvg
+               FROM scores s
+               JOIN bowlers b ON s.bowlerID = b.bowlerID
+               WHERE s.seasonID = @seasonID AND s.week = @prevWeek
+                 AND s.teamID = @teamID AND s.isPenalty = 0
+               ORDER BY b.bowlerName`,
+            );
 
-        for (const row of prevResult.recordset) {
-          const side: 'home' | 'away' =
-            row.teamID === sched.team1ID ? 'home' : 'away';
-          bowlers.push({
-            name: row.bowlerName,
-            side,
-            incomingAvg: row.incomingAvg,
-            handicap: calcHandicap(row.incomingAvg),
-          });
+          for (const row of prevResult.recordset) {
+            teamBowlers.push({
+              name: row.bowlerName,
+              side,
+              incomingAvg: row.incomingAvg,
+              handicap: calcHandicap(row.incomingAvg),
+              rosterSource: 'lastweek',
+            });
+          }
         }
       }
+
+      bowlers.push(...teamBowlers);
     }
 
     // If still no bowlers, add empty slots
@@ -313,9 +306,10 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setTextColor(120);
     doc.text(`Week ${match.week}`, 40, 30);
 
-    // Turkey emoji above home team's turkeys column
+    // Turkey emoji above home team's turkeys column (facing left - default)
     const tkSize = 24;
-    doc.addImage(TURKEY_PNG, 'PNG', turkeyColX + (turkeyColW - tkSize) / 2, 50 - tkSize - 4, tkSize, tkSize);
+    const tkX = turkeyColX + (turkeyColW - tkSize) / 2;
+    doc.addImage(TURKEY_PNG, 'PNG', tkX, 50 - tkSize - 4, tkSize, tkSize);
 
     // Home team table
     const homeRows = buildRows(match.homeTeamName, homeBowlers);
@@ -341,6 +335,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
         fontSize: 9,
         fontStyle: 'bold',
         cellPadding: 6,
+        halign: 'center',
       },
       columnStyles: {
         0: { cellWidth: 95 },
@@ -358,14 +353,22 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const afterHomeY = (doc as any).lastAutoTable?.finalY ?? 300;
 
-    // Turkey emoji above away team's turkeys column
-    const awayTableY = afterHomeY + 25;
-    doc.addImage(TURKEY_PNG, 'PNG', turkeyColX + (turkeyColW - tkSize) / 2, awayTableY - tkSize - 4, tkSize, tkSize);
+    // Turkey emoji above away team's turkeys column (flipped to face right)
+    const awayGap = 40;
+    const awayTkX = turkeyColX + (turkeyColW - tkSize) / 2;
+    const awayTkY = afterHomeY + awayGap - tkSize - 4;
+    // Flip horizontally using internal PDF transform
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const internal = doc.internal as any;
+    internal.write('q');
+    internal.write(`-1 0 0 1 ${(awayTkX * 2 + tkSize).toFixed(2)} 0 cm`);
+    doc.addImage(TURKEY_PNG, 'PNG', awayTkX, awayTkY, tkSize, tkSize);
+    internal.write('Q');
 
     // Away team table
     const awayRows = buildRows(match.awayTeamName, awayBowlers);
     autoTable(doc, {
-      startY: afterHomeY + 25,
+      startY: afterHomeY + awayGap,
       head: [columns],
       body: [
         ...awayRows,
@@ -386,6 +389,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
         fontSize: 9,
         fontStyle: 'bold',
         cellPadding: 6,
+        halign: 'center',
       },
       columnStyles: {
         0: { cellWidth: 95 },

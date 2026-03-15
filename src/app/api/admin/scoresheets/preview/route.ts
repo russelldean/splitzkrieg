@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
         side: b.side,
         avg: b.incomingAvg,
         hcp: b.handicap,
+        source: b.rosterSource || null,
       })),
     }));
 
