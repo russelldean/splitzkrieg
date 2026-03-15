@@ -543,7 +543,7 @@ export async function getSeasonTeams(
     .query<{ teamID: number; teamName: string }>(
       `SELECT DISTINCT t.teamID, t.teamName
        FROM schedule sch
-       JOIN teams t ON t.teamID = sch.homeTeamID OR t.teamID = sch.awayTeamID
+       JOIN teams t ON t.teamID = sch.team1ID OR t.teamID = sch.team2ID
        WHERE sch.seasonID = @seasonID
        ORDER BY t.teamName`,
     );
