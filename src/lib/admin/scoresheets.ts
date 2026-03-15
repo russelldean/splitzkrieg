@@ -601,32 +601,13 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setTextColor(120);
     doc.text(`Week ${match.week}`, 40, 30);
 
-    // Active announcements
-    const today = new Date().toISOString().slice(0, 10);
-    const activeAnnouncements = announcements.filter(
-      (a) => !a.expires || a.expires > today,
-    );
-    let announcementEndY = 30;
-    if (activeAnnouncements.length > 0) {
-      doc.setFontSize(9);
-      doc.setTextColor(navy);
-      doc.setFont('helvetica', 'bold');
-      for (const a of activeAnnouncements) {
-        announcementEndY += 14;
-        const icon = a.type === 'urgent' ? '!  ' : '';
-        doc.text(`${icon}${a.message}`, pageW / 2, announcementEndY, { align: 'center' });
-      }
-      doc.setFont('helvetica', 'normal');
-      announcementEndY += 10;
-    }
-
     // Check roster source per team
     const homeSource = homeBowlers[0]?.rosterSource;
     const awaySource = awayBowlers[0]?.rosterSource;
     const fallbackMsg = "Last Week's Lineup - Please Submit Lineups before 5pm Monday";
 
     // Home team fallback warning
-    let homeTableY = Math.max(50, announcementEndY + 6);
+    let homeTableY = 50;
     if (homeSource === 'lastweek') {
       doc.setFontSize(8);
       doc.setTextColor(180, 100, 0);
@@ -640,6 +621,38 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     const tkSize = 24;
     const tkX = turkeyColX + (turkeyColW - tkSize) / 2;
     doc.addImage(TURKEY_PNG, 'PNG', tkX, homeTableY - tkSize - 4, tkSize, tkSize);
+
+    // Speech bubble from turkey with active announcements
+    const today = new Date().toISOString().slice(0, 10);
+    const activeAnnouncements = announcements.filter(
+      (a) => !a.expires || a.expires > today,
+    );
+    if (activeAnnouncements.length > 0) {
+      const bubbleText = activeAnnouncements.map((a) => a.message).join('  |  ');
+      const bubbleW = doc.getTextWidth(bubbleText) + 16;
+      const bubbleH = 18;
+      const bubbleX = tkX - bubbleW - 8;
+      const bubbleY = homeTableY - tkSize - 8;
+
+      // Bubble rectangle
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.5);
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(bubbleX, bubbleY, bubbleW, bubbleH, 4, 4, 'FD');
+
+      // Little triangle pointing to turkey
+      const triX = bubbleX + bubbleW;
+      const triY = bubbleY + bubbleH / 2 - 3;
+      doc.setFillColor(255, 255, 255);
+      doc.triangle(triX, triY, triX, triY + 6, triX + 6, triY + 3, 'FD');
+
+      // Text
+      doc.setFontSize(8);
+      doc.setTextColor(navy);
+      doc.setFont('helvetica', 'bold');
+      doc.text(bubbleText, bubbleX + 8, bubbleY + 12);
+      doc.setFont('helvetica', 'normal');
+    }
 
     // Home team table
     const homeRows = buildRows(match.homeTeamName, homeBowlers);
