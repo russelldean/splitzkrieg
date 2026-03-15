@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 07-homepage-personality-and-portfolio-polish
+current_phase: 08-admin-tools
 current_plan: 2 of 5
-status: phase-complete
-last_updated: "2026-03-14T00:00:00.000Z"
+status: in-progress
+last_updated: "2026-03-15T01:51:26.569Z"
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 4
+  total_plans: 10
+  completed_plans: 5
 ---
 
 # Session State
@@ -22,7 +22,7 @@ See: .planning/PROJECT.md
 ## Position
 
 **Milestone:** v1.0 milestone
-**Current phase:** 07-homepage-personality-and-portfolio-polish
+**Current phase:** 08-admin-tools
 **Current plan:** 2 of 5
 **Status:** In Progress
 
@@ -44,6 +44,7 @@ See: .planning/PROJECT.md
 - 2026-03-14: Phase 7 complete — footer redesign (dark nav bar + light branding), BackToHome on secondary pages, Recent Updates in mobile menu
 - 2026-03-14: Phase 9 complete — all 35 seasons have schedule data, 646 division rows, import tooling in place
 - 2026-03-14: Phase 8 context gathered — admin dashboard, score pipeline, lineup submission, blog editor, scoresheet PDF
+- 2026-03-14: Phase 8 Plan 01 — Admin foundation: JWT auth (jose), proxy.ts, 4 DB tables, sidebar layout
 
 ## Decisions
 
@@ -67,6 +68,9 @@ See: .planning/PROJECT.md
 - **[Phase 07-01]** Tagline: "Since 2007. 100+ bowlers. One very specific website." -- dry/understated tone
 - **[Phase 07-01]** SVG icons exported as JSX elements from shared icons.tsx, not component functions
 - **[Phase 07-02]** User rejected homepage pill nav and tagline -- reverted to original layout; directory parallax heroes approved
+- **[Phase 08-01]** Route group (dashboard) to separate login from auth-protected admin layout
+- **[Phase 08-01]** proxy.ts does cookie existence only; full JWT verification in layout/API routes
+- **[Phase 08-01]** AdminShell uses fixed positioning to overlay public site Header/Footer
 
 ## Pending Todos
 

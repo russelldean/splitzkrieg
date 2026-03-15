@@ -80,8 +80,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Admin
 
-- [ ] **ADMN-01**: Score entry web interface (replaces spreadsheet workflow)
-- [ ] **ADMN-02**: Score validation (flags unusual scores, checks against known bowlers)
+- [x] **ADMN-01**: Score entry web interface (replaces spreadsheet workflow)
+- [x] **ADMN-02**: Score validation (flags unusual scores, checks against known bowlers)
 
 ### Cross-Cutting
 
@@ -182,8 +182,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HOME-03 | Phase 3 | Complete |
 | HOME-04 | Phase 3 | Complete |
 | HOME-05 | Phase 3 | Complete |
-| ADMN-01 | Phase 7 | Pending |
-| ADMN-02 | Phase 7 | Pending |
+| ADMN-01 | Phase 7 | Complete |
+| ADMN-02 | Phase 7 | Complete |
 | XCUT-01 | Phase 2 | Complete |
 | XCUT-02 | Phase 1 | Complete |
 | XCUT-03 | Phase 1 | Complete |
