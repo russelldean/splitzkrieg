@@ -160,9 +160,16 @@ export async function lpPullScores(
   seasonID: number,
   weekNum: number,
 ): Promise<{ matches: StagedMatch[]; warnings: string[] }> {
+  // Strip any whitespace from cookie (line breaks from paste)
+  const cleanCookie = cookie.trim().replace(/\s+/g, '');
+  // Ensure cookie has the connect.sid= prefix
+  const fullCookie = cleanCookie.startsWith('connect.sid=')
+    ? cleanCookie
+    : `connect.sid=${cleanCookie}`;
+
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    Cookie: cookie,
+    Cookie: fullCookie,
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
   };
 
