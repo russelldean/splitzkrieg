@@ -45,7 +45,8 @@ export async function getRecentRoster(
       `SELECT DISTINCT s.bowlerID
        FROM scores s
        WHERE s.teamID = @teamID AND s.seasonID IN (@seasonID, @prevSeasonID) AND s.isPenalty = 0
-       ORDER BY s.bowlerID`,
+       UNION
+       SELECT bowlerID FROM bowlers WHERE bowlerName = 'Penalty'`,
     );
   return result.recordset.map((r) => r.bowlerID);
 }

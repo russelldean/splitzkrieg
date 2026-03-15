@@ -135,7 +135,7 @@ export default function LineupPage() {
     setError(null);
   }
 
-  // Sort bowlers: recent roster first, then alphabetical by full name
+  // Sort bowlers: recent roster first (Penalty last within team), then alphabetical
   const sortedBowlers = useMemo(() => {
     if (!context) return [];
     const recentSet = new Set(context.recentRoster);
@@ -144,6 +144,11 @@ export default function LineupPage() {
       const bRecent = recentSet.has(b.bowlerID);
       if (aRecent && !bRecent) return -1;
       if (!aRecent && bRecent) return 1;
+      // Penalty sorts last within its group
+      const aPenalty = a.firstName === 'Penalty';
+      const bPenalty = b.firstName === 'Penalty';
+      if (aPenalty && !bPenalty) return 1;
+      if (!aPenalty && bPenalty) return -1;
       return `${a.firstName} ${a.lastName}`.localeCompare(
         `${b.firstName} ${b.lastName}`,
       );
@@ -227,27 +232,6 @@ export default function LineupPage() {
     });
   }, []);
 
-  const addSlot = useCallback(() => {
-    setSlots((prev) => [
-      ...prev,
-      {
-        position: prev.length + 1,
-        bowlerID: null,
-        bowlerName: '',
-        isNew: false,
-        newBowlerName: '',
-      },
-    ]);
-  }, []);
-
-  const removeSlot = useCallback((index: number) => {
-    setSlots((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev
-        .filter((_, i) => i !== index)
-        .map((s, i) => ({ ...s, position: i + 1 }));
-    });
-  }, []);
 
   const handleSubmit = async () => {
     if (!context) return;
@@ -491,17 +475,6 @@ export default function LineupPage() {
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
-                {slots.length > 1 && (
-                  <button
-                    onClick={() => removeSlot(index)}
-                    className="p-1 text-red-400 hover:text-red-600 ml-1"
-                    title="Remove slot"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                )}
               </div>
             </div>
 
@@ -666,15 +639,6 @@ export default function LineupPage() {
             )}
           </div>
         ))}
-      </div>
-
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          onClick={addSlot}
-          className="font-body text-sm text-navy/50 hover:text-navy border border-dashed border-navy/20 rounded-md px-4 py-2"
-        >
-          + Add Slot
-        </button>
       </div>
 
       <div className="mb-5">
