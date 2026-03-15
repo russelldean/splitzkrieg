@@ -39,23 +39,29 @@ export function MobileNav({ groups }: MobileNavProps) {
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle navigation"
         aria-expanded={isOpen}
-        className="relative z-50 flex flex-col justify-center items-center gap-1.5 p-2 rounded hover:bg-cream-dark transition-colors"
+        className="relative z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-navy text-cream transition-colors hover:bg-navy-light"
       >
-        <span
-          className={`block h-0.5 w-5 bg-navy transition-all duration-200 ${
-            isOpen ? 'translate-y-2 rotate-45' : ''
-          }`}
-        />
-        <span
-          className={`block h-0.5 w-5 bg-navy transition-opacity duration-200 ${
-            isOpen ? 'opacity-0' : ''
-          }`}
-        />
-        <span
-          className={`block h-0.5 w-5 bg-navy transition-all duration-200 ${
-            isOpen ? '-translate-y-2 -rotate-45' : ''
-          }`}
-        />
+        <div className="relative w-5 h-5 flex flex-col justify-center items-center">
+          {/* Top line — rotates to become one arm of the X */}
+          <span
+            className={`absolute block h-[2.5px] w-5 rounded-sm transition-all duration-300 origin-center ${
+              isOpen ? 'rotate-45 bg-[#c53030]' : 'bg-cream -translate-y-[6px]'
+            }`}
+          />
+          {/* Middle line — fades out */}
+          <span
+            className={`absolute block h-[2.5px] w-5 rounded-sm bg-cream transition-all duration-200 ${
+              isOpen ? 'opacity-0 scale-x-0' : 'opacity-100'
+            }`}
+          />
+          {/* Bottom line — rotates to become other arm of the X */}
+          <span
+            className={`absolute block h-[2.5px] w-5 rounded-sm transition-all duration-300 origin-center ${
+              isOpen ? '-rotate-45 bg-[#c53030]' : 'bg-cream translate-y-[6px]'
+            }`}
+          />
+        </div>
+        <span className="font-body text-sm font-semibold">{isOpen ? 'Close' : 'Menu'}</span>
       </button>
 
       {/* Backdrop */}

@@ -71,7 +71,7 @@ export async function Header() {
                 <span className="font-heading text-navy uppercase tracking-widest text-xl sm:text-2xl font-normal block leading-none">
                   SPLITZKRIEG
                 </span>
-                <span className="font-body text-xs text-navy/65 tracking-wider uppercase leading-none mt-0.5 hidden sm:block">
+                <span className="font-body text-xs text-navy/80 tracking-wider uppercase leading-none mt-0.5 hidden sm:block">
                   Bowling League &middot; Est. 2007
                 </span>
               </Link>
@@ -139,6 +139,9 @@ export async function Header() {
                 Blog
               </Link>
             </DesktopNav>
+
+            {/* Spacer pushes mobile nav to the right */}
+            <div className="flex-1 md:hidden" />
 
             {/* Mobile Nav */}
             <div className="md:hidden flex-shrink-0">

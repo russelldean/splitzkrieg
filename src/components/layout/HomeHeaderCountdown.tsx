@@ -44,10 +44,10 @@ export function HomeHeaderCountdown({ targetDate }: { targetDate: string | null 
             <span className="font-digital text-2xl tracking-wider text-navy tabular-nums">
               {String(value).padStart(2, '0')}
             </span>
-            <span className="font-body text-sm text-navy/40 ml-0.5">{label}</span>
+            <span className="font-body text-sm text-navy/60 ml-0.5">{label}</span>
           </span>
         ))}
-        <span className="font-body text-sm text-navy/50 ml-3">until bowling</span>
+        <span className="font-body text-sm text-navy/65 ml-3">until bowling</span>
       </div>
     </div>
   );

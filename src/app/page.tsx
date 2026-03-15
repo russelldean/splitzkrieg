@@ -105,12 +105,17 @@ export default async function Home() {
               unoptimized
               priority
             />
-            <p className="font-body text-sm sm:text-base text-navy/65 -mt-4 sm:-mt-6">
+            <p className="font-body text-sm sm:text-base text-navy/80 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>
 
-          {/* Countdown Clock — mobile only (desktop uses HeaderCountdown in ticker) */}
+          {/* Search bar — mobile only (desktop has it in ticker overlay) */}
+          <div className="mt-4 sm:hidden">
+            <SearchBar />
+          </div>
+
+          {/* Countdown Clock — mobile only (desktop uses HeaderCountdown in header) */}
           <div className="mt-4 sm:hidden">
             <CountdownClock targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
           </div>

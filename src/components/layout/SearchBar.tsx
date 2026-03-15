@@ -126,7 +126,7 @@ export function SearchBar({ variant = 'light' }: { variant?: 'light' | 'dark' })
           className={`w-full rounded-lg pl-9 pr-4 py-2 text-base sm:text-sm font-body focus:outline-none focus:ring-2 transition-colors ${
             variant === 'dark'
               ? 'bg-navy border border-navy shadow-lg text-cream placeholder:text-cream/40 focus:ring-red/40 focus:border-red/40'
-              : 'bg-white border border-navy/20 text-navy placeholder:text-navy/40 focus:ring-red/30 focus:border-red/30 animate-search-glow'
+              : 'bg-white border border-navy/25 text-navy placeholder:text-navy/55 focus:ring-red/30 focus:border-red/30 shadow-sm animate-search-glow'
           }`}
           role="combobox"
           aria-expanded={isDropdownOpen}

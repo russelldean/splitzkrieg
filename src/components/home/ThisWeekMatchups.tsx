@@ -25,7 +25,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-red-600/30 p-6">
-      <div className="flex items-baseline justify-between mb-3">
+      <div className="flex items-baseline justify-between mb-5">
         <div>
           <h3 className="font-heading text-lg text-navy">Up Next</h3>
           <p className="text-xs font-body text-navy/65">

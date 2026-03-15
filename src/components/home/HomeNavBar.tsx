@@ -23,6 +23,7 @@ export function HomeNavBar({ items }: { items: NavItem[] }) {
   const [mounted, setMounted] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const barRef = useRef<HTMLElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   function handleEnter(i: number) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -43,6 +44,7 @@ export function HomeNavBar({ items }: { items: NavItem[] }) {
       }
     }
     setSeenKeys(seen);
+
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
@@ -56,7 +58,7 @@ export function HomeNavBar({ items }: { items: NavItem[] }) {
   }
 
   return (
-    <nav ref={barRef} className="mt-6 sm:mt-8 border-y border-navy/30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+    <nav ref={barRef} className="hidden sm:block relative mt-6 sm:mt-8 border-y border-navy/30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center divide-x divide-navy/25">
         {items.map((item, i) => {
           const showBadge = mounted && item.newBadgeKey && !seenKeys.has(item.newBadgeKey);
@@ -64,7 +66,7 @@ export function HomeNavBar({ items }: { items: NavItem[] }) {
           return (
             <div
               key={item.href}
-              className="relative flex-1"
+              className="relative sm:flex-1"
               onMouseEnter={() => handleEnter(i)}
               onMouseLeave={handleLeave}
             >

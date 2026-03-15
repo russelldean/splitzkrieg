@@ -205,6 +205,13 @@ body {
   @apply border-l-4 border-red/30 pl-4 italic text-navy/60 my-6;
 }
 
+/* Hide scrollbar but keep scroll functionality */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
   .animate-shimmer,
