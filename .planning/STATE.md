@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 08-admin-tools
-current_plan: 2 of 5
+current_plan: 3 of 5
 status: in-progress
-last_updated: "2026-03-15T01:51:26.569Z"
+last_updated: "2026-03-15T01:58:49.000Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 10
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Session State
@@ -23,7 +23,7 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.0 milestone
 **Current phase:** 08-admin-tools
-**Current plan:** 2 of 5
+**Current plan:** 3 of 5
 **Status:** In Progress
 
 ## Session Log
@@ -45,6 +45,7 @@ See: .planning/PROJECT.md
 - 2026-03-14: Phase 9 complete — all 35 seasons have schedule data, 646 division rows, import tooling in place
 - 2026-03-14: Phase 8 context gathered — admin dashboard, score pipeline, lineup submission, blog editor, scoresheet PDF
 - 2026-03-14: Phase 8 Plan 01 — Admin foundation: JWT auth (jose), proxy.ts, 4 DB tables, sidebar layout
+- 2026-03-14: Phase 8 Plan 03 — Lineup submission: magic link captain auth, bowler picker form, admin lineup grid, LP push
 
 ## Decisions
 
@@ -71,6 +72,10 @@ See: .planning/PROJECT.md
 - **[Phase 08-01]** Route group (dashboard) to separate login from auth-protected admin layout
 - **[Phase 08-01]** proxy.ts does cookie existence only; full JWT verification in layout/API routes
 - **[Phase 08-01]** AdminShell uses fixed positioning to overlay public site Header/Footer
+- **[Phase 08-03]** Captain lineup form uses single API endpoint (GET context, POST submit)
+- **[Phase 08-03]** LP push refactored from CLI script into admin UI with same team ID mapping
+- **[Phase 08-03]** Admin lineups page inside (dashboard) route group for consistent auth
+- **[Phase 08-03]** Lineup re-submission uses transaction delete-and-replace
 
 ## Pending Todos
 
