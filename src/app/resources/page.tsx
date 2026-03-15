@@ -29,9 +29,9 @@ const resources: ResourceCategory[] = [
     category: 'League Documents',
     links: [
 {
-        label: 'Lineup Submission Form',
-        href: 'https://docs.google.com/forms/d/e/1FAIpQLSdsL0IXbCB97O0VlbFNKY1XdCl8502VsxXt3j-oIYFBJRBgSw/viewform',
-        description: 'Commissioners: submit weekly lineups here',
+        label: 'Lineup Submission',
+        href: '/lineup',
+        description: 'Captains: submit your weekly lineup here',
       },
       {
         label: 'League Calendar',
