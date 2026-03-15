@@ -4,20 +4,30 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: DashboardIcon, adminOnly: false },
-  { label: 'Scores', href: '/admin/scores', icon: ScoresIcon, adminOnly: true },
-  { label: 'Blog', href: '/admin/blog', icon: BlogIcon, adminOnly: false },
-  { label: 'Updates', href: '/admin/updates', icon: UpdatesIcon, adminOnly: true },
-  { label: 'Lineups', href: '/admin/lineups', icon: LineupsIcon, adminOnly: true },
-  { label: 'Scoresheets', href: '/admin/scoresheets', icon: ScoresheetsIcon, adminOnly: true },
-  { label: 'Bowlers', href: '/admin/bowlers', icon: BowlersIcon, adminOnly: true },
+type NavItem =
+  | { kind: 'link'; label: string; href: string; icon: React.FC<{ className?: string }>; adminOnly: boolean }
+  | { kind: 'divider' };
+
+const NAV_ITEMS: NavItem[] = [
+  { kind: 'link', label: 'Dashboard', href: '/admin', icon: DashboardIcon, adminOnly: false },
+  { kind: 'link', label: 'Lineups', href: '/admin/lineups', icon: LineupsIcon, adminOnly: true },
+  { kind: 'link', label: 'Scoresheets', href: '/admin/scoresheets', icon: ScoresheetsIcon, adminOnly: true },
+  { kind: 'divider' },
+  { kind: 'link', label: 'Scores', href: '/admin/scores', icon: ScoresIcon, adminOnly: true },
+  { kind: 'link', label: 'Blog', href: '/admin/blog', icon: BlogIcon, adminOnly: false },
+  { kind: 'divider' },
+  { kind: 'link', label: 'Updates', href: '/admin/updates', icon: UpdatesIcon, adminOnly: true },
+  { kind: 'link', label: 'Announcements', href: '/admin/announcements', icon: AnnouncementsIcon, adminOnly: true },
+  { kind: 'divider' },
+  { kind: 'link', label: 'Email', href: '/admin/email', icon: EmailNavIcon, adminOnly: true },
+  { kind: 'link', label: 'Captains', href: '/admin/captains', icon: CaptainsIcon, adminOnly: true },
+  { kind: 'link', label: 'Bowlers', href: '/admin/bowlers', icon: BowlersIcon, adminOnly: true },
 ];
 
 export function AdminShell({ children, role = 'admin' }: { children: React.ReactNode; role?: string }) {
   const visibleNav = role === 'admin'
     ? NAV_ITEMS
-    : NAV_ITEMS.filter((item) => !item.adminOnly);
+    : NAV_ITEMS.filter((item) => item.kind === 'divider' || !item.adminOnly);
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,7 +49,10 @@ export function AdminShell({ children, role = 'admin' }: { children: React.React
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {visibleNav.map((item) => {
+          {visibleNav.map((item, i) => {
+            if (item.kind === 'divider') {
+              return <div key={`div-${i}`} className="my-2 border-t border-white/10" />;
+            }
             const active =
               item.href === '/admin'
                 ? pathname === '/admin'
@@ -91,7 +104,10 @@ export function AdminShell({ children, role = 'admin' }: { children: React.React
         {mobileMenuOpen && (
           <div className="md:hidden bg-navy border-b border-white/10">
             <nav className="px-3 py-2 space-y-1">
-              {visibleNav.map((item) => {
+              {visibleNav.map((item, i) => {
+                if (item.kind === 'divider') {
+                  return <div key={`div-${i}`} className="my-2 border-t border-white/10" />;
+                }
                 const active =
                   item.href === '/admin'
                     ? pathname === '/admin'
@@ -194,6 +210,31 @@ function UpdatesIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function AnnouncementsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function EmailNavIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+    </svg>
+  );
+}
+
+function CaptainsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 3.323V3a1 1 0 011-1z" clipRule="evenodd" />
     </svg>
   );
 }

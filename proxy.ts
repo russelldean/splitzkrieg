@@ -17,16 +17,6 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // Lineup pages (except login) - check for lineup-token cookie
-  if (pathname.startsWith('/lineup') && !pathname.startsWith('/lineup/login')) {
-    const token = request.cookies.get('lineup-token')?.value;
-    if (!token) {
-      return NextResponse.redirect(
-        new URL('/lineup/login?expired=1', request.url),
-      );
-    }
-  }
-
   // Admin API routes - check for admin-token cookie
   if (pathname.startsWith('/api/admin')) {
     const token = request.cookies.get('admin-token')?.value;
@@ -39,5 +29,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/lineup/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*'],
 };

@@ -13,7 +13,7 @@ import autoTable from 'jspdf-autotable';
 import sql from 'mssql';
 import { getDb } from '@/lib/db';
 import { TURKEY_PNG } from './turkey-emoji';
-import announcements from '../../../content/announcements';
+import { getActiveAnnouncements } from './announcements-db';
 
 export interface ScoresheetBowler {
   name: string;
@@ -325,7 +325,7 @@ export async function getMatchupsForWeek(
  * Each match = 2 pages: cover page + scoring grid.
  * Portrait letter size.
  */
-export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
+export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -607,10 +607,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.addImage(TURKEY_PNG, 'PNG', tkX, homeTableY - tkSize - 4, tkSize, tkSize);
 
     // Speech bubble from turkey with active announcements
-    const today = new Date().toISOString().slice(0, 10);
-    const activeAnnouncements = announcements.filter(
-      (a) => !a.expires || a.expires > today,
-    );
+    const activeAnnouncements = await getActiveAnnouncements();
     if (activeAnnouncements.length > 0) {
       const bubbleText = activeAnnouncements.map((a) => a.message).join('  |  ');
       doc.setFontSize(8);

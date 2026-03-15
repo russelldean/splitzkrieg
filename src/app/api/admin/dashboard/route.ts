@@ -127,11 +127,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Determine pre-night pipeline step
+    let preNightStep = 'idle';
+    if (lineupStatus) {
+      if (lineupStatus.submitted > 0) {
+        preNightStep = 'reminded'; // some lineups are in
+      }
+      if (lineupStatus.submitted === lineupStatus.total && lineupStatus.total > 0) {
+        preNightStep = 'all-submitted';
+      }
+    }
+    // Check if lineups were pushed to LP (look for 'pushed' status)
+    if (season) {
+      const nextWeek = publishedWeek + 1;
+      const pushCheck = await db
+        .request()
+        .input('seasonID', sql.Int, season.seasonID)
+        .input('week', sql.Int, nextWeek)
+        .query<{ cnt: number }>(
+          `SELECT COUNT(*) AS cnt FROM lineupSubmissions
+           WHERE seasonID = @seasonID AND week = @week AND status = 'pushed'`,
+        );
+      if (pushCheck.recordset[0]?.cnt > 0) {
+        preNightStep = 'pushed';
+      }
+    }
+
     return NextResponse.json({
       season,
       publishedWeek,
       lineupStatus,
       pipelineStep,
+      preNightStep,
       recentScoreWeek,
     });
   } catch (err) {

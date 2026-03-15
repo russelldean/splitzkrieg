@@ -13,17 +13,69 @@ interface DashboardData {
     teams: Array<{ teamName: string; submitted: boolean }>;
   } | null;
   pipelineStep: string;
+  preNightStep: string;
   recentScoreWeek: number | null;
 }
 
-const PIPELINE_STEPS = [
+const PRE_NIGHT_STEPS = [
+  { key: 'remind', label: 'Remind', page: '/admin/lineups' },
+  { key: 'push', label: 'Push LP', page: '/admin/lineups' },
+  { key: 'print', label: 'Scoresheets', page: '/admin/scoresheets' },
+];
+
+const POST_NIGHT_STEPS = [
   { key: 'pull', label: 'Pull', page: '/admin/scores' },
   { key: 'review', label: 'Review', page: '/admin/scores' },
   { key: 'confirm', label: 'Confirm', page: '/admin/scores' },
-  { key: 'blog', label: 'Blog', page: '/admin/blog' },
+  { key: 'blog', label: 'Recap', page: '/admin/blog' },
   { key: 'publish', label: 'Publish', page: '' },
   { key: 'email', label: 'Email', page: '' },
 ];
+
+/* Shared pipeline renderer */
+function Pipeline({
+  steps,
+  activeIdx,
+}: {
+  steps: { key: string; label: string; page: string }[];
+  activeIdx: number;
+}) {
+  return (
+    <div className="flex items-start justify-center mb-5">
+      {steps.map((step, idx) => (
+        <div key={step.key} className="flex items-start">
+          <div className="flex flex-col items-center w-16">
+            <div
+              className={`flex items-center justify-center w-9 h-9 rounded-full text-xs font-body font-semibold transition-colors ${
+                idx < activeIdx
+                  ? 'bg-green-500 text-white'
+                  : idx === activeIdx
+                    ? 'bg-navy text-cream'
+                    : 'bg-navy/10 text-navy/40'
+              }`}
+            >
+              {idx < activeIdx ? '\u2713' : idx + 1}
+            </div>
+            <span
+              className={`font-body text-[10px] mt-1.5 text-center leading-tight ${
+                idx === activeIdx ? 'text-navy font-semibold' : 'text-navy/40'
+              }`}
+            >
+              {step.label}
+            </span>
+          </div>
+          {idx < steps.length - 1 && (
+            <div
+              className={`w-6 h-0.5 mt-[18px] -mx-1 ${
+                idx < activeIdx ? 'bg-green-500' : 'bg-navy/10'
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -33,6 +85,8 @@ export default function AdminDashboardPage() {
   const [publishResult, setPublishResult] = useState<string | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailResult, setEmailResult] = useState<string | null>(null);
+  const [remindLoading, setRemindLoading] = useState(false);
+  const [remindResult, setRemindResult] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -49,6 +103,46 @@ export default function AdminDashboardPage() {
     }
     load();
   }, []);
+
+  const handleRemind = useCallback(async () => {
+    if (!data?.season || !data?.lineupStatus) return;
+    const missing = data.lineupStatus.teams.filter((t) => !t.submitted);
+    if (missing.length === 0) return;
+
+    if (
+      !confirm(
+        `Send lineup reminders to ${missing.length} team${missing.length !== 1 ? 's' : ''}?`,
+      )
+    )
+      return;
+
+    setRemindLoading(true);
+    setRemindResult(null);
+
+    try {
+      const res = await fetch('/api/admin/remind-captains', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seasonID: data.season.seasonID,
+          week: data.lineupStatus.week,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Remind failed');
+
+      let msg = json.message;
+      if (json.noEmail?.length > 0) {
+        msg += ` | No email on file: ${json.noEmail.join(', ')}`;
+      }
+      setRemindResult(msg);
+    } catch (err) {
+      setRemindResult(err instanceof Error ? err.message : 'Failed to send reminders');
+    } finally {
+      setRemindLoading(false);
+    }
+  }, [data]);
 
   const handlePublish = useCallback(async () => {
     if (!data?.season) return;
@@ -69,7 +163,7 @@ export default function AdminDashboardPage() {
       if (!res.ok) throw new Error(json.error || 'Publish failed');
 
       setPublishResult(`Published Week ${week} successfully`);
-      setData((prev) => prev ? { ...prev, publishedWeek: week } : prev);
+      setData((prev) => (prev ? { ...prev, publishedWeek: week } : prev));
     } catch (err) {
       setPublishResult(err instanceof Error ? err.message : 'Publish failed');
     } finally {
@@ -128,18 +222,31 @@ export default function AdminDashboardPage() {
 
   const seasonLabel = data?.season?.displayName || 'Unknown Season';
   const nextWeek = (data?.publishedWeek || 0) + 1;
+  const missingLineups = data?.lineupStatus
+    ? data.lineupStatus.teams.filter((t) => !t.submitted).length
+    : 0;
 
-  // Determine active pipeline step
-  function getActiveStep(): number {
+  // Determine active pre-night step
+  function getPreNightStep(): number {
     if (!data) return 0;
-    if (data.pipelineStep === 'published') return 5; // ready for email
-    if (data.pipelineStep === 'confirmed') return 3; // ready for blog
-    if (data.pipelineStep === 'reviewing') return 1;
-    if (data.pipelineStep === 'pulled') return 1;
-    return 0; // idle, ready for pull
+    if (data.preNightStep === 'pushed') return 2;
+    if (data.preNightStep === 'all-submitted' || data.preNightStep === 'reminded')
+      return 1;
+    return 0;
   }
 
-  const activeStepIdx = getActiveStep();
+  // Determine active post-night step
+  function getPostNightStep(): number {
+    if (!data) return 0;
+    if (data.pipelineStep === 'published') return 5;
+    if (data.pipelineStep === 'confirmed') return 3;
+    if (data.pipelineStep === 'reviewing') return 1;
+    if (data.pipelineStep === 'pulled') return 1;
+    return 0;
+  }
+
+  const preNightIdx = getPreNightStep();
+  const postNightIdx = getPostNightStep();
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -150,183 +257,139 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* Status Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Lineup Status Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden">
-          <div className="px-5 py-4 border-b border-navy/10 flex items-center justify-between">
-            <h2 className="font-heading text-sm text-navy">Lineup Status</h2>
-            <Link
-              href="/admin/lineups"
-              className="font-body text-xs text-navy/50 hover:text-navy transition-colors"
-            >
-              View All
-            </Link>
+      {/* Pre-Bowling Night */}
+      <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden mb-6">
+        <div className="px-5 py-4 border-b border-navy/10 flex items-center justify-between">
+          <div>
+            <h2 className="font-heading text-sm text-navy">Pre-Bowling Night</h2>
+            <p className="font-body text-xs text-navy/40 mt-0.5">Week {nextWeek} prep</p>
           </div>
-          <div className="p-5">
-            {data?.lineupStatus ? (
-              <>
-                <p className="font-body text-sm text-navy mb-3">
-                  Week {data.lineupStatus.week}: {data.lineupStatus.submitted} of{' '}
-                  {data.lineupStatus.total} teams submitted
-                </p>
-                <div className="w-full h-2 bg-navy/10 rounded-full mb-4">
-                  <div
-                    className="h-2 bg-green-500 rounded-full transition-all"
-                    style={{
-                      width: `${data.lineupStatus.total > 0 ? (data.lineupStatus.submitted / data.lineupStatus.total) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  {data.lineupStatus.teams.map((t) => (
-                    <div key={t.teamName} className="flex items-center gap-2 py-0.5">
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          t.submitted ? 'bg-green-500' : 'bg-navy/20'
-                        }`}
-                      />
-                      <span className="font-body text-xs text-navy/70 truncate">
-                        {t.teamName}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="font-body text-xs text-navy/40">No lineup data available</p>
-            )}
-          </div>
+          {data?.lineupStatus && (
+            <span className="font-body text-xs text-navy/50">
+              {data.lineupStatus.submitted}/{data.lineupStatus.total} lineups in
+            </span>
+          )}
         </div>
+        <div className="p-5">
+          <Pipeline steps={PRE_NIGHT_STEPS} activeIdx={preNightIdx} />
 
-        {/* Score Pipeline Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden">
-          <div className="px-5 py-4 border-b border-navy/10">
-            <h2 className="font-heading text-sm text-navy">
-              Score Pipeline - Week {nextWeek}
-            </h2>
-          </div>
-          <div className="p-5">
-            <div className="flex items-center gap-1 mb-4">
-              {PIPELINE_STEPS.map((step, idx) => (
-                <div key={step.key} className="flex items-center">
+          {/* Lineup team grid */}
+          {data?.lineupStatus && data.lineupStatus.teams.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 mb-4">
+              {data.lineupStatus.teams.map((t) => (
+                <div key={t.teamName} className="flex items-center gap-2 py-0.5">
                   <div
-                    className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-body font-semibold transition-colors ${
-                      idx < activeStepIdx
-                        ? 'bg-green-500 text-white'
-                        : idx === activeStepIdx
-                          ? 'bg-navy text-cream'
-                          : 'bg-navy/10 text-navy/40'
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      t.submitted ? 'bg-green-500' : 'bg-navy/20'
                     }`}
-                  >
-                    {idx < activeStepIdx ? '\u2713' : idx + 1}
-                  </div>
-                  {idx < PIPELINE_STEPS.length - 1 && (
-                    <div
-                      className={`w-4 h-0.5 mx-0.5 ${
-                        idx < activeStepIdx ? 'bg-green-500' : 'bg-navy/10'
-                      }`}
-                    />
-                  )}
+                  />
+                  <span className="font-body text-xs text-navy/70 truncate">
+                    {t.teamName}
+                  </span>
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {PIPELINE_STEPS.map((step, idx) => (
-                <span
-                  key={step.key}
-                  className={`font-body text-[10px] ${
-                    idx === activeStepIdx ? 'text-navy font-semibold' : 'text-navy/40'
-                  }`}
-                  style={{ width: '3rem', textAlign: 'center' }}
-                >
-                  {step.label}
-                </span>
-              ))}
-            </div>
-            {PIPELINE_STEPS[activeStepIdx]?.page && (
-              <Link
-                href={PIPELINE_STEPS[activeStepIdx].page}
-                className="font-body text-xs text-navy/60 hover:text-navy underline transition-colors"
+          )}
+
+          {/* Pre-night actions */}
+          <div className="flex flex-wrap items-center gap-3">
+            {preNightIdx === 0 && missingLineups > 0 && (
+              <button
+                onClick={handleRemind}
+                disabled={remindLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-cream font-body text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
               >
-                Go to {PIPELINE_STEPS[activeStepIdx].label}
+                <EmailIcon className="w-4 h-4" />
+                {remindLoading
+                  ? 'Sending...'
+                  : `Remind ${missingLineups} Captain${missingLineups !== 1 ? 's' : ''}`}
+              </button>
+            )}
+            {PRE_NIGHT_STEPS[preNightIdx]?.page && preNightIdx > 0 && (
+              <Link
+                href={PRE_NIGHT_STEPS[preNightIdx].page}
+                className="inline-flex items-center gap-1 font-body text-xs text-navy/60 hover:text-navy underline transition-colors"
+              >
+                Go to {PRE_NIGHT_STEPS[preNightIdx].label} &rarr;
               </Link>
             )}
           </div>
+
+          {remindResult && (
+            <p className="font-body text-xs text-navy/70 bg-cream p-2 rounded mt-3">
+              {remindResult}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden mb-8">
+      {/* Post-Bowling Night */}
+      <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-navy/10">
-          <h2 className="font-heading text-sm text-navy">Quick Actions</h2>
+          <h2 className="font-heading text-sm text-navy">Post-Bowling Night</h2>
+          <p className="font-body text-xs text-navy/40 mt-0.5">Week {nextWeek} results</p>
         </div>
-        <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Link
-            href="/admin/scores"
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-navy/10 hover:border-navy/30 hover:bg-navy/5 transition-colors text-center"
-          >
-            <PullIcon className="w-5 h-5 text-navy/60" />
-            <span className="font-body text-xs text-navy">Pull Scores</span>
-          </Link>
+        <div className="p-5">
+          <Pipeline steps={POST_NIGHT_STEPS} activeIdx={postNightIdx} />
 
-          <Link
-            href="/admin/scoresheets"
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-navy/10 hover:border-navy/30 hover:bg-navy/5 transition-colors text-center"
-          >
-            <PrintIcon className="w-5 h-5 text-navy/60" />
-            <span className="font-body text-xs text-navy">Scoresheets</span>
-          </Link>
+          {/* Inline action buttons */}
+          <div className="flex flex-wrap gap-3 mb-3">
+            {postNightIdx >= 4 && (
+              <button
+                onClick={handlePublish}
+                disabled={publishLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
+              >
+                <PublishIcon className="w-4 h-4" />
+                {publishLoading ? 'Publishing...' : `Publish Week ${nextWeek}`}
+              </button>
+            )}
+            {postNightIdx >= 5 && (
+              <button
+                onClick={handleEmail}
+                disabled={emailLoading || !data?.publishedWeek}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
+              >
+                <EmailIcon className="w-4 h-4" />
+                {emailLoading ? 'Sending...' : 'Send Recap Email'}
+              </button>
+            )}
+            {POST_NIGHT_STEPS[postNightIdx]?.page && (
+              <Link
+                href={POST_NIGHT_STEPS[postNightIdx].page}
+                className="inline-flex items-center gap-1 font-body text-xs text-navy/60 hover:text-navy underline transition-colors"
+              >
+                Go to {POST_NIGHT_STEPS[postNightIdx].label} &rarr;
+              </Link>
+            )}
+          </div>
 
-          <button
-            onClick={handlePublish}
-            disabled={publishLoading}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-navy/10 hover:border-navy/30 hover:bg-navy/5 transition-colors text-center disabled:opacity-50"
-          >
-            <PublishIcon className="w-5 h-5 text-navy/60" />
-            <span className="font-body text-xs text-navy">
-              {publishLoading ? 'Publishing...' : `Publish Week ${nextWeek}`}
-            </span>
-          </button>
-
-          <button
-            onClick={handleEmail}
-            disabled={emailLoading || !data?.publishedWeek}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-navy/10 hover:border-navy/30 hover:bg-navy/5 transition-colors text-center disabled:opacity-50"
-          >
-            <EmailIcon className="w-5 h-5 text-navy/60" />
-            <span className="font-body text-xs text-navy">
-              {emailLoading ? 'Sending...' : 'Send Recap'}
-            </span>
-          </button>
+          {publishResult && (
+            <p className="font-body text-xs text-navy/70 bg-cream p-2 rounded mb-2">
+              {publishResult}
+            </p>
+          )}
+          {emailResult && (
+            <p className="font-body text-xs text-navy/70 bg-cream p-2 rounded mb-2">
+              {emailResult}
+            </p>
+          )}
         </div>
-
-        {/* Publish/Email results */}
-        {publishResult && (
-          <div className="px-5 pb-3">
-            <p className="font-body text-xs text-navy/70 bg-cream p-2 rounded">{publishResult}</p>
-          </div>
-        )}
-        {emailResult && (
-          <div className="px-5 pb-3">
-            <p className="font-body text-xs text-navy/70 bg-cream p-2 rounded">{emailResult}</p>
-          </div>
-        )}
       </div>
 
-      {/* Links row */}
+      {/* Quick links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Link
-          href="/admin/blog"
+          href="/admin/announcements"
           className="bg-white rounded-lg shadow-sm border border-navy/10 p-4 text-center hover:border-navy/30 transition-colors"
         >
-          <span className="font-body text-xs text-navy">Blog Editor</span>
+          <span className="font-body text-xs text-navy">Announcements</span>
         </Link>
         <Link
-          href="/admin/lineups"
+          href="/admin/updates"
           className="bg-white rounded-lg shadow-sm border border-navy/10 p-4 text-center hover:border-navy/30 transition-colors"
         >
-          <span className="font-body text-xs text-navy">Lineup Manager</span>
+          <span className="font-body text-xs text-navy">Site Updates</span>
         </Link>
         <Link
           href="/"
@@ -346,22 +409,6 @@ export default function AdminDashboardPage() {
 }
 
 /* Inline SVG icons */
-
-function PullIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function PrintIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
-    </svg>
-  );
-}
 
 function PublishIcon({ className }: { className?: string }) {
   return (

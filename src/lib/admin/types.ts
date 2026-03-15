@@ -4,9 +4,7 @@
  */
 
 export interface TokenPayload {
-  role: 'admin' | 'writer' | 'captain';
-  teamID?: number;
-  captainName?: string;
+  role: 'admin' | 'writer';
 }
 
 export interface StagedBowler {

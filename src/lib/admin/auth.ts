@@ -1,5 +1,5 @@
 /**
- * JWT authentication helpers for admin and captain sessions.
+ * JWT authentication helpers for admin sessions.
  * Uses the jose library for HS256 signing/verification.
  */
 
@@ -80,23 +80,3 @@ export async function requireAdminOrWriter(
   return payload;
 }
 
-/**
- * Require an authenticated captain user for an API route.
- * Reads the 'lineup-token' cookie, verifies the JWT, and checks for captain role.
- * Throws an Error if not authenticated or not a captain.
- */
-export async function requireCaptain(
-  request: NextRequest,
-): Promise<TokenPayload> {
-  const token = request.cookies.get('lineup-token')?.value;
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-
-  const payload = await verifyToken(token);
-  if (!payload || payload.role !== 'captain') {
-    throw new Error('Not authorized');
-  }
-
-  return payload;
-}

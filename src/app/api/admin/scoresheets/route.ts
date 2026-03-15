@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const doc = generateScoresheet(matches);
+    const doc = await generateScoresheet(matches);
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
     return new NextResponse(pdfBuffer, {
