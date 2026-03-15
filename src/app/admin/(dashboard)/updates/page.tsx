@@ -35,7 +35,6 @@ export default function AdminUpdatesPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
-  const [suggestSince, setSuggestSince] = useState('');
   const [addingSuggestions, setAddingSuggestions] = useState(false);
 
   // Inline editing
@@ -60,13 +59,6 @@ export default function AdminUpdatesPage() {
   useEffect(() => {
     loadUpdates();
   }, [loadUpdates]);
-
-  // Compute the last update date for suggestions default
-  useEffect(() => {
-    if (updates.length > 0 && !suggestSince) {
-      setSuggestSince(updates[0].date);
-    }
-  }, [updates, suggestSince]);
 
   async function handleAdd() {
     if (!newText.trim()) return;
@@ -137,7 +129,7 @@ export default function AdminUpdatesPage() {
     setSuggestLoading(true);
     setError(null);
     try {
-      const since = suggestSince || updates[0]?.date || '';
+      const since = updates[0]?.date || '';
       const res = await fetch(`/api/admin/updates/suggest?since=${since}`);
       if (!res.ok) {
         const d = await res.json();
@@ -307,27 +299,7 @@ export default function AdminUpdatesPage() {
 
       {showSuggestions && suggestions.length === 0 && !suggestLoading && (
         <div className="mb-6 px-4 py-3 rounded-lg bg-navy/5 font-body text-sm text-navy/60">
-          No commit suggestions found since {suggestSince || 'last week'}.
-        </div>
-      )}
-
-      {/* Suggest Since Control */}
-      {showSuggestions && (
-        <div className="mb-4 flex items-center gap-3">
-          <label className="font-body text-xs text-navy/60">Since:</label>
-          <input
-            type="date"
-            value={suggestSince}
-            onChange={(e) => setSuggestSince(e.target.value)}
-            className="px-2 py-1 rounded-md border border-navy/20 font-body text-sm"
-          />
-          <button
-            onClick={loadSuggestions}
-            disabled={suggestLoading}
-            className="px-3 py-1 rounded-md font-body text-xs bg-navy/10 text-navy hover:bg-navy/20 transition-colors disabled:opacity-50"
-          >
-            Refresh
-          </button>
+          No new commits found since the last update ({updates[0]?.date || 'unknown'}).
         </div>
       )}
 
