@@ -83,6 +83,7 @@ export default function LineupPage() {
   const loadTeamContext = useCallback(async (teamID: number) => {
     setLoadingContext(true);
     setError(null);
+    window.scrollTo(0, 0);
     try {
       const res = await fetch(`/api/lineup/submit?teamID=${teamID}`);
       if (!res.ok) throw new Error('Failed to load lineup');
