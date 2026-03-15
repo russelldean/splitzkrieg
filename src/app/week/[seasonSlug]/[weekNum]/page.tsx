@@ -122,7 +122,7 @@ export default async function WeekPage({
   const nextWeek = weekIdx < sortedWeeks.length - 1 ? sortedWeeks[weekIdx + 1] : null;
 
   // Check for blog post cross-link
-  const blogPost = getPostForWeek(season.romanNumeral, weekNum);
+  const blogPost = await getPostForWeek(season.romanNumeral, weekNum);
 
   // Cross-season prev/next: if at first/last week, link to adjacent season
   const seasonIdx = allSeasons.findIndex(s => s.seasonID === season.seasonID);

@@ -7,8 +7,9 @@ import { mdxComponents } from '@/lib/mdx-components';
 
 export const dynamicParams = false;
 
-export function generateStaticParams() {
-  return getAllPosts().map((post) => ({ slug: post.slug }));
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -17,7 +18,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   if (!post) return { title: 'Post Not Found | Splitzkrieg' };
 
   return {
@@ -32,13 +33,13 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const meta = getPostBySlug(slug);
+  const meta = await getPostBySlug(slug);
   if (!meta) notFound();
 
-  const content = getPostContent(slug);
+  const content = await getPostContent(slug);
   if (!content) notFound();
 
-  const { prev, next } = getAdjacentPosts(slug);
+  const { prev, next } = await getAdjacentPosts(slug);
 
   return (
     <BlogPostLayout meta={meta} prev={prev} next={next}>

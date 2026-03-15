@@ -172,7 +172,7 @@ export default async function Home() {
               { href: '/teams?filter=current', label: 'Current Teams' },
               { href: '/teams', label: 'All Teams' },
             ]},
-            { label: 'Blog', href: '/blog', links: [], newBadgeKey: getAllPosts()[0]?.slug ?? undefined },
+            { label: 'Blog', href: '/blog', links: [], newBadgeKey: (await getAllPosts())[0]?.slug ?? undefined },
           ]} />
         </div>
       </section>

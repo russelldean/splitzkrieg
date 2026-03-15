@@ -17,8 +17,8 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function BlogPage() {
-  const posts = getAllPosts();
+export default async function BlogPage() {
+  const posts = await getAllPosts();
   const [featured, ...rest] = posts;
 
   return (
@@ -52,7 +52,7 @@ export default function BlogPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Featured latest post — big card with hero image */}
+            {/* Featured latest post */}
             <Link
               href={`/blog/${featured.slug}`}
               className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-navy/10 hover:border-navy/20"
@@ -96,7 +96,7 @@ export default function BlogPage() {
               )}
             </Link>
 
-            {/* Older posts — compact cards */}
+            {/* Older posts */}
             {rest.map((post) => (
               <Link
                 key={post.slug}

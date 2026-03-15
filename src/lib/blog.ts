@@ -1,6 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
+import {
+  getPublishedBlogPosts,
+  getBlogPostBySlug,
+} from '@/lib/admin/blog-db';
 
 export interface PostMeta {
   title: string;
@@ -15,61 +16,60 @@ export interface PostMeta {
   heroFocalY?: number;
 }
 
-const BLOG_DIR = path.join(process.cwd(), 'content', 'blog');
-
 /**
- * Get all blog posts, sorted by date descending (newest first).
+ * Get all published blog posts, sorted by date descending (newest first).
+ * Now reads from DB instead of filesystem.
  */
-export function getAllPosts(): PostMeta[] {
-  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith('.mdx'));
+export async function getAllPosts(): Promise<PostMeta[]> {
+  const posts = await getPublishedBlogPosts();
 
-  const posts = files.map((filename) => {
-    const filePath = path.join(BLOG_DIR, filename);
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const { data } = matter(raw);
-
-    return {
-      title: data.title,
-      date: data.date,
-      slug: data.slug,
-      excerpt: data.excerpt,
-      type: data.type ?? 'announcement',
-      ...(data.season ? { season: data.season } : {}),
-      ...(data.seasonSlug ? { seasonSlug: data.seasonSlug } : {}),
-      ...(data.week != null ? { week: data.week } : {}),
-      ...(data.heroImage ? { heroImage: data.heroImage } : {}),
-      ...(data.heroFocalY != null ? { heroFocalY: data.heroFocalY } : {}),
-    } as PostMeta;
-  });
-
-  // Reverse chronological (newest first)
-  return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return posts.map((post) => ({
+    title: post.title,
+    date: post.publishedAt
+      ? post.publishedAt.split('T')[0]
+      : new Date().toISOString().split('T')[0],
+    slug: post.slug,
+    excerpt: post.excerpt ?? '',
+    type: post.type ?? 'announcement',
+    ...(post.seasonRomanNumeral
+      ? { season: post.seasonRomanNumeral }
+      : {}),
+    ...(post.seasonSlug ? { seasonSlug: post.seasonSlug } : {}),
+    ...(post.week != null ? { week: post.week } : {}),
+    ...(post.heroImage ? { heroImage: post.heroImage } : {}),
+    ...(post.heroFocalY != null ? { heroFocalY: post.heroFocalY } : {}),
+  }));
 }
 
 /**
- * Get a single post by slug.
+ * Get a single post meta by slug.
  */
-export function getPostBySlug(slug: string): PostMeta | undefined {
-  return getAllPosts().find((p) => p.slug === slug);
+export async function getPostBySlug(
+  slug: string,
+): Promise<PostMeta | undefined> {
+  const posts = await getAllPosts();
+  return posts.find((p) => p.slug === slug);
 }
 
 /**
- * Get raw MDX content for a post (frontmatter stripped).
+ * Get raw content for a post (MDX/markdown body).
  */
-export function getPostContent(slug: string): string | undefined {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) return undefined;
-  const raw = fs.readFileSync(filePath, 'utf8');
-  const { content } = matter(raw);
-  return content;
+export async function getPostContent(
+  slug: string,
+): Promise<string | undefined> {
+  const post = await getBlogPostBySlug(slug);
+  if (!post) return undefined;
+  return post.content;
 }
 
 /**
  * Get adjacent posts for prev/next navigation.
  * Posts are ordered newest-first, so "prev" is newer and "next" is older.
  */
-export function getAdjacentPosts(slug: string): { prev: PostMeta | null; next: PostMeta | null } {
-  const posts = getAllPosts();
+export async function getAdjacentPosts(
+  slug: string,
+): Promise<{ prev: PostMeta | null; next: PostMeta | null }> {
+  const posts = await getAllPosts();
   const index = posts.findIndex((p) => p.slug === slug);
 
   if (index === -1) return { prev: null, next: null };
@@ -83,6 +83,10 @@ export function getAdjacentPosts(slug: string): { prev: PostMeta | null; next: P
 /**
  * Find the blog post for a specific season + week (for cross-linking from league night pages).
  */
-export function getPostForWeek(season: string, week: number): PostMeta | undefined {
-  return getAllPosts().find((p) => p.season === season && p.week === week);
+export async function getPostForWeek(
+  season: string,
+  week: number,
+): Promise<PostMeta | undefined> {
+  const posts = await getAllPosts();
+  return posts.find((p) => p.season === season && p.week === week);
 }
