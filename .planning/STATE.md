@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 08-admin-tools
 current_plan: 5 of 5
 status: executing
-last_updated: "2026-03-15T02:09:06Z"
+last_updated: "2026-03-15T02:11:42.709Z"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
   completed_plans: 9
 ---
@@ -48,6 +48,7 @@ See: .planning/PROJECT.md
 - 2026-03-14: Phase 8 Plan 03 — Lineup submission: magic link captain auth, bowler picker form, admin lineup grid, LP push
 - 2026-03-15: Phase 8 Plan 02 — Score pipeline: LP pull, validation, insert/match-results/patches confirm, review UI
 - 2026-03-15: Phase 8 Plan 05 — Scoresheets PDF (jspdf), publish/email APIs, admin dashboard overview
+- 2026-03-15: Phase 8 Plan 04 — Blog editor: DB-backed blog, markdown editor, auto-draft from scores, MDX migration
 
 ## Decisions
 
@@ -85,6 +86,9 @@ See: .planning/PROJECT.md
 - **[Phase 08-05]** Scoresheet preview endpoint separate from PDF generation for fast UI feedback
 - **[Phase 08-05]** Dashboard API aggregates DB queries server-side; client is a single fetch
 - **[Phase 08-05]** Pipeline step indicator is read-only on dashboard; actions link to dedicated pages
+- [Phase 08-04]: blogPosts table extended with 6 columns to match BlogPost interface
+- [Phase 08-04]: Auto-draft embeds WeekRecap MDX component matching existing blog pattern
+- [Phase 08-04]: All blog.ts functions made async for DB access; all callers updated
 
 ## Pending Todos
 
