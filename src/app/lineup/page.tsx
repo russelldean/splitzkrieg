@@ -444,19 +444,6 @@ export default function LineupPage() {
         </div>
       )}
 
-      <div className="mb-5">
-        <label className="block font-body text-xs text-navy/60 mb-1.5">
-          Your name <span className="text-red">*</span>
-        </label>
-        <input
-          type="text"
-          value={submittedBy}
-          onChange={(e) => setSubmittedBy(e.target.value)}
-          placeholder="Who is submitting this lineup?"
-          className="w-full font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
-        />
-      </div>
-
       <div className="space-y-3 mb-6">
         {slots.map((slot, index) => (
           <div
@@ -608,6 +595,19 @@ export default function LineupPage() {
         >
           + Add Slot
         </button>
+      </div>
+
+      <div className="mb-5">
+        <label className="block font-body text-xs text-navy/60 mb-1.5">
+          Your name <span className="text-red">*</span>
+        </label>
+        <input
+          type="text"
+          value={submittedBy}
+          onChange={(e) => setSubmittedBy(e.target.value)}
+          placeholder="Who is submitting this lineup?"
+          className="w-full font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
+        />
       </div>
 
       <button
