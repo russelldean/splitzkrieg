@@ -268,6 +268,14 @@ export default function LineupPage() {
       return;
     }
 
+    const missingLastName = validSlots.find(
+      (s) => s.isNew && s.newBowlerName.trim() && !s.newBowlerName.trim().includes(' '),
+    );
+    if (missingLastName) {
+      setError(`Please enter a full name (first and last) for "${missingLastName.newBowlerName.trim()}".`);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -488,20 +496,47 @@ export default function LineupPage() {
             </div>
 
             {slot.isNew ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={slot.newBowlerName}
-                  onChange={(e) => updateNewBowlerName(index, e.target.value)}
-                  placeholder="Enter new bowler name"
-                  className="flex-1 font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
-                />
-                <button
-                  onClick={() => toggleNewBowler(index)}
-                  className="font-body text-xs text-navy/50 hover:text-navy whitespace-nowrap"
-                >
-                  Pick existing
-                </button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={slot.newBowlerName}
+                    onChange={(e) => updateNewBowlerName(index, e.target.value)}
+                    placeholder="Full name (first and last)"
+                    className="flex-1 font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
+                  />
+                  <button
+                    onClick={() => toggleNewBowler(index)}
+                    className="font-body text-xs text-navy/50 hover:text-navy whitespace-nowrap"
+                  >
+                    Pick existing
+                  </button>
+                </div>
+                {slot.newBowlerName.trim() && !slot.newBowlerName.trim().includes(' ') && (
+                  <p className="font-body text-xs text-amber-600 mt-1">
+                    Please enter first and last name
+                  </p>
+                )}
+                {slot.newBowlerName.trim().includes(' ') && (() => {
+                  const q = slot.newBowlerName.trim().toLowerCase();
+                  const match = context.bowlers.find(
+                    (b) => `${b.firstName} ${b.lastName}`.toLowerCase() === q,
+                  );
+                  if (!match) return null;
+                  return (
+                    <div className="mt-1.5 px-3 py-2 rounded-md bg-amber-50 border border-amber-200">
+                      <p className="font-body text-xs text-amber-700">
+                        <strong>{match.firstName} {match.lastName}</strong> already exists in the system.
+                      </p>
+                      <button
+                        onClick={() => selectBowler(index, match)}
+                        className="font-body text-xs text-amber-800 underline hover:no-underline mt-0.5"
+                      >
+                        Use existing bowler instead
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             ) : slot.bowlerID ? (
               <div className="flex items-center justify-between">
@@ -528,26 +563,53 @@ export default function LineupPage() {
                       autoFocus
                     />
                     <div className="max-h-48 overflow-y-auto border border-navy/10 rounded-md">
-                      {filteredBowlers.slice(0, 50).map((bowler) => {
-                        const isRecent = context.recentRoster.includes(bowler.bowlerID);
+                      {(() => {
+                        const recentSet = new Set(context.recentRoster);
+                        const visible = filteredBowlers.slice(0, 50);
+                        const recentBowlers = visible.filter((b) => recentSet.has(b.bowlerID));
+                        const otherBowlers = visible.filter((b) => !recentSet.has(b.bowlerID));
                         return (
-                          <button
-                            key={bowler.bowlerID}
-                            onClick={() => selectBowler(index, bowler)}
-                            className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0 flex items-center justify-between"
-                          >
-                            <span>{bowler.firstName} {bowler.lastName}</span>
-                            {isRecent && (
-                              <span className="text-xs text-navy/40">recent</span>
+                          <>
+                            {recentBowlers.length > 0 && (
+                              <>
+                                <div className="px-3 py-1.5 bg-navy/[0.03] font-body text-xs text-navy/40 uppercase tracking-wide">
+                                  Your team
+                                </div>
+                                {recentBowlers.map((bowler) => (
+                                  <button
+                                    key={bowler.bowlerID}
+                                    onClick={() => selectBowler(index, bowler)}
+                                    className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0"
+                                  >
+                                    {bowler.firstName} {bowler.lastName}
+                                  </button>
+                                ))}
+                              </>
                             )}
-                          </button>
+                            {otherBowlers.length > 0 && (
+                              <>
+                                <div className="px-3 py-1.5 bg-navy/[0.03] font-body text-xs text-navy/40 uppercase tracking-wide">
+                                  All bowlers
+                                </div>
+                                {otherBowlers.map((bowler) => (
+                                  <button
+                                    key={bowler.bowlerID}
+                                    onClick={() => selectBowler(index, bowler)}
+                                    className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0"
+                                  >
+                                    {bowler.firstName} {bowler.lastName}
+                                  </button>
+                                ))}
+                              </>
+                            )}
+                            {visible.length === 0 && (
+                              <p className="px-3 py-2 font-body text-sm text-navy/40">
+                                No bowlers found
+                              </p>
+                            )}
+                          </>
                         );
-                      })}
-                      {filteredBowlers.length === 0 && (
-                        <p className="px-3 py-2 font-body text-sm text-navy/40">
-                          No bowlers found
-                        </p>
-                      )}
+                      })()}
                     </div>
                     <div className="mt-2 flex gap-2">
                       <button

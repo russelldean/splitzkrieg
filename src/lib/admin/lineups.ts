@@ -17,7 +17,7 @@ export async function getAllBowlers(): Promise<
   const result = await db.request().query<{
     bowlerID: number;
     bowlerName: string;
-  }>(`SELECT bowlerID, bowlerName FROM bowlers WHERE isActive = 1 ORDER BY bowlerName`);
+  }>(`SELECT bowlerID, bowlerName FROM bowlers WHERE isEligible = 1 ORDER BY bowlerName`);
   return result.recordset.map((r) => {
     const parts = r.bowlerName.split(' ');
     const firstName = parts[0] || '';
