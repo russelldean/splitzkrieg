@@ -22,13 +22,30 @@ export interface ScoresheetBowler {
   rosterSource?: 'lineup' | 'lastweek';
 }
 
+export interface H2HMeeting {
+  season: string;
+  week: number;
+  date: string;
+  homeWins: number;
+  awayWins: number;
+  tie: boolean;
+}
+
 export interface ScoresheetMatch {
   homeTeamName: string;
   awayTeamName: string;
+  homeTeamID: number;
+  awayTeamID: number;
   week: number;
   date: string;
   matchNumber: number;
   bowlers: ScoresheetBowler[];
+  h2h?: {
+    homeWins: number;
+    awayWins: number;
+    ties: number;
+    meetings: H2HMeeting[];
+  };
 }
 
 /**
@@ -185,13 +202,70 @@ export async function getMatchupsForWeek(
         })
       : '';
 
+    // Query H2H history for these two teams
+    const h2hResult = await db
+      .request()
+      .input('t1ID', sql.Int, sched.team1ID)
+      .input('t2ID', sql.Int, sched.team2ID)
+      .query<{
+        seasonID: number;
+        week: number;
+        matchDate: Date | null;
+        romanNumeral: string;
+        team1ID: number;
+        t1Total: number;
+        t2Total: number;
+      }>(
+        `SELECT s.seasonID, s.week, s.matchDate, se.romanNumeral, s.team1ID,
+                (mr.team1GamePts + mr.team1BonusPts) AS t1Total,
+                (mr.team2GamePts + mr.team2BonusPts) AS t2Total
+         FROM matchResults mr
+         JOIN schedule s ON mr.scheduleID = s.scheduleID
+         JOIN seasons se ON s.seasonID = se.seasonID
+         WHERE (s.team1ID = @t1ID AND s.team2ID = @t2ID)
+            OR (s.team1ID = @t2ID AND s.team2ID = @t1ID)
+         ORDER BY s.seasonID DESC, s.week DESC`,
+      );
+
+    let homeWins = 0;
+    let awayWins = 0;
+    let ties = 0;
+    const meetings: H2HMeeting[] = [];
+
+    for (const row of h2hResult.recordset) {
+      // Normalize so "home" always = sched.team1ID for this matchup
+      const homeIsT1 = row.team1ID === sched.team1ID;
+      const homePts = homeIsT1 ? row.t1Total : row.t2Total;
+      const awayPts = homeIsT1 ? row.t2Total : row.t1Total;
+
+      if (homePts > awayPts) homeWins++;
+      else if (awayPts > homePts) awayWins++;
+      else ties++;
+
+      const mDate = row.matchDate
+        ? new Date(row.matchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : '';
+
+      meetings.push({
+        season: row.romanNumeral,
+        week: row.week,
+        date: mDate,
+        homeWins: homePts,
+        awayWins: awayPts,
+        tie: homePts === awayPts,
+      });
+    }
+
     matches.push({
       homeTeamName: sched.t1Name,
       awayTeamName: sched.t2Name,
+      homeTeamID: sched.team1ID,
+      awayTeamID: sched.team2ID,
       week,
       date: dateStr,
       matchNumber: idx + 1,
       bowlers,
+      h2h: meetings.length > 0 ? { homeWins, awayWins, ties, meetings } : undefined,
     });
   }
 
@@ -254,15 +328,92 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setTextColor(navy);
     doc.text(match.awayTeamName, pageW / 2, centerY + 115, { align: 'center' });
 
+    // H2H history
+    if (match.h2h && match.h2h.meetings.length > 0) {
+      const h2h = match.h2h;
+      const h2hStartY = centerY + 165;
+
+      // Record summary
+      doc.setFontSize(11);
+      doc.setTextColor(navy);
+      doc.setFont('helvetica', 'bold');
+      const recordParts: string[] = [];
+      if (h2h.homeWins > h2h.awayWins) {
+        recordParts.push(`${match.homeTeamName} lead ${h2h.homeWins}-${h2h.awayWins}`);
+      } else if (h2h.awayWins > h2h.homeWins) {
+        recordParts.push(`${match.awayTeamName} lead ${h2h.awayWins}-${h2h.homeWins}`);
+      } else {
+        recordParts.push(`Tied ${h2h.homeWins}-${h2h.awayWins}`);
+      }
+      if (h2h.ties > 0) recordParts[0] += `-${h2h.ties}`;
+      recordParts[0] += ' all-time';
+      doc.text(recordParts[0], pageW / 2, h2hStartY, { align: 'center' });
+
+      // Meeting history table
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+
+      // Two-column layout: 5 rows per column, 10 most recent meetings
+      const recent = h2h.meetings.slice(0, 10);
+      const leftCol = recent.slice(0, 5);
+      const rightCol = recent.slice(5, 10);
+
+      const col1X = 80;
+      const col2X = pageW / 2 + 30;
+
+      let rowY = h2hStartY + 22;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Date', col1X, rowY);
+      doc.text('Result', col1X + 130, rowY);
+      if (rightCol.length > 0) {
+        doc.text('Date', col2X, rowY);
+        doc.text('Result', col2X + 130, rowY);
+      }
+      doc.setFont('helvetica', 'normal');
+      rowY += 4;
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.5);
+      doc.line(col1X, rowY, col1X + 180, rowY);
+      if (rightCol.length > 0) doc.line(col2X, rowY, col2X + 180, rowY);
+      rowY += 11;
+
+      for (let j = 0; j < 5; j++) {
+        const left = leftCol[j];
+        const right = rightCol[j];
+        if (left) {
+          const result = left.homeWins > left.awayWins
+            ? `W ${left.homeWins}-${left.awayWins}`
+            : left.awayWins > left.homeWins
+            ? `L ${left.homeWins}-${left.awayWins}`
+            : `T ${left.homeWins}-${left.awayWins}`;
+          doc.text(left.date || `S${left.season} W${left.week}`, col1X, rowY);
+          doc.text(`${result}  (S${left.season})`, col1X + 130, rowY);
+        }
+        if (right) {
+          const result = right.homeWins > right.awayWins
+            ? `W ${right.homeWins}-${right.awayWins}`
+            : right.awayWins > right.homeWins
+            ? `L ${right.homeWins}-${right.awayWins}`
+            : `T ${right.homeWins}-${right.awayWins}`;
+          doc.text(right.date || `S${right.season} W${right.week}`, col2X, rowY);
+          doc.text(`${result}  (S${right.season})`, col2X + 130, rowY);
+        }
+        rowY += 14;
+      }
+    }
+
     // Bottom decorative line
     doc.setDrawColor(navy);
     doc.setLineWidth(2);
-    doc.line(50, pageH - 80, pageW - 50, pageH - 80);
+    doc.line(50, pageH - 60, pageW - 50, pageH - 60);
 
-    // Splitzkrieg branding
+    // Find more data CTA
     doc.setFontSize(10);
-    doc.setTextColor(180);
-    doc.text('splitzkrieg.com', pageW / 2, pageH - 55, { align: 'center' });
+    doc.setTextColor(navy);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Find more data at splitzkrieg.com', pageW / 2, pageH - 40, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
 
     // ===== PAGE 2: Scoring grid =====
     doc.addPage();
@@ -346,6 +497,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
         lineWidth: 0.5,
         textColor: navy,
         overflow: 'ellipsize' as const,
+        valign: 'middle',
       },
       headStyles: {
         fillColor: grey,
@@ -414,6 +566,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
         lineWidth: 0.5,
         textColor: navy,
         overflow: 'ellipsize' as const,
+        valign: 'middle',
       },
       headStyles: {
         fillColor: grey,
@@ -456,15 +609,22 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.text('The ACCURATE game score for team = (Screen total) - (New bowler game score)', 40, noteY + 58);
 
     // Feedback prompt
-    doc.setFontSize(8);
-    doc.setTextColor(140);
-    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    doc.setTextColor(navy);
+    doc.setFont('helvetica', 'bold');
     doc.text(
-      'Something noteworthy happen on the lanes? Use the Feedback button at splitzkrieg.com to let us know!',
+      'Something noteworthy happen on the lanes tonight?',
       40,
-      noteY + 78,
+      noteY + 80,
     );
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(
+      'Tell us at splitzkrieg.com - look for the speech bubble icon in the bottom right corner.',
+      40,
+      noteY + 93,
+    );
   }
 
   return doc;
