@@ -124,6 +124,8 @@ interface LpGame {
   totalPins: number;
   isBlind?: boolean;
   isVacant?: boolean;
+  isSubstitute?: boolean;
+  subName?: string;
 }
 
 interface LpPlayer {
@@ -301,7 +303,10 @@ export async function lpPullScores(
       const teamName = isHome ? homeTeamName : awayTeamName;
 
       for (const p of team.players) {
-        const lpName = p.bowler?.name || p.subName || 'Unknown';
+        // Check for sub name: can be at player level OR game level
+        // Game-level subs have subName on individual games (LP stores it per-game)
+        const gameSubName = p.games?.find((g: LpGame) => g.isSubstitute && g.subName)?.subName;
+        const lpName = gameSubName || p.subName || p.bowler?.name || 'Unknown';
         const isBlind =
           p.games?.some((g: LpGame) => g.isBlind) || false;
         const isVacant =
