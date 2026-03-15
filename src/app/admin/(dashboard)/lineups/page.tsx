@@ -30,30 +30,22 @@ export default function AdminLineupsPage() {
   const [editingSubmission, setEditingSubmission] =
     useState<LineupSubmission | null>(null);
   const [editEntries, setEditEntries] = useState<EditEntry[]>([]);
-  const [magicLinkModal, setMagicLinkModal] = useState<Team | null>(null);
-  const [magicLinkForm, setMagicLinkForm] = useState({
-    captainName: '',
-    captainEmail: '',
-  });
   const [pushModal, setPushModal] = useState(false);
   const [lpCookie, setLpCookie] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  // Load initial context
+  // Load current season/week on mount
   useEffect(() => {
     async function loadContext() {
       try {
-        const res = await fetch('/api/admin/lineups?seasonID=0&week=0');
-        if (res.status === 401) {
-          window.location.href = '/admin/login';
-          return;
-        }
-        // We need the season ID. Grab from a separate endpoint or default.
-        // For now, load from context - the GET will return empty data
-        // but we can extract team info.
+        const res = await fetch('/api/lineup/submit');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.seasonID) setSeasonID(data.seasonID);
+        if (data.week) setWeek(data.week);
       } catch {
-        // ignore initial load error
+        // ignore - user can enter manually
       }
     }
     loadContext();
@@ -130,33 +122,6 @@ export default function AdminLineupsPage() {
       setTimeout(() => setActionMessage(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const sendMagicLink = async () => {
-    if (!magicLinkModal) return;
-    setActionLoading(true);
-    try {
-      const res = await fetch('/api/admin/magic-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teamID: magicLinkModal.teamID,
-          captainName: magicLinkForm.captainName,
-          captainEmail: magicLinkForm.captainEmail,
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to send magic link');
-      setMagicLinkModal(null);
-      setMagicLinkForm({ captainName: '', captainEmail: '' });
-      setActionMessage('Magic link sent!');
-      setTimeout(() => setActionMessage(null), 3000);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to send magic link',
-      );
     } finally {
       setActionLoading(false);
     }
@@ -318,15 +283,7 @@ export default function AdminLineupsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <p className="font-body text-xs mb-2">No lineup yet</p>
-                    <button
-                      onClick={() => setMagicLinkModal(team)}
-                      className="font-body text-xs underline hover:no-underline"
-                    >
-                      Send Magic Link
-                    </button>
-                  </div>
+                  <p className="font-body text-xs">No lineup yet</p>
                 )}
               </div>
             );
@@ -381,75 +338,6 @@ export default function AdminLineupsPage() {
                 className="font-body text-sm bg-navy text-cream px-4 py-2 rounded-md hover:bg-navy/90 disabled:opacity-50"
               >
                 {actionLoading ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Magic Link Modal */}
-      {magicLinkModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="font-heading text-lg text-navy mb-4">
-              Send Magic Link: {magicLinkModal.teamName}
-            </h2>
-            <div className="space-y-3 mb-4">
-              <div>
-                <label className="font-body text-xs text-navy/50 block mb-1">
-                  Captain Name
-                </label>
-                <input
-                  type="text"
-                  value={magicLinkForm.captainName}
-                  onChange={(e) =>
-                    setMagicLinkForm((f) => ({
-                      ...f,
-                      captainName: e.target.value,
-                    }))
-                  }
-                  placeholder="Captain's name"
-                  className="w-full font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
-                />
-              </div>
-              <div>
-                <label className="font-body text-xs text-navy/50 block mb-1">
-                  Captain Email
-                </label>
-                <input
-                  type="email"
-                  value={magicLinkForm.captainEmail}
-                  onChange={(e) =>
-                    setMagicLinkForm((f) => ({
-                      ...f,
-                      captainEmail: e.target.value,
-                    }))
-                  }
-                  placeholder="captain@email.com"
-                  className="w-full font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setMagicLinkModal(null);
-                  setMagicLinkForm({ captainName: '', captainEmail: '' });
-                }}
-                className="font-body text-sm text-navy/50 px-4 py-2 rounded-md hover:bg-navy/5"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={sendMagicLink}
-                disabled={
-                  actionLoading ||
-                  !magicLinkForm.captainName ||
-                  !magicLinkForm.captainEmail
-                }
-                className="font-body text-sm bg-navy text-cream px-4 py-2 rounded-md hover:bg-navy/90 disabled:opacity-50"
-              >
-                {actionLoading ? 'Sending...' : 'Send Link'}
               </button>
             </div>
           </div>

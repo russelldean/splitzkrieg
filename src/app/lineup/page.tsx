@@ -89,10 +89,8 @@ export default function LineupPage() {
       const data: LineupContext = await res.json();
       setContext(data);
 
-      // Pre-fill submittedBy if there's an existing submission
-      if (data.submittedBy) {
-        setSubmittedBy(data.submittedBy);
-      }
+      // Only pre-fill submittedBy from this team's current week submission
+      setSubmittedBy(data.submittedBy || '');
 
       // Pre-fill from last week's lineup or start with 4 empty slots
       if (data.lastWeekLineup.length > 0) {
