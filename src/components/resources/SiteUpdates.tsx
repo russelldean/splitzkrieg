@@ -27,7 +27,7 @@ export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastU
   const visible = expanded ? updates : updates.slice(0, COLLAPSED_COUNT);
 
   return (
-    <section id="recent-updates" className="mb-10">
+    <section id="recent-updates" className="mb-10 scroll-mt-20">
       <div className="flex items-baseline justify-between mb-4">
         <h2 className="font-heading text-xl text-navy">
           Site Updates
