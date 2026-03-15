@@ -166,7 +166,7 @@ export async function lpPullScores(
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
   };
 
-  // 1. Get latest score info to find the right weekIdx
+  // 1. Verify LP session is valid
   const latestRes = await fetch(`${LP_BASE}/latestScore?id=${LP_LEAGUE_ID}`, {
     headers,
   });
@@ -175,13 +175,10 @@ export async function lpPullScores(
   }
   if (!latestRes.ok) throw new Error(`latestScore failed: ${latestRes.status}`);
 
-  // weekIdx is 0-based in LP, our weeks are 1-based
-  const targetWeekIdx = weekNum - 1;
-
-  // 2. Get scores
+  // 2. Get all scores (LP puts all weeks at weekIdx=0 for this league)
   const maxDate = new Date('2027-01-01').getTime();
   const minDate = new Date('2025-01-01').getTime();
-  const scoresUrl = `${LP_BASE}/recentScores?leagueId=${LP_LEAGUE_ID}&maxDate=${maxDate}&minDate=${minDate}&weekIdx=${targetWeekIdx}`;
+  const scoresUrl = `${LP_BASE}/recentScores?leagueId=${LP_LEAGUE_ID}&maxDate=${maxDate}&minDate=${minDate}&weekIdx=0`;
   const scoresRes = await fetch(scoresUrl, { headers });
   if (scoresRes.status === 401 || scoresRes.status === 403) {
     throw new Error('LP session expired, please get a fresh cookie');
@@ -189,10 +186,41 @@ export async function lpPullScores(
   if (!scoresRes.ok)
     throw new Error(`recentScores failed: ${scoresRes.status}`);
   const scoresData = await scoresRes.json();
-  const lpMatches: LpMatch[] = scoresData.data;
+  const allMatches: LpMatch[] = scoresData.data;
 
-  if (!lpMatches || lpMatches.length === 0) {
-    throw new Error('No matches found for this week on LeaguePals');
+  if (!allMatches || allMatches.length === 0) {
+    throw new Error('No matches found on LeaguePals');
+  }
+
+  // 3. Look up the match date for this week from our schedule table,
+  //    then filter LP matches to that date
+  const db2 = await getDb();
+  const dateResult = await db2
+    .request()
+    .input('seasonID', seasonID)
+    .input('week', weekNum)
+    .query<{ matchDate: Date }>(
+      `SELECT TOP 1 matchDate FROM schedule WHERE seasonID = @seasonID AND week = @week AND matchDate IS NOT NULL`,
+    );
+
+  if (!dateResult.recordset[0]?.matchDate) {
+    throw new Error(`No match date found in schedule for season ${seasonID} week ${weekNum}`);
+  }
+
+  const matchDate = dateResult.recordset[0].matchDate.toISOString().split('T')[0];
+  const lpMatches = allMatches.filter(
+    (m) => m.date && m.date.startsWith(matchDate),
+  );
+
+  if (lpMatches.length === 0) {
+    // List available dates to help debug
+    const availDates = [...new Set(allMatches.map((m) => m.date?.split('T')[0]))]
+      .filter(Boolean)
+      .sort()
+      .join(', ');
+    throw new Error(
+      `No LP matches found for ${matchDate} (week ${weekNum}). Available dates: ${availDates}`,
+    );
   }
 
   // 3. Get user mapping (LP userId -> name)
