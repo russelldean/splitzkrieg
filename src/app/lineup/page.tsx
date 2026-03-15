@@ -317,11 +317,6 @@ export default function LineupPage() {
   if (!selectedTeamID) {
     const submittedCount = seasonInfo.teams.filter((t) => t.submitted).length;
     const totalCount = seasonInfo.teams.length;
-    // Show unsubmitted teams first, then submitted
-    const sortedTeams = [...seasonInfo.teams].sort((a, b) => {
-      if (a.submitted !== b.submitted) return a.submitted ? 1 : -1;
-      return a.teamName.localeCompare(b.teamName);
-    });
 
     return (
       <div>
@@ -340,7 +335,7 @@ export default function LineupPage() {
           </span>
         </div>
         <div className="space-y-2">
-          {sortedTeams.map((team) => (
+          {seasonInfo.teams.map((team) => (
             <button
               key={team.teamID}
               onClick={() => handleTeamSelect(team.teamID)}

@@ -258,18 +258,18 @@ export async function editLineup(
 }
 
 /**
- * Get the previous week's lineup for pre-fill.
+ * Get the most recent lineup for pre-fill.
+ * Checks the current week first (so resubmits pre-fill with what you already sent),
+ * then falls back to the most recent prior week.
  */
 export async function getLastWeekLineup(
   teamID: number,
   seasonID: number,
   currentWeek: number,
 ): Promise<LineupEntry[]> {
-  if (currentWeek <= 1) return [];
-
   const db = await getDb();
 
-  // Find the most recent submission before the current week
+  // Check current week first, then fall back to most recent prior week
   const subResult = await db
     .request()
     .input('teamID', teamID)
@@ -277,7 +277,7 @@ export async function getLastWeekLineup(
     .input('currentWeek', currentWeek)
     .query<{ id: number }>(
       `SELECT TOP 1 id FROM lineupSubmissions
-       WHERE teamID = @teamID AND seasonID = @seasonID AND week < @currentWeek
+       WHERE teamID = @teamID AND seasonID = @seasonID AND week <= @currentWeek
        ORDER BY week DESC`,
     );
 
