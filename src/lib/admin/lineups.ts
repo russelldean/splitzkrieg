@@ -8,6 +8,7 @@ import type { LineupEntry, LineupSubmission } from './types';
 
 /**
  * Get all bowlers for the captain bowler picker.
+ * Splits bowlerName into firstName/lastName for the UI.
  */
 export async function getAllBowlers(): Promise<
   Array<{ bowlerID: number; firstName: string; lastName: string }>
@@ -15,10 +16,14 @@ export async function getAllBowlers(): Promise<
   const db = await getDb();
   const result = await db.request().query<{
     bowlerID: number;
-    firstName: string;
-    lastName: string;
-  }>(`SELECT bowlerID, firstName, lastName FROM bowlers ORDER BY lastName, firstName`);
-  return result.recordset;
+    bowlerName: string;
+  }>(`SELECT bowlerID, bowlerName FROM bowlers WHERE isActive = 1 ORDER BY bowlerName`);
+  return result.recordset.map((r) => {
+    const parts = r.bowlerName.split(' ');
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+    return { bowlerID: r.bowlerID, firstName, lastName };
+  });
 }
 
 /**
@@ -164,11 +169,10 @@ export async function getLineups(
         position: number;
         bowlerID: number | null;
         newBowlerName: string | null;
-        firstName: string | null;
-        lastName: string | null;
+        bowlerName: string | null;
       }>(
         `SELECT le.id, le.submissionID, le.position, le.bowlerID, le.newBowlerName,
-                b.firstName, b.lastName
+                b.bowlerName
          FROM lineupEntries le
          LEFT JOIN bowlers b ON le.bowlerID = b.bowlerID
          WHERE le.submissionID = @submissionID
@@ -182,7 +186,7 @@ export async function getLineups(
       bowlerID: e.bowlerID,
       newBowlerName: e.newBowlerName,
       bowlerName: e.bowlerID
-        ? `${e.firstName} ${e.lastName}`
+        ? e.bowlerName || undefined
         : e.newBowlerName || undefined,
     }));
 
@@ -290,11 +294,10 @@ export async function getLastWeekLineup(
       position: number;
       bowlerID: number | null;
       newBowlerName: string | null;
-      firstName: string | null;
-      lastName: string | null;
+      bowlerName: string | null;
     }>(
       `SELECT le.id, le.submissionID, le.position, le.bowlerID, le.newBowlerName,
-              b.firstName, b.lastName
+              b.bowlerName
        FROM lineupEntries le
        LEFT JOIN bowlers b ON le.bowlerID = b.bowlerID
        WHERE le.submissionID = @submissionID
@@ -308,7 +311,7 @@ export async function getLastWeekLineup(
     bowlerID: e.bowlerID,
     newBowlerName: e.newBowlerName,
     bowlerName: e.bowlerID
-      ? `${e.firstName} ${e.lastName}`
+      ? e.bowlerName || undefined
       : e.newBowlerName || undefined,
   }));
 }

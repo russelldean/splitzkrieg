@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 
+interface Team {
+  teamID: number;
+  teamName: string;
+}
+
 interface Bowler {
   bowlerID: number;
   firstName: string;
@@ -16,9 +21,15 @@ interface LineupSlot {
   newBowlerName: string;
 }
 
+interface SeasonInfo {
+  seasonID: number;
+  seasonName: string;
+  week: number;
+  teams: Team[];
+}
+
 interface LineupContext {
   teamID: number;
-  captainName: string;
   seasonID: number;
   seasonName: string;
   week: number;
@@ -33,60 +44,89 @@ interface LineupContext {
 }
 
 export default function LineupPage() {
+  // Step 1: Team selection
+  const [seasonInfo, setSeasonInfo] = useState<SeasonInfo | null>(null);
+  const [selectedTeamID, setSelectedTeamID] = useState<number | null>(null);
+  const [loadingTeams, setLoadingTeams] = useState(true);
+
+  // Step 2: Lineup form
   const [context, setContext] = useState<LineupContext | null>(null);
   const [slots, setSlots] = useState<LineupSlot[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingContext, setLoadingContext] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
 
+  // Step 1: Load teams
   useEffect(() => {
-    async function loadContext() {
+    async function loadTeams() {
       try {
         const res = await fetch('/api/lineup/submit');
-        if (res.status === 401) {
-          window.location.href = '/lineup/login?expired=1';
-          return;
-        }
-        if (!res.ok) throw new Error('Failed to load lineup context');
-        const data: LineupContext = await res.json();
-        setContext(data);
-
-        // Pre-fill from last week's lineup or start with 4 empty slots
-        if (data.lastWeekLineup.length > 0) {
-          setSlots(
-            data.lastWeekLineup.map((entry) => ({
-              position: entry.position,
-              bowlerID: entry.bowlerID,
-              bowlerName: entry.bowlerName || entry.newBowlerName || '',
-              isNew: !entry.bowlerID && !!entry.newBowlerName,
-              newBowlerName: entry.newBowlerName || '',
-            })),
-          );
-        } else {
-          setSlots(
-            Array.from({ length: 4 }, (_, i) => ({
-              position: i + 1,
-              bowlerID: null,
-              bowlerName: '',
-              isNew: false,
-              newBowlerName: '',
-            })),
-          );
-        }
+        if (!res.ok) throw new Error('Failed to load season info');
+        const data: SeasonInfo = await res.json();
+        setSeasonInfo(data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to load lineup data',
-        );
+        setError(err instanceof Error ? err.message : 'Failed to load');
       } finally {
-        setLoading(false);
+        setLoadingTeams(false);
       }
     }
-
-    loadContext();
+    loadTeams();
   }, []);
+
+  // Step 2: Load lineup context when team is selected
+  const loadTeamContext = useCallback(async (teamID: number) => {
+    setLoadingContext(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/lineup/submit?teamID=${teamID}`);
+      if (!res.ok) throw new Error('Failed to load lineup');
+      const data: LineupContext = await res.json();
+      setContext(data);
+
+      // Pre-fill from last week's lineup or start with 4 empty slots
+      if (data.lastWeekLineup.length > 0) {
+        setSlots(
+          data.lastWeekLineup.map((entry) => ({
+            position: entry.position,
+            bowlerID: entry.bowlerID,
+            bowlerName: entry.bowlerName || entry.newBowlerName || '',
+            isNew: !entry.bowlerID && !!entry.newBowlerName,
+            newBowlerName: entry.newBowlerName || '',
+          })),
+        );
+      } else {
+        setSlots(
+          Array.from({ length: 4 }, (_, i) => ({
+            position: i + 1,
+            bowlerID: null,
+            bowlerName: '',
+            isNew: false,
+            newBowlerName: '',
+          })),
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load lineup');
+    } finally {
+      setLoadingContext(false);
+    }
+  }, []);
+
+  function handleTeamSelect(teamID: number) {
+    setSelectedTeamID(teamID);
+    loadTeamContext(teamID);
+  }
+
+  function handleBackToTeams() {
+    setSelectedTeamID(null);
+    setContext(null);
+    setSlots([]);
+    setSubmitted(false);
+    setError(null);
+  }
 
   // Sort bowlers: recent roster first, then alphabetical
   const sortedBowlers = useMemo(() => {
@@ -145,13 +185,7 @@ export default function LineupPage() {
     setSlots((prev) =>
       prev.map((s, i) =>
         i === slotIndex
-          ? {
-              ...s,
-              bowlerID: null,
-              bowlerName: '',
-              isNew: false,
-              newBowlerName: '',
-            }
+          ? { ...s, bowlerID: null, bowlerName: '', isNew: false, newBowlerName: '' }
           : s,
       ),
     );
@@ -161,12 +195,7 @@ export default function LineupPage() {
     setSlots((prev) =>
       prev.map((s, i) =>
         i === slotIndex
-          ? {
-              ...s,
-              isNew: !s.isNew,
-              bowlerID: null,
-              bowlerName: '',
-            }
+          ? { ...s, isNew: !s.isNew, bowlerID: null, bowlerName: '' }
           : s,
       ),
     );
@@ -219,7 +248,6 @@ export default function LineupPage() {
   const handleSubmit = async () => {
     if (!context) return;
 
-    // Validate: each slot must have either a bowlerID or a new bowler name
     const validSlots = slots.filter(
       (s) => s.bowlerID || (s.isNew && s.newBowlerName.trim()),
     );
@@ -233,6 +261,7 @@ export default function LineupPage() {
     setError(null);
 
     try {
+      const teamName = seasonInfo?.teams.find((t) => t.teamID === selectedTeamID)?.teamName;
       const entries = validSlots.map((s) => ({
         position: s.position,
         bowlerID: s.bowlerID,
@@ -243,9 +272,11 @@ export default function LineupPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          teamID: context.teamID,
           seasonID: context.seasonID,
           week: context.week,
           entries,
+          submittedBy: teamName || 'Captain',
         }),
       });
 
@@ -256,15 +287,14 @@ export default function LineupPage() {
 
       setSubmitted(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to submit lineup',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to submit lineup');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
+  // ── Loading state ──
+  if (loadingTeams) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="w-8 h-8 border-3 border-navy/20 border-t-navy rounded-full animate-spin" />
@@ -272,7 +302,7 @@ export default function LineupPage() {
     );
   }
 
-  if (error && !context) {
+  if (error && !seasonInfo) {
     return (
       <div className="text-center py-16">
         <p className="font-body text-red-600">{error}</p>
@@ -280,36 +310,100 @@ export default function LineupPage() {
     );
   }
 
-  if (!context) return null;
+  if (!seasonInfo) return null;
 
+  // ── Step 1: Team selection ──
+  if (!selectedTeamID) {
+    return (
+      <div>
+        <div className="mb-6">
+          <h2 className="font-heading text-xl text-navy">
+            Week {seasonInfo.week} Lineup
+          </h2>
+          <p className="font-body text-sm text-navy/60">{seasonInfo.seasonName}</p>
+        </div>
+        <p className="font-body text-sm text-navy/70 mb-4">
+          Select your team to submit or update your lineup.
+        </p>
+        <div className="space-y-2">
+          {seasonInfo.teams.map((team) => (
+            <button
+              key={team.teamID}
+              onClick={() => handleTeamSelect(team.teamID)}
+              className="w-full text-left px-4 py-3 rounded-lg bg-white border border-navy/10 hover:border-navy/20 hover:shadow-sm transition-all font-body text-navy"
+            >
+              {team.teamName}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Loading lineup context ──
+  if (loadingContext) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="w-8 h-8 border-3 border-navy/20 border-t-navy rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // ── Submitted confirmation ──
   if (submitted) {
+    const teamName = seasonInfo.teams.find((t) => t.teamID === selectedTeamID)?.teamName;
     return (
       <div className="text-center py-16">
         <div className="bg-green-50 rounded-lg p-8 max-w-md mx-auto">
           <h2 className="font-heading text-2xl text-navy mb-3">
             Lineup Submitted!
           </h2>
-          <p className="font-body text-navy/70 mb-6">
-            You can update it until league night.
+          <p className="font-body text-navy/70 mb-1">
+            {teamName} - Week {context?.week}
           </p>
-          <button
-            onClick={() => setSubmitted(false)}
-            className="font-body text-sm text-navy/60 underline hover:text-navy"
-          >
-            Edit lineup
-          </button>
+          <p className="font-body text-sm text-navy/50 mb-6">
+            You can update it any time before league night.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => setSubmitted(false)}
+              className="font-body text-sm text-navy/60 underline hover:text-navy"
+            >
+              Edit lineup
+            </button>
+            <button
+              onClick={handleBackToTeams}
+              className="font-body text-sm text-navy/60 underline hover:text-navy"
+            >
+              Different team
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  if (!context) return null;
+
+  // ── Step 2: Lineup form ──
+  const teamName = seasonInfo.teams.find((t) => t.teamID === selectedTeamID)?.teamName;
+
   return (
     <div>
       <div className="mb-6">
-        <h2 className="font-heading text-xl text-navy">
-          Week {context.week} Lineup
-        </h2>
-        <p className="font-body text-sm text-navy/60">{context.seasonName}</p>
+        <button
+          onClick={handleBackToTeams}
+          className="font-body text-xs text-navy/40 hover:text-navy mb-2 flex items-center gap-1"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+          Back to teams
+        </button>
+        <h2 className="font-heading text-xl text-navy">{teamName}</h2>
+        <p className="font-body text-sm text-navy/60">
+          Week {context.week} - {context.seasonName}
+        </p>
       </div>
 
       {error && (
@@ -335,16 +429,8 @@ export default function LineupPage() {
                   className="p-1 text-navy/30 hover:text-navy disabled:opacity-30"
                   title="Move up"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-                      clipRule="evenodd"
-                    />
+                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
                 <button
@@ -353,16 +439,8 @@ export default function LineupPage() {
                   className="p-1 text-navy/30 hover:text-navy disabled:opacity-30"
                   title="Move down"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
+                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
                 {slots.length > 1 && (
@@ -371,16 +449,8 @@ export default function LineupPage() {
                     className="p-1 text-red-400 hover:text-red-600 ml-1"
                     title="Remove slot"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
                 )}
@@ -429,22 +499,16 @@ export default function LineupPage() {
                     />
                     <div className="max-h-48 overflow-y-auto border border-navy/10 rounded-md">
                       {filteredBowlers.slice(0, 50).map((bowler) => {
-                        const isRecent = context.recentRoster.includes(
-                          bowler.bowlerID,
-                        );
+                        const isRecent = context.recentRoster.includes(bowler.bowlerID);
                         return (
                           <button
                             key={bowler.bowlerID}
                             onClick={() => selectBowler(index, bowler)}
                             className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0 flex items-center justify-between"
                           >
-                            <span>
-                              {bowler.firstName} {bowler.lastName}
-                            </span>
+                            <span>{bowler.firstName} {bowler.lastName}</span>
                             {isRecent && (
-                              <span className="text-xs text-navy/40">
-                                recent
-                              </span>
+                              <span className="text-xs text-navy/40">recent</span>
                             )}
                           </button>
                         );
@@ -457,10 +521,7 @@ export default function LineupPage() {
                     </div>
                     <div className="mt-2 flex gap-2">
                       <button
-                        onClick={() => {
-                          setActiveSlot(null);
-                          setSearchQuery('');
-                        }}
+                        onClick={() => { setActiveSlot(null); setSearchQuery(''); }}
                         className="font-body text-xs text-navy/40 hover:text-navy"
                       >
                         Cancel

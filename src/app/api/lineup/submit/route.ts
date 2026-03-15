@@ -1,34 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireCaptain } from '@/lib/admin/auth';
 import {
   submitLineup,
   getLastWeekLineup,
   getAllBowlers,
   getRecentRoster,
   getCurrentLineupContext,
+  getSeasonTeams,
 } from '@/lib/admin/lineups';
 
+export const dynamic = 'force-dynamic';
+
 /**
- * GET: Return lineup context for the captain form.
- * Includes bowler list, recent roster, current lineup context, and last week's lineup.
+ * GET: Return lineup context.
+ * Without ?teamID: returns season info + team list (for team picker).
+ * With ?teamID=N: returns full lineup context for that team.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  let payload;
   try {
-    payload = await requireCaptain(request);
-  } catch {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
-  }
-
-  try {
-    const teamID = payload.teamID!;
     const context = await getCurrentLineupContext();
-
     if (!context) {
       return NextResponse.json(
         { error: 'No active season found' },
         { status: 404 },
       );
+    }
+
+    const teamIDParam = request.nextUrl.searchParams.get('teamID');
+
+    // No teamID: return season info + teams for the picker
+    if (!teamIDParam) {
+      const teams = await getSeasonTeams(context.seasonID);
+      return NextResponse.json({
+        seasonID: context.seasonID,
+        seasonName: context.seasonName,
+        week: context.nextWeek,
+        teams,
+      });
+    }
+
+    // With teamID: return full context for lineup form
+    const teamID = parseInt(teamIDParam, 10);
+    if (isNaN(teamID)) {
+      return NextResponse.json({ error: 'Invalid teamID' }, { status: 400 });
     }
 
     const [bowlers, recentRoster, lastWeekLineup] = await Promise.all([
@@ -39,7 +52,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       teamID,
-      captainName: payload.captainName,
       seasonID: context.seasonID,
       seasonName: context.seasonName,
       week: context.nextWeek,
@@ -57,34 +69,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
- * POST: Submit a lineup for the captain's team.
+ * POST: Submit a lineup. Replaces any existing submission for the same team/season/week.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let payload;
   try {
-    payload = await requireCaptain(request);
-  } catch {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
-  }
+    const { teamID, seasonID, week, entries, submittedBy } = await request.json();
 
-  try {
-    const { seasonID, week, entries } = await request.json();
-
-    if (!seasonID || !week || !Array.isArray(entries) || entries.length === 0) {
+    if (!teamID || !seasonID || !week || !Array.isArray(entries) || entries.length === 0) {
       return NextResponse.json(
-        { error: 'seasonID, week, and entries are required' },
+        { error: 'teamID, seasonID, week, and entries are required' },
         { status: 400 },
       );
     }
-
-    const teamID = payload.teamID!;
-    const submittedBy = payload.captainName || 'Captain';
 
     const submissionID = await submitLineup(
       seasonID,
       week,
       teamID,
-      submittedBy,
+      submittedBy || 'Captain',
       entries,
     );
 
