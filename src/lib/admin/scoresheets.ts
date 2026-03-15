@@ -210,8 +210,8 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
 
   const navy = '#1a1f3d';
   const cream = '#f5f0e8';
-  const grey = [220, 220, 220] as [number, number, number];
-  const lightGrey = [245, 245, 245] as [number, number, number];
+  const grey = [240, 240, 240] as [number, number, number];
+  const white = [255, 255, 255] as [number, number, number];
 
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
@@ -306,28 +306,46 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setTextColor(120);
     doc.text(`Week ${match.week}`, 40, 30);
 
+    // Check roster source per team
+    const homeSource = homeBowlers[0]?.rosterSource;
+    const awaySource = awayBowlers[0]?.rosterSource;
+    const fallbackMsg = "Last Week's Lineup - Please Submit Lineups before 5pm Monday";
+
+    // Home team fallback warning
+    let homeTableY = 50;
+    if (homeSource === 'lastweek') {
+      doc.setFontSize(8);
+      doc.setTextColor(180, 100, 0);
+      doc.setFont('helvetica', 'italic');
+      doc.text(fallbackMsg, 40, 42);
+      doc.setFont('helvetica', 'normal');
+      homeTableY = 54;
+    }
+
     // Turkey emoji above home team's turkeys column (facing left - default)
     const tkSize = 24;
     const tkX = turkeyColX + (turkeyColW - tkSize) / 2;
-    doc.addImage(TURKEY_PNG, 'PNG', tkX, 50 - tkSize - 4, tkSize, tkSize);
+    doc.addImage(TURKEY_PNG, 'PNG', tkX, homeTableY - tkSize - 4, tkSize, tkSize);
 
     // Home team table
     const homeRows = buildRows(match.homeTeamName, homeBowlers);
     autoTable(doc, {
-      startY: 50,
+      startY: homeTableY,
       head: [columns],
       body: [
         ...homeRows,
-        [{ content: '', colSpan: 4, styles: { fillColor: lightGrey } }, { content: 'total w/ hdcp', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: lightGrey } }, '', '', ''],
+        [{ content: '', colSpan: 4, styles: { fillColor: white } }, { content: 'total w/ hdcp', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: white } }, '', '', ''],
         [{ content: '', colSpan: 5, styles: { fillColor: [255, 255, 255] as [number, number, number] } }, { content: 'win/loss', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'italic' as const } }, '', ''],
       ],
       theme: 'grid',
       styles: {
-        fontSize: 10,
-        cellPadding: 8,
+        fontSize: 9,
+        cellPadding: 6,
+        minCellHeight: 28,
         lineColor: [180, 180, 180],
         lineWidth: 0.5,
         textColor: navy,
+        overflow: 'ellipsize' as const,
       },
       headStyles: {
         fillColor: grey,
@@ -335,16 +353,17 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
         fontSize: 9,
         fontStyle: 'bold',
         cellPadding: 6,
+        minCellHeight: 20,
         halign: 'center',
       },
       columnStyles: {
-        0: { cellWidth: 95 },
-        1: { cellWidth: 100 },
+        0: { cellWidth: 90, fontSize: 8 },
+        1: { cellWidth: 105, fontSize: 9 },
         2: { cellWidth: 45, halign: 'center' },
         3: { cellWidth: 45, halign: 'center' },
-        4: { cellWidth: 72, halign: 'center', fillColor: lightGrey },
-        5: { cellWidth: 72, halign: 'center', fillColor: lightGrey },
-        6: { cellWidth: 72, halign: 'center', fillColor: lightGrey },
+        4: { cellWidth: 72, halign: 'center', fillColor: white },
+        5: { cellWidth: 72, halign: 'center', fillColor: white },
+        6: { cellWidth: 72, halign: 'center', fillColor: white },
         7: { cellWidth: 50, halign: 'center' },
       },
       margin: { left: 35, right: 35 },
@@ -353,10 +372,21 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const afterHomeY = (doc as any).lastAutoTable?.finalY ?? 300;
 
-    // Turkey emoji above away team's turkeys column (flipped to face right)
+    // Away team fallback warning
     const awayGap = 40;
+    let awayTableY = afterHomeY + awayGap;
+    if (awaySource === 'lastweek') {
+      doc.setFontSize(8);
+      doc.setTextColor(180, 100, 0);
+      doc.setFont('helvetica', 'italic');
+      doc.text(fallbackMsg, 40, afterHomeY + awayGap - 8);
+      doc.setFont('helvetica', 'normal');
+      awayTableY = afterHomeY + awayGap + 4;
+    }
+
+    // Turkey emoji above away team's turkeys column (flipped to face right)
     const awayTkX = turkeyColX + (turkeyColW - tkSize) / 2;
-    const awayTkY = afterHomeY + awayGap - tkSize - 4;
+    const awayTkY = awayTableY - tkSize - 4;
     // Flip horizontally using internal PDF transform
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const internal = doc.internal as any;
@@ -368,20 +398,22 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     // Away team table
     const awayRows = buildRows(match.awayTeamName, awayBowlers);
     autoTable(doc, {
-      startY: afterHomeY + awayGap,
+      startY: awayTableY,
       head: [columns],
       body: [
         ...awayRows,
-        [{ content: '', colSpan: 4, styles: { fillColor: lightGrey } }, { content: 'total w/ hdcp', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: lightGrey } }, '', '', ''],
+        [{ content: '', colSpan: 4, styles: { fillColor: white } }, { content: 'total w/ hdcp', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: white } }, '', '', ''],
         [{ content: '', colSpan: 5, styles: { fillColor: [255, 255, 255] as [number, number, number] } }, { content: 'win/loss', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'italic' as const } }, '', ''],
       ],
       theme: 'grid',
       styles: {
-        fontSize: 10,
-        cellPadding: 8,
+        fontSize: 9,
+        cellPadding: 6,
+        minCellHeight: 28,
         lineColor: [180, 180, 180],
         lineWidth: 0.5,
         textColor: navy,
+        overflow: 'ellipsize' as const,
       },
       headStyles: {
         fillColor: grey,
@@ -389,16 +421,17 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
         fontSize: 9,
         fontStyle: 'bold',
         cellPadding: 6,
+        minCellHeight: 20,
         halign: 'center',
       },
       columnStyles: {
-        0: { cellWidth: 95 },
-        1: { cellWidth: 100 },
+        0: { cellWidth: 90, fontSize: 8 },
+        1: { cellWidth: 105, fontSize: 9 },
         2: { cellWidth: 45, halign: 'center' },
         3: { cellWidth: 45, halign: 'center' },
-        4: { cellWidth: 72, halign: 'center', fillColor: lightGrey },
-        5: { cellWidth: 72, halign: 'center', fillColor: lightGrey },
-        6: { cellWidth: 72, halign: 'center', fillColor: lightGrey },
+        4: { cellWidth: 72, halign: 'center', fillColor: white },
+        5: { cellWidth: 72, halign: 'center', fillColor: white },
+        6: { cellWidth: 72, halign: 'center', fillColor: white },
         7: { cellWidth: 50, halign: 'center' },
       },
       margin: { left: 35, right: 35 },
@@ -421,6 +454,17 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setFont('helvetica', 'normal');
     doc.text('Record the team total the screen is showing and we will fix as needed.', 40, noteY + 48);
     doc.text('The ACCURATE game score for team = (Screen total) - (New bowler game score)', 40, noteY + 58);
+
+    // Feedback prompt
+    doc.setFontSize(8);
+    doc.setTextColor(140);
+    doc.setFont('helvetica', 'italic');
+    doc.text(
+      'Something noteworthy happen on the lanes? Use the Feedback button at splitzkrieg.com to let us know!',
+      40,
+      noteY + 78,
+    );
+    doc.setFont('helvetica', 'normal');
   }
 
   return doc;
