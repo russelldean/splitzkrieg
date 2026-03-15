@@ -12,6 +12,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import sql from 'mssql';
 import { getDb } from '@/lib/db';
+import { TURKEY_PNG } from './turkey-emoji';
 
 export interface ScoresheetBowler {
   name: string;
@@ -75,7 +76,8 @@ export async function getMatchupsForWeek(
 
   const matches: ScoresheetMatch[] = [];
 
-  for (const sched of scheduleResult.recordset) {
+  for (let idx = 0; idx < scheduleResult.recordset.length; idx++) {
+    const sched = scheduleResult.recordset[idx];
     const bowlers: ScoresheetBowler[] = [];
 
     if (source === 'lineups') {
@@ -195,7 +197,7 @@ export async function getMatchupsForWeek(
       awayTeamName: sched.t2Name,
       week,
       date: dateStr,
-      matchNumber: sched.matchNumber,
+      matchNumber: idx + 1,
       bowlers,
     });
   }
@@ -275,14 +277,18 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     const homeBowlers = match.bowlers.filter((b) => b.side === 'home');
     const awayBowlers = match.bowlers.filter((b) => b.side === 'away');
 
-    const columns = ['', 'Bowler', 'Avg', 'HCP', 'Game 1', 'Game 2', 'Game 3', 'Turkeys'];
+    const columns = ['', 'Bowler', 'Avg', 'HCP', 'Game 1', 'Game 2', 'Game 3', ''];
+
+    // Turkey column position: left margin (35) + sum of cols 0-6 widths
+    const turkeyColX = 35 + 95 + 100 + 45 + 45 + 72 + 72 + 72;
+    const turkeyColW = 50;
 
     function buildRows(
       teamName: string,
       bowlers: ScoresheetBowler[],
     ): Array<Array<string | number>> {
       const rows: Array<Array<string | number>> = [];
-      for (let j = 0; j < Math.max(bowlers.length, 4); j++) {
+      for (let j = 0; j < Math.max(bowlers.length, 6); j++) {
         const b = bowlers[j];
         if (b) {
           rows.push([
@@ -302,11 +308,14 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
       return rows;
     }
 
-    // Header
+    // Header (week only, lanes are on cover page)
     doc.setFontSize(10);
     doc.setTextColor(120);
-    doc.text(lanes, pageW - 40, 30, { align: 'right' });
     doc.text(`Week ${match.week}`, 40, 30);
+
+    // Turkey emoji above home team's turkeys column
+    const tkSize = 24;
+    doc.addImage(TURKEY_PNG, 'PNG', turkeyColX + (turkeyColW - tkSize) / 2, 50 - tkSize - 4, tkSize, tkSize);
 
     // Home team table
     const homeRows = buildRows(match.homeTeamName, homeBowlers);
@@ -348,6 +357,10 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const afterHomeY = (doc as any).lastAutoTable?.finalY ?? 300;
+
+    // Turkey emoji above away team's turkeys column
+    const awayTableY = afterHomeY + 25;
+    doc.addImage(TURKEY_PNG, 'PNG', turkeyColX + (turkeyColW - tkSize) / 2, awayTableY - tkSize - 4, tkSize, tkSize);
 
     // Away team table
     const awayRows = buildRows(match.awayTeamName, awayBowlers);
