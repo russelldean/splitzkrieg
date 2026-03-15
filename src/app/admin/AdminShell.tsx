@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: 'Blog', href: '/admin/blog', icon: BlogIcon },
   { label: 'Lineups', href: '/admin/lineups', icon: LineupsIcon },
   { label: 'Scoresheets', href: '/admin/scoresheets', icon: ScoresheetsIcon },
+  { label: 'Bowlers', href: '/admin/bowlers', icon: BowlersIcon },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -164,6 +165,14 @@ function ScoresheetsIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function BowlersIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
     </svg>
   );
 }

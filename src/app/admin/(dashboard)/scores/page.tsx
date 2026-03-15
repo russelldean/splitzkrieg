@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type {
   StagedMatch,
   StagedBowler,
@@ -95,9 +95,38 @@ interface ConfirmResult {
 type Step = 'idle' | 'loading' | 'reviewing' | 'confirming' | 'done';
 
 export default function ScoresPage() {
-  // Season/week selectors
-  const [seasonID, setSeasonID] = useState(35);
+  // Season auto-detected from DB, week selector
+  const [seasonID, setSeasonID] = useState<number | null>(null);
+  const [seasonName, setSeasonName] = useState('');
   const [week, setWeek] = useState(1);
+
+  // All bowlers for picker dropdown
+  const [allBowlers, setAllBowlers] = useState<
+    Array<{ bowlerID: number; bowlerName: string }>
+  >([]);
+
+  // Load current season and bowler list on mount
+  useEffect(() => {
+    fetch('/api/admin/dashboard')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.season) {
+          setSeasonID(data.season.seasonID);
+          setSeasonName(data.season.displayName || `Season ${data.season.seasonID}`);
+          if (data.publishedWeek != null) {
+            setWeek(data.publishedWeek + 1);
+          }
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/admin/bowlers')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.bowlers) setAllBowlers(data.bowlers);
+      })
+      .catch(() => {});
+  }, []);
 
   // Pipeline state
   const [step, setStep] = useState<Step>('idle');
@@ -353,61 +382,59 @@ export default function ScoresPage() {
       <h1 className="font-heading text-2xl text-navy mb-6">Score Pipeline</h1>
 
       {/* Season/Week Selectors */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div>
-          <label className="block font-body text-xs text-navy/60 mb-1">
-            Season
-          </label>
-          <select
-            value={seasonID}
-            onChange={(e) => setSeasonID(Number(e.target.value))}
-            disabled={step !== 'idle'}
-            className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
-          >
-            {Array.from({ length: 35 }, (_, i) => 35 - i).map((s) => (
-              <option key={s} value={s}>
-                Season {s}
-              </option>
-            ))}
-          </select>
+      {seasonID == null ? (
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-4 h-4 border-2 border-navy/20 border-t-navy rounded-full animate-spin" />
+          <span className="font-body text-sm text-navy/60">Loading season...</span>
         </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <div>
+            <label className="block font-body text-xs text-navy/60 mb-1">
+              Season
+            </label>
+            <p className="font-body text-sm text-navy px-3 py-2">
+              {seasonName}
+            </p>
+          </div>
 
-        <div>
-          <label className="block font-body text-xs text-navy/60 mb-1">
-            Week
-          </label>
-          <select
-            value={week}
-            onChange={(e) => setWeek(Number(e.target.value))}
-            disabled={step !== 'idle'}
-            className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
-          >
-            {Array.from({ length: 20 }, (_, i) => i + 1).map((w) => (
-              <option key={w} value={w}>
-                Week {w}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block font-body text-xs text-navy/60 mb-1">
+              Week
+            </label>
+            <select
+              value={week}
+              onChange={(e) => setWeek(Number(e.target.value))}
+              disabled={step !== 'idle'}
+              className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
+            >
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((w) => (
+                <option key={w} value={w}>
+                  Week {w}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <button
+              onClick={() => setShowCookieModal(true)}
+              disabled={step !== 'idle'}
+              className="px-4 py-2 bg-navy text-cream font-body text-sm rounded hover:bg-navy/90 disabled:opacity-50 transition-colors"
+            >
+              Pull from LP
+            </button>
+
+            <button
+              onClick={handleManualEntry}
+              disabled={step !== 'idle'}
+              className="px-4 py-2 bg-white text-navy border border-navy/20 font-body text-sm rounded hover:bg-navy/5 disabled:opacity-50 transition-colors"
+            >
+              Manual Entry
+            </button>
+          </div>
         </div>
-
-        <div className="flex items-end gap-2">
-          <button
-            onClick={() => setShowCookieModal(true)}
-            disabled={step !== 'idle'}
-            className="px-4 py-2 bg-navy text-cream font-body text-sm rounded hover:bg-navy/90 disabled:opacity-50 transition-colors"
-          >
-            Pull from LP
-          </button>
-
-          <button
-            onClick={handleManualEntry}
-            disabled={step !== 'idle'}
-            className="px-4 py-2 bg-white text-navy border border-navy/20 font-body text-sm rounded hover:bg-navy/5 disabled:opacity-50 transition-colors"
-          >
-            Manual Entry
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -449,6 +476,7 @@ export default function ScoresPage() {
               key={matchIdx}
               match={match}
               matchIdx={matchIdx}
+              allBowlers={allBowlers}
               warnings={validationWarnings.filter(
                 (w) =>
                   match.bowlers.some(
@@ -636,6 +664,7 @@ export default function ScoresPage() {
 interface MatchCardProps {
   match: StagedMatch;
   matchIdx: number;
+  allBowlers: Array<{ bowlerID: number; bowlerName: string }>;
   warnings: ValidationWarning[];
   onUpdateBowler: (
     matchIdx: number,
@@ -661,6 +690,7 @@ interface MatchCardProps {
 function MatchCard({
   match,
   matchIdx,
+  allBowlers,
   warnings,
   onUpdateBowler,
   onTogglePenalty,
@@ -692,6 +722,7 @@ function MatchCard({
           teamID={match.homeTeamID}
           bowlers={homeBowlers}
           matchIdx={matchIdx}
+          allBowlers={allBowlers}
           onUpdateBowler={onUpdateBowler}
           onTogglePenalty={onTogglePenalty}
           onResolveBowler={onResolveBowler}
@@ -713,6 +744,7 @@ function MatchCard({
           teamID={match.awayTeamID}
           bowlers={awayBowlers}
           matchIdx={matchIdx}
+          allBowlers={allBowlers}
           onUpdateBowler={onUpdateBowler}
           onTogglePenalty={onTogglePenalty}
           onResolveBowler={onResolveBowler}
@@ -757,6 +789,7 @@ interface TeamSectionProps {
   teamID: number;
   bowlers: Array<{ bowler: StagedBowler; idx: number }>;
   matchIdx: number;
+  allBowlers: Array<{ bowlerID: number; bowlerName: string }>;
   onUpdateBowler: (
     matchIdx: number,
     bowlerIdx: number,
@@ -777,6 +810,7 @@ function TeamSection({
   teamName,
   bowlers,
   matchIdx,
+  allBowlers,
   onUpdateBowler,
   onTogglePenalty,
   onResolveBowler,
@@ -798,7 +832,7 @@ function TeamSection({
               <th className="text-center py-1 px-1 w-14">Turkeys</th>
               <th className="text-center py-1 px-1 w-14">Avg</th>
               <th className="text-center py-1 px-1 w-20">Status</th>
-              <th className="text-center py-1 px-1 w-8"></th>
+              <th className="text-center py-1 px-1 w-10"></th>
             </tr>
           </thead>
           <tbody>
@@ -808,6 +842,7 @@ function TeamSection({
                 bowler={bowler}
                 matchIdx={matchIdx}
                 bowlerIdx={idx}
+                allBowlers={allBowlers}
                 onUpdate={onUpdateBowler}
                 onTogglePenalty={onTogglePenalty}
                 onResolve={onResolveBowler}
@@ -827,6 +862,7 @@ interface BowlerRowProps {
   bowler: StagedBowler;
   matchIdx: number;
   bowlerIdx: number;
+  allBowlers: Array<{ bowlerID: number; bowlerName: string }>;
   onUpdate: (
     matchIdx: number,
     bowlerIdx: number,
@@ -847,12 +883,21 @@ function BowlerRow({
   bowler,
   matchIdx,
   bowlerIdx,
+  allBowlers,
   onUpdate,
   onTogglePenalty,
   onResolve,
   onRemove,
 }: BowlerRowProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [bowlerSearch, setBowlerSearch] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+
+  const filteredBowlers = useMemo(() => {
+    if (!bowlerSearch.trim()) return allBowlers.slice(0, 20);
+    const q = bowlerSearch.toLowerCase();
+    return allBowlers.filter((b) => b.bowlerName.toLowerCase().includes(q)).slice(0, 20);
+  }, [bowlerSearch, allBowlers]);
 
   const parseScore = (val: string): number | null => {
     const num = parseInt(val, 10);
@@ -898,16 +943,54 @@ function BowlerRow({
               </div>
             )}
           </div>
+        ) : bowler.bowlerID == null ? (
+          <div className="relative">
+            <input
+              type="text"
+              value={bowlerSearch}
+              onChange={(e) => {
+                setBowlerSearch(e.target.value);
+                setShowPicker(true);
+              }}
+              onFocus={() => setShowPicker(true)}
+              className="w-full bg-transparent border-b border-navy/30 focus:border-navy/60 focus:outline-none px-0 py-0.5 text-navy"
+              placeholder="Search bowler..."
+            />
+            {showPicker && (
+              <div className="absolute z-10 mt-1 bg-white border border-navy/20 rounded shadow-lg py-1 min-w-[200px] max-h-48 overflow-y-auto">
+                {filteredBowlers.map((b) => (
+                  <button
+                    key={b.bowlerID}
+                    onClick={() => {
+                      onResolve(matchIdx, bowlerIdx, b.bowlerID, b.bowlerName);
+                      setShowPicker(false);
+                      setBowlerSearch('');
+                    }}
+                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-navy/5 transition-colors"
+                  >
+                    {b.bowlerName}
+                  </button>
+                ))}
+                {filteredBowlers.length === 0 && (
+                  <p className="px-3 py-1.5 text-xs text-navy/40">No matches</p>
+                )}
+              </div>
+            )}
+          </div>
         ) : (
-          <input
-            type="text"
-            value={bowler.bowlerName}
-            onChange={(e) =>
-              onUpdate(matchIdx, bowlerIdx, 'bowlerName', e.target.value)
-            }
-            className="w-full bg-transparent border-b border-transparent hover:border-navy/20 focus:border-navy/40 focus:outline-none px-0 py-0.5 text-navy"
-            placeholder="Bowler name"
-          />
+          <div className="flex items-center gap-1">
+            <span className="text-navy py-0.5">{bowler.bowlerName}</span>
+            <button
+              onClick={() => {
+                onUpdate(matchIdx, bowlerIdx, 'bowlerID', null);
+                onUpdate(matchIdx, bowlerIdx, 'bowlerName', '');
+              }}
+              className="px-1 py-0.5 text-[10px] text-navy/30 hover:text-navy transition-colors"
+              title="Change bowler"
+            >
+              swap
+            </button>
+          </div>
         )}
       </td>
 
@@ -999,10 +1082,10 @@ function BowlerRow({
       <td className="py-1.5 px-1 text-center">
         <button
           onClick={() => onRemove(matchIdx, bowlerIdx)}
-          className="text-navy/20 hover:text-red transition-colors"
+          className="px-2 py-1 text-sm font-semibold text-navy/30 hover:text-red hover:bg-red/10 rounded transition-colors"
           title="Remove bowler"
         >
-          x
+          X
         </button>
       </td>
     </tr>
