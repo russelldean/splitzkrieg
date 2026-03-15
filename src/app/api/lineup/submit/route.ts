@@ -7,6 +7,7 @@ import {
   getCurrentLineupContext,
   getSeasonTeams,
   getSubmittedTeamIDs,
+  getCurrentSubmittedBy,
 } from '@/lib/admin/lineups';
 
 export const dynamic = 'force-dynamic';
@@ -50,16 +51,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Invalid teamID' }, { status: 400 });
     }
 
-    const [bowlers, recentRoster, lastWeekLineup] = await Promise.all([
+    const [bowlers, recentRoster, lastWeekLineup, currentSubmittedBy] = await Promise.all([
       getAllBowlers(),
       getRecentRoster(teamID, context.seasonID),
       getLastWeekLineup(teamID, context.seasonID, context.nextWeek),
+      getCurrentSubmittedBy(teamID, context.seasonID, context.nextWeek),
     ]);
 
     return NextResponse.json({
       teamID,
       seasonID: context.seasonID,
       seasonName: context.seasonName,
+      submittedBy: currentSubmittedBy,
       week: context.nextWeek,
       bowlers,
       recentRoster,

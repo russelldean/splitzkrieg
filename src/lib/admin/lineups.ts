@@ -567,3 +567,24 @@ export async function getSubmittedTeamIDs(
     );
   return new Set(result.recordset.map((r) => r.teamID));
 }
+
+/**
+ * Get the submittedBy name from the current week's submission (for pre-fill).
+ */
+export async function getCurrentSubmittedBy(
+  teamID: number,
+  seasonID: number,
+  week: number,
+): Promise<string | null> {
+  const db = await getDb();
+  const result = await db
+    .request()
+    .input('teamID', teamID)
+    .input('seasonID', seasonID)
+    .input('week', week)
+    .query<{ submittedBy: string | null }>(
+      `SELECT submittedBy FROM lineupSubmissions
+       WHERE teamID = @teamID AND seasonID = @seasonID AND week = @week`,
+    );
+  return result.recordset[0]?.submittedBy ?? null;
+}
