@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import type { BlogPost } from '@/lib/admin/types';
 
 function formatDate(dateStr: string | null): string {
@@ -16,6 +16,7 @@ function formatDate(dateStr: string | null): string {
 
 export default function AdminBlogPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -38,9 +39,10 @@ export default function AdminBlogPage() {
     }
   }, []);
 
+  // Refetch whenever this page is navigated to (pathname triggers on SPA navigation back)
   useEffect(() => {
     loadPosts();
-  }, [loadPosts]);
+  }, [loadPosts, pathname]);
 
   async function handleNewPost() {
     setCreating(true);

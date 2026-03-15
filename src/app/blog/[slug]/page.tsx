@@ -5,7 +5,8 @@ import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent } from '@/
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
 import { mdxComponents } from '@/lib/mdx-components';
 
-export const dynamicParams = false;
+export const dynamicParams = true;
+export const revalidate = 3600; // revalidate at most every hour; on-demand revalidation handles immediate updates
 
 export async function generateStaticParams() {
   const posts = await getAllPosts();

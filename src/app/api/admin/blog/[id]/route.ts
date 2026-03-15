@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/auth';
 import {
   getBlogPostById,
@@ -65,6 +66,15 @@ export async function PUT(
 
     const body = await request.json();
     await updateBlogPost(postId, body);
+
+    // Revalidate blog pages when publish state changes
+    if ('publishedAt' in body) {
+      revalidatePath('/blog', 'page');
+      if (body.slug) {
+        revalidatePath(`/blog/${body.slug}`, 'page');
+      }
+    }
+
     return NextResponse.json({ updated: true });
   } catch (err) {
     console.error('Admin blog PUT error:', err);
@@ -96,6 +106,7 @@ export async function DELETE(
     }
 
     await deleteBlogPost(postId);
+    revalidatePath('/blog', 'page');
     return NextResponse.json({ deleted: true });
   } catch (err) {
     console.error('Admin blog DELETE error:', err);

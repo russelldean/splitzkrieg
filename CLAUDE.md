@@ -78,7 +78,7 @@ When inserting/shifting score data manually, check ALL downstream:
 ## Key Formulas
 
 - **Slug**: `LOWER(REPLACE(firstName,' ','-'))+'-'+LOWER(REPLACE(lastName,' ','-'))`
-- **HCP**: `FLOOR((225 - FLOOR(incomingAvg)) * 0.95)` — floor avg FIRST
+- **HCP**: `FLOOR((225 - FLOOR(incomingAvg)) * 0.95)` — floor avg FIRST, max 147
 - **Penalty**: flat 199 per hcpGame
 - **No-avg bowler**: flat 219 per hcpGame
 - **incomingAvg**: ALWAYS stored as whole number (no decimals)

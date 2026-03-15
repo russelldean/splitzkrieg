@@ -659,6 +659,41 @@ export default function ScoresPage() {
   );
 }
 
+// ---- Handicap helpers ----
+
+function calcHcp(incomingAvg: number | null): number {
+  if (incomingAvg == null || incomingAvg <= 0) return 0;
+  return Math.min(147, Math.floor((225 - Math.floor(incomingAvg)) * 0.95));
+}
+
+function calcHcpGame(bowler: StagedBowler, game: number | null): number | null {
+  if (game == null) return null;
+  if (bowler.isPenalty) return 199;
+  if (bowler.incomingAvg == null || bowler.incomingAvg <= 0) return 219;
+  return game + calcHcp(bowler.incomingAvg);
+}
+
+function teamHcpTotals(bowlers: Array<{ bowler: StagedBowler }>): {
+  g1: number | null;
+  g2: number | null;
+  g3: number | null;
+} {
+  let g1: number | null = null;
+  let g2: number | null = null;
+  let g3: number | null = null;
+
+  for (const { bowler } of bowlers) {
+    const h1 = calcHcpGame(bowler, bowler.game1);
+    const h2 = calcHcpGame(bowler, bowler.game2);
+    const h3 = calcHcpGame(bowler, bowler.game3);
+    if (h1 != null) g1 = (g1 ?? 0) + h1;
+    if (h2 != null) g2 = (g2 ?? 0) + h2;
+    if (h3 != null) g3 = (g3 ?? 0) + h3;
+  }
+
+  return { g1, g2, g3 };
+}
+
 // ---- Match Card Component ----
 
 interface MatchCardProps {
@@ -705,6 +740,9 @@ function MatchCard({
     .map((b, i) => ({ bowler: b, idx: i }))
     .filter((x) => x.bowler.teamID === match.awayTeamID);
 
+  const homeHcp = teamHcpTotals(homeBowlers);
+  const awayHcp = teamHcpTotals(awayBowlers);
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-navy/10 mb-4 overflow-hidden">
       {/* Match Header */}
@@ -723,6 +761,7 @@ function MatchCard({
           bowlers={homeBowlers}
           matchIdx={matchIdx}
           allBowlers={allBowlers}
+          hcp={homeHcp}
           onUpdateBowler={onUpdateBowler}
           onTogglePenalty={onTogglePenalty}
           onResolveBowler={onResolveBowler}
@@ -745,6 +784,7 @@ function MatchCard({
           bowlers={awayBowlers}
           matchIdx={matchIdx}
           allBowlers={allBowlers}
+          hcp={awayHcp}
           onUpdateBowler={onUpdateBowler}
           onTogglePenalty={onTogglePenalty}
           onResolveBowler={onResolveBowler}
@@ -790,6 +830,7 @@ interface TeamSectionProps {
   bowlers: Array<{ bowler: StagedBowler; idx: number }>;
   matchIdx: number;
   allBowlers: Array<{ bowlerID: number; bowlerName: string }>;
+  hcp: { g1: number | null; g2: number | null; g3: number | null };
   onUpdateBowler: (
     matchIdx: number,
     bowlerIdx: number,
@@ -811,11 +852,17 @@ function TeamSection({
   bowlers,
   matchIdx,
   allBowlers,
+  hcp,
   onUpdateBowler,
   onTogglePenalty,
   onResolveBowler,
   onRemoveBowler,
 }: TeamSectionProps) {
+  const hcpTotal =
+    hcp.g1 != null && hcp.g2 != null && hcp.g3 != null
+      ? hcp.g1 + hcp.g2 + hcp.g3
+      : null;
+  const hasHcp = hcp.g1 != null || hcp.g2 != null || hcp.g3 != null;
   return (
     <div className="mb-2">
       <p className="font-body text-xs font-semibold text-navy/50 mb-2 uppercase tracking-wider">
@@ -850,6 +897,20 @@ function TeamSection({
               />
             ))}
           </tbody>
+          {hasHcp && (
+            <tfoot>
+              <tr className="bg-navy/5 border-t border-navy/10">
+                <td className="py-1.5 px-1 font-semibold text-navy/50">HCP Total</td>
+                <td className="py-1.5 px-1 text-center font-semibold text-navy">{hcp.g1 ?? '--'}</td>
+                <td className="py-1.5 px-1 text-center font-semibold text-navy">{hcp.g2 ?? '--'}</td>
+                <td className="py-1.5 px-1 text-center font-semibold text-navy">{hcp.g3 ?? '--'}</td>
+                <td className="py-1.5 px-1" />
+                <td className="py-1.5 px-1" />
+                <td className="py-1.5 px-1 text-center font-semibold text-navy/70">{hcpTotal ?? '--'}</td>
+                <td className="py-1.5 px-1" />
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
     </div>

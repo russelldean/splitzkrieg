@@ -4,6 +4,8 @@ import { getAllPosts } from '@/lib/blog';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { TrailNav } from '@/components/ui/TrailNav';
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Blog | Splitzkrieg',
   description: 'Weekly recaps, league news, and stories from Splitzkrieg Bowling League.',
