@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { Update } from '../../../content/updates';
+interface Update {
+  date: string;
+  text: string;
+  tag: 'fix' | 'feat';
+}
 
 const COLLAPSED_COUNT = 5;
 

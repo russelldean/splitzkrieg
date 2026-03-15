@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin', icon: DashboardIcon, adminOnly: false },
   { label: 'Scores', href: '/admin/scores', icon: ScoresIcon, adminOnly: true },
   { label: 'Blog', href: '/admin/blog', icon: BlogIcon, adminOnly: false },
+  { label: 'Updates', href: '/admin/updates', icon: UpdatesIcon, adminOnly: true },
   { label: 'Lineups', href: '/admin/lineups', icon: LineupsIcon, adminOnly: true },
   { label: 'Scoresheets', href: '/admin/scoresheets', icon: ScoresheetsIcon, adminOnly: true },
   { label: 'Bowlers', href: '/admin/bowlers', icon: BowlersIcon, adminOnly: true },
@@ -185,6 +186,14 @@ function LogoutIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h5a1 1 0 100-2H4V5h4a1 1 0 100-2H3z" clipRule="evenodd" />
       <path fillRule="evenodd" d="M13.293 9.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L14.586 14H7a1 1 0 110-2h7.586l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function UpdatesIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z" clipRule="evenodd" />
     </svg>
   );
 }

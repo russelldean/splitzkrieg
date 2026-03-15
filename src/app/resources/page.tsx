@@ -5,7 +5,7 @@ import { BackToHome } from '@/components/ui/BackToHome';
 
 
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
-import updates, { lastUpdated } from '../../../content/updates';
+import { getSiteUpdates } from '@/lib/queries/updates';
 
 export const metadata: Metadata = {
   title: 'Resources',
@@ -87,6 +87,8 @@ function ExternalLinkIcon() {
 }
 
 export default async function ResourcesPage() {
+  const updates = await getSiteUpdates();
+  const lastUpdated = updates.length > 0 ? updates[0].date : undefined;
   return (
     <div className="min-h-screen bg-cream">
       <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Splitzkrieg CRASH parade truck with bowling pins">
