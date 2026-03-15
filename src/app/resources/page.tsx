@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { BackToHome } from '@/components/ui/BackToHome';
 
 
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
@@ -107,6 +108,7 @@ export default async function ResourcesPage() {
           </div>
         </div>
       </section>
+      <BackToHome />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Site Updates */}

@@ -116,6 +116,13 @@ export function MobileNav({ groups }: MobileNavProps) {
             >
               Village Lanes
             </Link>
+            <Link
+              href="/resources#recent-updates"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 text-base font-body text-navy/60 rounded-lg hover:bg-cream-dark transition-colors"
+            >
+              Recent Updates
+            </Link>
           </div>
         </nav>
       </div>

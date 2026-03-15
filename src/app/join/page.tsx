@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { BackToHome } from '@/components/ui/BackToHome';
 
 export const metadata: Metadata = {
   title: 'How to Join | Splitzkrieg',
@@ -24,6 +25,7 @@ export default function JoinPage() {
           </div>
         </div>
       </section>
+    <BackToHome />
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
       <div className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-red-600/40 px-8 py-12 shadow-sm">

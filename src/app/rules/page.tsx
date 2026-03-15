@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { BackToHome } from '@/components/ui/BackToHome';
 
 export const metadata: Metadata = {
   title: 'Rules | Splitzkrieg',
@@ -26,6 +27,7 @@ export default function RulesPage() {
           </div>
         </div>
       </section>
+    <BackToHome />
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
       <div className="space-y-8">

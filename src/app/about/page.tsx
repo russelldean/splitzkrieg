@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { BackToHome } from '@/components/ui/BackToHome';
 import { getDataCompleteness } from '@/lib/queries/seasons/core';
 
 export const metadata: Metadata = {
@@ -26,6 +27,8 @@ export default async function AboutPage() {
           </h1>
         </div>
       </div>
+
+      <BackToHome />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="font-body text-lg text-navy/70 leading-relaxed space-y-6">
