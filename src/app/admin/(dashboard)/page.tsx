@@ -229,10 +229,8 @@ export default function AdminDashboardPage() {
   // Determine active pre-night step
   function getPreNightStep(): number {
     if (!data) return 0;
-    if (data.preNightStep === 'pushed') return 2;
-    if (data.preNightStep === 'all-submitted' || data.preNightStep === 'reminded')
-      return 1;
-    return 0;
+    if (data.preNightStep === 'pushed') return 2; // ready for scoresheets
+    return 0; // remind is always step 0 until lineups are pushed
   }
 
   // Determine active post-night step

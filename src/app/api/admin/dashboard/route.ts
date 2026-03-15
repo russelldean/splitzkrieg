@@ -128,16 +128,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Determine pre-night pipeline step
+    // Only advance based on verifiable actions, not assumptions
     let preNightStep = 'idle';
-    if (lineupStatus) {
-      if (lineupStatus.submitted > 0) {
-        preNightStep = 'reminded'; // some lineups are in
-      }
-      if (lineupStatus.submitted === lineupStatus.total && lineupStatus.total > 0) {
-        preNightStep = 'all-submitted';
-      }
-    }
-    // Check if lineups were pushed to LP (look for 'pushed' status)
     if (season) {
       const nextWeek = publishedWeek + 1;
       const pushCheck = await db
