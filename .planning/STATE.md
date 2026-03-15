@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 08-admin-tools
 current_plan: 3 of 5
-status: in-progress
-last_updated: "2026-03-15T01:58:49.000Z"
+status: executing
+last_updated: "2026-03-15T02:01:20.234Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Session State
@@ -46,6 +46,7 @@ See: .planning/PROJECT.md
 - 2026-03-14: Phase 8 context gathered — admin dashboard, score pipeline, lineup submission, blog editor, scoresheet PDF
 - 2026-03-14: Phase 8 Plan 01 — Admin foundation: JWT auth (jose), proxy.ts, 4 DB tables, sidebar layout
 - 2026-03-14: Phase 8 Plan 03 — Lineup submission: magic link captain auth, bowler picker form, admin lineup grid, LP push
+- 2026-03-15: Phase 8 Plan 02 — Score pipeline: LP pull, validation, insert/match-results/patches confirm, review UI
 
 ## Decisions
 
@@ -76,6 +77,10 @@ See: .planning/PROJECT.md
 - **[Phase 08-03]** LP push refactored from CLI script into admin UI with same team ID mapping
 - **[Phase 08-03]** Admin lineups page inside (dashboard) route group for consistent auth
 - **[Phase 08-03]** Lineup re-submission uses transaction delete-and-replace
+- **[Phase 08-02]** PersonalBest in shared types.ts to avoid client importing server-only scores.ts
+- **[Phase 08-02]** Scores page under (dashboard) route group for AdminShell layout and auth
+- **[Phase 08-02]** Only weekly patches run during confirm; season-level patches unaffected
+- **[Phase 08-02]** Match results scoped to week during confirm, not full season regeneration
 
 ## Pending Todos
 
