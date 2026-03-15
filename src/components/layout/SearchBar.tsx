@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { SearchEntry } from '@/lib/search-index';
 
 
-export function SearchBar({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
+export function SearchBar({ variant = 'light', onNavigate }: { variant?: 'light' | 'dark'; onNavigate?: () => void }) {
   const [query, setQuery] = useState('');
   const [entries, setEntries] = useState<SearchEntry[]>([]);
   const [isFocused, setIsFocused] = useState(false);
@@ -62,8 +62,9 @@ export function SearchBar({ variant = 'light' }: { variant?: 'light' | 'dark' })
       setQuery('');
       setIsFocused(false);
       router.push(entry.type === 'team' ? `/team/${entry.slug}` : `/bowler/${entry.slug}`);
+      onNavigate?.();
     },
-    [router]
+    [router, onNavigate]
   );
 
   const hasResults = results.length > 0;

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
-import { DesktopNav, HeaderSearchWrapper } from './DesktopNav';
+import { DesktopNav, HeaderSearchWrapper, MobileSearchRow } from './DesktopNav';
 import { getCurrentSeasonSnapshot, getNextBowlingNight } from '@/lib/queries';
 import { HomeHeaderCountdown } from './HomeHeaderCountdown';
 import { bowlersIcon, teamsIcon, seasonsIcon, leagueNightsIcon, blogIcon, statsIcon } from '@/components/ui/icons';
@@ -148,6 +148,11 @@ export async function Header() {
               <MobileNav groups={mobileGroups} />
             </div>
           </div>
+
+          {/* Mobile search bar — full width below header row */}
+          <MobileSearchRow>
+            <SearchBar />
+          </MobileSearchRow>
         </div>
     </header>
   );

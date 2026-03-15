@@ -15,13 +15,25 @@ export function DesktopNav({ children }: { children: ReactNode }) {
   );
 }
 
-/** Hides search bar on homepage where it moves to the ticker area */
+/** Desktop: inline search bar in header row (hidden on homepage) */
 export function HeaderSearchWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   if (pathname === '/') return null;
 
   return (
-    <div className="flex-1 max-w-md mx-auto">
+    <div className="hidden md:flex flex-1 max-w-md mx-auto">
+      {children}
+    </div>
+  );
+}
+
+/** Mobile: full-width search bar below header row (hidden on homepage) */
+export function MobileSearchRow({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  if (pathname === '/') return null;
+
+  return (
+    <div className="md:hidden pb-3">
       {children}
     </div>
   );
