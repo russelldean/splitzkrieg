@@ -1,3 +1,9 @@
 {
-  "regions": ["cle1"]
+  "regions": ["cle1"],
+  "crons": [
+    {
+      "path": "/api/cron/lineup-reminder",
+      "schedule": "0 15 * * 5"
+    }
+  ]
 }
