@@ -1,18 +1,30 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
-type Source = 'lineups' | 'lastweek';
+interface PreviewBowler {
+  name: string;
+  side: 'home' | 'away';
+  avg: number | null;
+  hcp: number | null;
+}
+
+interface PreviewMatch {
+  home: string;
+  away: string;
+  homeCount: number;
+  awayCount: number;
+  bowlers: PreviewBowler[];
+}
 
 export default function ScoresheetsPage() {
-  const [seasonID, setSeasonID] = useState(35);
+  const [seasonID, setSeasonID] = useState<number | null>(null);
+  const [seasonName, setSeasonName] = useState('');
   const [week, setWeek] = useState(1);
-  const [source, setSource] = useState<Source>('lineups');
+  const source = 'lineups';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<
-    Array<{ home: string; away: string; homeCount: number; awayCount: number }> | null
-  >(null);
+  const [preview, setPreview] = useState<PreviewMatch[] | null>(null);
 
   // Email state
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -25,8 +37,25 @@ export default function ScoresheetsPage() {
   const [emailing, setEmailing] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Fetch matchup preview
+  // Load current season on mount
+  useEffect(() => {
+    fetch('/api/admin/dashboard')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.season) {
+          setSeasonID(data.season.seasonID);
+          setSeasonName(data.season.displayName || `Season ${data.season.seasonID}`);
+          if (data.publishedWeek != null) {
+            setWeek(data.publishedWeek + 1);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Auto-load preview when week or source changes
   const loadPreview = useCallback(async () => {
+    if (!seasonID) return;
     setError(null);
     setPreview(null);
     setLoading(true);
@@ -54,9 +83,13 @@ export default function ScoresheetsPage() {
     }
   }, [seasonID, week, source]);
 
+  useEffect(() => {
+    if (seasonID) loadPreview();
+  }, [seasonID, week, source, loadPreview]);
+
   // Email PDF
   const handleEmail = useCallback(async () => {
-    if (!emailTo.trim()) return;
+    if (!emailTo.trim() || !seasonID) return;
     setEmailing(true);
     setEmailStatus(null);
 
@@ -88,6 +121,7 @@ export default function ScoresheetsPage() {
 
   // Generate and download PDF
   const handleGenerate = useCallback(async () => {
+    if (!seasonID) return;
     setLoading(true);
     setError(null);
 
@@ -105,7 +139,6 @@ export default function ScoresheetsPage() {
         return;
       }
 
-      // Download the PDF blob
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -127,72 +160,41 @@ export default function ScoresheetsPage() {
       <h1 className="font-heading text-2xl text-navy mb-6">Scoresheets</h1>
 
       {/* Season/Week Selectors */}
-      <div className="flex flex-wrap items-end gap-4 mb-6">
-        <div>
-          <label className="block font-body text-xs text-navy/60 mb-1">
-            Season
-          </label>
-          <select
-            value={seasonID}
-            onChange={(e) => {
-              setSeasonID(Number(e.target.value));
-              setPreview(null);
-            }}
-            className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
-          >
-            {Array.from({ length: 35 }, (_, i) => 35 - i).map((s) => (
-              <option key={s} value={s}>
-                Season {s}
-              </option>
-            ))}
-          </select>
+      {seasonID == null ? (
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-4 h-4 border-2 border-navy/20 border-t-navy rounded-full animate-spin" />
+          <span className="font-body text-sm text-navy/60">Loading season...</span>
         </div>
+      ) : (
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          <div>
+            <label className="block font-body text-xs text-navy/60 mb-1">
+              Season
+            </label>
+            <p className="font-body text-sm text-navy px-3 py-2">
+              {seasonName}
+            </p>
+          </div>
 
-        <div>
-          <label className="block font-body text-xs text-navy/60 mb-1">
-            Week
-          </label>
-          <select
-            value={week}
-            onChange={(e) => {
-              setWeek(Number(e.target.value));
-              setPreview(null);
-            }}
-            className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
-          >
-            {Array.from({ length: 20 }, (_, i) => i + 1).map((w) => (
-              <option key={w} value={w}>
-                Week {w}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block font-body text-xs text-navy/60 mb-1">
+              Week
+            </label>
+            <select
+              value={week}
+              onChange={(e) => setWeek(Number(e.target.value))}
+              className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
+            >
+              {Array.from({ length: 11 }, (_, i) => i + 1).map((w) => (
+                <option key={w} value={w}>
+                  Week {w}
+                </option>
+              ))}
+            </select>
+          </div>
+
         </div>
-
-        <div>
-          <label className="block font-body text-xs text-navy/60 mb-1">
-            Source
-          </label>
-          <select
-            value={source}
-            onChange={(e) => {
-              setSource(e.target.value as Source);
-              setPreview(null);
-            }}
-            className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
-          >
-            <option value="lineups">From Lineups</option>
-            <option value="lastweek">From Last Week</option>
-          </select>
-        </div>
-
-        <button
-          onClick={loadPreview}
-          disabled={loading}
-          className="px-4 py-2 bg-white text-navy border border-navy/20 font-body text-sm rounded hover:bg-navy/5 disabled:opacity-50 transition-colors"
-        >
-          Preview Matchups
-        </button>
-      </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -213,55 +215,132 @@ export default function ScoresheetsPage() {
         </div>
       )}
 
-      {/* Preview */}
+      {/* Preview with bowler details */}
       {preview && !loading && (
-        <div className="space-y-3 mb-8">
-          <h2 className="font-heading text-lg text-navy">
-            Week {week} Matchups ({preview.length} matches)
-          </h2>
-
-          <div className="grid gap-3">
-            {preview.map((m, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg shadow-sm border border-navy/10 p-4 flex items-center justify-between"
+        <div className="space-y-4 mb-8">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-lg text-navy">
+              Week {week} Matchups ({preview.length} matches)
+            </h2>
+            <div className="flex gap-3">
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="px-4 py-2 bg-navy text-cream font-body text-sm rounded hover:bg-navy/90 disabled:opacity-50 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-heading text-sm text-navy">{m.home}</span>
-                  <span className="font-body text-xs text-navy/40">vs</span>
-                  <span className="font-heading text-sm text-navy">{m.away}</span>
+                Download PDF
+              </button>
+              <button
+                onClick={() => setShowEmailModal(true)}
+                disabled={loading}
+                className="px-4 py-2 bg-white text-navy border border-navy/20 font-body text-sm rounded hover:bg-navy/5 disabled:opacity-50 transition-colors"
+              >
+                Email Scoresheets
+              </button>
+            </div>
+          </div>
+
+          {preview.map((m, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden"
+            >
+              <div className="bg-navy/5 px-4 py-3 border-b border-navy/10">
+                <h3 className="font-heading text-sm text-navy">
+                  {m.home} vs {m.away}
+                </h3>
+              </div>
+              <div className="p-4 grid grid-cols-2 gap-4">
+                {/* Home Team */}
+                <div>
+                  <p className="font-body text-xs font-semibold text-navy/50 mb-2 uppercase tracking-wider">
+                    {m.home}
+                  </p>
+                  <table className="w-full text-xs font-body">
+                    <thead>
+                      <tr className="text-navy/40 border-b border-navy/10">
+                        <th className="text-left py-1 px-1">Name</th>
+                        <th className="text-center py-1 px-1 w-12">Avg</th>
+                        <th className="text-center py-1 px-1 w-12">HCP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {m.bowlers
+                        .filter((b) => b.side === 'home')
+                        .map((b, j) => (
+                          <tr key={j} className="border-b border-navy/5">
+                            <td className="py-1.5 px-1 text-navy">
+                              {b.name || <span className="text-navy/30">--</span>}
+                            </td>
+                            <td className="py-1.5 px-1 text-center text-navy/60">
+                              {b.avg ?? '--'}
+                            </td>
+                            <td className="py-1.5 px-1 text-center text-navy/60">
+                              {b.hcp ?? '--'}
+                            </td>
+                          </tr>
+                        ))}
+                      {m.bowlers.filter((b) => b.side === 'home').length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="py-2 text-center text-navy/30">
+                            No bowlers
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="font-body text-xs text-navy/50">
-                  {m.homeCount} / {m.awayCount} bowlers
+
+                {/* Away Team */}
+                <div>
+                  <p className="font-body text-xs font-semibold text-navy/50 mb-2 uppercase tracking-wider">
+                    {m.away}
+                  </p>
+                  <table className="w-full text-xs font-body">
+                    <thead>
+                      <tr className="text-navy/40 border-b border-navy/10">
+                        <th className="text-left py-1 px-1">Name</th>
+                        <th className="text-center py-1 px-1 w-12">Avg</th>
+                        <th className="text-center py-1 px-1 w-12">HCP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {m.bowlers
+                        .filter((b) => b.side === 'away')
+                        .map((b, j) => (
+                          <tr key={j} className="border-b border-navy/5">
+                            <td className="py-1.5 px-1 text-navy">
+                              {b.name || <span className="text-navy/30">--</span>}
+                            </td>
+                            <td className="py-1.5 px-1 text-center text-navy/60">
+                              {b.avg ?? '--'}
+                            </td>
+                            <td className="py-1.5 px-1 text-center text-navy/60">
+                              {b.hcp ?? '--'}
+                            </td>
+                          </tr>
+                        ))}
+                      {m.bowlers.filter((b) => b.side === 'away').length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="py-2 text-center text-navy/30">
+                            No bowlers
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex gap-3">
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="px-6 py-3 bg-navy text-cream font-body text-sm rounded-md hover:bg-navy/90 disabled:opacity-50 transition-colors"
-            >
-              Download PDF
-            </button>
-            <button
-              onClick={() => setShowEmailModal(true)}
-              disabled={loading}
-              className="px-6 py-3 bg-white text-navy border border-navy/20 font-body text-sm rounded-md hover:bg-navy/5 disabled:opacity-50 transition-colors"
-            >
-              Email Scoresheets
-            </button>
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Empty state */}
-      {!preview && !loading && !error && (
+      {!preview && !loading && !error && seasonID != null && (
         <div className="text-center py-16">
           <p className="font-body text-sm text-navy/40">
-            Select a season and week, then preview matchups before generating scoresheets.
+            No matchups found for this week.
           </p>
         </div>
       )}

@@ -408,7 +408,7 @@ export default function ScoresPage() {
               disabled={step !== 'idle'}
               className="font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
             >
-              {Array.from({ length: 20 }, (_, i) => i + 1).map((w) => (
+              {Array.from({ length: 11 }, (_, i) => i + 1).map((w) => (
                 <option key={w} value={w}>
                   Week {w}
                 </option>

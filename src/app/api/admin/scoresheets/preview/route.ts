@@ -36,8 +36,15 @@ export async function POST(request: NextRequest) {
     const matches = matchups.map((m) => ({
       home: m.homeTeamName,
       away: m.awayTeamName,
+      lanes: `Lanes ${m.matchNumber * 2 - 1}/${m.matchNumber * 2}`,
       homeCount: m.bowlers.filter((b) => b.side === 'home' && b.name).length,
       awayCount: m.bowlers.filter((b) => b.side === 'away' && b.name).length,
+      bowlers: m.bowlers.map((b) => ({
+        name: b.name,
+        side: b.side,
+        avg: b.incomingAvg,
+        hcp: b.handicap,
+      })),
     }));
 
     return NextResponse.json({ matches });
