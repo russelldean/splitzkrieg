@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 interface Team {
   teamID: number;
   teamName: string;
+  submitted: boolean;
 }
 
 interface Bowler {
@@ -314,25 +315,50 @@ export default function LineupPage() {
 
   // ── Step 1: Team selection ──
   if (!selectedTeamID) {
+    const submittedCount = seasonInfo.teams.filter((t) => t.submitted).length;
+    const totalCount = seasonInfo.teams.length;
+    // Show unsubmitted teams first, then submitted
+    const sortedTeams = [...seasonInfo.teams].sort((a, b) => {
+      if (a.submitted !== b.submitted) return a.submitted ? 1 : -1;
+      return a.teamName.localeCompare(b.teamName);
+    });
+
     return (
       <div>
         <div className="mb-6">
           <h2 className="font-heading text-xl text-navy">
-            Week {seasonInfo.week} Lineup
+            Week {seasonInfo.week} Lineups
           </h2>
           <p className="font-body text-sm text-navy/60">{seasonInfo.seasonName}</p>
         </div>
-        <p className="font-body text-sm text-navy/70 mb-4">
-          Select your team to submit or update your lineup.
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="font-body text-sm text-navy/70">
+            Select your team to submit or update your lineup.
+          </p>
+          <span className="font-body text-xs text-navy/40 shrink-0 ml-3">
+            {submittedCount}/{totalCount} submitted
+          </span>
+        </div>
         <div className="space-y-2">
-          {seasonInfo.teams.map((team) => (
+          {sortedTeams.map((team) => (
             <button
               key={team.teamID}
               onClick={() => handleTeamSelect(team.teamID)}
-              className="w-full text-left px-4 py-3 rounded-lg bg-white border border-navy/10 hover:border-navy/20 hover:shadow-sm transition-all font-body text-navy"
+              className={`w-full text-left px-4 py-3 rounded-lg border transition-all flex items-center justify-between ${
+                team.submitted
+                  ? 'bg-navy/[0.02] border-navy/5 text-navy/40'
+                  : 'bg-white border-navy/10 hover:border-navy/20 hover:shadow-sm text-navy'
+              }`}
             >
-              {team.teamName}
+              <span className="font-body">{team.teamName}</span>
+              {team.submitted && (
+                <span className="flex items-center gap-1.5 font-body text-xs text-green-600/70">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  submitted
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -364,7 +390,7 @@ export default function LineupPage() {
           <p className="font-body text-sm text-navy/50 mb-6">
             You can update it any time before league night.
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-4 justify-center">
             <button
               onClick={() => setSubmitted(false)}
               className="font-body text-sm text-navy/60 underline hover:text-navy"
@@ -375,7 +401,7 @@ export default function LineupPage() {
               onClick={handleBackToTeams}
               className="font-body text-sm text-navy/60 underline hover:text-navy"
             >
-              Different team
+              View all teams
             </button>
           </div>
         </div>

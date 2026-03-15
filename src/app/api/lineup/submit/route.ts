@@ -6,6 +6,7 @@ import {
   getRecentRoster,
   getCurrentLineupContext,
   getSeasonTeams,
+  getSubmittedTeamIDs,
 } from '@/lib/admin/lineups';
 
 export const dynamic = 'force-dynamic';
@@ -27,14 +28,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const teamIDParam = request.nextUrl.searchParams.get('teamID');
 
-    // No teamID: return season info + teams for the picker
+    // No teamID: return season info + teams with submission status
     if (!teamIDParam) {
       const teams = await getSeasonTeams(context.seasonID);
+      const submitted = await getSubmittedTeamIDs(context.seasonID, context.nextWeek);
+      const teamsWithStatus = teams.map((t) => ({
+        ...t,
+        submitted: submitted.has(t.teamID),
+      }));
       return NextResponse.json({
         seasonID: context.seasonID,
         seasonName: context.seasonName,
         week: context.nextWeek,
-        teams,
+        teams: teamsWithStatus,
       });
     }
 

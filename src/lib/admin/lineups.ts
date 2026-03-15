@@ -549,3 +549,21 @@ export async function getSeasonTeams(
     );
   return result.recordset;
 }
+
+/**
+ * Get the set of teamIDs that have submitted lineups for a given season/week.
+ */
+export async function getSubmittedTeamIDs(
+  seasonID: number,
+  week: number,
+): Promise<Set<number>> {
+  const db = await getDb();
+  const result = await db
+    .request()
+    .input('seasonID', seasonID)
+    .input('week', week)
+    .query<{ teamID: number }>(
+      `SELECT teamID FROM lineupSubmissions WHERE seasonID = @seasonID AND week = @week`,
+    );
+  return new Set(result.recordset.map((r) => r.teamID));
+}
