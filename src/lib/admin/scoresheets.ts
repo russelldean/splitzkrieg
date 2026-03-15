@@ -13,6 +13,7 @@ import autoTable from 'jspdf-autotable';
 import sql from 'mssql';
 import { getDb } from '@/lib/db';
 import { TURKEY_PNG } from './turkey-emoji';
+import announcements from '../../../content/announcements';
 
 export interface ScoresheetBowler {
   name: string;
@@ -31,6 +32,12 @@ export interface H2HMeeting {
   tie: boolean;
 }
 
+export interface StandingsEntry {
+  teamName: string;
+  totalPts: number;
+  rank: number;
+}
+
 export interface ScoresheetMatch {
   homeTeamName: string;
   awayTeamName: string;
@@ -46,6 +53,7 @@ export interface ScoresheetMatch {
     ties: number;
     meetings: H2HMeeting[];
   };
+  standings?: StandingsEntry[];
 }
 
 /**
@@ -91,6 +99,38 @@ export async function getMatchupsForWeek(
          AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
        ORDER BY sch.matchNumber`,
     );
+
+  // Query current standings (through previous week)
+  const prevWeek = week - 1;
+  let standings: StandingsEntry[] = [];
+  if (prevWeek >= 1) {
+    const standingsResult = await db
+      .request()
+      .input('seasonID', sql.Int, seasonID)
+      .input('prevWeek', sql.Int, prevWeek)
+      .query<{ teamName: string; totalPts: number }>(
+        `SELECT t.teamName, SUM(pts.gamePts + pts.bonusPts) AS totalPts
+         FROM (
+           SELECT sch.team1ID AS teamID, mr.team1GamePts AS gamePts, mr.team1BonusPts AS bonusPts
+           FROM matchResults mr
+           JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+           WHERE sch.seasonID = @seasonID AND sch.week <= @prevWeek
+           UNION ALL
+           SELECT sch.team2ID, mr.team2GamePts, mr.team2BonusPts
+           FROM matchResults mr
+           JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+           WHERE sch.seasonID = @seasonID AND sch.week <= @prevWeek
+         ) pts
+         JOIN teams t ON pts.teamID = t.teamID
+         GROUP BY t.teamName
+         ORDER BY totalPts DESC`,
+      );
+    standings = standingsResult.recordset.map((row, idx) => ({
+      teamName: row.teamName,
+      totalPts: row.totalPts,
+      rank: idx + 1,
+    }));
+  }
 
   const matches: ScoresheetMatch[] = [];
 
@@ -266,6 +306,7 @@ export async function getMatchupsForWeek(
       matchNumber: idx + 1,
       bowlers,
       h2h: meetings.length > 0 ? { homeWins, awayWins, ties, meetings } : undefined,
+      standings: standings.length > 0 ? standings : undefined,
     });
   }
 
@@ -312,8 +353,8 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setLineWidth(2);
     doc.line(50, 70, pageW - 50, 70);
 
-    // Home team name
-    const centerY = pageH * 0.38;
+    // Home team name (moved up)
+    const centerY = 120;
     doc.setFontSize(52);
     doc.setTextColor(navy);
     doc.text(match.homeTeamName, pageW / 2, centerY, { align: 'center' });
@@ -331,7 +372,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     // H2H history
     if (match.h2h && match.h2h.meetings.length > 0) {
       const h2h = match.h2h;
-      const h2hStartY = centerY + 165;
+      const h2hStartY = centerY + 160;
 
       // Record summary
       doc.setFontSize(11);
@@ -403,16 +444,79 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
       }
     }
 
+    // Current Standings (two columns of 10)
+    if (match.standings && match.standings.length > 0) {
+      const standingsY = pageH * 0.58;
+
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.5);
+      doc.line(60, standingsY - 10, pageW - 60, standingsY - 10);
+
+      doc.setFontSize(11);
+      doc.setTextColor(navy);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Standings through Week ${match.week - 1}`, pageW / 2, standingsY + 5, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+
+      const sCol1X = 80;
+      const sCol2X = pageW / 2 + 30;
+      const leftStandings = match.standings.slice(0, 10);
+      const rightStandings = match.standings.slice(10, 20);
+
+      // Column headers
+      let sRowY = standingsY + 22;
+      doc.setTextColor(140);
+      doc.setFont('helvetica', 'bold');
+      doc.text('#', sCol1X, sRowY);
+      doc.text('Team', sCol1X + 18, sRowY);
+      doc.text('Pts', sCol1X + 165, sRowY);
+      if (rightStandings.length > 0) {
+        doc.text('#', sCol2X, sRowY);
+        doc.text('Team', sCol2X + 18, sRowY);
+        doc.text('Pts', sCol2X + 165, sRowY);
+      }
+      doc.setFont('helvetica', 'normal');
+      sRowY += 4;
+      doc.setDrawColor(200);
+      doc.line(sCol1X, sRowY, sCol1X + 185, sRowY);
+      if (rightStandings.length > 0) doc.line(sCol2X, sRowY, sCol2X + 185, sRowY);
+      sRowY += 11;
+
+      doc.setTextColor(80);
+      for (let j = 0; j < 10; j++) {
+        const left = leftStandings[j];
+        const right = rightStandings[j];
+        if (left) {
+          const isMatchTeam = left.teamName === match.homeTeamName || left.teamName === match.awayTeamName;
+          if (isMatchTeam) doc.setFont('helvetica', 'bold');
+          doc.text(`${left.rank}.`, sCol1X, sRowY);
+          doc.text(left.teamName, sCol1X + 18, sRowY);
+          doc.text(String(left.totalPts), sCol1X + 165, sRowY);
+          if (isMatchTeam) doc.setFont('helvetica', 'normal');
+        }
+        if (right) {
+          const isMatchTeam = right.teamName === match.homeTeamName || right.teamName === match.awayTeamName;
+          if (isMatchTeam) doc.setFont('helvetica', 'bold');
+          doc.text(`${right.rank}.`, sCol2X, sRowY);
+          doc.text(right.teamName, sCol2X + 18, sRowY);
+          doc.text(String(right.totalPts), sCol2X + 165, sRowY);
+          if (isMatchTeam) doc.setFont('helvetica', 'normal');
+        }
+        sRowY += 14;
+      }
+    }
+
     // Bottom decorative line
     doc.setDrawColor(navy);
     doc.setLineWidth(2);
-    doc.line(50, pageH - 60, pageW - 50, pageH - 60);
+    doc.line(50, pageH - 50, pageW - 50, pageH - 50);
 
     // Find more data CTA
     doc.setFontSize(10);
     doc.setTextColor(navy);
     doc.setFont('helvetica', 'bold');
-    doc.text('Find more data at splitzkrieg.com', pageW / 2, pageH - 40, { align: 'center' });
+    doc.text('Find more data at splitzkrieg.com', pageW / 2, pageH - 32, { align: 'center' });
     doc.setFont('helvetica', 'normal');
 
     // ===== PAGE 2: Scoring grid =====
@@ -457,13 +561,32 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.setTextColor(120);
     doc.text(`Week ${match.week}`, 40, 30);
 
+    // Active announcements
+    const today = new Date().toISOString().slice(0, 10);
+    const activeAnnouncements = announcements.filter(
+      (a) => !a.expires || a.expires > today,
+    );
+    let announcementEndY = 30;
+    if (activeAnnouncements.length > 0) {
+      doc.setFontSize(9);
+      doc.setTextColor(navy);
+      doc.setFont('helvetica', 'bold');
+      for (const a of activeAnnouncements) {
+        announcementEndY += 14;
+        const icon = a.type === 'urgent' ? '!  ' : '';
+        doc.text(`${icon}${a.message}`, pageW / 2, announcementEndY, { align: 'center' });
+      }
+      doc.setFont('helvetica', 'normal');
+      announcementEndY += 10;
+    }
+
     // Check roster source per team
     const homeSource = homeBowlers[0]?.rosterSource;
     const awaySource = awayBowlers[0]?.rosterSource;
     const fallbackMsg = "Last Week's Lineup - Please Submit Lineups before 5pm Monday";
 
     // Home team fallback warning
-    let homeTableY = 50;
+    let homeTableY = Math.max(50, announcementEndY + 6);
     if (homeSource === 'lastweek') {
       doc.setFontSize(8);
       doc.setTextColor(180, 100, 0);
