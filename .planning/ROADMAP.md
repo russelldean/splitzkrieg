@@ -13,8 +13,8 @@ A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 19 
 - [x] **Phase 5: Polish and Team H2H** — Parallax, standings, match legend, H2H data (completed 2026-03-08)
 - [ ] **Phase 6: Blog and Weekly Automation** — Blog infrastructure, first post, automated weekly pipeline
 - [x] **Phase 7: Homepage Personality and Portfolio Polish** — Reduce "AI-made" feel, visual warmth, portfolio readiness (completed 2026-03-12)
-- [ ] **Phase 8: Admin Tools** — Score entry UI, lineup submission, season management
-- [ ] **Phase 9: Data Backfill and Tooling** — Old schedule imports, division data, reusable backfill scripts
+- [ ] **Phase 8: Admin Tools** — Score entry UI, lineup submission, blog editor, scoresheet PDF, admin dashboard
+- [x] **Phase 9: Data Backfill and Tooling** — Old schedule imports, division data, reusable backfill scripts (completed 2026-03-14)
 - [ ] **Phase 10: Profile Depth** — Top-ten finishes, streaks, frequent partners, enhanced week reports
 
 ## Phase Details
@@ -74,17 +74,31 @@ Plans:
 - [x] 07-02-PLAN.md — Directory page parallax heroes, visual checkpoint
 
 ### Phase 8: Admin Tools
-**Goal**: The commissioner can manage scores, lineups, and seasons through the site instead of spreadsheets and Google Forms
+**Goal**: The commissioner can manage the full weekly pipeline through a web-based admin dashboard: pull scores, review/adjust, confirm, write blog posts, publish, and send recap emails. Captains submit lineups through the site. Printable scoresheets are auto-generated.
 **Depends on**: Phase 1
+**Requirements:** [ADMN-01, ADMN-02]
 **What to build**:
-  - Score entry web interface (replace spreadsheet workflow)
-  - Lineup submission system (replace Google Form for captains)
-  - Season management (create seasons, divisions, schedules, rosters)
+  - Auth system (admin password + captain magic links)
+  - Score entry web interface with LP pull and manual fallback
+  - Score validation (unusual scores, unmatched bowlers)
+  - Lineup submission for captains
+  - Scoresheet PDF generation
+  - Blog editor (DB-backed, markdown with preview)
+  - Publish + email flow from admin UI
+  - Admin dashboard overview
 **Success Criteria**:
-  1. Commissioner can enter scores through a web form with validation
+  1. Commissioner can enter/review scores through a web form with validation
   2. Captains can submit lineups through the site
-  3. New seasons can be set up without direct DB access
-**Plans**: TBD
+  3. Blog posts can be written and published from admin UI
+  4. Printable scoresheets generated from lineup data
+  5. Full weekly pipeline managed from admin dashboard
+**Plans:** 5 plans
+Plans:
+- [ ] 08-01-PLAN.md — Auth system, DB schema, admin layout, shared types
+- [ ] 08-02-PLAN.md — Score pipeline (LP pull, review UI, validation, confirm)
+- [ ] 08-03-PLAN.md — Lineup submission (captain auth, form, admin management)
+- [ ] 08-04-PLAN.md — Blog editor (DB-backed, markdown preview, migration)
+- [ ] 08-05-PLAN.md — Scoresheets, publish/email flow, admin dashboard
 
 ### Phase 9: Data Backfill and Tooling
 **Goal**: Fill in historical gaps and build reusable tooling so backfill doesn't require rediscovering the process each time
@@ -146,5 +160,5 @@ Items to build when the time is right, not tied to a specific phase:
 | 6. Blog and Weekly Automation | Complete | 2026-03-10 |
 | 7. Homepage Personality and Portfolio Polish | Complete | 2026-03-12 |
 | 8. Admin Tools | Not started | - |
-| 9. Data Backfill and Tooling | Not started | - |
+| 9. Data Backfill and Tooling | Complete | 2026-03-14 |
 | 10. Profile Depth | Not started | - |
