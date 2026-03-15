@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 08-admin-tools
-current_plan: 3 of 5
+current_plan: 5 of 5
 status: executing
-last_updated: "2026-03-15T02:01:20.234Z"
+last_updated: "2026-03-15T02:09:06Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 9
 ---
 
 # Session State
@@ -23,7 +23,7 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.0 milestone
 **Current phase:** 08-admin-tools
-**Current plan:** 3 of 5
+**Current plan:** 5 of 5
 **Status:** In Progress
 
 ## Session Log
@@ -47,6 +47,7 @@ See: .planning/PROJECT.md
 - 2026-03-14: Phase 8 Plan 01 — Admin foundation: JWT auth (jose), proxy.ts, 4 DB tables, sidebar layout
 - 2026-03-14: Phase 8 Plan 03 — Lineup submission: magic link captain auth, bowler picker form, admin lineup grid, LP push
 - 2026-03-15: Phase 8 Plan 02 — Score pipeline: LP pull, validation, insert/match-results/patches confirm, review UI
+- 2026-03-15: Phase 8 Plan 05 — Scoresheets PDF (jspdf), publish/email APIs, admin dashboard overview
 
 ## Decisions
 
@@ -81,6 +82,9 @@ See: .planning/PROJECT.md
 - **[Phase 08-02]** Scores page under (dashboard) route group for AdminShell layout and auth
 - **[Phase 08-02]** Only weekly patches run during confirm; season-level patches unaffected
 - **[Phase 08-02]** Match results scoped to week during confirm, not full season regeneration
+- **[Phase 08-05]** Scoresheet preview endpoint separate from PDF generation for fast UI feedback
+- **[Phase 08-05]** Dashboard API aggregates DB queries server-side; client is a single fetch
+- **[Phase 08-05]** Pipeline step indicator is read-only on dashboard; actions link to dedicated pages
 
 ## Pending Todos
 
