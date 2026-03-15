@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getAllUpdates, createUpdate, createUpdates } from '@/lib/admin/updates-db';
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
         }
       }
       const ids = await createUpdates(body.items);
+      revalidatePath('/resources', 'page');
       return NextResponse.json({ ids });
     }
 
@@ -64,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = await createUpdate({ date, text, tag: tag ?? 'feat' });
+    revalidatePath('/resources', 'page');
     return NextResponse.json({ id });
   } catch (err) {
     console.error('Admin updates POST error:', err);

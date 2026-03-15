@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/auth';
 import { updateUpdate, deleteUpdate } from '@/lib/admin/updates-db';
 
@@ -26,6 +27,7 @@ export async function PUT(
   try {
     const body = await request.json();
     await updateUpdate(id, body);
+    revalidatePath('/resources', 'page');
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Admin updates PUT error:', err);
@@ -57,6 +59,7 @@ export async function DELETE(
 
   try {
     await deleteUpdate(id);
+    revalidatePath('/resources', 'page');
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Admin updates DELETE error:', err);
