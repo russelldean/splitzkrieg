@@ -110,11 +110,11 @@ export function MobileNav({ groups }: MobileNavProps) {
               About the League
             </Link>
             <Link
-              href="/village-lanes"
+              href="/lineup"
               onClick={() => setIsOpen(false)}
               className="block px-3 py-2 text-base font-body text-navy/60 rounded-lg hover:bg-cream-dark transition-colors"
             >
-              Village Lanes
+              For Captains
             </Link>
             <Link
               href="/resources#recent-updates"
