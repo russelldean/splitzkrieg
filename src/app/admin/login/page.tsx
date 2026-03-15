@@ -21,10 +21,10 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
 
+      const data = await res.json();
       if (res.ok) {
-        router.push('/admin');
+        router.push(data.role === 'writer' ? '/admin/blog' : '/admin');
       } else {
-        const data = await res.json();
         setError(data.error || 'Login failed');
       }
     } catch {
@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
             Splitzkrieg Admin
           </h1>
           <p className="font-body text-sm text-navy/50 text-center mb-8">
-            Commissioner access only
+            Authorized access only
           </p>
 
           <form onSubmit={handleSubmit}>

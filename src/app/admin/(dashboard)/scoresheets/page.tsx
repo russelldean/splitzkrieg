@@ -14,6 +14,17 @@ export default function ScoresheetsPage() {
     Array<{ home: string; away: string; homeCount: number; awayCount: number }> | null
   >(null);
 
+  // Email state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailTo, setEmailTo] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('scoresheet-email') || '';
+    }
+    return '';
+  });
+  const [emailing, setEmailing] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
   // Fetch matchup preview
   const loadPreview = useCallback(async () => {
     setError(null);
@@ -42,6 +53,38 @@ export default function ScoresheetsPage() {
       setLoading(false);
     }
   }, [seasonID, week, source]);
+
+  // Email PDF
+  const handleEmail = useCallback(async () => {
+    if (!emailTo.trim()) return;
+    setEmailing(true);
+    setEmailStatus(null);
+
+    try {
+      localStorage.setItem('scoresheet-email', emailTo.trim());
+
+      const res = await fetch('/api/admin/scoresheets/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seasonID, week, source, to: emailTo.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailStatus({ text: data.error || 'Failed to send', type: 'error' });
+      } else {
+        setEmailStatus({ text: `Sent to ${emailTo.trim()}`, type: 'success' });
+        setTimeout(() => {
+          setShowEmailModal(false);
+          setEmailStatus(null);
+        }, 2000);
+      }
+    } catch {
+      setEmailStatus({ text: 'Network error', type: 'error' });
+    } finally {
+      setEmailing(false);
+    }
+  }, [seasonID, week, source, emailTo]);
 
   // Generate and download PDF
   const handleGenerate = useCallback(async () => {
@@ -195,13 +238,22 @@ export default function ScoresheetsPage() {
             ))}
           </div>
 
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className="mt-4 px-6 py-3 bg-navy text-cream font-body text-sm rounded-md hover:bg-navy/90 disabled:opacity-50 transition-colors"
-          >
-            Generate Scoresheets
-          </button>
+          <div className="mt-4 flex gap-3">
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="px-6 py-3 bg-navy text-cream font-body text-sm rounded-md hover:bg-navy/90 disabled:opacity-50 transition-colors"
+            >
+              Download PDF
+            </button>
+            <button
+              onClick={() => setShowEmailModal(true)}
+              disabled={loading}
+              className="px-6 py-3 bg-white text-navy border border-navy/20 font-body text-sm rounded-md hover:bg-navy/5 disabled:opacity-50 transition-colors"
+            >
+              Email Scoresheets
+            </button>
+          </div>
         </div>
       )}
 
@@ -211,6 +263,56 @@ export default function ScoresheetsPage() {
           <p className="font-body text-sm text-navy/40">
             Select a season and week, then preview matchups before generating scoresheets.
           </p>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-4">
+            <h2 className="font-heading text-lg text-navy mb-3">
+              Email Scoresheets
+            </h2>
+            <p className="font-body text-xs text-navy/60 mb-4">
+              Week {week} scoresheets will be sent as a PDF attachment.
+            </p>
+            <input
+              type="email"
+              value={emailTo}
+              onChange={(e) => setEmailTo(e.target.value)}
+              placeholder="email@example.com"
+              className="w-full px-3 py-2 font-body text-sm border border-navy/20 rounded bg-white text-navy placeholder:text-navy/30 focus:outline-none focus:ring-2 focus:ring-navy/20 mb-4"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && emailTo.trim()) handleEmail();
+              }}
+            />
+
+            {emailStatus && (
+              <p className={`mb-3 font-body text-sm ${emailStatus.type === 'success' ? 'text-green-700' : 'text-red'}`}>
+                {emailStatus.text}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowEmailModal(false);
+                  setEmailStatus(null);
+                }}
+                className="px-4 py-2 font-body text-sm text-navy/60 hover:text-navy transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEmail}
+                disabled={emailing || !emailTo.trim()}
+                className="px-4 py-2 bg-navy text-cream font-body text-sm rounded hover:bg-navy/90 disabled:opacity-50 transition-colors"
+              >
+                {emailing ? 'Sending...' : 'Send'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

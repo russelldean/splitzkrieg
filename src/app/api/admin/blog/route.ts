@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/admin/auth';
+import { requireAdminOrWriter } from '@/lib/admin/auth';
 import {
   getAllBlogPosts,
   createBlogPost,
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request);
+    await requireAdminOrWriter(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin(request);
+    await requireAdminOrWriter(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }

@@ -5,15 +5,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: DashboardIcon },
-  { label: 'Scores', href: '/admin/scores', icon: ScoresIcon },
-  { label: 'Blog', href: '/admin/blog', icon: BlogIcon },
-  { label: 'Lineups', href: '/admin/lineups', icon: LineupsIcon },
-  { label: 'Scoresheets', href: '/admin/scoresheets', icon: ScoresheetsIcon },
-  { label: 'Bowlers', href: '/admin/bowlers', icon: BowlersIcon },
+  { label: 'Dashboard', href: '/admin', icon: DashboardIcon, adminOnly: false },
+  { label: 'Scores', href: '/admin/scores', icon: ScoresIcon, adminOnly: true },
+  { label: 'Blog', href: '/admin/blog', icon: BlogIcon, adminOnly: false },
+  { label: 'Lineups', href: '/admin/lineups', icon: LineupsIcon, adminOnly: true },
+  { label: 'Scoresheets', href: '/admin/scoresheets', icon: ScoresheetsIcon, adminOnly: true },
+  { label: 'Bowlers', href: '/admin/bowlers', icon: BowlersIcon, adminOnly: true },
 ];
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({ children, role = 'admin' }: { children: React.ReactNode; role?: string }) {
+  const visibleNav = role === 'admin'
+    ? NAV_ITEMS
+    : NAV_ITEMS.filter((item) => !item.adminOnly);
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,7 +38,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {visibleNav.map((item) => {
             const active =
               item.href === '/admin'
                 ? pathname === '/admin'
@@ -87,7 +90,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {mobileMenuOpen && (
           <div className="md:hidden bg-navy border-b border-white/10">
             <nav className="px-3 py-2 space-y-1">
-              {NAV_ITEMS.map((item) => {
+              {visibleNav.map((item) => {
                 const active =
                   item.href === '/admin'
                     ? pathname === '/admin'

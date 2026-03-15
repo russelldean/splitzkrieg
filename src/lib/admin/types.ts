@@ -4,7 +4,7 @@
  */
 
 export interface TokenPayload {
-  role: 'admin' | 'captain';
+  role: 'admin' | 'writer' | 'captain';
   teamID?: number;
   captainName?: string;
 }

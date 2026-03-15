@@ -5,16 +5,21 @@ export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json();
 
-    if (!password || password !== process.env.ADMIN_PASSWORD) {
+    const isAdmin = password && password === process.env.ADMIN_PASSWORD;
+    const isWriter =
+      !isAdmin && password && process.env.WRITER_PASSWORD && password === process.env.WRITER_PASSWORD;
+
+    if (!isAdmin && !isWriter) {
       return NextResponse.json(
         { error: 'Invalid password' },
         { status: 401 },
       );
     }
 
-    const token = await signToken({ role: 'admin' });
+    const role = isAdmin ? 'admin' : 'writer';
+    const token = await signToken({ role } as { role: 'admin' | 'writer' });
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, role });
     response.cookies.set('admin-token', token, {
       httpOnly: true,
       path: '/',

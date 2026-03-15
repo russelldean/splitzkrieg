@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from 'mssql';
-import { requireAdmin } from '@/lib/admin/auth';
+import { requireAdminOrWriter } from '@/lib/admin/auth';
 import { getDb, withRetry } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin(request);
+    await requireAdminOrWriter(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }

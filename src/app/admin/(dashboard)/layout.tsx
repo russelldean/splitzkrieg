@@ -18,9 +18,9 @@ export default async function AdminLayout({
   }
 
   const payload = await verifyToken(token);
-  if (!payload || payload.role !== 'admin') {
+  if (!payload || (payload.role !== 'admin' && payload.role !== 'writer')) {
     redirect('/admin/login');
   }
 
-  return <AdminShell>{children}</AdminShell>;
+  return <AdminShell role={payload.role}>{children}</AdminShell>;
 }

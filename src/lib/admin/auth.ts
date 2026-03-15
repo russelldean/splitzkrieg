@@ -61,6 +61,26 @@ export async function requireAdmin(
 }
 
 /**
+ * Require an authenticated admin or writer user for an API route.
+ * Used for blog-related endpoints that writers can access.
+ */
+export async function requireAdminOrWriter(
+  request: NextRequest,
+): Promise<TokenPayload> {
+  const token = request.cookies.get('admin-token')?.value;
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const payload = await verifyToken(token);
+  if (!payload || (payload.role !== 'admin' && payload.role !== 'writer')) {
+    throw new Error('Not authorized');
+  }
+
+  return payload;
+}
+
+/**
  * Require an authenticated captain user for an API route.
  * Reads the 'lineup-token' cookie, verifies the JWT, and checks for captain role.
  * Throws an Error if not authenticated or not a captain.

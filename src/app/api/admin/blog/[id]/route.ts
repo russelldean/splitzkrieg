@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/admin/auth';
+import { requireAdminOrWriter } from '@/lib/admin/auth';
 import {
   getBlogPostById,
   updateBlogPost,
@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAdmin(request);
+    await requireAdminOrWriter(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
@@ -52,7 +52,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAdmin(request);
+    await requireAdminOrWriter(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
@@ -93,7 +93,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAdmin(request);
+    await requireAdminOrWriter(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
