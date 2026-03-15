@@ -5,7 +5,7 @@ milestone_name: milestone
 current_phase: 07-homepage-personality-and-portfolio-polish
 current_plan: 2 of 5
 status: phase-complete
-last_updated: "2026-03-12T04:12:04.737Z"
+last_updated: "2026-03-14T00:00:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 1
@@ -41,6 +41,9 @@ See: .planning/PROJECT.md
 - 2026-03-10: Phase 6 Plan 03 — Publish gate (leagueSettings), email script (Resend), weekly runbook
 - 2026-03-12: Phase 7 Plan 01 — Shared SVG icons, homepage pill nav, league-specific tagline
 - 2026-03-12: Phase 7 Plan 02 — Directory parallax heroes shipped; homepage changes reverted per user feedback
+- 2026-03-14: Phase 7 complete — footer redesign (dark nav bar + light branding), BackToHome on secondary pages, Recent Updates in mobile menu
+- 2026-03-14: Phase 9 complete — all 35 seasons have schedule data, 646 division rows, import tooling in place
+- 2026-03-14: Phase 8 context gathered — admin dashboard, score pipeline, lineup submission, blog editor, scoresheet PDF
 
 ## Decisions
 
