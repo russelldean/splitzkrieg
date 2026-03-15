@@ -27,21 +27,24 @@ export async function getAllBowlers(): Promise<
 }
 
 /**
- * Get bowlerIDs from the most recent scores for a team, used to pre-sort the bowler picker.
+ * Get bowlerIDs from the current or previous season for a team.
+ * These are the bowlers shown by default in the lineup picker.
  */
 export async function getRecentRoster(
   teamID: number,
   seasonID: number,
 ): Promise<number[]> {
   const db = await getDb();
+  const prevSeasonID = seasonID - 1;
   const result = await db
     .request()
     .input('teamID', teamID)
     .input('seasonID', seasonID)
+    .input('prevSeasonID', prevSeasonID)
     .query<{ bowlerID: number }>(
       `SELECT DISTINCT s.bowlerID
        FROM scores s
-       WHERE s.teamID = @teamID AND s.seasonID = @seasonID AND s.isPenalty = 0
+       WHERE s.teamID = @teamID AND s.seasonID IN (@seasonID, @prevSeasonID) AND s.isPenalty = 0
        ORDER BY s.bowlerID`,
     );
   return result.recordset.map((r) => r.bowlerID);

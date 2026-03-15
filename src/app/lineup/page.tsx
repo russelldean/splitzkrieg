@@ -568,24 +568,51 @@ export default function LineupPage() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search bowlers..."
+                      placeholder="Search all bowlers or add new"
                       className="w-full font-body text-sm border border-navy/20 rounded-md px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
                       autoFocus
                     />
                     <div className="max-h-48 overflow-y-auto border border-navy/10 rounded-md">
                       {(() => {
                         const recentSet = new Set(context.recentRoster);
-                        const visible = filteredBowlers.slice(0, 50);
-                        const recentBowlers = visible.filter((b) => recentSet.has(b.bowlerID));
-                        const otherBowlers = visible.filter((b) => !recentSet.has(b.bowlerID));
+                        const isSearching = searchQuery.trim().length > 0;
+                        const teamBowlers = filteredBowlers.filter((b) => recentSet.has(b.bowlerID));
+                        const otherBowlers = isSearching
+                          ? filteredBowlers.filter((b) => !recentSet.has(b.bowlerID)).slice(0, 20)
+                          : [];
+                        const showBowlers = isSearching ? filteredBowlers.slice(0, 30) : teamBowlers;
+
+                        if (isSearching) {
+                          return (
+                            <>
+                              {showBowlers.length > 0 ? showBowlers.map((bowler) => (
+                                <button
+                                  key={bowler.bowlerID}
+                                  onClick={() => selectBowler(index, bowler)}
+                                  className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0 flex items-center justify-between"
+                                >
+                                  <span>{bowler.firstName} {bowler.lastName}</span>
+                                  {recentSet.has(bowler.bowlerID) && (
+                                    <span className="text-xs text-navy/40">your team</span>
+                                  )}
+                                </button>
+                              )) : (
+                                <p className="px-3 py-2 font-body text-sm text-navy/40">
+                                  No bowlers found
+                                </p>
+                              )}
+                            </>
+                          );
+                        }
+
                         return (
                           <>
-                            {recentBowlers.length > 0 && (
+                            {teamBowlers.length > 0 ? (
                               <>
                                 <div className="px-3 py-1.5 bg-navy/[0.03] font-body text-xs text-navy/40 uppercase tracking-wide">
                                   Your team
                                 </div>
-                                {recentBowlers.map((bowler) => (
+                                {teamBowlers.map((bowler) => (
                                   <button
                                     key={bowler.bowlerID}
                                     onClick={() => selectBowler(index, bowler)}
@@ -595,26 +622,9 @@ export default function LineupPage() {
                                   </button>
                                 ))}
                               </>
-                            )}
-                            {otherBowlers.length > 0 && (
-                              <>
-                                <div className="px-3 py-1.5 bg-navy/[0.03] font-body text-xs text-navy/40 uppercase tracking-wide">
-                                  All bowlers
-                                </div>
-                                {otherBowlers.map((bowler) => (
-                                  <button
-                                    key={bowler.bowlerID}
-                                    onClick={() => selectBowler(index, bowler)}
-                                    className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0"
-                                  >
-                                    {bowler.firstName} {bowler.lastName}
-                                  </button>
-                                ))}
-                              </>
-                            )}
-                            {visible.length === 0 && (
+                            ) : (
                               <p className="px-3 py-2 font-body text-sm text-navy/40">
-                                No bowlers found
+                                Type to search all bowlers
                               </p>
                             )}
                           </>
