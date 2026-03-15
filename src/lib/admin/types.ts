@@ -41,6 +41,14 @@ export interface ValidationWarning {
   severity: 'info' | 'warning';
 }
 
+export interface PersonalBest {
+  bowlerID: number;
+  bowlerName: string;
+  type: 'highGame' | 'highSeries';
+  value: number;
+  previousBest: number | null;
+}
+
 export interface PipelineStatus {
   step: 'idle' | 'pulled' | 'reviewing' | 'confirmed' | 'published';
   seasonID: number;

@@ -8,15 +8,9 @@ import sql from 'mssql';
 import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
-import type { StagedMatch } from './types';
+import type { StagedMatch, PersonalBest } from './types';
 
-export interface PersonalBest {
-  bowlerID: number;
-  bowlerName: string;
-  type: 'highGame' | 'highSeries';
-  value: number;
-  previousBest: number | null;
-}
+export type { PersonalBest };
 
 /**
  * Delete existing scores for a given season and week.
