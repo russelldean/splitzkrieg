@@ -1,7 +1,9 @@
 /**
- * Site updates query for build-time rendering on the resources page.
+ * Site updates query for the resources page.
+ * Hits DB directly (no cachedQuery) since updates are admin-managed
+ * and the page is revalidated on demand via revalidatePath.
  */
-import { getDb, cachedQuery } from '../db';
+import { getDb, withRetry } from '../db';
 
 export interface SiteUpdateEntry {
   date: string;
@@ -9,33 +11,34 @@ export interface SiteUpdateEntry {
   tag: 'fix' | 'feat';
 }
 
-const SITE_UPDATES_SQL = `
-  SELECT updateDate, text, tag
-  FROM siteUpdates
-  ORDER BY updateDate DESC, sortOrder DESC
-`;
-
 /**
  * Get all site updates for display, newest first.
- * Not marked stable since updates change frequently.
  */
 export async function getSiteUpdates(): Promise<SiteUpdateEntry[]> {
-  return cachedQuery(
-    'getSiteUpdates',
-    async () => {
-      const db = await getDb();
-      const result = await db.request().query<{
-        updateDate: Date;
-        text: string;
-        tag: string;
-      }>(SITE_UPDATES_SQL);
-      return result.recordset.map((row) => ({
-        date: row.updateDate.toISOString().split('T')[0],
-        text: row.text,
-        tag: (row.tag as 'fix' | 'feat') ?? 'feat',
-      }));
-    },
-    [],
-    { sql: SITE_UPDATES_SQL },
-  );
+  if (!process.env.AZURE_SQL_SERVER) return [];
+
+  try {
+    const db = await getDb();
+    const result = await withRetry(
+      () =>
+        db.request().query<{
+          updateDate: Date;
+          text: string;
+          tag: string;
+        }>(`
+          SELECT updateDate, text, tag
+          FROM siteUpdates
+          ORDER BY updateDate DESC, sortOrder DESC
+        `),
+      'getSiteUpdates',
+    );
+    return result.recordset.map((row) => ({
+      date: row.updateDate.toISOString().split('T')[0],
+      text: row.text,
+      tag: (row.tag as 'fix' | 'feat') ?? 'feat',
+    }));
+  } catch (err) {
+    console.warn('getSiteUpdates: DB unavailable', err);
+    return [];
+  }
 }
