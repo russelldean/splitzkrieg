@@ -361,7 +361,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
     doc.line(50, 70, pageW - 50, 70);
 
     // Home team name
-    const centerY = 115;
+    const centerY = 135;
     doc.setFontSize(52);
     doc.setTextColor(navy);
     doc.text(match.homeTeamName, pageW / 2, centerY, { align: 'center' });
@@ -381,7 +381,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
       const h2h = match.h2h;
 
       // Divider
-      const h2hDivY = centerY + 150;
+      const h2hDivY = centerY + 160;
       doc.setDrawColor(180);
       doc.setLineWidth(0.5);
       doc.line(60, h2hDivY, pageW - 60, h2hDivY);
@@ -458,7 +458,7 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
 
     // ---- Current Standings ----
     if (match.standings && match.standings.length > 0) {
-      const standingsY = pageH * 0.64;
+      const standingsY = pageH * 0.60;
 
       doc.setDrawColor(180);
       doc.setLineWidth(0.5);
@@ -615,10 +615,9 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
       const bubbleText = activeAnnouncements.map((a) => a.message).join('  |  ');
       doc.setFontSize(8);
       const textW = doc.getTextWidth(bubbleText);
-      const maxBubbleW = tkX - 50; // don't extend past left margin
-      const bubbleW = Math.min(textW + 16, maxBubbleW);
+      const bubbleW = textW + 24;
       const bubbleH = 18;
-      const bubbleX = tkX - bubbleW - 10;
+      const bubbleX = tkX - bubbleW - 14;
       const bubbleY = homeTableY - tkSize - 10;
 
       // Bubble rectangle
@@ -631,13 +630,13 @@ export function generateScoresheet(matches: ScoresheetMatch[]): jsPDF {
       const triX = bubbleX + bubbleW;
       const triY = bubbleY + bubbleH / 2 - 3;
       doc.setFillColor(255, 255, 255);
-      doc.triangle(triX, triY, triX, triY + 6, triX + 6, triY + 3, 'FD');
+      doc.triangle(triX, triY, triX, triY + 6, triX + 7, triY + 3, 'FD');
 
-      // Text
+      // Text (centered in bubble)
       doc.setFontSize(8);
       doc.setTextColor(navy);
       doc.setFont('helvetica', 'bold');
-      doc.text(bubbleText, bubbleX + 8, bubbleY + 12);
+      doc.text(bubbleText, bubbleX + bubbleW / 2, bubbleY + 12, { align: 'center' });
       doc.setFont('helvetica', 'normal');
     }
 
