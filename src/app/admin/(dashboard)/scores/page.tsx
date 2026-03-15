@@ -667,8 +667,8 @@ function calcHcp(incomingAvg: number | null): number {
 }
 
 function calcHcpGame(bowler: StagedBowler, game: number | null): number | null {
-  if (game == null) return null;
   if (bowler.isPenalty) return 199;
+  if (game == null) return null;
   if (bowler.incomingAvg == null || bowler.incomingAvg <= 0) return 219;
   return game + calcHcp(bowler.incomingAvg);
 }
