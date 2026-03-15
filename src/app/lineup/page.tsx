@@ -135,7 +135,7 @@ export default function LineupPage() {
     setError(null);
   }
 
-  // Sort bowlers: recent roster first, then alphabetical
+  // Sort bowlers: recent roster first, then alphabetical by full name
   const sortedBowlers = useMemo(() => {
     if (!context) return [];
     const recentSet = new Set(context.recentRoster);
@@ -144,18 +144,15 @@ export default function LineupPage() {
       const bRecent = recentSet.has(b.bowlerID);
       if (aRecent && !bRecent) return -1;
       if (!aRecent && bRecent) return 1;
-      return `${a.lastName} ${a.firstName}`.localeCompare(
-        `${b.lastName} ${b.firstName}`,
+      return `${a.firstName} ${a.lastName}`.localeCompare(
+        `${b.firstName} ${b.lastName}`,
       );
     });
   }, [context]);
 
-  // Filter bowlers by search query, exclude already-selected
+  // Filter bowlers by search query (don't hide already-selected)
   const filteredBowlers = useMemo(() => {
-    const selectedIDs = new Set(
-      slots.filter((s) => s.bowlerID).map((s) => s.bowlerID),
-    );
-    let filtered = sortedBowlers.filter((b) => !selectedIDs.has(b.bowlerID));
+    let filtered = sortedBowlers;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -275,6 +272,18 @@ export default function LineupPage() {
     if (missingLastName) {
       setError(`Please enter a full name (first and last) for "${missingLastName.newBowlerName.trim()}".`);
       return;
+    }
+
+    // Check for duplicate bowlers
+    const seen = new Set<string>();
+    for (const s of validSlots) {
+      const key = s.bowlerID ? `id:${s.bowlerID}` : `name:${s.newBowlerName.trim().toLowerCase()}`;
+      if (seen.has(key)) {
+        const name = s.bowlerID ? s.bowlerName : s.newBowlerName.trim();
+        setError(`${name} is listed more than once. Please remove the duplicate.`);
+        return;
+      }
+      seen.add(key);
     }
 
     setSubmitting(true);
