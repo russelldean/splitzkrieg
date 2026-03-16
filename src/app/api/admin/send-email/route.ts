@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { subject, body } = await request.json();
+    const { subject, body, testEmail } = await request.json();
 
     if (!subject || !body) {
       return NextResponse.json(
@@ -56,15 +56,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const captains = await getCaptainEmails();
-    if (captains.length === 0) {
-      return NextResponse.json(
-        { error: 'No captain emails on file. Add emails on the Captains page.' },
-        { status: 400 },
-      );
+    // If testEmail provided, send only to that address
+    let emails: string[];
+    if (testEmail) {
+      emails = [testEmail];
+    } else {
+      const captains = await getCaptainEmails();
+      if (captains.length === 0) {
+        return NextResponse.json(
+          { error: 'No captain emails on file. Add emails on the Captains page.' },
+          { status: 400 },
+        );
+      }
+      emails = [...new Set(captains.map((c) => c.email))];
     }
-
-    const emails = [...new Set(captains.map((c) => c.email))];
     const resend = new Resend(apiKey);
     const fromAddress =
       process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <onboarding@resend.dev>';

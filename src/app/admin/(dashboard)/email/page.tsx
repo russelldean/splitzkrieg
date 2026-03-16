@@ -10,10 +10,7 @@ export default function EmailPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSend() {
-    if (!subject.trim() || !body.trim()) return;
-    if (!confirm(`Send this email to all ${to}?`)) return;
-
+  async function sendEmail(testEmail?: string) {
     setSending(true);
     setResult(null);
     setError(null);
@@ -26,6 +23,7 @@ export default function EmailPage() {
           to,
           subject: subject.trim(),
           body: body.trim(),
+          testEmail,
         }),
       });
 
@@ -37,13 +35,26 @@ export default function EmailPage() {
         msg += ` | Errors: ${data.errors.join(', ')}`;
       }
       setResult(msg);
-      setSubject('');
-      setBody('');
+      if (!testEmail) {
+        setSubject('');
+        setBody('');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send');
     } finally {
       setSending(false);
     }
+  }
+
+  async function handleSend() {
+    if (!subject.trim() || !body.trim()) return;
+    if (!confirm(`Send this email to all ${to}?`)) return;
+    await sendEmail();
+  }
+
+  async function handleTest() {
+    if (!subject.trim() || !body.trim()) return;
+    await sendEmail('admin@splitzkrieg.com');
   }
 
   return (
@@ -110,14 +121,23 @@ export default function EmailPage() {
             </p>
           </div>
 
-          {/* Send */}
-          <button
-            onClick={handleSend}
-            disabled={sending || !subject.trim() || !body.trim()}
-            className="px-5 py-2.5 bg-navy text-cream rounded-md font-body text-sm font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
-          >
-            {sending ? 'Sending...' : 'Send Email'}
-          </button>
+          {/* Send buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleSend}
+              disabled={sending || !subject.trim() || !body.trim()}
+              className="px-5 py-2.5 bg-navy text-cream rounded-md font-body text-sm font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+            >
+              {sending ? 'Sending...' : 'Send Email'}
+            </button>
+            <button
+              onClick={handleTest}
+              disabled={sending || !subject.trim() || !body.trim()}
+              className="px-5 py-2.5 border border-navy/20 text-navy rounded-md font-body text-sm font-semibold hover:bg-navy/5 transition-colors disabled:opacity-50"
+            >
+              Send Test to Me
+            </button>
+          </div>
         </div>
 
         {result && (
