@@ -19,6 +19,13 @@ export interface StandingsRow {
   hcpAvgRank: number;
 }
 
+interface HeadToHeadResult {
+  team1ID: number;
+  team2ID: number;
+  team1Pts: number;
+  team2Pts: number;
+}
+
 export interface SeasonLeaderEntry {
   bowlerID: number;
   bowlerName: string;
@@ -135,15 +142,97 @@ const GET_SEASON_STANDINGS_SQL = `
   ORDER BY sd.divisionName, totalPts DESC, wins DESC, ta.teamScratchAvg DESC
 `;
 
+const GET_HEAD_TO_HEAD_SQL = `
+  SELECT sch.team1ID, sch.team2ID,
+         mr.team1GamePts + mr.team1BonusPts AS team1Pts,
+         mr.team2GamePts + mr.team2BonusPts AS team2Pts
+  FROM matchResults mr
+  JOIN schedule sch ON mr.scheduleID = sch.scheduleID
+  WHERE sch.seasonID = @seasonID
+`;
+
+/**
+ * Resolve two-way ties within each division using head-to-head game points.
+ * Only applies to exact 2-way ties on totalPts. 3+ way ties or ties with
+ * no h2h data keep the existing sort (wins DESC, scratchAvg DESC).
+ */
+function resolveH2HTiebreakers(
+  standings: StandingsRow[],
+  h2hResults: HeadToHeadResult[]
+): StandingsRow[] {
+  // Build lookup: "loID-hiID" → net game pts for the lower-ID team
+  const h2hMap = new Map<string, number>();
+  for (const r of h2hResults) {
+    const [lo, hi] = r.team1ID < r.team2ID
+      ? [r.team1ID, r.team2ID]
+      : [r.team2ID, r.team1ID];
+    const key = `${lo}-${hi}`;
+    const netForLo = r.team1ID < r.team2ID
+      ? r.team1Pts - r.team2Pts
+      : r.team2Pts - r.team1Pts;
+    h2hMap.set(key, (h2hMap.get(key) ?? 0) + netForLo);
+  }
+
+  // Group by division (preserving original order)
+  const divisions = new Map<string, StandingsRow[]>();
+  for (const row of standings) {
+    const div = row.divisionName ?? '__none__';
+    if (!divisions.has(div)) divisions.set(div, []);
+    divisions.get(div)!.push(row);
+  }
+
+  const result: StandingsRow[] = [];
+  for (const rows of divisions.values()) {
+    // Split into tiers of equal totalPts
+    let i = 0;
+    while (i < rows.length) {
+      let j = i + 1;
+      while (j < rows.length && rows[j].totalPts === rows[i].totalPts) j++;
+      const tier = rows.slice(i, j);
+
+      if (tier.length === 2) {
+        // Two-way tie: check h2h
+        const [a, b] = tier;
+        const [lo, hi] = a.teamID < b.teamID
+          ? [a.teamID, b.teamID]
+          : [b.teamID, a.teamID];
+        const key = `${lo}-${hi}`;
+        const netForLo = h2hMap.get(key) ?? 0;
+        const netForA = a.teamID < b.teamID ? netForLo : -netForLo;
+
+        if (netForA > 0) {
+          result.push(a, b);
+        } else if (netForA < 0) {
+          result.push(b, a);
+        } else {
+          // H2H also tied, keep existing order (wins, scratchAvg)
+          result.push(a, b);
+        }
+      } else {
+        // Single team or 3+ way tie: keep existing SQL order
+        result.push(...tier);
+      }
+
+      i = j;
+    }
+  }
+
+  return result;
+}
+
 export async function getSeasonStandings(seasonID: number): Promise<StandingsRow[]> {
   return cachedQuery(`getSeasonStandings-${seasonID}`, async () => {
     const db = await getDb();
-    const result = await db
+    const standingsResult = await db
       .request()
       .input('seasonID', seasonID)
       .query<StandingsRow>(GET_SEASON_STANDINGS_SQL);
-    return result.recordset;
-  }, [], { sql: GET_SEASON_STANDINGS_SQL, seasonID });
+    const h2hResult = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<HeadToHeadResult>(GET_HEAD_TO_HEAD_SQL);
+    return resolveH2HTiebreakers(standingsResult.recordset, h2hResult.recordset);
+  }, [], { sql: GET_SEASON_STANDINGS_SQL + GET_HEAD_TO_HEAD_SQL, seasonID });
 }
 
 const GET_PLAYOFF_TEAM_IDS_SQL = `

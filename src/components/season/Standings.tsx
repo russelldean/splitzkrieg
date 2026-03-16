@@ -18,7 +18,8 @@ interface Props {
 
 /**
  * Compute which teamIDs are in playoff position.
- * With divisions: top 2 per division (including ties for 2nd).
+ * With divisions: top 2 per division. Standings are pre-sorted with
+ * head-to-head tiebreaker for 2-way ties, so position is definitive.
  * Without divisions: top 8 overall (including ties for 8th).
  */
 function getPlayoffTeamIDs(standings: StandingsRow[], hasDivisions: boolean): Set<number> {
@@ -32,17 +33,9 @@ function getPlayoffTeamIDs(standings: StandingsRow[], hasDivisions: boolean): Se
       divisions.get(div)!.push(row);
     }
     for (const rows of divisions.values()) {
-      if (rows.length === 0) continue;
-      ids.add(rows[0].teamID);
-      if (rows.length >= 2) {
-        const secondPlacePts = rows[1].totalPts;
-        for (let i = 1; i < rows.length; i++) {
-          if (rows[i].totalPts >= secondPlacePts) {
-            ids.add(rows[i].teamID);
-          } else {
-            break;
-          }
-        }
+      // Top 2 by position (h2h tiebreaker already applied in sort)
+      for (let i = 0; i < Math.min(2, rows.length); i++) {
+        ids.add(rows[i].teamID);
       }
     }
   } else {
