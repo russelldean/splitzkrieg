@@ -88,6 +88,7 @@ export default function AdminDashboardPage() {
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindResult, setRemindResult] = useState<string | null>(null);
   const [advancingPreNight, setAdvancingPreNight] = useState(false);
+  const [advancingPostNight, setAdvancingPostNight] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -162,6 +163,26 @@ export default function AdminDashboardPage() {
       // silently fail
     } finally {
       setAdvancingPreNight(false);
+    }
+  }, [data]);
+
+  const handleAdvancePostNight = useCallback(async () => {
+    if (!data) return;
+    const week = (data.publishedWeek || 0) + 1;
+    setAdvancingPostNight(true);
+    try {
+      const res = await fetch('/api/admin/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'advancePostNight', week }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setData((prev) => prev ? { ...prev, pipelineStep: json.step } : prev);
+    } catch {
+      // silently fail
+    } finally {
+      setAdvancingPostNight(false);
     }
   }, [data]);
 
@@ -259,9 +280,11 @@ export default function AdminDashboardPage() {
   // Determine active post-night step
   function getPostNightStep(): number {
     if (!data) return 0;
+    if (data.pipelineStep === 'emailed') return 6;
     if (data.pipelineStep === 'published') return 5;
+    if (data.pipelineStep === 'blogged') return 4;
     if (data.pipelineStep === 'confirmed') return 3;
-    if (data.pipelineStep === 'reviewing') return 1;
+    if (data.pipelineStep === 'reviewed') return 2;
     if (data.pipelineStep === 'pulled') return 1;
     return 0;
   }
@@ -391,6 +414,15 @@ export default function AdminDashboardPage() {
               >
                 Go to {POST_NIGHT_STEPS[postNightIdx].label} &rarr;
               </Link>
+            )}
+            {postNightIdx < POST_NIGHT_STEPS.length && (
+              <button
+                onClick={handleAdvancePostNight}
+                disabled={advancingPostNight}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-navy/15 font-body text-xs text-navy/50 hover:text-navy hover:border-navy/30 transition-colors disabled:opacity-50"
+              >
+                {advancingPostNight ? '...' : `Mark ${POST_NIGHT_STEPS[postNightIdx]?.label} Done`}
+              </button>
             )}
           </div>
 

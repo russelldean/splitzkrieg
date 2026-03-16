@@ -89,42 +89,29 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Determine pipeline step based on most recent score data
+    // Determine post-night pipeline step
+    // Check manual override first, then verifiable state
     let pipelineStep = 'idle';
     let recentScoreWeek: number | null = null;
     if (season) {
       const nextWeek = publishedWeek + 1;
 
-      // Check if scores exist for next week
-      const scoreCheck = await db
-        .request()
-        .input('seasonID', sql.Int, season.seasonID)
-        .input('week', sql.Int, nextWeek)
-        .query<{ cnt: number }>(
-          `SELECT COUNT(*) AS cnt FROM scores WHERE seasonID = @seasonID AND week = @week`,
-        );
-
-      if (scoreCheck.recordset[0]?.cnt > 0) {
-        pipelineStep = 'confirmed';
-        recentScoreWeek = nextWeek;
-
-        // Check if match results exist (means confirm was completed)
-        const mrCheck = await db
+      // Check for manual step override
+      try {
+        const overrideResult = await db
           .request()
-          .input('seasonID', sql.Int, season.seasonID)
-          .input('week', sql.Int, nextWeek)
-          .query<{ cnt: number }>(
-            `SELECT COUNT(*) AS cnt FROM matchResults mr
-             JOIN schedule sch ON mr.scheduleID = sch.scheduleID
-             WHERE sch.seasonID = @seasonID AND sch.week = @week`,
+          .input('key', sql.VarChar(50), `postNightStep-w${nextWeek}`)
+          .query<{ settingValue: string }>(
+            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
           );
-
-        if (mrCheck.recordset[0]?.cnt > 0) {
-          pipelineStep = 'confirmed';
+        if (overrideResult.recordset[0]) {
+          pipelineStep = overrideResult.recordset[0].settingValue;
         }
+      } catch {
+        // key doesn't exist yet
       }
 
-      // Check published status
+      // Published status overrides everything
       if (publishedWeek >= nextWeek) {
         pipelineStep = 'published';
       }
@@ -183,6 +170,7 @@ export async function GET(request: NextRequest) {
 }
 
 const PRE_NIGHT_ORDER = ['idle', 'reminded', 'pushed', 'printed'];
+const POST_NIGHT_ORDER = ['idle', 'pulled', 'reviewed', 'confirmed', 'blogged', 'published', 'emailed'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -221,6 +209,46 @@ export async function POST(request: NextRequest) {
       }
 
       // Upsert the setting
+      await db
+        .request()
+        .input('key', sql.VarChar(50), key)
+        .input('value', sql.VarChar(50), nextStep)
+        .query(`
+          MERGE leagueSettings AS target
+          USING (SELECT @key AS settingKey) AS source
+          ON target.settingKey = source.settingKey
+          WHEN MATCHED THEN UPDATE SET settingValue = @value
+          WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
+        `);
+
+      return NextResponse.json({ step: nextStep });
+    }
+
+    if (action === 'advancePostNight' && week) {
+      const db = await getDb();
+      const key = `postNightStep-w${week}`;
+
+      let current = 'idle';
+      try {
+        const result = await db
+          .request()
+          .input('key', sql.VarChar(50), key)
+          .query<{ settingValue: string }>(
+            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
+          );
+        if (result.recordset[0]) {
+          current = result.recordset[0].settingValue;
+        }
+      } catch {
+        // key doesn't exist yet
+      }
+
+      const currentIdx = POST_NIGHT_ORDER.indexOf(current);
+      const nextStep = POST_NIGHT_ORDER[currentIdx + 1];
+      if (!nextStep) {
+        return NextResponse.json({ error: 'Already at last step' }, { status: 400 });
+      }
+
       await db
         .request()
         .input('key', sql.VarChar(50), key)
