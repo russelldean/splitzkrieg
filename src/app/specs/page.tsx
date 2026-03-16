@@ -84,13 +84,13 @@ export default function SpecsPage() {
           {/* Data Pipeline */}
           <Section title="Data Pipeline">
             <TechItem name="CSV Scoresheets" desc="Raw scores come in as CSV exports. Node.js scripts parse, validate, and insert them into the database." />
-            <TechItem name="20+ Automation Scripts" desc="Match results, playoff brackets, achievement patches, schedule imports, rolling averages, team name history. Each has a dedicated script that can be run incrementally." />
+            <TechItem name="45+ Automation Scripts" desc="Match results, playoff brackets, achievement patches, schedule imports, rolling averages, team name history. Each has a dedicated script that can be run incrementally." />
             <TechItem name="LeaguePals Sync" desc="A script that reads the weekly CSV, fuzzy-matches bowlers by name, and auto-updates team rosters and averages on LeaguePals." />
           </Section>
 
           {/* Patches */}
           <Section title="Achievement Patches">
-            <TechItem name="12 Patch Types" desc="Pre-computed achievements stored in the database. Awarded by a populate script after each score upload. Build-time queries are simple indexed lookups, not heavy computations." />
+            <TechItem name="13 Patch Types" desc="Pre-computed achievements stored in the database. Awarded by a populate script after each score upload. Build-time queries are simple indexed lookups, not heavy computations." />
           </Section>
 
           {/* Testing */}
@@ -106,7 +106,7 @@ export default function SpecsPage() {
               <Stat label="Games scored" value="45,000+" />
               <Stat label="Pins knocked down" value="9M+" />
               <Stat label="Query functions" value="40+" />
-              <Stat label="Automation scripts" value="20+" />
+              <Stat label="Automation scripts" value="45+" />
             </div>
           </Section>
 
