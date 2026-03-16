@@ -2,21 +2,28 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-interface Captain {
+interface TeamCaptain {
   teamID: number;
   teamName: string;
+  captainBowlerID: number | null;
+  captainName: string | null;
+  captainEmail: string | null;
+}
+
+interface Bowler {
   bowlerID: number;
   bowlerName: string;
-  email: string | null;
 }
 
 export default function CaptainsPage() {
-  const [captains, setCaptains] = useState<Captain[]>([]);
+  const [teams, setTeams] = useState<TeamCaptain[]>([]);
+  const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Inline edit state
-  const [editingBowlerID, setEditingBowlerID] = useState<number | null>(null);
+  const [editingTeamID, setEditingTeamID] = useState<number | null>(null);
+  const [editBowlerID, setEditBowlerID] = useState<number | ''>('');
   const [editEmail, setEditEmail] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -24,9 +31,10 @@ export default function CaptainsPage() {
     try {
       const res = await fetch('/api/admin/captains');
       const data = await res.json();
-      if (data.captains) setCaptains(data.captains);
+      if (data.teams) setTeams(data.teams);
+      if (data.bowlers) setBowlers(data.bowlers);
     } catch {
-      setError('Failed to load captains');
+      setError('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -36,44 +44,65 @@ export default function CaptainsPage() {
     load();
   }, [load]);
 
-  function startEdit(c: Captain) {
-    setEditingBowlerID(c.bowlerID);
-    setEditEmail(c.email ?? '');
+  function startEdit(t: TeamCaptain) {
+    setEditingTeamID(t.teamID);
+    setEditBowlerID(t.captainBowlerID ?? '');
+    setEditEmail(t.captainEmail ?? '');
   }
 
   function cancelEdit() {
-    setEditingBowlerID(null);
+    setEditingTeamID(null);
+    setEditBowlerID('');
     setEditEmail('');
   }
 
-  async function handleSave(bowlerID: number) {
+  // When bowler selection changes, auto-fill their email if they have one
+  function handleBowlerChange(bowlerID: number | '') {
+    setEditBowlerID(bowlerID);
+    if (bowlerID) {
+      // Check if this bowler already has an email from another team's captain entry
+      const existing = teams.find(
+        (t) => t.captainBowlerID === bowlerID && t.captainEmail,
+      );
+      if (existing) {
+        setEditEmail(existing.captainEmail!);
+      }
+    }
+  }
+
+  async function handleSave(teamID: number) {
     setSaving(true);
     setError(null);
     try {
       const res = await fetch('/api/admin/captains', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bowlerID, email: editEmail.trim() }),
+        body: JSON.stringify({
+          teamID,
+          bowlerID: editBowlerID || null,
+          email: editEmail.trim() || null,
+        }),
       });
       if (!res.ok) throw new Error('Save failed');
-      setEditingBowlerID(null);
+      cancelEdit();
       await load();
     } catch {
-      setError('Failed to save email');
+      setError('Failed to save');
     } finally {
       setSaving(false);
     }
   }
 
-  const withEmail = captains.filter((c) => c.email);
-  const withoutEmail = captains.filter((c) => !c.email);
+  const withCaptain = teams.filter((t) => t.captainBowlerID);
+  const withoutCaptain = teams.filter((t) => !t.captainBowlerID);
+  const withEmail = withCaptain.filter((t) => t.captainEmail);
 
   return (
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl text-navy">Captains</h1>
         <span className="font-body text-xs text-navy/50">
-          {withEmail.length}/{captains.length} have email
+          {withCaptain.length}/{teams.length} assigned, {withEmail.length} with email
         </span>
       </div>
 
@@ -85,47 +114,49 @@ export default function CaptainsPage() {
 
       {loading ? (
         <p className="font-body text-sm text-navy/50">Loading...</p>
-      ) : captains.length === 0 ? (
-        <p className="font-body text-sm text-navy/50">
-          No team captains assigned. Set captainBowlerID on teams first.
-        </p>
       ) : (
         <div className="space-y-2">
-          {/* Missing email first */}
-          {withoutEmail.length > 0 && (
+          {/* Teams without captains first */}
+          {withoutCaptain.length > 0 && (
             <p className="font-body text-xs text-red/70 font-semibold uppercase tracking-wider pt-2 pb-1">
-              Missing Email
+              No Captain Assigned
             </p>
           )}
-          {withoutEmail.map((c) => (
+          {withoutCaptain.map((t) => (
             <CaptainRow
-              key={c.bowlerID}
-              captain={c}
-              editing={editingBowlerID === c.bowlerID}
+              key={t.teamID}
+              team={t}
+              bowlers={bowlers}
+              editing={editingTeamID === t.teamID}
+              editBowlerID={editBowlerID}
               editEmail={editEmail}
               saving={saving}
-              onStartEdit={() => startEdit(c)}
+              onStartEdit={() => startEdit(t)}
               onCancel={cancelEdit}
+              onBowlerChange={handleBowlerChange}
               onEmailChange={setEditEmail}
-              onSave={() => handleSave(c.bowlerID)}
+              onSave={() => handleSave(t.teamID)}
             />
           ))}
 
-          {withoutEmail.length > 0 && withEmail.length > 0 && (
+          {withoutCaptain.length > 0 && withCaptain.length > 0 && (
             <div className="border-t border-navy/10 my-3" />
           )}
 
-          {withEmail.map((c) => (
+          {withCaptain.map((t) => (
             <CaptainRow
-              key={c.bowlerID}
-              captain={c}
-              editing={editingBowlerID === c.bowlerID}
+              key={t.teamID}
+              team={t}
+              bowlers={bowlers}
+              editing={editingTeamID === t.teamID}
+              editBowlerID={editBowlerID}
               editEmail={editEmail}
               saving={saving}
-              onStartEdit={() => startEdit(c)}
+              onStartEdit={() => startEdit(t)}
               onCancel={cancelEdit}
+              onBowlerChange={handleBowlerChange}
               onEmailChange={setEditEmail}
-              onSave={() => handleSave(c.bowlerID)}
+              onSave={() => handleSave(t.teamID)}
             />
           ))}
         </div>
@@ -135,74 +166,113 @@ export default function CaptainsPage() {
 }
 
 function CaptainRow({
-  captain,
+  team,
+  bowlers,
   editing,
+  editBowlerID,
   editEmail,
   saving,
   onStartEdit,
   onCancel,
+  onBowlerChange,
   onEmailChange,
   onSave,
 }: {
-  captain: Captain;
+  team: TeamCaptain;
+  bowlers: Bowler[];
   editing: boolean;
+  editBowlerID: number | '';
   editEmail: string;
   saving: boolean;
   onStartEdit: () => void;
   onCancel: () => void;
+  onBowlerChange: (id: number | '') => void;
   onEmailChange: (v: string) => void;
   onSave: () => void;
 }) {
+  if (editing) {
+    return (
+      <div className="p-4 bg-white rounded-lg border border-navy/20">
+        <p className="font-body text-sm font-semibold text-navy mb-3">
+          {team.teamName}
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="block font-body text-xs text-navy/50 mb-1">Captain</label>
+            <select
+              value={editBowlerID}
+              onChange={(e) =>
+                onBowlerChange(e.target.value ? Number(e.target.value) : '')
+              }
+              className="w-full px-2 py-1.5 border border-navy/20 rounded font-body text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+            >
+              <option value="">None</option>
+              {bowlers.map((b) => (
+                <option key={b.bowlerID} value={b.bowlerID}>
+                  {b.bowlerName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block font-body text-xs text-navy/50 mb-1">Email</label>
+            <input
+              type="email"
+              value={editEmail}
+              onChange={(e) => onEmailChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onSave()}
+              placeholder="captain@email.com"
+              className="w-full px-2 py-1.5 border border-navy/20 rounded font-body text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onSave}
+              disabled={saving}
+              className="px-3 py-1.5 text-xs font-body font-semibold bg-navy text-cream rounded hover:bg-navy/90 transition-colors disabled:opacity-50"
+            >
+              {saving ? '...' : 'Save'}
+            </button>
+            <button
+              onClick={onCancel}
+              className="px-3 py-1.5 text-xs font-body text-navy/50 hover:text-navy transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-4 p-3 bg-white rounded-lg border border-navy/10">
-      <div className="w-40 shrink-0">
+      <div className="w-36 shrink-0">
         <p className="font-body text-sm font-semibold text-navy truncate">
-          {captain.teamName}
+          {team.teamName}
         </p>
-        <p className="font-body text-xs text-navy/50 truncate">{captain.bowlerName}</p>
       </div>
-
-      {editing ? (
-        <div className="flex-1 flex items-center gap-2">
-          <input
-            type="email"
-            value={editEmail}
-            onChange={(e) => onEmailChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onSave()}
-            className="flex-1 px-2 py-1.5 border border-navy/20 rounded font-body text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
-            autoFocus
-          />
-          <button
-            onClick={onSave}
-            disabled={saving}
-            className="px-3 py-1.5 text-xs font-body font-semibold bg-navy text-cream rounded hover:bg-navy/90 transition-colors disabled:opacity-50"
-          >
-            {saving ? '...' : 'Save'}
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-3 py-1.5 text-xs font-body text-navy/50 hover:text-navy transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-between min-w-0">
-          <span
-            className={`font-body text-sm truncate ${
-              captain.email ? 'text-navy/70' : 'text-red/50 italic'
-            }`}
-          >
-            {captain.email || 'No email'}
-          </span>
-          <button
-            onClick={onStartEdit}
-            className="shrink-0 px-3 py-1.5 text-xs font-body font-semibold text-navy/70 border border-navy/20 rounded hover:bg-navy/5 transition-colors ml-2"
-          >
-            Edit
-          </button>
-        </div>
-      )}
+      <div className="flex-1 min-w-0">
+        {team.captainName ? (
+          <p className="font-body text-sm text-navy/70 truncate">
+            {team.captainName}
+            {team.captainEmail && (
+              <span className="text-navy/40"> &middot; {team.captainEmail}</span>
+            )}
+            {!team.captainEmail && (
+              <span className="text-red/50 italic"> &middot; no email</span>
+            )}
+          </p>
+        ) : (
+          <p className="font-body text-sm text-red/50 italic">No captain</p>
+        )}
+      </div>
+      <button
+        onClick={onStartEdit}
+        className="shrink-0 px-3 py-1.5 text-xs font-body font-semibold text-navy/70 border border-navy/20 rounded hover:bg-navy/5 transition-colors"
+      >
+        Edit
+      </button>
     </div>
   );
 }

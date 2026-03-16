@@ -1,8 +1,6 @@
 /**
- * GET /api/admin/captains - list all team captains with emails
- * PUT /api/admin/captains - update a bowler's email
- *
- * Captain info comes from teams.captainBowlerID -> bowlers.email
+ * GET /api/admin/captains - all current season teams with captain info
+ * PUT /api/admin/captains - update captain (bowlerID) and email for a team
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,25 +19,46 @@ export async function GET(request: NextRequest) {
 
   try {
     const db = await getDb();
-    const result = await withRetry(
+
+    // All teams in current season with captain info
+    const teamsResult = await withRetry(
       () =>
         db.request().query(`
-          SELECT t.teamID, t.teamName, t.captainBowlerID,
-                 b.bowlerName, b.email
-          FROM teams t
+          SELECT DISTINCT t.teamID, t.teamName, t.captainBowlerID,
+                 b.bowlerName AS captainName, b.email AS captainEmail
+          FROM schedule sch
+          JOIN teams t ON t.teamID = sch.team1ID OR t.teamID = sch.team2ID
           LEFT JOIN bowlers b ON t.captainBowlerID = b.bowlerID
-          WHERE t.captainBowlerID IS NOT NULL
+          WHERE sch.seasonID = (
+            SELECT TOP 1 seasonID FROM seasons
+            ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+          )
+            AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
           ORDER BY t.teamName
         `),
-      'getCaptains',
+      'getCaptainTeams',
     );
+
+    // All eligible bowlers for the picker
+    const bowlersResult = await withRetry(
+      () =>
+        db.request().query(
+          `SELECT bowlerID, bowlerName FROM bowlers WHERE isEligible = 1 ORDER BY bowlerName`,
+        ),
+      'getCaptainBowlers',
+    );
+
     return NextResponse.json({
-      captains: result.recordset.map((r) => ({
+      teams: teamsResult.recordset.map((r) => ({
         teamID: r.teamID,
         teamName: r.teamName,
-        bowlerID: r.captainBowlerID,
+        captainBowlerID: r.captainBowlerID ?? null,
+        captainName: r.captainName ?? null,
+        captainEmail: r.captainEmail ?? null,
+      })),
+      bowlers: bowlersResult.recordset.map((r) => ({
+        bowlerID: r.bowlerID,
         bowlerName: r.bowlerName,
-        email: r.email ?? null,
       })),
     });
   } catch (err) {
@@ -59,26 +78,42 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { bowlerID, email } = await request.json();
-    if (!bowlerID) {
-      return NextResponse.json({ error: 'bowlerID is required' }, { status: 400 });
+    const { teamID, bowlerID, email } = await request.json();
+    if (!teamID) {
+      return NextResponse.json({ error: 'teamID is required' }, { status: 400 });
     }
 
     const db = await getDb();
+
+    // Update the team's captain
     await withRetry(
       () =>
         db
           .request()
-          .input('bowlerID', sql.Int, bowlerID)
-          .input('email', sql.VarChar(255), email || null)
-          .query('UPDATE bowlers SET email = @email WHERE bowlerID = @bowlerID'),
-      'updateCaptainEmail',
+          .input('teamID', sql.Int, teamID)
+          .input('bowlerID', sql.Int, bowlerID || null)
+          .query('UPDATE teams SET captainBowlerID = @bowlerID WHERE teamID = @teamID'),
+      'updateTeamCaptain',
     );
+
+    // Update the bowler's email if a bowler is assigned
+    if (bowlerID && email !== undefined) {
+      await withRetry(
+        () =>
+          db
+            .request()
+            .input('bowlerID', sql.Int, bowlerID)
+            .input('email', sql.VarChar(255), email || null)
+            .query('UPDATE bowlers SET email = @email WHERE bowlerID = @bowlerID'),
+        'updateCaptainEmail',
+      );
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Admin captains PUT error:', err);
     return NextResponse.json(
-      { error: 'Failed to update email' },
+      { error: 'Failed to update captain' },
       { status: 500 },
     );
   }
