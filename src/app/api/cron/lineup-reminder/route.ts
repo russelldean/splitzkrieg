@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px;">
               <h2 style="color: #1a2744; margin-bottom: 16px;">Hey ${name}!</h2>
               <p style="color: #333; line-height: 1.6; margin-bottom: 24px;">
-                We bowl Monday! Please submit your Week ${nextWeek} lineup for <strong>${team.teamName}</strong> before then.
+                Please submit your Week ${nextWeek} lineup for <strong>${team.teamName}</strong> as soon as you are able. After submitted, you will still be able to edit your lineup on the site until we print scoresheets Monday afternoon.
               </p>
               <a href="https://splitzkrieg.com/lineup"
                  style="display: inline-block; background-color: #c83232; color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: 600; font-size: 16px;">
