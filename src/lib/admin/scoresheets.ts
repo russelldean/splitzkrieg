@@ -425,10 +425,12 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
       doc.setFont('helvetica', 'bold');
       doc.text('Date', col1X + 30, rowY, { align: 'center' });
       doc.text(homeAbbr, col1X + 105, rowY, { align: 'center' });
+      doc.text('-', col1X + 130, rowY, { align: 'center' });
       doc.text(awayAbbr, col1X + 155, rowY, { align: 'center' });
       if (rightCol.length > 0) {
         doc.text('Date', col2X + 30, rowY, { align: 'center' });
         doc.text(homeAbbr, col2X + 105, rowY, { align: 'center' });
+        doc.text('-', col2X + 130, rowY, { align: 'center' });
         doc.text(awayAbbr, col2X + 155, rowY, { align: 'center' });
       }
       doc.setFont('helvetica', 'normal');
@@ -445,11 +447,13 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
         if (left) {
           doc.text(left.date || '', col1X, rowY);
           doc.text(fmtWins(left.homeGameWins), col1X + 105, rowY, { align: 'center' });
+          doc.text('-', col1X + 130, rowY, { align: 'center' });
           doc.text(fmtWins(left.awayGameWins), col1X + 155, rowY, { align: 'center' });
         }
         if (right) {
           doc.text(right.date || '', col2X, rowY);
           doc.text(fmtWins(right.homeGameWins), col2X + 105, rowY, { align: 'center' });
+          doc.text('-', col2X + 130, rowY, { align: 'center' });
           doc.text(fmtWins(right.awayGameWins), col2X + 155, rowY, { align: 'center' });
         }
         rowY += 15;
@@ -561,10 +565,11 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
     ): Array<Array<string | number>> {
       const rows: Array<Array<string | number>> = [];
       for (let j = 0; j < Math.max(bowlers.length, 6); j++) {
+        const showTeamName = j < 4 ? teamName : '';
         const b = bowlers[j];
         if (b) {
           rows.push([
-            teamName,
+            showTeamName,
             b.name || '',
             b.incomingAvg != null ? String(Math.floor(b.incomingAvg)) : '',
             b.handicap != null ? String(b.handicap) : '',
@@ -574,7 +579,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
             '',
           ]);
         } else {
-          rows.push([teamName, '', '', '', '', '', '', '']);
+          rows.push([showTeamName, '', '', '', '', '', '', '']);
         }
       }
       return rows;
