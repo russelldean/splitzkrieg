@@ -1,9 +1,10 @@
 /**
  * GET /api/admin/dashboard
- * Returns dashboard overview data: season info, lineup status, pipeline step.
+ * Returns dashboard overview data: season info, lineup status, completed steps.
  *
  * POST /api/admin/dashboard
- * Advance a pipeline step manually (e.g. mark "Remind" as done).
+ * Toggle a pipeline step as done/undone.
+ * Body: { pipeline: 'pre' | 'post', stepKey: string, week: number }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -54,7 +55,6 @@ export async function GET(request: NextRequest) {
     if (season) {
       const nextWeek = publishedWeek + 1;
 
-      // Get all teams for this season
       const teamsResult = await db
         .request()
         .input('seasonID', sql.Int, season.seasonID)
@@ -66,7 +66,6 @@ export async function GET(request: NextRequest) {
            ORDER BY t.teamName`,
         );
 
-      // Get submitted lineups for this week
       const lineupsResult = await db
         .request()
         .input('seasonID', sql.Int, season.seasonID)
@@ -89,66 +88,27 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Determine post-night pipeline step
-    // Check manual override first, then verifiable state
-    let pipelineStep = 'idle';
-    let recentScoreWeek: number | null = null;
+    // Load completed steps for this week (stored as comma-separated keys)
+    let preNightDone: string[] = [];
+    let postNightDone: string[] = [];
     if (season) {
       const nextWeek = publishedWeek + 1;
-
-      // Check for manual step override
       try {
-        const overrideResult = await db
+        const result = await db
           .request()
-          .input('key', sql.VarChar(50), `postNightStep-w${nextWeek}`)
-          .query<{ settingValue: string }>(
-            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
+          .input('preKey', sql.VarChar(50), `preNightDone-w${nextWeek}`)
+          .input('postKey', sql.VarChar(50), `postNightDone-w${nextWeek}`)
+          .query<{ settingKey: string; settingValue: string }>(
+            `SELECT settingKey, settingValue FROM leagueSettings
+             WHERE settingKey IN (@preKey, @postKey)`,
           );
-        if (overrideResult.recordset[0]) {
-          pipelineStep = overrideResult.recordset[0].settingValue;
+        for (const row of result.recordset) {
+          const val = row.settingValue ? row.settingValue.split(',').filter(Boolean) : [];
+          if (row.settingKey.startsWith('preNight')) preNightDone = val;
+          else postNightDone = val;
         }
       } catch {
-        // key doesn't exist yet
-      }
-
-      // Published status overrides everything
-      if (publishedWeek >= nextWeek) {
-        pipelineStep = 'published';
-      }
-    }
-
-    // Determine pre-night pipeline step
-    // Check manual override first, then verifiable actions
-    let preNightStep = 'idle';
-    if (season) {
-      const nextWeek = publishedWeek + 1;
-
-      // Check for manual step override (e.g. "preNightStep-w5" = "reminded")
-      try {
-        const overrideResult = await db
-          .request()
-          .input('key', sql.VarChar(50), `preNightStep-w${nextWeek}`)
-          .query<{ settingValue: string }>(
-            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
-          );
-        if (overrideResult.recordset[0]) {
-          preNightStep = overrideResult.recordset[0].settingValue;
-        }
-      } catch {
-        // leagueSettings might not have this key
-      }
-
-      // Pushed status overrides everything
-      const pushCheck = await db
-        .request()
-        .input('seasonID', sql.Int, season.seasonID)
-        .input('week', sql.Int, nextWeek)
-        .query<{ cnt: number }>(
-          `SELECT COUNT(*) AS cnt FROM lineupSubmissions
-           WHERE seasonID = @seasonID AND week = @week AND status = 'pushed'`,
-        );
-      if (pushCheck.recordset[0]?.cnt > 0) {
-        preNightStep = 'pushed';
+        // leagueSettings might not have these keys
       }
     }
 
@@ -156,9 +116,8 @@ export async function GET(request: NextRequest) {
       season,
       publishedWeek,
       lineupStatus,
-      pipelineStep,
-      preNightStep,
-      recentScoreWeek,
+      preNightDone,
+      postNightDone,
     });
   } catch (err) {
     console.error('Dashboard error:', err);
@@ -169,9 +128,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-const PRE_NIGHT_ORDER = ['idle', 'reminded', 'pushed', 'printed'];
-const POST_NIGHT_ORDER = ['idle', 'pulled', 'reviewed', 'confirmed', 'blogged', 'published', 'emailed'];
-
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin(request);
@@ -180,91 +136,56 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { action, week } = await request.json();
-
-    if (action === 'advancePreNight' && week) {
-      const db = await getDb();
-      const key = `preNightStep-w${week}`;
-
-      // Get current step
-      let current = 'idle';
-      try {
-        const result = await db
-          .request()
-          .input('key', sql.VarChar(50), key)
-          .query<{ settingValue: string }>(
-            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
-          );
-        if (result.recordset[0]) {
-          current = result.recordset[0].settingValue;
-        }
-      } catch {
-        // key doesn't exist yet
-      }
-
-      const currentIdx = PRE_NIGHT_ORDER.indexOf(current);
-      const nextStep = PRE_NIGHT_ORDER[currentIdx + 1];
-      if (!nextStep) {
-        return NextResponse.json({ error: 'Already at last step' }, { status: 400 });
-      }
-
-      // Upsert the setting
-      await db
-        .request()
-        .input('key', sql.VarChar(50), key)
-        .input('value', sql.VarChar(50), nextStep)
-        .query(`
-          MERGE leagueSettings AS target
-          USING (SELECT @key AS settingKey) AS source
-          ON target.settingKey = source.settingKey
-          WHEN MATCHED THEN UPDATE SET settingValue = @value
-          WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
-        `);
-
-      return NextResponse.json({ step: nextStep });
+    const { pipeline, stepKey, week } = await request.json();
+    if (!pipeline || !stepKey || !week) {
+      return NextResponse.json(
+        { error: 'pipeline, stepKey, and week are required' },
+        { status: 400 },
+      );
     }
 
-    if (action === 'advancePostNight' && week) {
-      const db = await getDb();
-      const key = `postNightStep-w${week}`;
+    const db = await getDb();
+    const settingKey =
+      pipeline === 'pre' ? `preNightDone-w${week}` : `postNightDone-w${week}`;
 
-      let current = 'idle';
-      try {
-        const result = await db
-          .request()
-          .input('key', sql.VarChar(50), key)
-          .query<{ settingValue: string }>(
-            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
-          );
-        if (result.recordset[0]) {
-          current = result.recordset[0].settingValue;
-        }
-      } catch {
-        // key doesn't exist yet
-      }
-
-      const currentIdx = POST_NIGHT_ORDER.indexOf(current);
-      const nextStep = POST_NIGHT_ORDER[currentIdx + 1];
-      if (!nextStep) {
-        return NextResponse.json({ error: 'Already at last step' }, { status: 400 });
-      }
-
-      await db
+    // Get current set
+    let current: string[] = [];
+    try {
+      const result = await db
         .request()
-        .input('key', sql.VarChar(50), key)
-        .input('value', sql.VarChar(50), nextStep)
-        .query(`
-          MERGE leagueSettings AS target
-          USING (SELECT @key AS settingKey) AS source
-          ON target.settingKey = source.settingKey
-          WHEN MATCHED THEN UPDATE SET settingValue = @value
-          WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
-        `);
-
-      return NextResponse.json({ step: nextStep });
+        .input('key', sql.VarChar(50), settingKey)
+        .query<{ settingValue: string }>(
+          `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
+        );
+      if (result.recordset[0]?.settingValue) {
+        current = result.recordset[0].settingValue.split(',').filter(Boolean);
+      }
+    } catch {
+      // doesn't exist yet
     }
 
-    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+    // Toggle
+    if (current.includes(stepKey)) {
+      current = current.filter((k) => k !== stepKey);
+    } else {
+      current.push(stepKey);
+    }
+
+    const value = current.join(',');
+
+    await db
+      .request()
+      .input('key', sql.VarChar(50), settingKey)
+      .input('value', sql.VarChar(255), value)
+      .query(`
+        MERGE leagueSettings AS target
+        USING (SELECT @key AS settingKey) AS source
+        ON target.settingKey = source.settingKey
+        WHEN MATCHED THEN UPDATE SET settingValue = @value
+        WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
+      `);
+
+    return NextResponse.json({ done: current });
   } catch (err) {
     console.error('Dashboard POST error:', err);
     return NextResponse.json(

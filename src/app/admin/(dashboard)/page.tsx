@@ -12,9 +12,8 @@ interface DashboardData {
     total: number;
     teams: Array<{ teamName: string; submitted: boolean }>;
   } | null;
-  pipelineStep: string;
-  preNightStep: string;
-  recentScoreWeek: number | null;
+  preNightDone: string[];
+  postNightDone: string[];
 }
 
 const PRE_NIGHT_STEPS = [
@@ -32,47 +31,54 @@ const POST_NIGHT_STEPS = [
   { key: 'email', label: 'Email', page: '' },
 ];
 
-/* Shared pipeline renderer */
+/* Shared pipeline renderer with clickable toggleable steps */
 function Pipeline({
   steps,
-  activeIdx,
+  doneKeys,
+  onToggle,
 }: {
   steps: { key: string; label: string; page: string }[];
-  activeIdx: number;
+  doneKeys: Set<string>;
+  onToggle: (key: string) => void;
 }) {
   return (
     <div className="flex items-start justify-center mb-5">
-      {steps.map((step, idx) => (
-        <div key={step.key} className="flex items-start">
-          <div className="flex flex-col items-center w-16">
-            <div
-              className={`flex items-center justify-center w-9 h-9 rounded-full text-xs font-body font-semibold transition-colors ${
-                idx < activeIdx
-                  ? 'bg-green-500 text-white'
-                  : idx === activeIdx
-                    ? 'bg-navy text-cream'
-                    : 'bg-navy/10 text-navy/40'
-              }`}
-            >
-              {idx < activeIdx ? '\u2713' : idx + 1}
+      {steps.map((step, idx) => {
+        const done = doneKeys.has(step.key);
+        return (
+          <div key={step.key} className="flex items-start">
+            <div className="flex flex-col items-center w-16">
+              <button
+                onClick={() => onToggle(step.key)}
+                className={`flex items-center justify-center w-9 h-9 rounded-full text-xs font-body font-semibold transition-colors cursor-pointer ${
+                  done
+                    ? 'bg-green-500 text-white hover:bg-green-600'
+                    : 'bg-navy/10 text-navy/40 hover:bg-navy/20 hover:text-navy/60'
+                }`}
+                title={done ? `Mark ${step.label} undone` : `Mark ${step.label} done`}
+              >
+                {done ? '\u2713' : idx + 1}
+              </button>
+              <span
+                className={`font-body text-[10px] mt-1.5 text-center leading-tight ${
+                  done ? 'text-green-600 font-semibold' : 'text-navy/40'
+                }`}
+              >
+                {step.label}
+              </span>
             </div>
-            <span
-              className={`font-body text-[10px] mt-1.5 text-center leading-tight ${
-                idx === activeIdx ? 'text-navy font-semibold' : 'text-navy/40'
-              }`}
-            >
-              {step.label}
-            </span>
+            {idx < steps.length - 1 && (
+              <div
+                className={`w-6 h-0.5 mt-[18px] -mx-1 ${
+                  done && doneKeys.has(steps[idx + 1].key)
+                    ? 'bg-green-500'
+                    : 'bg-navy/10'
+                }`}
+              />
+            )}
           </div>
-          {idx < steps.length - 1 && (
-            <div
-              className={`w-6 h-0.5 mt-[18px] -mx-1 ${
-                idx < activeIdx ? 'bg-green-500' : 'bg-navy/10'
-              }`}
-            />
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -87,8 +93,6 @@ export default function AdminDashboardPage() {
   const [emailResult, setEmailResult] = useState<string | null>(null);
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindResult, setRemindResult] = useState<string | null>(null);
-  const [advancingPreNight, setAdvancingPreNight] = useState(false);
-  const [advancingPostNight, setAdvancingPostNight] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -105,6 +109,37 @@ export default function AdminDashboardPage() {
     }
     load();
   }, []);
+
+  const toggleStep = useCallback(
+    async (pipeline: 'pre' | 'post', stepKey: string) => {
+      if (!data) return;
+      const week = (data.publishedWeek || 0) + 1;
+
+      // Optimistic update
+      const field = pipeline === 'pre' ? 'preNightDone' : 'postNightDone';
+      const current = data[field];
+      const next = current.includes(stepKey)
+        ? current.filter((k) => k !== stepKey)
+        : [...current, stepKey];
+      setData((prev) => (prev ? { ...prev, [field]: next } : prev));
+
+      try {
+        const res = await fetch('/api/admin/dashboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pipeline, stepKey, week }),
+        });
+        const json = await res.json();
+        if (res.ok) {
+          setData((prev) => (prev ? { ...prev, [field]: json.done } : prev));
+        }
+      } catch {
+        // Revert on error
+        setData((prev) => (prev ? { ...prev, [field]: current } : prev));
+      }
+    },
+    [data],
+  );
 
   const handleRemind = useCallback(async () => {
     if (!data?.season || !data?.lineupStatus) return;
@@ -143,46 +178,6 @@ export default function AdminDashboardPage() {
       setRemindResult(err instanceof Error ? err.message : 'Failed to send reminders');
     } finally {
       setRemindLoading(false);
-    }
-  }, [data]);
-
-  const handleAdvancePreNight = useCallback(async () => {
-    if (!data) return;
-    const week = (data.publishedWeek || 0) + 1;
-    setAdvancingPreNight(true);
-    try {
-      const res = await fetch('/api/admin/dashboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'advancePreNight', week }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      setData((prev) => prev ? { ...prev, preNightStep: json.step } : prev);
-    } catch {
-      // silently fail
-    } finally {
-      setAdvancingPreNight(false);
-    }
-  }, [data]);
-
-  const handleAdvancePostNight = useCallback(async () => {
-    if (!data) return;
-    const week = (data.publishedWeek || 0) + 1;
-    setAdvancingPostNight(true);
-    try {
-      const res = await fetch('/api/admin/dashboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'advancePostNight', week }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      setData((prev) => prev ? { ...prev, pipelineStep: json.step } : prev);
-    } catch {
-      // silently fail
-    } finally {
-      setAdvancingPostNight(false);
     }
   }, [data]);
 
@@ -268,29 +263,8 @@ export default function AdminDashboardPage() {
     ? data.lineupStatus.teams.filter((t) => !t.submitted).length
     : 0;
 
-  // Determine active pre-night step
-  function getPreNightStep(): number {
-    if (!data) return 0;
-    if (data.preNightStep === 'printed') return 3; // all done
-    if (data.preNightStep === 'pushed') return 2;  // ready for scoresheets
-    if (data.preNightStep === 'reminded') return 1; // ready for push
-    return 0;
-  }
-
-  // Determine active post-night step
-  function getPostNightStep(): number {
-    if (!data) return 0;
-    if (data.pipelineStep === 'emailed') return 6;
-    if (data.pipelineStep === 'published') return 5;
-    if (data.pipelineStep === 'blogged') return 4;
-    if (data.pipelineStep === 'confirmed') return 3;
-    if (data.pipelineStep === 'reviewed') return 2;
-    if (data.pipelineStep === 'pulled') return 1;
-    return 0;
-  }
-
-  const preNightIdx = getPreNightStep();
-  const postNightIdx = getPostNightStep();
+  const preNightDone = new Set(data?.preNightDone ?? []);
+  const postNightDone = new Set(data?.postNightDone ?? []);
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -315,7 +289,11 @@ export default function AdminDashboardPage() {
           )}
         </div>
         <div className="p-5">
-          <Pipeline steps={PRE_NIGHT_STEPS} activeIdx={preNightIdx} />
+          <Pipeline
+            steps={PRE_NIGHT_STEPS}
+            doneKeys={preNightDone}
+            onToggle={(key) => toggleStep('pre', key)}
+          />
 
           {/* Lineup team grid */}
           {data?.lineupStatus && data.lineupStatus.teams.length > 0 && (
@@ -335,38 +313,19 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* Pre-night actions */}
-          <div className="flex flex-wrap items-center gap-3">
-            {preNightIdx === 0 && missingLineups > 0 && (
-              <button
-                onClick={handleRemind}
-                disabled={remindLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-cream font-body text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
-              >
-                <EmailIcon className="w-4 h-4" />
-                {remindLoading
-                  ? 'Sending...'
-                  : `Remind ${missingLineups} Captain${missingLineups !== 1 ? 's' : ''}`}
-              </button>
-            )}
-            {PRE_NIGHT_STEPS[preNightIdx]?.page && preNightIdx > 0 && (
-              <Link
-                href={PRE_NIGHT_STEPS[preNightIdx].page}
-                className="inline-flex items-center gap-1 font-body text-xs text-navy/60 hover:text-navy underline transition-colors"
-              >
-                Go to {PRE_NIGHT_STEPS[preNightIdx].label} &rarr;
-              </Link>
-            )}
-            {preNightIdx < PRE_NIGHT_STEPS.length && (
-              <button
-                onClick={handleAdvancePreNight}
-                disabled={advancingPreNight}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-navy/15 font-body text-xs text-navy/50 hover:text-navy hover:border-navy/30 transition-colors disabled:opacity-50"
-              >
-                {advancingPreNight ? '...' : `Mark ${PRE_NIGHT_STEPS[preNightIdx]?.label} Done`}
-              </button>
-            )}
-          </div>
+          {/* Remind button */}
+          {missingLineups > 0 && (
+            <button
+              onClick={handleRemind}
+              disabled={remindLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-cream font-body text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+            >
+              <EmailIcon className="w-4 h-4" />
+              {remindLoading
+                ? 'Sending...'
+                : `Remind ${missingLineups} Captain${missingLineups !== 1 ? 's' : ''}`}
+            </button>
+          )}
 
           {remindResult && (
             <p className="font-body text-xs text-navy/70 bg-cream p-2 rounded mt-3">
@@ -383,47 +342,30 @@ export default function AdminDashboardPage() {
           <p className="font-body text-xs text-navy/40 mt-0.5">Week {nextWeek} results</p>
         </div>
         <div className="p-5">
-          <Pipeline steps={POST_NIGHT_STEPS} activeIdx={postNightIdx} />
+          <Pipeline
+            steps={POST_NIGHT_STEPS}
+            doneKeys={postNightDone}
+            onToggle={(key) => toggleStep('post', key)}
+          />
 
-          {/* Inline action buttons */}
+          {/* Action buttons */}
           <div className="flex flex-wrap gap-3 mb-3">
-            {postNightIdx >= 4 && (
-              <button
-                onClick={handlePublish}
-                disabled={publishLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
-              >
-                <PublishIcon className="w-4 h-4" />
-                {publishLoading ? 'Publishing...' : `Publish Week ${nextWeek}`}
-              </button>
-            )}
-            {postNightIdx >= 5 && (
-              <button
-                onClick={handleEmail}
-                disabled={emailLoading || !data?.publishedWeek}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
-              >
-                <EmailIcon className="w-4 h-4" />
-                {emailLoading ? 'Sending...' : 'Send Recap Email'}
-              </button>
-            )}
-            {POST_NIGHT_STEPS[postNightIdx]?.page && (
-              <Link
-                href={POST_NIGHT_STEPS[postNightIdx].page}
-                className="inline-flex items-center gap-1 font-body text-xs text-navy/60 hover:text-navy underline transition-colors"
-              >
-                Go to {POST_NIGHT_STEPS[postNightIdx].label} &rarr;
-              </Link>
-            )}
-            {postNightIdx < POST_NIGHT_STEPS.length && (
-              <button
-                onClick={handleAdvancePostNight}
-                disabled={advancingPostNight}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-navy/15 font-body text-xs text-navy/50 hover:text-navy hover:border-navy/30 transition-colors disabled:opacity-50"
-              >
-                {advancingPostNight ? '...' : `Mark ${POST_NIGHT_STEPS[postNightIdx]?.label} Done`}
-              </button>
-            )}
+            <button
+              onClick={handlePublish}
+              disabled={publishLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
+            >
+              <PublishIcon className="w-4 h-4" />
+              {publishLoading ? 'Publishing...' : `Publish Week ${nextWeek}`}
+            </button>
+            <button
+              onClick={handleEmail}
+              disabled={emailLoading || !data?.publishedWeek}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
+            >
+              <EmailIcon className="w-4 h-4" />
+              {emailLoading ? 'Sending...' : 'Send Recap Email'}
+            </button>
           </div>
 
           {publishResult && (
