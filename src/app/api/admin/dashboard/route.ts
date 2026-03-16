@@ -1,6 +1,9 @@
 /**
  * GET /api/admin/dashboard
  * Returns dashboard overview data: season info, lineup status, pipeline step.
+ *
+ * POST /api/admin/dashboard
+ * Advance a pipeline step manually (e.g. mark "Remind" as done).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -128,10 +131,27 @@ export async function GET(request: NextRequest) {
     }
 
     // Determine pre-night pipeline step
-    // Only advance based on verifiable actions, not assumptions
+    // Check manual override first, then verifiable actions
     let preNightStep = 'idle';
     if (season) {
       const nextWeek = publishedWeek + 1;
+
+      // Check for manual step override (e.g. "preNightStep-w5" = "reminded")
+      try {
+        const overrideResult = await db
+          .request()
+          .input('key', sql.VarChar(50), `preNightStep-w${nextWeek}`)
+          .query<{ settingValue: string }>(
+            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
+          );
+        if (overrideResult.recordset[0]) {
+          preNightStep = overrideResult.recordset[0].settingValue;
+        }
+      } catch {
+        // leagueSettings might not have this key
+      }
+
+      // Pushed status overrides everything
       const pushCheck = await db
         .request()
         .input('seasonID', sql.Int, season.seasonID)
@@ -157,6 +177,70 @@ export async function GET(request: NextRequest) {
     console.error('Dashboard error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to load dashboard' },
+      { status: 500 },
+    );
+  }
+}
+
+const PRE_NIGHT_ORDER = ['idle', 'reminded', 'pushed', 'printed'];
+
+export async function POST(request: NextRequest) {
+  try {
+    await requireAdmin(request);
+  } catch {
+    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+  }
+
+  try {
+    const { action, week } = await request.json();
+
+    if (action === 'advancePreNight' && week) {
+      const db = await getDb();
+      const key = `preNightStep-w${week}`;
+
+      // Get current step
+      let current = 'idle';
+      try {
+        const result = await db
+          .request()
+          .input('key', sql.VarChar(50), key)
+          .query<{ settingValue: string }>(
+            `SELECT settingValue FROM leagueSettings WHERE settingKey = @key`,
+          );
+        if (result.recordset[0]) {
+          current = result.recordset[0].settingValue;
+        }
+      } catch {
+        // key doesn't exist yet
+      }
+
+      const currentIdx = PRE_NIGHT_ORDER.indexOf(current);
+      const nextStep = PRE_NIGHT_ORDER[currentIdx + 1];
+      if (!nextStep) {
+        return NextResponse.json({ error: 'Already at last step' }, { status: 400 });
+      }
+
+      // Upsert the setting
+      await db
+        .request()
+        .input('key', sql.VarChar(50), key)
+        .input('value', sql.VarChar(50), nextStep)
+        .query(`
+          MERGE leagueSettings AS target
+          USING (SELECT @key AS settingKey) AS source
+          ON target.settingKey = source.settingKey
+          WHEN MATCHED THEN UPDATE SET settingValue = @value
+          WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
+        `);
+
+      return NextResponse.json({ step: nextStep });
+    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+  } catch (err) {
+    console.error('Dashboard POST error:', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to update' },
       { status: 500 },
     );
   }

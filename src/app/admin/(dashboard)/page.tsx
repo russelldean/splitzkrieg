@@ -87,6 +87,7 @@ export default function AdminDashboardPage() {
   const [emailResult, setEmailResult] = useState<string | null>(null);
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindResult, setRemindResult] = useState<string | null>(null);
+  const [advancingPreNight, setAdvancingPreNight] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -141,6 +142,26 @@ export default function AdminDashboardPage() {
       setRemindResult(err instanceof Error ? err.message : 'Failed to send reminders');
     } finally {
       setRemindLoading(false);
+    }
+  }, [data]);
+
+  const handleAdvancePreNight = useCallback(async () => {
+    if (!data) return;
+    const week = (data.publishedWeek || 0) + 1;
+    setAdvancingPreNight(true);
+    try {
+      const res = await fetch('/api/admin/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'advancePreNight', week }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setData((prev) => prev ? { ...prev, preNightStep: json.step } : prev);
+    } catch {
+      // silently fail
+    } finally {
+      setAdvancingPreNight(false);
     }
   }, [data]);
 
@@ -229,8 +250,10 @@ export default function AdminDashboardPage() {
   // Determine active pre-night step
   function getPreNightStep(): number {
     if (!data) return 0;
-    if (data.preNightStep === 'pushed') return 2; // ready for scoresheets
-    return 0; // remind is always step 0 until lineups are pushed
+    if (data.preNightStep === 'printed') return 3; // all done
+    if (data.preNightStep === 'pushed') return 2;  // ready for scoresheets
+    if (data.preNightStep === 'reminded') return 1; // ready for push
+    return 0;
   }
 
   // Determine active post-night step
@@ -310,6 +333,15 @@ export default function AdminDashboardPage() {
               >
                 Go to {PRE_NIGHT_STEPS[preNightIdx].label} &rarr;
               </Link>
+            )}
+            {preNightIdx < PRE_NIGHT_STEPS.length && (
+              <button
+                onClick={handleAdvancePreNight}
+                disabled={advancingPreNight}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-navy/15 font-body text-xs text-navy/50 hover:text-navy hover:border-navy/30 transition-colors disabled:opacity-50"
+              >
+                {advancingPreNight ? '...' : `Mark ${PRE_NIGHT_STEPS[preNightIdx]?.label} Done`}
+              </button>
             )}
           </div>
 
