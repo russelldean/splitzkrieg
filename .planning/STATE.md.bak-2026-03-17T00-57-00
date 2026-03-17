@@ -1,0 +1,100 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+current_phase: 08-admin-tools
+current_plan: 5 of 5
+status: planning
+last_updated: "2026-03-15T02:16:33.552Z"
+progress:
+  total_phases: 5
+  completed_phases: 2
+  total_plans: 10
+  completed_plans: 9
+---
+
+# Session State
+
+## Project Reference
+
+See: .planning/PROJECT.md
+
+## Position
+
+**Milestone:** v1.0 milestone
+**Current phase:** 08-admin-tools
+**Current plan:** 5 of 5
+**Status:** Ready to plan
+
+## Session Log
+
+- 2026-03-03: Phases 1-3 completed
+- 2026-03-04: Phase 4 plans 01-02 completed
+- 2026-03-05: Phase 4 plans 03-04 completed (13-item feedback overhaul)
+- 2026-03-06: Phase 4 verified complete
+- 2026-03-06–07: Nav restructure, homepage layout, season hero, playoff bracket UI, PIN redesign
+- 2026-03-08: Weekly highlights ticker shipped (replaced milestone ticker)
+- 2026-03-08: Planning review — dropped 6 todos, updated roadmap, parked PIN formula
+- 2026-03-08: Phase 5 Plan 01 — Standings week context, TeamHero W-L record, collapsible season stats
+- 2026-03-08: Phase 5 Plan 02 — Team H2H with real matchResults data, summary table + drill-down
+- 2026-03-10: Phase 6 Plan 01 — MDX blog infrastructure, /blog and /blog/[slug] pages, nav integration
+- 2026-03-10: Phase 6 Plan 03 — Publish gate (leagueSettings), email script (Resend), weekly runbook
+- 2026-03-12: Phase 7 Plan 01 — Shared SVG icons, homepage pill nav, league-specific tagline
+- 2026-03-12: Phase 7 Plan 02 — Directory parallax heroes shipped; homepage changes reverted per user feedback
+- 2026-03-14: Phase 7 complete — footer redesign (dark nav bar + light branding), BackToHome on secondary pages, Recent Updates in mobile menu
+- 2026-03-14: Phase 9 complete — all 35 seasons have schedule data, 646 division rows, import tooling in place
+- 2026-03-14: Phase 8 context gathered — admin dashboard, score pipeline, lineup submission, blog editor, scoresheet PDF
+- 2026-03-14: Phase 8 Plan 01 — Admin foundation: JWT auth (jose), proxy.ts, 4 DB tables, sidebar layout
+- 2026-03-14: Phase 8 Plan 03 — Lineup submission: magic link captain auth, bowler picker form, admin lineup grid, LP push
+- 2026-03-15: Phase 8 Plan 02 — Score pipeline: LP pull, validation, insert/match-results/patches confirm, review UI
+- 2026-03-15: Phase 8 Plan 05 — Scoresheets PDF (jspdf), publish/email APIs, admin dashboard overview
+- 2026-03-15: Phase 8 Plan 04 — Blog editor: DB-backed blog, markdown editor, auto-draft from scores, MDX migration
+
+## Decisions
+
+- **[Phase 05 planning]** PIN formula parked — current version accepted, revisit much later
+- **[Phase 05 planning]** Nav restructure considered done — League Nights / Seasons / The Stats / Bowlers / Teams
+- **[Phase 05 planning]** Dropped 6 profile todos (game log reorder, current team name, collapsible sections, trophy icons, team captain notation, rules history page)
+- **[Phase 05 planning]** Playoff/champion data confirmed populated — removed from data gaps
+- **[Phase 05 planning]** Weekly highlights ticker committed as standalone feature
+- **[Phase 05-01]** Losses computed as (matchWeeks * 3 - wins) to handle ties as half-values
+- **[Phase 05-01]** TeamHero links to /week/ league nights page per CONTEXT.md locked decisions
+- **[Phase 05-01]** SeasonStatsTable converted to client component for expand/collapse
+- **[Phase 05-02]** Single flat H2H query per team; component groups by opponent client-side with useMemo
+- **[Phase 05-02]** Ghost Team included naturally in H2H records (no special filtering)
+- **[Phase 06-01]** Added @content/* tsconfig path alias for MDX dynamic imports from content/ directory
+- **[Phase 06-01]** Blog uses Promise<params> pattern matching Next.js 16 conventions
+- **[Phase 06-01]** Prev/next nav labeled Newer/Older to match reverse chronological ordering
+- **[Phase 06-03]** Publish gate uses leagueSettings table with settingKey/settingValue pattern
+- **[Phase 06-03]** HIGHLIGHTS query uses publishedSeasonID + publishedWeek instead of MAX(week) ORDER BY
+- **[Phase 06-03]** Email script uses inline HTML (not templates) with navy/cream/red palette
+- **[Phase 06-03]** Runbook includes match results step between import and patches
+- **[Phase 07-01]** Tagline: "Since 2007. 100+ bowlers. One very specific website." -- dry/understated tone
+- **[Phase 07-01]** SVG icons exported as JSX elements from shared icons.tsx, not component functions
+- **[Phase 07-02]** User rejected homepage pill nav and tagline -- reverted to original layout; directory parallax heroes approved
+- **[Phase 08-01]** Route group (dashboard) to separate login from auth-protected admin layout
+- **[Phase 08-01]** proxy.ts does cookie existence only; full JWT verification in layout/API routes
+- **[Phase 08-01]** AdminShell uses fixed positioning to overlay public site Header/Footer
+- **[Phase 08-03]** Captain lineup form uses single API endpoint (GET context, POST submit)
+- **[Phase 08-03]** LP push refactored from CLI script into admin UI with same team ID mapping
+- **[Phase 08-03]** Admin lineups page inside (dashboard) route group for consistent auth
+- **[Phase 08-03]** Lineup re-submission uses transaction delete-and-replace
+- **[Phase 08-02]** PersonalBest in shared types.ts to avoid client importing server-only scores.ts
+- **[Phase 08-02]** Scores page under (dashboard) route group for AdminShell layout and auth
+- **[Phase 08-02]** Only weekly patches run during confirm; season-level patches unaffected
+- **[Phase 08-02]** Match results scoped to week during confirm, not full season regeneration
+- **[Phase 08-05]** Scoresheet preview endpoint separate from PDF generation for fast UI feedback
+- **[Phase 08-05]** Dashboard API aggregates DB queries server-side; client is a single fetch
+- **[Phase 08-05]** Pipeline step indicator is read-only on dashboard; actions link to dedicated pages
+- [Phase 08-04]: blogPosts table extended with 6 columns to match BlogPost interface
+- [Phase 08-04]: Auto-draft embeds WeekRecap MDX component matching existing blog pattern
+- [Phase 08-04]: All blog.ts functions made async for DB access; all callers updated
+
+## Pending Todos
+
+5 todos in `.planning/todos/pending/`:
+1. **Add top-ten finishes to profile season stats** — ui
+2. **Show most frequent bowling partners** — ui
+3. **Track bowling streaks** — ui
+4. **Enhance most recent week report with context** — ui
+5. **Data backfill** — older season schedules (I-XXV), divisions
