@@ -121,7 +121,7 @@ export function MobileNav({ groups }: MobileNavProps) {
               onClick={() => setIsOpen(false)}
               className="block px-3 py-2 text-base font-body text-navy/60 rounded-lg hover:bg-cream-dark transition-colors"
             >
-              Recent Updates
+              Extras
             </Link>
           </div>
         </nav>

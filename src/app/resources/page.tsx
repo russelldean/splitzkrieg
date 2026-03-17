@@ -8,9 +8,9 @@ import { SiteUpdates } from '@/components/resources/SiteUpdates';
 import { getSiteUpdates } from '@/lib/queries/updates';
 
 export const metadata: Metadata = {
-  title: 'Resources',
+  title: 'Extras',
   description:
-    'Quick links and resources for Splitzkrieg Bowling League bowlers.',
+    'Quick links, extras, and hidden gems for Splitzkrieg Bowling League bowlers.',
 };
 
 interface ResourceLink {
@@ -56,8 +56,13 @@ const resources: ResourceCategory[] = [
     ],
   },
   {
-    category: 'Remembering Village Lanes',
+    category: 'Hidden Gems',
     links: [
+      {
+        label: 'Splitzkrieg Shares',
+        href: '/splitzkrieg-shares',
+        description: 'The free table. One bowler\'s junk is another bowler\'s treasure.',
+      },
       {
         label: 'Village Lanes',
         href: '/village-lanes',
@@ -105,8 +110,8 @@ export default async function ResourcesPage() {
         <div className="absolute inset-0 z-[1] bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">Resources &amp; Quick Links</h1>
-            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">Site updates, social links, potpourri.</p>
+            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">Extras</h1>
+            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">Site updates, social links, and hidden gems.</p>
           </div>
         </div>
       </section>
