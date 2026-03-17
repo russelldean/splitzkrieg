@@ -5,6 +5,7 @@ import { BackToHome } from '@/components/ui/BackToHome';
 
 
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
+import { SharesCard } from '@/components/resources/SharesCard';
 import { getSiteUpdates } from '@/lib/queries/updates';
 
 export const metadata: Metadata = {
@@ -121,6 +122,7 @@ export default async function ResourcesPage() {
         {/* Site Updates */}
         <SiteUpdates updates={updates} lastUpdated={lastUpdated} />
 
+
         {/* Resource Categories */}
         <div className="space-y-10">
           {resources.map((category) => (
@@ -130,6 +132,10 @@ export default async function ResourcesPage() {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {category.links.map((link) => {
+                  if (link.href === '/splitzkrieg-shares') {
+                    return <SharesCard key={link.label} />;
+                  }
+
                   const isPlaceholder = link.href === '#';
 
                   if (isPlaceholder) {
