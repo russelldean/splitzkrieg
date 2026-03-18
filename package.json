@@ -14,7 +14,6 @@
     "@types/mdx": "^2.0.13",
     "@uiw/react-md-editor": "^4.0.11",
     "fuse.js": "^7.1.0",
-    "gray-matter": "^4.0.3",
     "html-to-image": "^1.11.13",
     "jose": "^6.2.1",
     "jspdf": "^4.2.0",
@@ -26,7 +25,6 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.7.0",
-    "remark-gfm": "^4.0.1",
     "resend": "^6.9.3"
   },
   "devDependencies": {
