@@ -33,7 +33,7 @@ export async function getSiteUpdates(): Promise<SiteUpdateEntry[]> {
       'getSiteUpdates',
     );
     return result.recordset.map((row) => ({
-      date: row.updateDate.toISOString().split('T')[0],
+      date: `${row.updateDate.getFullYear()}-${String(row.updateDate.getMonth() + 1).padStart(2, '0')}-${String(row.updateDate.getDate()).padStart(2, '0')}`,
       text: row.text,
       tag: (row.tag as 'fix' | 'feat') ?? 'feat',
     }));
