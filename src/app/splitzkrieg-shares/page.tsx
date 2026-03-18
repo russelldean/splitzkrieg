@@ -66,7 +66,7 @@ export default function SplitzkriegSharesPage() {
               >
                 Brooke Insley
               </Link>{' '}
-              (Guttermouths). Each week, bowlers are encouraged to bring unwanted
+              (<Link href="/team/guttermouths" className="text-red font-semibold hover:underline">Guttermouths</Link>). Each week, bowlers are encouraged to bring unwanted
               treasures that other bowlers may want to take home.
             </p>
           </div>
@@ -172,7 +172,7 @@ export default function SplitzkriegSharesPage() {
               Where to find it
             </p>
             <p className="font-body text-navy/80 text-base">
-              Located on the lanes where the Guttermouths are bowling.
+              Located on the lanes where the <Link href="/team/guttermouths" className="text-red font-semibold hover:underline">Guttermouths</Link> are bowling.
             </p>
             <p className="font-body text-navy/70 text-base leading-relaxed">
               So as items are piling up at home for thrift store donation drop-off,
