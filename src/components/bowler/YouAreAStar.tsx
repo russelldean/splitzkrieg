@@ -6,6 +6,7 @@ import type { BowlerStarStats } from '@/lib/queries';
 interface Props {
   stats: BowlerStarStats;
   inTicker: boolean;
+  slug?: string;
   easterEgg?: { src: string; alt: string; width: number; height: number };
 }
 
@@ -13,6 +14,7 @@ interface StarLine {
   patch?: string;
   label: string;
   value: string;
+  renderValue?: React.ReactNode;
   hint?: string;
 }
 
@@ -31,7 +33,54 @@ const PATCH_STYLE: Record<string, { abbr: string; color: string; bg: string }> =
   hcpChampion:     { abbr: 'HC',   color: 'text-orange-700',  bg: 'bg-orange-200' },
 };
 
-export function YouAreAStar({ stats, inTicker, easterEgg }: Props) {
+/** Mini $2 bill rendered inline */
+function TwoDollarBill() {
+  return (
+    <Image
+      src="/two-dollar-bill.png"
+      alt="$2 bill"
+      width={524}
+      height={222}
+      className="rounded-sm shadow-sm"
+      style={{ width: 90, height: 'auto' }}
+    />
+  );
+}
+
+/** Dollar coin images for Jon Hunt's "1" values */
+const DOLLAR_COINS = [
+  { src: '/sacagawea-dollar.png', alt: 'Sacagawea dollar', size: 316 },
+  { src: '/susan-b-anthony-dollar.png', alt: 'Susan B. Anthony dollar', size: 1280 },
+];
+
+function DollarCoin({ index }: { index: number }) {
+  const coin = DOLLAR_COINS[index % DOLLAR_COINS.length];
+  return (
+    <Image
+      src={coin.src}
+      alt={coin.alt}
+      width={coin.size}
+      height={coin.size}
+      className="rounded-full shadow-sm"
+      style={{ width: 32, height: 32 }}
+    />
+  );
+}
+
+function BuffaloNickel() {
+  return (
+    <Image
+      src="/buffalo-nickel.png"
+      alt="Buffalo nickel"
+      width={456}
+      height={456}
+      className="rounded-full shadow-sm"
+      style={{ width: 32, height: 32 }}
+    />
+  );
+}
+
+export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
   const [open, setOpen] = useState(false);
 
   const lines: StarLine[] = [];
@@ -151,6 +200,23 @@ export function YouAreAStar({ stats, inTicker, easterEgg }: Props) {
   // Nothing to show
   if (lines.length === 0) return null;
 
+  const isJonHunt = slug === 'jon-hunt';
+
+  // Jon Hunt easter egg: wacky money for stat values
+  if (isJonHunt) {
+    let coinIndex = 0;
+    for (const line of lines) {
+      if (line.value === '2') {
+        line.renderValue = <TwoDollarBill />;
+      } else if (line.value === '1' || line.value === '1x') {
+        line.renderValue = <DollarCoin index={coinIndex} />;
+        coinIndex++;
+      } else if (line.value === '5' || line.value === '5x') {
+        line.renderValue = <BuffaloNickel />;
+      }
+    }
+  }
+
   const totalStars = lines.length;
 
   return (
@@ -190,7 +256,10 @@ export function YouAreAStar({ stats, inTicker, easterEgg }: Props) {
                   )}
                   <span className="text-navy font-medium">{line.label}</span>
                 </div>
-                <span className="font-heading text-lg text-navy tabular-nums">{line.value}</span>
+                {line.renderValue
+                  ? line.renderValue
+                  : <span className="font-heading text-lg text-navy tabular-nums">{line.value}</span>
+                }
               </div>
             ))}
           </div>
