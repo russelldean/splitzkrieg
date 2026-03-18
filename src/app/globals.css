@@ -244,40 +244,40 @@ body {
 
 /* Shares card: left person walks right, swaps, walks back, repeat */
 @keyframes shares-left {
-  0%, 5% { transform: translateX(30px); }
+  0%, 5% { transform: translateX(10px); }
   20%, 30% { transform: translateX(85px); }
-  45%, 55% { transform: translateX(30px); }
+  45%, 55% { transform: translateX(10px); }
   70%, 80% { transform: translateX(85px); }
-  95%, 100% { transform: translateX(30px); }
+  95%, 100% { transform: translateX(10px); }
 }
 
 /* Shares card: right person walks left, swaps, walks back, repeat */
 @keyframes shares-right {
-  0%, 5% { transform: translateX(170px); }
+  0%, 5% { transform: translateX(190px); }
   20%, 30% { transform: translateX(115px); }
-  45%, 55% { transform: translateX(170px); }
+  45%, 55% { transform: translateX(190px); }
   70%, 80% { transform: translateX(115px); }
-  95%, 100% { transform: translateX(170px); }
+  95%, 100% { transform: translateX(190px); }
 }
 
 /* Shares card: item A starts left, goes to center, leaves with right person, comes back with swap */
 @keyframes shares-itemA {
-  0%, 5% { transform: translateX(38px); }
+  0%, 5% { transform: translateX(18px); }
   20% { transform: translateX(93px); }
   30% { transform: translateX(123px); }
-  45%, 55% { transform: translateX(178px); }
+  45%, 55% { transform: translateX(198px); }
   70% { transform: translateX(123px); }
   80% { transform: translateX(93px); }
-  95%, 100% { transform: translateX(38px); }
+  95%, 100% { transform: translateX(18px); }
 }
 
 /* Shares card: item B starts right, goes to center, leaves with left person, comes back with swap */
 @keyframes shares-itemB {
-  0%, 5% { transform: translateX(178px); }
+  0%, 5% { transform: translateX(198px); }
   20% { transform: translateX(123px); }
   30% { transform: translateX(93px); }
-  45%, 55% { transform: translateX(38px); }
+  45%, 55% { transform: translateX(18px); }
   70% { transform: translateX(93px); }
   80% { transform: translateX(123px); }
-  95%, 100% { transform: translateX(178px); }
+  95%, 100% { transform: translateX(198px); }
 }
