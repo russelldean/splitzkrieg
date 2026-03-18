@@ -48,7 +48,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           Season {strikeX(snapshot.romanNumeral)}
         </h3>
         <Link
-          href="/stats"
+          href={`/stats/${snapshot.slug}`}
           className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           Full leaderboards &rarr;

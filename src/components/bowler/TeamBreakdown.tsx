@@ -27,7 +27,7 @@ export function TeamBreakdown({ teams }: Props) {
         className="inline-flex items-center gap-1.5 px-3 py-1 bg-navy/5 rounded-full text-sm font-body text-navy hover:bg-navy/10 transition-colors"
       >
         <span className="text-navy/65">Teams</span>
-        <span className="font-semibold">{teams.length}</span>
+        <span className="font-bold font-heading">{teams.length}</span>
         <span className="text-navy/30 text-xs ml-0.5">{open ? '▲' : '▼'}</span>
       </button>
 

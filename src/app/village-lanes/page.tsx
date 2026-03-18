@@ -4,7 +4,7 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
   title: 'Village Lanes | Splitzkrieg',
-  description: 'Village Lanes - home of Splitzkrieg Bowling League since 2007.',
+  description: 'Village Lanes - home of Splitzkrieg Bowling League from 2007-2023.',
 };
 
 export default function VillageLanesPage() {
@@ -22,7 +22,7 @@ export default function VillageLanesPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">Village Lanes</h1>
-            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">Durham, NC. Home since 2007.</p>
+            <p className="font-body text-white/85 text-sm mt-1 drop-shadow">Durham, NC. Home, 2007-2023.</p>
           </div>
         </div>
       </section>
