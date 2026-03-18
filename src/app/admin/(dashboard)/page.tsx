@@ -42,11 +42,11 @@ function Pipeline({
   onToggle: (key: string) => void;
 }) {
   return (
-    <div className="flex items-start justify-center mb-5">
+    <div className="flex items-start justify-center mb-5 overflow-x-auto pb-2">
       {steps.map((step, idx) => {
         const done = doneKeys.has(step.key);
         return (
-          <div key={step.key} className="flex items-start">
+          <div key={step.key} className="flex items-start shrink-0">
             <div className="flex flex-col items-center w-16">
               <button
                 onClick={() => onToggle(step.key)}
@@ -267,7 +267,7 @@ export default function AdminDashboardPage() {
   const postNightDone = new Set(data?.postNightDone ?? []);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto overflow-x-hidden">
       <div className="mb-8">
         <h1 className="font-heading text-3xl text-navy mb-1">Dashboard</h1>
         <p className="font-body text-sm text-navy/60">
