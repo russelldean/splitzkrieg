@@ -14,9 +14,10 @@ interface Props {
   teams: TeamStat[];
   isBowlerOfTheWeek?: boolean;
   currentTeam?: { name: string; slug: string | null } | null;
+  slug?: string;
 }
 
-export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUrl, teams, isBowlerOfTheWeek, currentTeam }: Props) {
+export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUrl, teams, isBowlerOfTheWeek, currentTeam, slug }: Props) {
   const name = careerSummary?.bowlerName ?? 'Unknown Bowler';
 
   return (
@@ -27,6 +28,16 @@ export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUr
             {isBowlerOfTheWeek && <BowlerOfTheWeekRibbon />}
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-navy">
               {name}
+              {/* EASTER EGG: Alex Leftenstein evil twin tooltip */ slug === 'alex-leftenstein' && (
+                <span className="relative group cursor-help inline-block ml-2 align-middle">
+                  <svg className="w-5 h-5 text-navy/30 hover:text-navy/60 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-navy text-cream text-xs font-body rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg">
+                    Evil twin of Alex Rubenstein
+                  </span>
+                </span>
+              )}
             </h1>
           </div>
           {currentTeam && currentTeam.slug && (

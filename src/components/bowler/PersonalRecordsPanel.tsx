@@ -4,7 +4,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { WeekDelta } from './LastWeekHighlight';
 
-/** One-off notes for bowlers with notable achievements outside regular season scores */
+// EASTER EGG: Geoffrey Berry playoff 300 note
 const HIGH_GAME_NOTES: Record<string, string> = {
   'geoffrey-berry': '300 game bowled during Fall 2022 Playoffs',
 };

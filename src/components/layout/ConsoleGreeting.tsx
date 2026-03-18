@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+// EASTER EGG: HOT FUN ASCII art in browser console
 export function ConsoleGreeting() {
   useEffect(() => {
     const styles = {

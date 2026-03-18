@@ -200,6 +200,7 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
   // Nothing to show
   if (lines.length === 0) return null;
 
+  // EASTER EGG: Jon Hunt wacky money denominations
   const isJonHunt = slug === 'jon-hunt';
 
   // Jon Hunt easter egg: wacky money for stat values

@@ -181,6 +181,7 @@ export default async function BowlerPage({
         teams={teams}
         isBowlerOfTheWeek={isBowlerOfTheWeek}
         currentTeam={latestSeason ? { name: latestSeason.teamName ?? 'Unknown', slug: latestSeason.teamSlug } : null}
+        slug={slug}
       />
 
       <div className="mt-8 space-y-8">
@@ -206,6 +207,7 @@ export default async function BowlerPage({
           stats={starStats}
           slug={slug}
           inTicker={[...tickerItems, ...milestoneTickerItems(leagueMilestones)].some(t => t.href === `/bowler/${slug}`)}
+          // EASTER EGG: Mike DePasquale 300 photo, Harper Gordek photo
           easterEgg={slug === 'mike-depasquale' ? { src: '/village-lanes-mp300.jpg', alt: 'Mike\'s 300 - Perfect Game at Village Lanes', width: 4032, height: 3024 } : slug === 'harper-gordek' ? { src: '/IMG_7806.jpeg', alt: 'Harper Gordek', width: 2016, height: 1512 } : undefined}
         />
       </div>
