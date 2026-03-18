@@ -31,11 +31,9 @@ export function SharesCard() {
             <line x1="0" y1="48" x2="6" y2="62" stroke="currentColor" strokeWidth="2" className="text-navy" />
           </g>
 
-          {/* Item A - red gift box, starts with left person */}
+          {/* Item A - bowling ball, starts with left person */}
           <g className="animate-[shares-itemA_8s_ease-in-out_infinite]">
-            <rect x="-5" y="32" width="10" height="8" rx="1" fill="currentColor" className="text-red" />
-            <line x1="0" y1="30" x2="0" y2="32" stroke="currentColor" strokeWidth="1.5" className="text-red" />
-            <line x1="-3" y1="30" x2="3" y2="30" stroke="currentColor" strokeWidth="1.5" className="text-red" />
+            <text x="0" y="42" textAnchor="middle" fontSize="14">&#x1F4DA;</text>
           </g>
 
           {/* Item B - teddy bear, starts with right person */}
