@@ -136,6 +136,45 @@ export default async function ResourcesPage() {
                     return <SharesCard key={link.label} />;
                   }
 
+                  if (link.href === '/village-lanes') {
+                    const neonGlow = '0 0 2px #fff, 0 0 7px rgba(91,184,255,1), 0 0 14px rgba(59,130,246,0.9), 0 0 28px rgba(59,130,246,0.5), 0 0 42px rgba(59,130,246,0.25)';
+                    const neonFont = { fontFamily: "'Trebuchet MS', 'Arial Narrow', sans-serif", fontWeight: 300 as const, letterSpacing: '0.15em' };
+                    return (
+                      <Link key={link.label} href={link.href} className="relative overflow-hidden rounded-lg p-5 border border-navy/10 bg-white hover:border-navy/20 hover:shadow-sm transition-all group">
+                        <div className="relative z-10">
+                          {/* Title line: Village Lanes neon sign, then "the original", then Party Zone photo */}
+                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                            {/* VILLAGE LANES neon sign */}
+                            <div
+                              className="bg-[#0a0a1a] rounded px-2 py-0 inline-flex items-baseline whitespace-nowrap"
+                              style={{ ...neonFont, transform: 'rotate(2deg)', boxShadow: '0 0 10px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.3), 0 0 40px rgba(59,130,246,0.15)' }}
+                            >
+                              <span className="text-lg sm:text-xl uppercase text-[#a0d8ff]" style={{ textShadow: neonGlow }}>VILLAGE</span>
+                              <span className="inline-block w-2"></span>
+                              <span className="text-lg sm:text-xl uppercase text-[#a0d8ff] inline-block" style={{ textShadow: neonGlow }}>L</span>
+                              <span className="text-lg sm:text-xl uppercase text-[#a0d8ff] inline-block" style={{ transform: 'rotate(1.5deg) translateY(2px)', textShadow: neonGlow }}>A</span>
+                              <span className="text-lg sm:text-xl uppercase text-[#a0d8ff] inline-block" style={{ transform: 'rotate(3deg) translateY(4px)', textShadow: neonGlow }}>N</span>
+                              <span className="text-lg sm:text-xl uppercase text-[#a0d8ff] inline-block" style={{ transform: 'rotate(5deg) translateY(5px)', textShadow: neonGlow }}>E</span>
+                              <span className="text-lg sm:text-xl uppercase text-[#a0d8ff] inline-block" style={{ transform: 'rotate(6deg) translateY(7px)', textShadow: neonGlow }}>S</span>
+                            </div>
+                          </div>
+                          <div className="relative mt-2">
+                            <p className="font-body text-base text-navy/65">Our original home</p>
+                            {/* PARTY ZONE sign covers "Our original home" when it flickers on */}
+                            <div className="absolute inset-0 flex items-center pl-[22%] animate-[neon-swap-b_8s_ease-in-out_infinite]">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src="/party-zone-sign.png"
+                                alt=""
+                                className="w-[60%] h-auto drop-shadow-[0_0_12px_rgba(59,130,246,0.7)]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  }
+
                   const isPlaceholder = link.href === '#';
 
                   if (isPlaceholder) {
