@@ -173,6 +173,7 @@ export interface BowlerSeasonStats {
   year: number;
   period: string;
   teamName: string | null;
+  canonicalTeamName: string | null;
   teamSlug: string | null;
   seasonSlug: string;
   nightsBowled: number;
@@ -194,6 +195,7 @@ const BOWLER_SEASON_STATS_SQL = `
     sn.year,
     sn.period,
     COALESCE(tnh.teamName, t.teamName)                   AS teamName,
+    t.teamName                                           AS canonicalTeamName,
     t.slug                                               AS teamSlug,
     LOWER(REPLACE(sn.displayName, ' ', '-'))             AS seasonSlug,
     COUNT(sc.scoreID)                                    AS nightsBowled,
@@ -228,7 +230,7 @@ const BOWLER_SEASON_STATS_SQL = `
     AND sc.isPenalty = 0
   GROUP BY
     sc.seasonID, sn.romanNumeral, sn.displayName,
-    sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.slug,
+    sn.year, sn.period, COALESCE(tnh.teamName, t.teamName), t.teamName, t.slug,
     LOWER(REPLACE(sn.displayName, ' ', '-'))
   ORDER BY
     sn.year DESC,

@@ -75,8 +75,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Milestone Ticker with Search Bar overlay — sticky on desktop below header */}
-      <div className="relative sm:sticky sm:top-16 sm:z-30">
+      {/* Milestone Ticker with Search Bar overlay */}
+      <div className="relative">
         <MilestoneTicker items={allTickerItems} variant="dark" />
         {/* Search bar floats centered over the ticker on desktop */}
         <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none z-10">

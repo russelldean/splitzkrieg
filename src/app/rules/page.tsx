@@ -68,7 +68,9 @@ export default function RulesPage() {
                 over 200 averages. This then changed to <strong className="text-navy">floor(.95*(225-floor(average)))</strong>, which
                 means we drop the remainder on the average first, then calculate handicap
                 and drop the remainder again.  This change was made to align with common practice
-                and match the system at Bowlero.
+                and match the system at Bowlero. The maximum handicap is <strong className="text-navy">147</strong> (for
+                a 70 average), so bowlers averaging below 70 receive the same handicap
+                as a 70-average bowler.
               </li>
               <li>
                 <strong className="text-navy">Penalties and missing bowlers.</strong>{' '}

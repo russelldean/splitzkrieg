@@ -107,12 +107,12 @@ export default async function BowlerPage({
   // Derive team breakdown from season stats
   const teamMap = new Map<string, { teamName: string; teamSlug: string | null; nights: number }>();
   for (const s of seasonStats) {
-    const key = s.teamSlug ?? s.teamName ?? 'Unknown';
+    const key = s.teamSlug ?? s.canonicalTeamName ?? s.teamName ?? 'Unknown';
     const existing = teamMap.get(key);
     if (existing) {
       existing.nights += s.nightsBowled;
     } else {
-      teamMap.set(key, { teamName: s.teamName ?? 'Unknown', teamSlug: s.teamSlug, nights: s.nightsBowled });
+      teamMap.set(key, { teamName: s.canonicalTeamName ?? s.teamName ?? 'Unknown', teamSlug: s.teamSlug, nights: s.nightsBowled });
     }
   }
   const totalNights = seasonStats.reduce((sum, s) => sum + s.nightsBowled, 0);

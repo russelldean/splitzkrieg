@@ -20,7 +20,7 @@ const treasures = [
 
 export default function SplitzkriegSharesPage() {
   return (
-    <main className="min-h-screen bg-cream">
+    <main className="min-h-screen bg-gradient-to-b from-red/[0.04] via-cream to-cream">
       {/* Hero */}
       <section
         className="relative overflow-hidden h-48 sm:h-56"
@@ -57,7 +57,7 @@ export default function SplitzkriegSharesPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
         {/* Origin story */}
         <section className="space-y-5">
-          <div className="bg-white rounded-xl p-6 sm:p-8 border border-navy/10 shadow-sm">
+          <div className="bg-white rounded-xl p-6 sm:p-8 border border-red/15 shadow-sm shadow-red/5">
             <p className="font-body text-navy/80 text-base sm:text-lg leading-relaxed">
               The Splitzkrieg Shares free table is orchestrated by{' '}
               <Link
@@ -72,11 +72,11 @@ export default function SplitzkriegSharesPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-navy/10" />
+            <div className="h-px flex-1 bg-red/15" />
             <span className="font-heading text-base text-navy/60 tracking-widest uppercase">
               Est. July 26, 2021
             </span>
-            <div className="h-px flex-1 bg-navy/10" />
+            <div className="h-px flex-1 bg-red/15" />
           </div>
         </section>
 
@@ -106,9 +106,9 @@ export default function SplitzkriegSharesPage() {
 
           {/* Arrow / divider */}
           <div className="flex items-center justify-center py-2">
-            <div className="h-px flex-1 bg-navy/10" />
+            <div className="h-px flex-1 bg-red/15" />
             <span className="mx-4 font-heading text-navy/30 text-2xl">&#8595;</span>
-            <div className="h-px flex-1 bg-navy/10" />
+            <div className="h-px flex-1 bg-red/15" />
           </div>
 
           {/* After */}
@@ -144,7 +144,7 @@ export default function SplitzkriegSharesPage() {
             {treasures.map((item) => (
               <div
                 key={item}
-                className="bg-white rounded-lg px-5 py-3 border border-navy/10 font-body text-navy/75 flex items-center gap-3"
+                className="bg-white rounded-lg px-5 py-3 border border-red/15 shadow-sm shadow-red/5 font-body text-navy/75 flex items-center gap-3"
               >
                 <span className="text-red text-lg" aria-hidden="true">
                   &#9733;
@@ -167,7 +167,7 @@ export default function SplitzkriegSharesPage() {
 
         {/* Where to find it */}
         <section>
-          <div className="bg-white rounded-xl p-6 border border-navy/10 text-center space-y-2">
+          <div className="bg-white rounded-xl p-6 border border-red/15 shadow-sm shadow-red/5 text-center space-y-2">
             <p className="font-body text-navy/60 text-sm uppercase tracking-wider font-semibold">
               Where to find it
             </p>

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function VillageLanesPage() {
   return (
-    <main>
+    <main className="min-h-screen bg-gradient-to-b from-navy/[0.04] via-cream to-cream">
       {/* Parallax Hero — Party Zone neon sign */}
       <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Party Zone neon sign at Village Lanes">
         <ParallaxBg
@@ -30,7 +30,7 @@ export default function VillageLanesPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Panorama */}
         <figure>
-          <div className="rounded-xl overflow-hidden shadow-md">
+          <div className="rounded-xl overflow-hidden shadow-md shadow-navy/10">
             <Image
               src="/village-lanes-panorama.jpg"
               alt="Panoramic view of Village Lanes"
@@ -44,7 +44,7 @@ export default function VillageLanesPage() {
         {/* Two-column grid: lanes + ball returns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <figure>
-            <div className="rounded-xl overflow-hidden shadow-md">
+            <div className="rounded-xl overflow-hidden shadow-md shadow-navy/10">
               <Image
                 src="/village-lanes-lanes.jpg"
                 alt="Looking down the lanes at Village Lanes"
@@ -55,7 +55,7 @@ export default function VillageLanesPage() {
             </div>
           </figure>
           <figure>
-            <div className="rounded-xl overflow-hidden shadow-md">
+            <div className="rounded-xl overflow-hidden shadow-md shadow-navy/10">
               <Image
                 src="/village-lanes-brunswick-2000s.jpg"
                 alt="Brunswick 2000 ball returns at Village Lanes"
@@ -69,7 +69,7 @@ export default function VillageLanesPage() {
 
         {/* Parking lot wide shot */}
         <figure>
-          <div className="rounded-xl overflow-hidden shadow-md">
+          <div className="rounded-xl overflow-hidden shadow-md shadow-navy/10">
             <Image
               src="/village-lanes-parking-lot.jpg"
               alt="Village Lanes from the parking lot"
@@ -80,7 +80,7 @@ export default function VillageLanesPage() {
           </div>
         </figure>
 
-        <p className="text-center text-zinc-400 text-lg italic">For another day</p>
+        <p className="text-center text-navy/30 text-lg italic">For another day</p>
       </div>
     </main>
   );
