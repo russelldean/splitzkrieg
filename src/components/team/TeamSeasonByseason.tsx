@@ -81,9 +81,9 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, 
               <div className="border border-navy/10 rounded-lg overflow-hidden">
                 <button
                   onClick={() => toggleSeason(season.seasonID)}
-                  className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
+                  className="w-full flex justify-between items-start px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start flex-wrap gap-x-2 gap-y-0.5">
                     <Link href={`/season/${season.seasonSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                       {season.seasonName} <span className="text-navy/40">({season.romanNumeral})</span>
                     </Link>
@@ -99,7 +99,7 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, 
                       <span className="text-base" title="League Champion">🏆</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-sm font-body text-navy/65">
+                  <div className="flex items-start gap-4 text-sm font-body text-navy/65 shrink-0">
                     {season.wins != null && (
                       <span className="hidden sm:inline tabular-nums">
                         {season.wins}-{season.losses}{season.ties ? `-${season.ties}` : ''}

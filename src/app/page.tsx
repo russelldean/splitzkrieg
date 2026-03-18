@@ -158,7 +158,7 @@ export default async function Home() {
               ...(seasonSnapshot ? [{ href: `/season/${seasonSnapshot.slug}`, label: 'Current Season' }] : []),
               { href: '/seasons', label: 'All Seasons' },
             ]},
-            { label: 'The Stats', href: '/stats', links: [
+            { label: 'Stats', href: '/stats', links: [
               ...(seasonSnapshot ? [{ href: `/stats/${seasonSnapshot.slug}`, label: 'Current Season Stats' }] : []),
               { href: '/stats', label: 'All Season Stats' },
               { href: '/stats/all-time', label: 'All-Time' },

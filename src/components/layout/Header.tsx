@@ -104,7 +104,7 @@ export async function Header() {
                 ]}
               />
               <NavDropdown
-                label="The Stats"
+                label="Stats"
                 icon={statsIcon}
                 links={[
                   ...(currentSeasonSlug ? [{ href: `/stats/${currentSeasonSlug}`, label: 'Current Season Stats' }] : []),

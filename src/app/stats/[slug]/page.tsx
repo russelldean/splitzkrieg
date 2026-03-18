@@ -147,7 +147,7 @@ export default async function SeasonStatsPage({
           Season {strikeX(season.romanNumeral)}
         </h1>
         <p className="font-body text-sm text-navy/55 mt-1">
-          The Stats &middot; {season.period} {season.year}
+          Stats &middot; {season.period} {season.year}
         </p>
       </div>
       <SeasonNav current={season} allSeasons={allSeasons} basePath="/stats" />
