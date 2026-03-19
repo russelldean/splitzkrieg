@@ -10,14 +10,15 @@ export const metadata: Metadata = {
 export default function VillageLanesPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-navy/[0.04] via-cream to-cream">
-      {/* Parallax Hero — Party Zone neon sign */}
-      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Party Zone neon sign at Village Lanes">
+      {/* Parallax Hero — lights-out reveal */}
+      <section className="relative overflow-hidden h-44 sm:h-52" role="img" aria-label="Party Zone neon sign at Village Lanes">
         <ParallaxBg
           src="/village-lanes-party-zone.jpg"
           imgW={1293} imgH={621}
-          focalY={0.45}
+          focalY={0.44}
         />
-        <div className="absolute inset-0 z-[1] bg-navy/15" />
+        {/* Dark overlay that flickers off to reveal the Party Zone sign */}
+        <div className="absolute inset-0 z-[2] bg-black animate-[village-lights-on_5.5s_ease-in-out_1_forwards]" />
         <div className="absolute inset-0 z-[1] bg-gradient-to-r from-navy/40 via-transparent to-navy/40 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
           <div>
