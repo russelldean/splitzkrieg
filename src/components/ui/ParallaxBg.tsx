@@ -148,8 +148,16 @@ function MobileParallax({
 
   useEffect(() => {
     computeLayout();
+    // Watch for layout shifts (announcement banner, lazy content, etc.)
+    const observer = new ResizeObserver(computeLayout);
+    if (ref.current?.parentElement) {
+      observer.observe(document.body);
+    }
     window.addEventListener('resize', computeLayout);
-    return () => window.removeEventListener('resize', computeLayout);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', computeLayout);
+    };
   }, [computeLayout]);
 
   return (
