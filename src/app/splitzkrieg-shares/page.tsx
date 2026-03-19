@@ -178,10 +178,9 @@ export default function SplitzkriegSharesPage() {
                 {/* Center dot */}
                 <circle cx="120" cy="12" r="0.8" fill="currentColor" className="text-navy" />
                 {/* Stuff piled on table */}
-                <text x="88" y="49" fontSize="12">&#x1F3B3;</text>
-                <text x="105" y="49" fontSize="11">&#x1F4DA;</text>
-                <text x="122" y="49" fontSize="12">&#x1F9F8;</text>
-                <text x="140" y="49" fontSize="10">&#x1F3BA;</text>
+                <text x="95" y="49" fontSize="14">&#x1F423;</text>
+                <text x="118" y="49" fontSize="12">&#x1F419;</text>
+                <text x="140" y="49" fontSize="12">&#x1F994;</text>
                 {/* Sad stick figure */}
                 <circle cx="40" cy="22" r="6" fill="currentColor" className="text-navy" />
                 {/* Frown */}
