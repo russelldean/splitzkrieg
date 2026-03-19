@@ -242,6 +242,18 @@ body {
   41%, 100% { opacity: 0; }
 }
 
+/* Sad stick figure tears falling */
+@keyframes tear-fall-l {
+  0% { transform: translate(0, 0); opacity: 1; }
+  80% { transform: translate(-2px, 15px); opacity: 0.8; }
+  100% { transform: translate(-3px, 20px); opacity: 0; }
+}
+@keyframes tear-fall-r {
+  0% { transform: translate(0, 0); opacity: 1; }
+  80% { transform: translate(2px, 15px); opacity: 0.8; }
+  100% { transform: translate(3px, 20px); opacity: 0; }
+}
+
 /* Party Zone flickers on and off, Village stays lit */
 @keyframes neon-swap-b {
   0%, 40% { opacity: 0; }

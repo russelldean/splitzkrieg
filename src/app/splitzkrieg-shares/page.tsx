@@ -159,8 +159,51 @@ export default function SplitzkriegSharesPage() {
           <div className="bg-red/5 border border-red/20 rounded-xl p-6 sm:p-8 text-center space-y-3">
             <h2 className="font-heading text-xl text-red">The One Rule</h2>
             <p className="font-body text-navy/80 text-base sm:text-lg leading-relaxed max-w-lg mx-auto">
-              Please take home any unclaimed items at the end of the night.
+              Please take home any unclaimed items at the end of the night, so nobody else has to.
             </p>
+            {/* Sad stick figure next to abandoned table of stuff */}
+            <div className="pt-4 opacity-70 sm:opacity-50" aria-hidden="true">
+              <svg viewBox="0 0 200 75" className="w-64 sm:w-80 h-auto mx-auto">
+                {/* Table */}
+                <line x1="70" y1="50" x2="170" y2="50" stroke="currentColor" strokeWidth="2.5" className="text-red" />
+                <line x1="80" y1="50" x2="80" y2="70" stroke="currentColor" strokeWidth="2" className="text-red" />
+                <line x1="160" y1="50" x2="160" y2="70" stroke="currentColor" strokeWidth="2" className="text-red" />
+                {/* Clock on the wall */}
+                <circle cx="120" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-navy" />
+                <text x="112.5" y="9" fontSize="4" fill="currentColor" className="text-navy" fontWeight="bold">11</text>
+                {/* Hour hand pointing to 11 */}
+                <line x1="120" y1="12" x2="117" y2="10" stroke="currentColor" strokeWidth="1.2" className="text-navy" strokeLinecap="round" />
+                {/* Minute hand pointing to 12 */}
+                <line x1="120" y1="12" x2="120" y2="5" stroke="currentColor" strokeWidth="0.8" className="text-navy" strokeLinecap="round" />
+                {/* Center dot */}
+                <circle cx="120" cy="12" r="0.8" fill="currentColor" className="text-navy" />
+                {/* Stuff piled on table */}
+                <text x="88" y="49" fontSize="12">&#x1F3B3;</text>
+                <text x="105" y="49" fontSize="11">&#x1F4DA;</text>
+                <text x="122" y="49" fontSize="12">&#x1F9F8;</text>
+                <text x="140" y="49" fontSize="10">&#x1F3BA;</text>
+                {/* Sad stick figure */}
+                <circle cx="40" cy="22" r="6" fill="currentColor" className="text-navy" />
+                {/* Frown */}
+                <path d="M36,25 Q40,23 44,25" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" />
+                {/* Eyes (dots) */}
+                <circle cx="37" cy="21" r="0.8" fill="white" />
+                <circle cx="43" cy="21" r="0.8" fill="white" />
+                <line x1="40" y1="28" x2="40" y2="50" stroke="currentColor" strokeWidth="2.5" className="text-navy" />
+                {/* Arms drooping down sadly */}
+                <line x1="40" y1="35" x2="32" y2="48" stroke="currentColor" strokeWidth="2" className="text-navy" />
+                <line x1="40" y1="35" x2="48" y2="48" stroke="currentColor" strokeWidth="2" className="text-navy" />
+                {/* Legs */}
+                <line x1="40" y1="50" x2="34" y2="65" stroke="currentColor" strokeWidth="2" className="text-navy" />
+                <line x1="40" y1="50" x2="46" y2="65" stroke="currentColor" strokeWidth="2" className="text-navy" />
+                {/* Animated tears - left */}
+                <circle cx="36" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-l 2s ease-in infinite' }} />
+                <circle cx="36" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-l 2s ease-in infinite 1s' }} />
+                {/* Animated tears - right */}
+                <circle cx="44" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-r 2s ease-in infinite 0.5s' }} />
+                <circle cx="44" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-r 2s ease-in infinite 1.5s' }} />
+              </svg>
+            </div>
           </div>
         </section>
 
