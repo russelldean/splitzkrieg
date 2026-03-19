@@ -125,8 +125,8 @@ export async function getTeamH2H(teamID: number): Promise<TeamH2HMatchup[]> {
 
 const GET_GHOST_TEAM_H2H_SQL = `
   WITH ghostMatches AS (
+    /* Scheduled ghost team weeks (odd-number seasons) */
     SELECT
-      sch.scheduleID,
       sch.seasonID,
       sch.week,
       sch.matchDate,
@@ -134,10 +134,25 @@ const GET_GHOST_TEAM_H2H_SQL = `
     FROM schedule sch
     WHERE (sch.team1ID = 45 OR sch.team2ID = 45)
       AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
+    UNION
+    /* Full-team forfeits: all 4 bowlers have isPenalty=1 */
+    SELECT
+      f.seasonID,
+      f.week,
+      sch.matchDate,
+      CASE WHEN sch.team1ID = f.teamID THEN sch.team2ID ELSE sch.team1ID END AS opponentID
+    FROM (
+      SELECT seasonID, week, teamID
+      FROM scores
+      WHERE isPenalty = 1 AND teamID != 45
+      GROUP BY seasonID, week, teamID
+      HAVING COUNT(*) = 4
+    ) f
+    JOIN schedule sch ON sch.seasonID = f.seasonID AND sch.week = f.week
+      AND (sch.team1ID = f.teamID OR sch.team2ID = f.teamID)
   ),
   oppScores AS (
     SELECT
-      gm.scheduleID,
       gm.seasonID,
       gm.week,
       gm.matchDate,
@@ -152,7 +167,7 @@ const GET_GHOST_TEAM_H2H_SQL = `
       AND sc.week = gm.week
       AND sc.teamID = gm.opponentID
       AND sc.isPenalty = 0
-    GROUP BY gm.scheduleID, gm.seasonID, gm.week, gm.matchDate, gm.opponentID
+    GROUP BY gm.seasonID, gm.week, gm.matchDate, gm.opponentID
     HAVING SUM(sc.incomingAvg) IS NOT NULL
   )
   SELECT

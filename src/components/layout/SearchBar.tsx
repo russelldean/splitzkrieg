@@ -163,9 +163,11 @@ export function SearchBar({ variant = 'light', onNavigate }: { variant?: 'light'
               <span className={`font-body text-sm ${result.item.type === 'team' ? 'font-semibold text-navy' : 'text-navy'}`}>
                 {result.item.name}
               </span>
-              <span className="text-navy/65 text-xs ml-2">
-                {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
-              </span>
+              {result.item.name !== 'Ghost Team' && (
+                <span className="text-navy/65 text-xs ml-2">
+                  {result.item.seasonsActive} {result.item.seasonsActive === 1 ? 'season' : 'seasons'}
+                </span>
+              )}
             </li>
           ))}
         </ul>
