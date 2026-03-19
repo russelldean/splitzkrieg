@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { BackToHome } from '@/components/ui/BackToHome';
+import { SharesHero } from '@/components/resources/SharesHero';
 
 export const metadata: Metadata = {
   title: 'Splitzkrieg Shares | Splitzkrieg',
@@ -21,36 +21,7 @@ const treasures = [
 export default function SplitzkriegSharesPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-red/[0.04] via-cream to-cream">
-      {/* Hero */}
-      <section
-        className="relative overflow-hidden h-48 sm:h-56"
-        role="img"
-        aria-label="Splitzkrieg Shares free table loaded with treasures"
-      >
-        <ParallaxBg
-          src="/splitzkrieg-shares-table.jpg"
-          imgW={1512}
-          imgH={2016}
-          focalY={0.35}
-          maxW={3024}
-          mobileSrc="/splitzkrieg-shares-table.jpg"
-          mobileFocalY={0.35}
-          mobileImgW={3024}
-          mobileImgH={4032}
-        />
-        <div className="absolute inset-0 z-[1] bg-navy/30" />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-navy/60 via-transparent to-navy/60 sm:from-navy/70 sm:via-transparent sm:to-navy/70" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-6">
-          <div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white drop-shadow-lg">
-              Splitzkrieg Shares
-            </h1>
-            <p className="font-body text-white/90 text-sm sm:text-base mt-1 drop-shadow">
-              One bowler&apos;s junk is another bowler&apos;s treasure.
-            </p>
-          </div>
-        </div>
-      </section>
+      <SharesHero />
 
       <BackToHome />
 

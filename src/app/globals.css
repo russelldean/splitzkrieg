@@ -281,3 +281,113 @@ body {
   80% { transform: translateX(123px); }
   95%, 100% { transform: translateX(198px); }
 }
+
+/*
+ * Shares hero: 4-person chain swap (18s loop)
+ * Positions: P1=50, P2=170, P3=290, P4=410
+ * Meeting points: 1↔2=110, 2↔3=230, 3↔4=350
+ * 6 phases: 1↔2, 2↔3, 3↔4, 4↔3, 3↔2, 2↔1
+ * Item A (tuba) travels the whole chain and back.
+ * Items B/C/D swap once outward and once back = seamless loop.
+ */
+@keyframes shares-hero-p1 {
+  0% { transform: translateX(50px); }
+  5% { transform: translateX(110px); }
+  9% { transform: translateX(110px); }
+  14%, 84% { transform: translateX(50px); }
+  89% { transform: translateX(110px); }
+  93% { transform: translateX(110px); }
+  98%, 100% { transform: translateX(50px); }
+}
+@keyframes shares-hero-p2 {
+  0% { transform: translateX(170px); }
+  5% { transform: translateX(110px); }
+  9% { transform: translateX(110px); }
+  14%, 16% { transform: translateX(170px); }
+  21% { transform: translateX(230px); }
+  25% { transform: translateX(230px); }
+  30%, 66% { transform: translateX(170px); }
+  71% { transform: translateX(230px); }
+  75% { transform: translateX(230px); }
+  80%, 84% { transform: translateX(170px); }
+  89% { transform: translateX(110px); }
+  93% { transform: translateX(110px); }
+  98%, 100% { transform: translateX(170px); }
+}
+@keyframes shares-hero-p3 {
+  0%, 16% { transform: translateX(290px); }
+  21% { transform: translateX(230px); }
+  25% { transform: translateX(230px); }
+  30%, 32% { transform: translateX(290px); }
+  37% { transform: translateX(350px); }
+  41% { transform: translateX(350px); }
+  46%, 50% { transform: translateX(290px); }
+  55% { transform: translateX(350px); }
+  59% { transform: translateX(350px); }
+  64%, 66% { transform: translateX(290px); }
+  71% { transform: translateX(230px); }
+  75% { transform: translateX(230px); }
+  80%, 100% { transform: translateX(290px); }
+}
+@keyframes shares-hero-p4 {
+  0%, 32% { transform: translateX(410px); }
+  37% { transform: translateX(350px); }
+  41% { transform: translateX(350px); }
+  46%, 50% { transform: translateX(410px); }
+  55% { transform: translateX(350px); }
+  59% { transform: translateX(350px); }
+  64%, 100% { transform: translateX(410px); }
+}
+
+/* Item A (tuba): travels the whole chain P1→P2→P3→P4→P3→P2→P1 */
+@keyframes shares-hero-iA {
+  0% { transform: translateX(50px); }
+  5% { transform: translateX(110px); }
+  9% { transform: translateX(110px); }
+  14%, 16% { transform: translateX(170px); }
+  21% { transform: translateX(230px); }
+  25% { transform: translateX(230px); }
+  30%, 32% { transform: translateX(290px); }
+  37% { transform: translateX(350px); }
+  41% { transform: translateX(350px); }
+  46%, 50% { transform: translateX(410px); }
+  55% { transform: translateX(350px); }
+  59% { transform: translateX(350px); }
+  64%, 66% { transform: translateX(290px); }
+  71% { transform: translateX(230px); }
+  75% { transform: translateX(230px); }
+  80%, 84% { transform: translateX(170px); }
+  89% { transform: translateX(110px); }
+  93% { transform: translateX(110px); }
+  98%, 100% { transform: translateX(50px); }
+}
+/* Item B (teddy): P2→P1 in phase 1, P1→P2 in phase 6 */
+@keyframes shares-hero-iB {
+  0% { transform: translateX(170px); }
+  5% { transform: translateX(110px); }
+  9% { transform: translateX(110px); }
+  14%, 84% { transform: translateX(50px); }
+  89% { transform: translateX(110px); }
+  93% { transform: translateX(110px); }
+  98%, 100% { transform: translateX(170px); }
+}
+/* Item C (bowling): P3→P2 in phase 2, P2→P3 in phase 5 */
+@keyframes shares-hero-iC {
+  0%, 16% { transform: translateX(290px); }
+  21% { transform: translateX(230px); }
+  25% { transform: translateX(230px); }
+  30%, 66% { transform: translateX(170px); }
+  71% { transform: translateX(230px); }
+  75% { transform: translateX(230px); }
+  80%, 100% { transform: translateX(290px); }
+}
+/* Item D (record): P4→P3 in phase 3, P3→P4 in phase 4 */
+@keyframes shares-hero-iD {
+  0%, 32% { transform: translateX(410px); }
+  37% { transform: translateX(350px); }
+  41% { transform: translateX(350px); }
+  46%, 50% { transform: translateX(290px); }
+  55% { transform: translateX(350px); }
+  59% { transform: translateX(350px); }
+  64%, 100% { transform: translateX(410px); }
+}
