@@ -231,15 +231,15 @@ body {
 
 /* Village Lanes hero: lights-out reveal on page load */
 @keyframes village-lights-on {
-  0%, 55% { opacity: 1; }
-  57% { opacity: 0.4; }
-  58% { opacity: 0.9; }
-  60% { opacity: 0.2; }
-  61% { opacity: 0.85; }
-  63% { opacity: 0.1; }
-  64% { opacity: 0.7; }
-  67% { opacity: 0.05; }
-  70%, 100% { opacity: 0; }
+  0%, 18% { opacity: 1; }
+  21% { opacity: 0.4; }
+  23% { opacity: 0.9; }
+  26% { opacity: 0.2; }
+  28% { opacity: 0.85; }
+  31% { opacity: 0.1; }
+  33% { opacity: 0.7; }
+  37% { opacity: 0.05; }
+  41%, 100% { opacity: 0; }
 }
 
 /* Party Zone flickers on and off, Village stays lit */

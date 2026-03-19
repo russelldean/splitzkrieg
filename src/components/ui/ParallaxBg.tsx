@@ -99,8 +99,14 @@ function DesktopParallax({
       });
     }
     compute();
+    // Watch for layout shifts (announcement banner, lazy content, etc.)
+    const observer = new ResizeObserver(compute);
+    observer.observe(document.body);
     window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', compute);
+    };
   }, [src, focalY, ref, maxW]);
 
   return <div ref={ref} className="absolute inset-0" style={style} />;
