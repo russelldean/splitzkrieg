@@ -34,7 +34,7 @@ function Animation({ items }: { items: Items }) {
   return (
     <div className="py-2 sm:py-6" aria-hidden="true">
       <div className="opacity-60">
-        <svg viewBox="0 0 460 65" className="w-full h-20 sm:h-24" preserveAspectRatio="xMidYMid slice">
+        <svg viewBox="0 0 460 65" className="w-full h-12 sm:h-24 sm:[aspect-ratio:auto]" preserveAspectRatio="xMidYMid meet">
           <StickFigure animation="animate-[shares-hero-p1_18s_ease-in-out_infinite]" />
           <StickFigure animation="animate-[shares-hero-p2_18s_ease-in-out_infinite]" />
           <StickFigure animation="animate-[shares-hero-p3_18s_ease-in-out_infinite]" />
