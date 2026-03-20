@@ -14,6 +14,7 @@
     "@types/mdx": "^2.0.13",
     "@uiw/react-md-editor": "^4.0.11",
     "fuse.js": "^7.1.0",
+    "howler": "^2.2.4",
     "html-to-image": "^1.11.13",
     "jose": "^6.2.1",
     "jspdf": "^4.2.0",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/howler": "^2.2.12",
     "@types/matter-js": "^0.20.2",
     "@types/mssql": "^9.1.9",
     "@types/node": "^20",
