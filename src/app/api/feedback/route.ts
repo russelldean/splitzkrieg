@@ -40,7 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (process.env.RESEND_API_KEY) {
       try {
         await resend.emails.send({
-          from: 'Splitzkrieg <onboarding@resend.dev>',
+          from: process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <noreply@splitzkrieg.com>',
           to: 'charlesrusselldean@gmail.com',
           subject: `Splitzkrieg Feedback${trimmed.name ? ` from ${trimmed.name}` : ''}`,
           text: [

@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
 
     const resend = new Resend(apiKey);
     const fromAddress =
-      process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <onboarding@resend.dev>';
+      process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <noreply@splitzkrieg.com>';
 
     let sent = 0;
     let skipped = 0;
