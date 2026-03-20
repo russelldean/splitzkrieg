@@ -63,7 +63,7 @@ function LeaderboardTable({
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-sm sm:text-base font-body">
         <thead>
-          <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+          <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/65 text-sm uppercase tracking-wider">
             <th className="px-4 py-2 text-left w-12">#</th>
             <th className="px-4 py-2 text-left">Bowler</th>
             <th className="px-4 py-2 text-left">Team</th>

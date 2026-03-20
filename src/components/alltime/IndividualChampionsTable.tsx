@@ -128,16 +128,16 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-navy/10 text-left">
-            <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-navy/60 text-sm uppercase tracking-wider">
               Season
             </th>
-            <th className="py-2 pr-4 font-heading text-amber-700/50 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
               Men&apos;s Scratch
             </th>
-            <th className="py-2 pr-4 font-heading text-amber-700/50 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
               Women&apos;s Scratch
             </th>
-            <th className="py-2 font-heading text-amber-700/50 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
               Handicap
             </th>
           </tr>

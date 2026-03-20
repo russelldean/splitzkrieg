@@ -28,12 +28,12 @@ function StandingsGroup({ rows, divisionName }: { rows: StandingsRow[]; division
               <td className="py-1 px-2">
                 <Link
                   href={`/team/${row.teamSlug}`}
-                  className="text-navy hover:text-red-600 transition-colors text-xs sm:text-sm"
+                  className="text-navy hover:text-red-600 transition-colors text-sm"
                 >
                   {row.teamName}
                 </Link>
               </td>
-              <td className="py-1 px-2 text-right tabular-nums text-xs sm:text-sm">
+              <td className="py-1 px-2 text-right tabular-nums text-sm">
                 <span className="font-semibold">{row.totalPts}</span>
                 {row.lastWeekPts != null && (
                   <span className="text-navy/65 ml-1 text-xs">

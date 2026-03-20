@@ -12,10 +12,10 @@ const COLLAPSED_COUNT = 5;
 function UpdateRow({ update }: { update: Update }) {
   return (
     <div className="flex items-baseline gap-3 px-5 py-3">
-      <span className="font-body text-xs font-medium uppercase tracking-wide text-navy/40 shrink-0">
+      <span className="font-body text-xs font-medium uppercase tracking-wide text-navy/60 shrink-0">
         {update.tag}
       </span>
-      <span className="font-body text-sm text-navy/50 shrink-0">
+      <span className="font-body text-sm text-navy/65 shrink-0">
         {new Date(update.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </span>
       <span className="font-body text-sm text-navy">
@@ -37,7 +37,7 @@ export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastU
           Site Updates
         </h2>
         {lastUpdated && (
-          <span className="font-body text-xs text-navy/40">
+          <span className="font-body text-xs text-navy/60">
             Updated {new Date(lastUpdated + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         )}
@@ -51,7 +51,7 @@ export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastU
         {hasMore && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="w-full px-5 py-3 text-sm font-body text-navy/50 hover:text-navy transition-colors text-left flex items-center gap-1.5 border-t border-navy/5"
+            className="w-full px-5 py-3 text-sm font-body text-navy/65 hover:text-navy transition-colors text-left flex items-center gap-1.5 border-t border-navy/5"
           >
             <svg
               className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}

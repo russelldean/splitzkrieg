@@ -78,13 +78,13 @@ export function TeamBoxScore({
               if (b.isPenalty) {
                 return (
                   <tr key={`penalty-${b.bowlerID}`} className="border-b border-navy/5 bg-navy/[0.02]">
-                    <td className="px-2 py-1 text-xs sm:text-sm text-navy/50 italic">Penalty</td>
+                    <td className="px-2 py-1 text-sm text-navy/60 italic">Penalty</td>
                     <td className="px-1 py-1"></td>
                     <td className="pl-2 pr-1 py-1 border-l border-navy/10"></td>
                     <td className="pl-2 pr-1 py-1 border-l border-navy/10"></td>
                     <td className="pl-2 pr-1 py-1 border-l border-navy/10"></td>
                     <td className="px-1 py-1"></td>
-                    <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/40">{b.handSeries ?? '-'}</td>
+                    <td className="px-1 py-1 text-right tabular-nums text-sm text-navy/60">{b.handSeries ?? '-'}</td>
                     <td className="px-1 py-1"></td>
                   </tr>
                 );
@@ -94,7 +94,7 @@ export function TeamBoxScore({
                   <td className="px-2 py-1">
                     <Link
                       href={`/bowler/${b.bowlerSlug}`}
-                      className={`underline-offset-2 hover:underline text-xs sm:text-sm ${isMVP ? 'text-amber-800 font-semibold hover:text-red-600' : 'text-navy hover:text-red-600'}`}
+                      className={`underline-offset-2 hover:underline text-sm ${isMVP ? 'text-amber-800 font-semibold hover:text-red-600' : 'text-navy hover:text-red-600'}`}
                     >
                       {b.bowlerName}
                     </Link>
@@ -104,25 +104,25 @@ export function TeamBoxScore({
                       </span>
                     )}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/65">
+                  <td className="px-1 py-1 text-right tabular-nums text-sm text-navy/65">
                     {b.incomingAvg ?? '-'}
                   </td>
-                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game1, b.incomingAvg)}`}>
+                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-sm border-l border-navy/10 ${avgColorClass(b.game1, b.incomingAvg)}`}>
                     {b.game1 ?? '-'}
                   </td>
-                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game2, b.incomingAvg)}`}>
+                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-sm border-l border-navy/10 ${avgColorClass(b.game2, b.incomingAvg)}`}>
                     {b.game2 ?? '-'}
                   </td>
-                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-xs sm:text-sm border-l border-navy/10 ${avgColorClass(b.game3, b.incomingAvg)}`}>
+                  <td className={`pl-2 pr-1 py-1 text-right tabular-nums text-sm border-l border-navy/10 ${avgColorClass(b.game3, b.incomingAvg)}`}>
                     {b.game3 ?? '-'}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums font-semibold text-xs sm:text-sm">
+                  <td className="px-1 py-1 text-right tabular-nums font-semibold text-sm">
                     {b.scratchSeries ?? '-'}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/60">
+                  <td className="px-1 py-1 text-right tabular-nums text-sm text-navy/60">
                     {b.handSeries ?? '-'}
                   </td>
-                  <td className="px-1 py-1 text-right tabular-nums text-xs sm:text-sm text-navy/65">
+                  <td className="px-1 py-1 text-right tabular-nums text-sm text-navy/65">
                     {b.turkeys > 0 ? b.turkeys : ''}
                   </td>
                 </tr>

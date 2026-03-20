@@ -228,12 +228,12 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
       >
         <div className="flex items-center gap-2">
           <h2 className="font-heading text-2xl text-navy">You Are a Star</h2>
-          <span className="text-sm text-navy/50 font-medium">
+          <span className="text-sm text-navy/65 font-medium">
             {totalStars} {totalStars === 1 ? 'highlight' : 'highlights'}
           </span>
         </div>
         <svg
-          className={`w-5 h-5 text-navy/40 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-navy/55 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -251,7 +251,7 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
               <div key={line.label} className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
                   {line.patch && PATCH_STYLE[line.patch] && (
-                    <span className={`inline-flex items-center text-[10px] font-semibold font-body px-1.5 py-0.5 rounded-full leading-none ${PATCH_STYLE[line.patch].color} ${PATCH_STYLE[line.patch].bg}`}>
+                    <span className={`inline-flex items-center text-[11px] font-semibold font-body px-1.5 py-0.5 rounded-full leading-none ${PATCH_STYLE[line.patch].color} ${PATCH_STYLE[line.patch].bg}`}>
                       {PATCH_STYLE[line.patch].abbr}
                     </span>
                   )}

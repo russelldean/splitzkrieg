@@ -114,7 +114,7 @@ export function AllTimeLeaderboardTable({ data }: Props) {
         <ScrollableTable>
           <table className="w-full text-sm sm:text-base font-body">
             <thead>
-              <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+              <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/65 text-sm uppercase tracking-wider">
                 <th className="px-3 py-2 text-left w-10 sticky left-0 bg-white z-10">#</th>
                 {COLUMNS.map((col) => (
                   <th

@@ -43,14 +43,14 @@ export function PatchBadge({ type }: { type: string }) {
       onClick={(e) => { e.stopPropagation(); setShowTooltip(prev => !prev); }}
     >
       <span
-        className={`inline-flex items-center text-[10px] font-semibold font-body px-1.5 py-0.5 rounded-full ${cfg.color} ${cfg.bg} leading-none cursor-help`}
+        className={`inline-flex items-center text-[11px] font-semibold font-body px-1.5 py-0.5 rounded-full ${cfg.color} ${cfg.bg} leading-none cursor-help`}
       >
         {cfg.abbr}
       </span>
       {showTooltip && pos && createPortal(
         <span
           style={{ position: 'absolute', top: pos.top, left: pos.left, transform: 'translate(-50%, -100%)' }}
-          className="px-2 py-1 text-[11px] font-body text-white bg-navy rounded shadow-lg whitespace-nowrap z-50 pointer-events-none"
+          className="px-2 py-1 text-xs font-body text-white bg-navy rounded shadow-lg whitespace-nowrap z-50 pointer-events-none"
         >
           {cfg.label}
         </span>,

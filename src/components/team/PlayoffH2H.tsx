@@ -125,7 +125,7 @@ function PlayoffSummaryRow({
       >
         <td className="px-4 py-2.5">
           <span className="flex items-center gap-2">
-            <span className="text-navy/40 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
+            <span className="text-navy/55 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
             <Link
               href={`/team/${s.opponentSlug}`}
               onClick={(e) => e.stopPropagation()}

@@ -9,7 +9,7 @@ export function PrivacyNote() {
     <div className="mt-1">
       <button
         onClick={() => setOpen(!open)}
-        className="font-body text-xs text-navy/40 hover:text-navy/60 transition-colors underline decoration-dotted underline-offset-2"
+        className="font-body text-xs text-navy/55 hover:text-navy/70 transition-colors underline decoration-dotted underline-offset-2"
       >
         Privacy note
       </button>

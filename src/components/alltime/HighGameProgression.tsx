@@ -189,7 +189,7 @@ export function HighGameProgression({ records, latestNight }: Props) {
                       <div className="font-bold text-sm">
                         {g.score}
                         {g.entries.length > 1 && (
-                          <span className="ml-1.5 text-[10px] font-normal text-amber-300 uppercase">
+                          <span className="ml-1.5 text-[11px] font-normal text-amber-300 uppercase">
                             {g.entries.length} bowlers
                           </span>
                         )}
@@ -204,21 +204,21 @@ export function HighGameProgression({ records, latestNight }: Props) {
                             {e.bowlerName}
                           </Link>
                           {e.isTied && (
-                            <span className="text-[9px] text-amber-300/70 uppercase">tied</span>
+                            <span className="text-[10px] text-amber-300/80 uppercase">tied</span>
                           )}
                           {e.isPlayoff && (
-                            <span className="text-[9px] text-sky-300/70 uppercase">playoffs</span>
+                            <span className="text-[10px] text-sky-300/80 uppercase">playoffs</span>
                           )}
                         </div>
                       ))}
-                      <div className="text-white/60">
+                      <div className="text-white/70">
                         Night {g.nightNumber}
                       </div>
                       {g.entries[0].matchDate && (
-                        <div className="text-white/40">{formatDate(g.entries[0].matchDate)}</div>
+                        <div className="text-white/60">{formatDate(g.entries[0].matchDate)}</div>
                       )}
                       {nightsHeld != null && (
-                        <div className="text-white/40 mt-1 border-t border-white/10 pt-1">
+                        <div className="text-white/60 mt-1 border-t border-white/10 pt-1">
                           Stood for {nightsHeld} night{nightsHeld !== 1 ? 's' : ''}
                           {isCurrentRecord(primary) && ' (and counting)'}
                         </div>
@@ -235,7 +235,7 @@ export function HighGameProgression({ records, latestNight }: Props) {
             {yearLabels.map(({ year, pct }) => (
               <span
                 key={year}
-                className="absolute text-[10px] text-navy/70 font-body font-semibold -translate-x-1/2"
+                className="absolute text-[11px] text-navy/75 font-body font-semibold -translate-x-1/2"
                 style={{ left: `${pct}%` }}
               >
                 {year}
@@ -250,19 +250,19 @@ export function HighGameProgression({ records, latestNight }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-navy/10 text-left">
-              <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+              <th className="py-2 pr-4 font-heading text-navy/65 text-sm uppercase tracking-wider">
                 Score
               </th>
-              <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+              <th className="py-2 pr-4 font-heading text-navy/65 text-sm uppercase tracking-wider">
                 Bowler
               </th>
-              <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+              <th className="py-2 pr-4 font-heading text-navy/65 text-sm uppercase tracking-wider">
                 Night
               </th>
-              <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+              <th className="py-2 pr-4 font-heading text-navy/65 text-sm uppercase tracking-wider">
                 Date
               </th>
-              <th className="py-2 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+              <th className="py-2 font-heading text-navy/65 text-sm uppercase tracking-wider">
                 Stood
               </th>
             </tr>
@@ -277,11 +277,11 @@ export function HighGameProgression({ records, latestNight }: Props) {
                   className={`border-b border-navy/5 last:border-0 ${r.isTied ? 'bg-navy/[0.02]' : ''}`}
                 >
                   <td className="py-3 pr-4 font-heading text-lg tabular-nums">
-                    <span className={r.isTied ? 'text-navy/40' : 'text-red-600'}>
+                    <span className={r.isTied ? 'text-navy/60' : 'text-red-600'}>
                       {r.score}
                     </span>
                     {r.isTied && (
-                      <span className="ml-2 text-xs font-body text-navy/40 uppercase tracking-wider">
+                      <span className="ml-2 text-xs font-body text-navy/60 uppercase tracking-wider">
                         Tied
                       </span>
                     )}
@@ -307,10 +307,10 @@ export function HighGameProgression({ records, latestNight }: Props) {
                   <td className="py-3 pr-4 font-body text-navy/70 tabular-nums">
                     {r.nightNumber}
                   </td>
-                  <td className="py-3 pr-4 font-body text-navy/50">
+                  <td className="py-3 pr-4 font-body text-navy/65">
                     {r.matchDate ? formatDate(r.matchDate) : ''}
                   </td>
-                  <td className="py-3 font-body text-navy/50 tabular-nums">
+                  <td className="py-3 font-body text-navy/65 tabular-nums">
                     {nightsHeld != null ? (
                       <>
                         {nightsHeld} night{nightsHeld !== 1 ? 's' : ''}

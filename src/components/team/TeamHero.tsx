@@ -26,7 +26,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
             href={`/bowler/${team.captainSlug}`}
             className="inline-flex items-center gap-1.5 mt-2 font-body text-base text-navy/60 hover:text-red-600 transition-colors"
           >
-            <span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-navy/10 text-[10px] font-heading font-bold text-navy/50 leading-none" title="Captain">C</span>
+            <span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-navy/10 text-[11px] font-heading font-bold text-navy/65 leading-none" title="Captain">C</span>
             {team.captainName}
           </Link>
         )}
@@ -40,17 +40,17 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
       {currentStanding && (
         <div className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg">
           <div className="text-center shrink-0">
-            <div className="font-body text-xs text-navy/50 uppercase tracking-wide">Current Rank</div>
+            <div className="font-body text-xs text-navy/65 uppercase tracking-wide">Current Rank</div>
             <div className="font-heading text-2xl text-navy mt-0.5">
               #{currentStanding.divisionRank}
-              <span className="text-base text-navy/50 font-body ml-0.5">/ {currentStanding.divisionSize}</span>
+              <span className="text-base text-navy/65 font-body ml-0.5">/ {currentStanding.divisionSize}</span>
             </div>
             {currentStanding.divisionName && (
-              <div className="font-body text-xs text-navy/50 mt-0.5">{currentStanding.divisionName}</div>
+              <div className="font-body text-xs text-navy/65 mt-0.5">{currentStanding.divisionName}</div>
             )}
           </div>
           <div className="border-l border-navy/10 pl-4 flex-1">
-            <div className="font-body text-xs text-navy/50 uppercase tracking-wide">Record</div>
+            <div className="font-body text-xs text-navy/65 uppercase tracking-wide">Record</div>
             <div className="font-body text-sm text-navy font-semibold tabular-nums mt-0.5">
               {currentStanding.wins} - {currentStanding.losses}
             </div>

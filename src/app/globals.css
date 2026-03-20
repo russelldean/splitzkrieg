@@ -555,9 +555,9 @@ body {
   width: 22px;
   height: 34px;
   font-family: var(--font-digital);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   background: linear-gradient(to bottom, #2a2a2a 50%, #1a1a1a 50%);
   border-radius: 4px;
 }
@@ -573,7 +573,7 @@ body {
 .flip-colon {
   font-family: var(--font-digital);
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   align-self: center;
   padding-bottom: 12px;
 }
@@ -599,16 +599,16 @@ body {
 
 .flip-label {
   font-family: var(--font-inter);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.8);
   text-transform: uppercase;
   margin-top: 3px;
 }
 
 @media (min-width: 640px) {
   .flip-label {
-    font-size: 10px;
+    font-size: 11px;
   }
 }

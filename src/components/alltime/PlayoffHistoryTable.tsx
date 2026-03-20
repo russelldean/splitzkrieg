@@ -155,19 +155,19 @@ export function PlayoffHistoryTable({ playoffs }: { playoffs: PlayoffSeason[] })
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-navy/10 text-left">
-            <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-navy/60 text-sm uppercase tracking-wider">
               Season
             </th>
-            <th className="py-2 pr-4 font-heading text-amber-700/50 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
               Champion
             </th>
-            <th className="py-2 pr-4 font-heading text-slate-400 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-slate-400 text-sm uppercase tracking-wider">
               Runner-Up
             </th>
-            <th className="py-2 pr-4 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-navy/60 text-sm uppercase tracking-wider">
               Semifinalist
             </th>
-            <th className="py-2 font-heading text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+            <th className="py-2 font-heading text-navy/60 text-sm uppercase tracking-wider">
               Semifinalist
             </th>
           </tr>

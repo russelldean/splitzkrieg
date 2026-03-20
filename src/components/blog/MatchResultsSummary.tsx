@@ -59,7 +59,7 @@ export async function MatchResultsSummary({ season, week }: MatchResultsSummaryP
                 </div>
               </div>
               {/* Series */}
-              <div className="flex items-center justify-between mt-1 font-body text-xs text-navy/40">
+              <div className="flex items-center justify-between mt-1 font-body text-xs text-navy/60">
                 <span>{m.team1Series?.toLocaleString()}</span>
                 <span>Series</span>
                 <span>{m.team2Series?.toLocaleString()}</span>

@@ -60,7 +60,7 @@ export function SeasonStatsTable({ seasons }: Props) {
       <div className="overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm">
         <table className="w-full text-sm sm:text-base font-body">
           <thead>
-            <tr className="bg-navy/[0.03] text-left text-xs uppercase tracking-wide text-navy/60">
+            <tr className="bg-navy/[0.03] text-left text-sm uppercase tracking-wide text-navy/65">
               <th className="px-4 py-3">Season</th>
               <th className="px-4 py-3">Team</th>
               <th className="px-4 py-3 text-right">Games</th>
@@ -80,7 +80,7 @@ export function SeasonStatsTable({ seasons }: Props) {
                     className="text-navy hover:text-red-600 transition-colors"
                   >
                     {season.displayName}{' '}
-                    <span className="text-navy/40">({season.romanNumeral})</span>
+                    <span className="text-navy/60">({season.romanNumeral})</span>
                   </Link>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">

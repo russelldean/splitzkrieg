@@ -69,7 +69,7 @@ function StandingsTable({
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-sm sm:text-base font-body">
         <thead>
-          <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/60 text-xs sm:text-sm uppercase tracking-wider">
+          <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/65 text-sm uppercase tracking-wider">
             <th className="px-4 py-2 text-left w-12">#</th>
             <th className="px-4 py-2 text-left">Team</th>
             <th className="px-4 py-2 text-right">Total Pts</th>
@@ -112,11 +112,11 @@ function StandingsTable({
                 <td className="px-4 py-2.5 text-right tabular-nums text-navy/70">{row.xp}</td>
                 <td className="px-4 py-2.5 text-left pl-6 tabular-nums text-navy/70">
                   {row.teamScratchAvg?.toFixed(1) ?? '\u2014'}
-                  <span className="text-navy/60 text-xs ml-1">({row.scratchAvgRank})</span>
+                  <span className="text-navy/65 text-xs ml-1">({row.scratchAvgRank})</span>
                 </td>
                 <td className="px-4 py-2.5 text-left pl-6 tabular-nums text-navy/70">
                   {row.teamHcpAvg?.toFixed(1) ?? '\u2014'}
-                  <span className="text-navy/60 text-xs ml-1">({row.hcpAvgRank})</span>
+                  <span className="text-navy/65 text-xs ml-1">({row.hcpAvgRank})</span>
                 </td>
               </tr>
             );
@@ -145,7 +145,7 @@ function CompactStandingsCard({
       </div>
       <table className="w-full text-sm font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/60 text-xs uppercase tracking-wider">
+          <tr className="border-b border-navy/10 text-navy/65 text-sm uppercase tracking-wider">
             <th className="px-3 py-1.5 text-left w-8">#</th>
             <th className="px-3 py-1.5 text-left">Team</th>
             <th className="px-3 py-1.5 text-right">Pts</th>

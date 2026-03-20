@@ -90,7 +90,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                   </Link>
                   <Link
                     href={`/week#season-${current.slug}`}
-                    className="text-sm font-medium text-navy/40 hover:text-navy transition-colors"
+                    className="text-sm font-medium text-navy/60 hover:text-navy transition-colors"
                   >
                     League Nights &rarr;
                   </Link>

@@ -133,7 +133,7 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
               className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.03] hover:bg-navy/[0.06] transition-colors"
             >
               <div className="flex items-center gap-2 flex-wrap">
-                <Link href={`/stats/${season.weeks[0]?.seasonSlug ?? ''}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors" onClick={(e) => e.stopPropagation()}>{season.displayName} <span className="text-navy/40">({season.weeks[0]?.romanNumeral ?? ''})</span></Link>
+                <Link href={`/stats/${season.weeks[0]?.seasonSlug ?? ''}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors" onClick={(e) => e.stopPropagation()}>{season.displayName} <span className="text-navy/60">({season.weeks[0]?.romanNumeral ?? ''})</span></Link>
                 {!isOpen && hasBest && (
                   <span className="text-xs font-body font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
                     {bestLabel}
@@ -143,7 +143,7 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
                   <PatchBadge key={p} type={p} />
                 ))}
                 {!isOpen && totalPatchCount > 0 && (
-                  <span className="text-[10px] font-body text-navy/40">
+                  <span className="text-[11px] font-body text-navy/60">
                     {totalPatchCount} {totalPatchCount === 1 ? 'patch' : 'patches'}
                   </span>
                 )}

@@ -176,7 +176,7 @@ export function StandingsRaceChart({ raceData, standings }: Props) {
           {activeTeam && (
             <button
               onClick={() => setActiveTeam(null)}
-              className="px-2 py-0.5 rounded text-xs font-body text-navy/40 hover:text-navy/60 transition-colors"
+              className="px-2 py-0.5 rounded text-xs font-body text-navy/60 hover:text-navy/80 transition-colors"
             >
               Show all
             </button>

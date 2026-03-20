@@ -28,7 +28,7 @@ export function TeamBreakdown({ teams }: Props) {
       >
         <span className="text-navy/65">Teams</span>
         <span className="font-bold font-heading">{teams.length}</span>
-        <span className="text-navy/30 text-xs ml-0.5">{open ? '▲' : '▼'}</span>
+        <span className="text-navy/50 text-xs ml-0.5">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
@@ -48,7 +48,7 @@ export function TeamBreakdown({ teams }: Props) {
                     <span className="text-sm text-navy/60 truncate block">{team.teamName}</span>
                   )}
                   {isLifer && (
-                    <span className="text-[11px] italic text-navy/60">forever</span>
+                    <span className="text-xs italic text-navy/65">forever</span>
                   )}
                 </div>
                 <div

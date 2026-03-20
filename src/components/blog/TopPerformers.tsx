@@ -22,7 +22,7 @@ function RankedList({
       <ol className="space-y-1">
         {items.map((item, i) => (
           <li key={`${item.slug}-${i}`} className="flex items-center gap-2 font-body text-sm">
-            <span className="text-navy/40 w-4 text-right">{i + 1}.</span>
+            <span className="text-navy/60 w-4 text-right">{i + 1}.</span>
             <Link href={`/bowler/${item.slug}`} className="text-navy hover:text-red-600 transition-colors">
               {item.bowlerName}
             </Link>

@@ -56,7 +56,7 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
                 className="flex items-center justify-between px-4 py-2.5 -mx-1 rounded-lg hover:bg-navy/[0.04] transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className={`font-heading text-base group-hover:text-red-600 transition-colors ${isMissingData ? 'text-navy/40' : 'text-navy'}`}>
+                  <span className={`font-heading text-base group-hover:text-red-600 transition-colors ${isMissingData ? 'text-navy/60' : 'text-navy'}`}>
                     Week {week}
                   </span>
                   {dateStr && (

@@ -127,7 +127,7 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
               href={`/blog/${prev.slug}`}
               className="group flex-1 min-w-0"
             >
-              <span className="font-body text-xs text-navy/40 uppercase tracking-wide">
+              <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
                 Newer
               </span>
               <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
@@ -143,7 +143,7 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
               href={`/blog/${next.slug}`}
               className="group flex-1 min-w-0 text-right"
             >
-              <span className="font-body text-xs text-navy/40 uppercase tracking-wide">
+              <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
                 Older
               </span>
               <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
