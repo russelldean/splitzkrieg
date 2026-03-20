@@ -10,14 +10,16 @@ describe('calculateLaunch', () => {
     expect(Math.abs(result.x)).toBeLessThan(1);
   });
 
-  it('right-offset release produces positive vx (curve right)', () => {
+  it('right-offset release produces negative vx (slingshot reversal curves left)', () => {
+    // Dragging right (release x > start x) slings ball left (negative vx)
     const result = calculateLaunch({ x: 100, y: 400 }, { x: 120, y: 500 });
-    expect(result.x).toBeGreaterThan(0);
+    expect(result.x).toBeLessThan(0);
   });
 
-  it('left-offset release produces negative vx (curve left)', () => {
+  it('left-offset release produces positive vx (slingshot reversal curves right)', () => {
+    // Dragging left (release x < start x) slings ball right (positive vx)
     const result = calculateLaunch({ x: 100, y: 400 }, { x: 80, y: 500 });
-    expect(result.x).toBeLessThan(0);
+    expect(result.x).toBeGreaterThan(0);
   });
 
   it('power scales with pull distance', () => {
