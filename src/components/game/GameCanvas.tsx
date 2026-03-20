@@ -7,6 +7,9 @@ import { createCamera, updateCamera } from './Camera';
 import { createInitialState, transitionState, shouldWin, advanceTier } from './GameState';
 import { SlingshotInput } from './SlingshotInput';
 import { CheatSystem } from './CheatSystem';
+import { SoundManager } from './SoundManager';
+import { HapticManager } from './HapticManager';
+import { ReplaySystem } from './ReplaySystem';
 import { getAimFeedback } from './AimPredictor';
 import { DemoAnimation } from './DemoAnimation';
 import type { Camera, GameState, Vec2, CheatDefinition } from './types';
@@ -34,6 +37,12 @@ export function GameCanvas() {
   const cheatProgressRef = useRef<number>(0);
   const cheatStartTimeRef = useRef<number>(0);
   const cheatTriggeredRef = useRef<boolean>(false);
+  const soundRef = useRef<SoundManager>(new SoundManager());
+  const hapticRef = useRef<HapticManager>(new HapticManager());
+  const replayRef = useRef<ReplaySystem>(new ReplaySystem());
+  const replayFrameIndexRef = useRef<number>(0);
+  const replayStartTimeRef = useRef<number>(0);
+  const soundInitializedRef = useRef<boolean>(false);
   const [showDemo, setShowDemo] = useState(true);
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
@@ -64,6 +73,12 @@ export function GameCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Initialize sound on first user interaction (iOS audio unlock)
+    if (!soundInitializedRef.current) {
+      soundRef.current.init();
+      soundInitializedRef.current = true;
+    }
+
     const state = stateRef.current;
 
     // During demo phase, skip to idle on any tap
@@ -71,6 +86,13 @@ export function GameCanvas() {
       sessionStorage.setItem('splitzkrieg-demo-seen', 'true');
       stateRef.current = transitionState(state, 'start');
       setShowDemo(false);
+      return;
+    }
+
+    // Tap during replay to skip it
+    if (state.phase === 'replay') {
+      replayRef.current.reset();
+      stateRef.current = { ...state, phase: 'result' };
       return;
     }
 
@@ -114,6 +136,14 @@ export function GameCanvas() {
       stateRef.current = transitionState(state, 'release');
       engineRef.current?.launchBall(velocity);
       predictorTextRef.current = '';
+
+      // Sound and haptic on ball release
+      soundRef.current.play('release');
+      soundRef.current.play('roll');
+      hapticRef.current.release();
+
+      // Start recording frames for replay
+      replayRef.current.startRecording();
     }
   }, []);
 
@@ -162,6 +192,15 @@ export function GameCanvas() {
         const pinPos = engine.getPinPosition();
         updateCamera(cameraRef.current, ballPos.y, displayHeight);
 
+        // Capture replay frame every tick during rolling
+        replayRef.current.captureFrame({
+          ballPos: { ...ballPos },
+          ballAngle: engine.getBallAngle(),
+          pinPos: { ...pinPos },
+          pinAngle: engine.getPinAngle(),
+          timestamp: performance.now(),
+        });
+
         // Calculate distance from ball to pin (as fraction of lane length)
         const totalDistance = GAME_CONSTANTS.LANE_LENGTH - 50 - 60; // ball start Y - pin Y
         const currentDistance = ballPos.y - pinPos.y;
@@ -181,36 +220,55 @@ export function GameCanvas() {
             cheatProgressRef.current = 0;
             cheatStartTimeRef.current = timestamp;
 
+            // Sound and haptic for cheat
+            soundRef.current.stop('roll');
+            if (cheat.tier === 1) {
+              soundRef.current.play('woosh');
+            } else {
+              soundRef.current.play('cheat');
+            }
+            hapticRef.current.cheat();
+
             // Transition to cheat phase
             stateRef.current = transitionState(state, 'cheat');
 
             // Execute the cheat (physics manipulation + animation)
             cheat.execute(engine, renderer).then(() => {
-              // Cheat animation complete -- transition to result
+              // Cheat animation complete -- stop recording and transition to replay
+              replayRef.current.stopRecording();
               const currentState = stateRef.current;
               if (currentState.phase !== 'cheat') return;
 
               const advanced = advanceTier(currentState);
-              stateRef.current = {
+              const nextState = {
                 ...advanced,
-                phase: 'result',
+                phase: 'replay' as const,
                 attempt: currentState.attempt + 1,
                 cheatsEncountered: [...currentState.cheatsEncountered, cheat.id],
               };
-              activeCheatRef.current = null;
-              cheatProgressRef.current = 0;
-              scheduleReset(displayHeight);
+              stateRef.current = nextState;
+
+              // Set up replay playback
+              replayStartTimeRef.current = performance.now();
+              replayFrameIndexRef.current = 0;
             });
           }
         }
 
         // Check for pin hit (win path)
         if (engine.isPinHit() && state.phase === 'rolling') {
+          soundRef.current.stop('roll');
+          soundRef.current.play('impact');
+          soundRef.current.play('clatter');
+          hapticRef.current.impact();
           if (shouldWin(state.isAdmin) || cheatTriggeredRef.current) {
+            soundRef.current.play('fanfare');
+            hapticRef.current.win();
             stateRef.current = transitionState(state, 'win');
           }
         } else if (engine.isBallOutOfBounds() && state.phase === 'rolling') {
           // Ball missed without cheat triggering
+          soundRef.current.stop('roll');
           stateRef.current = {
             ...state,
             phase: 'result',
@@ -220,10 +278,52 @@ export function GameCanvas() {
         }
       }
 
+      // Capture replay frames during cheat phase too
+      if (state.phase === 'cheat') {
+        replayRef.current.captureFrame({
+          ballPos: { ...engine.getBallPosition() },
+          ballAngle: engine.getBallAngle(),
+          pinPos: { ...engine.getPinPosition() },
+          pinAngle: engine.getPinAngle(),
+          timestamp: performance.now(),
+          cheatState: activeCheatRef.current?.id,
+        });
+      }
+
       // Update cheat animation progress during cheat phase
       if (state.phase === 'cheat' && activeCheatRef.current) {
         const cheatElapsed = timestamp - cheatStartTimeRef.current;
         cheatProgressRef.current = Math.min(cheatElapsed / activeCheatRef.current.duration, 1);
+      }
+
+      // Replay playback: advance frame index based on elapsed time at 0.25x speed
+      if (state.phase === 'replay') {
+        const replayFrames = replayRef.current.getFrames();
+        if (replayFrames.length >= 2) {
+          const replayElapsed = performance.now() - replayStartTimeRef.current;
+          const replayDuration = replayRef.current.getReplayDuration(0.25);
+          const progress = Math.min(replayElapsed / replayDuration, 1);
+          replayFrameIndexRef.current = Math.min(
+            Math.floor(progress * (replayFrames.length - 1)),
+            replayFrames.length - 1
+          );
+
+          // Replay finished -- transition to result
+          if (progress >= 1) {
+            replayRef.current.reset();
+            activeCheatRef.current = null;
+            cheatProgressRef.current = 0;
+            scheduleReset(displayHeight);
+            stateRef.current = { ...state, phase: 'result' };
+          }
+        } else {
+          // No frames to replay, skip straight to result
+          replayRef.current.reset();
+          activeCheatRef.current = null;
+          cheatProgressRef.current = 0;
+          scheduleReset(displayHeight);
+          stateRef.current = { ...state, phase: 'result' };
+        }
       }
 
       // Clear canvas
@@ -236,10 +336,24 @@ export function GameCanvas() {
       ctx.translate(0, -cameraRef.current.y);
 
       // Draw game world
-      renderer.drawLane(ctx, cameraRef.current);
-      renderer.drawGutters(ctx, cameraRef.current);
-      renderer.drawPin(ctx, engine.getPinPosition(), engine.getPinAngle(), 0);
-      renderer.drawBall(ctx, engine.getBallPosition(), engine.getBallAngle());
+      if (stateRef.current.phase === 'replay') {
+        // During replay: draw from recorded frames instead of live physics
+        const replayFrames = replayRef.current.getFrames();
+        const frameIdx = replayFrameIndexRef.current;
+        if (replayFrames.length > 0 && frameIdx < replayFrames.length) {
+          const frame = replayFrames[frameIdx];
+          renderer.drawLane(ctx, cameraRef.current);
+          renderer.drawGutters(ctx, cameraRef.current);
+          renderer.drawPin(ctx, frame.pinPos, frame.pinAngle, 0);
+          renderer.drawBall(ctx, frame.ballPos, frame.ballAngle);
+        }
+      } else {
+        // Normal rendering from live physics
+        renderer.drawLane(ctx, cameraRef.current);
+        renderer.drawGutters(ctx, cameraRef.current);
+        renderer.drawPin(ctx, engine.getPinPosition(), engine.getPinAngle(), 0);
+        renderer.drawBall(ctx, engine.getBallPosition(), engine.getBallAngle());
+      }
 
       // Draw aim arrow and rubberband during aiming phase
       if (stateRef.current.phase === 'aiming') {
@@ -264,6 +378,23 @@ export function GameCanvas() {
       // Draw caption during cheat phase (screen space, not camera space)
       if (stateRef.current.phase === 'cheat' && activeCheatRef.current) {
         renderer.drawCaption(ctx, activeCheatRef.current.caption, cheatProgressRef.current);
+      }
+
+      // Draw replay caption overlay (show the cheat caption during slow-mo replay)
+      if (stateRef.current.phase === 'replay' && activeCheatRef.current) {
+        const replayFrames = replayRef.current.getFrames();
+        const replayElapsed = performance.now() - replayStartTimeRef.current;
+        const replayDuration = replayRef.current.getReplayDuration(0.25);
+        const replayProgress = replayFrames.length >= 2 ? Math.min(replayElapsed / replayDuration, 1) : 0;
+        renderer.drawCaption(ctx, activeCheatRef.current.caption, replayProgress);
+
+        // Draw "Tap to skip" hint
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tap to skip', displayWidth / 2, displayHeight - 20);
+        ctx.restore();
       }
 
       ctx.restore(); // transform reset
