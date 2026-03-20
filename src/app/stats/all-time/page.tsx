@@ -24,12 +24,13 @@ export const metadata: Metadata = {
 };
 
 export default async function AllTimeStatsPage() {
-  const [playoffs, individualChampions, leaderboard, highGameRecords] = await Promise.all([
+  const [playoffs, individualChampions, leaderboard, highGameProgression] = await Promise.all([
     getAllPlayoffHistory(),
     getAllIndividualChampions(),
     getAllTimeLeaderboard(),
     getHighGameProgression(),
   ]);
+  const { records: highGameRecords, latestNight } = highGameProgression;
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
@@ -128,7 +129,7 @@ export default async function AllTimeStatsPage() {
         <p className="font-body text-sm text-navy/50 mt-1">
           How the all-time high scratch game record has progressed across seasons
         </p>
-        <HighGameProgression records={highGameRecords} />
+        <HighGameProgression records={highGameRecords} latestNight={latestNight} />
       </details>
 
       <TrailNav current="/stats" />

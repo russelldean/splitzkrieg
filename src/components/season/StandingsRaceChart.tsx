@@ -97,7 +97,7 @@ export function StandingsRaceChart({ raceData, standings }: Props) {
       <p className="font-body text-sm text-navy/60 mb-4">
         Team rank positions by total points over the season. Click a team to highlight.
       </p>
-      <div className="bg-white rounded-lg p-4">
+      <div className="bg-white rounded-lg border border-navy/10 p-4">
         <ResponsiveContainer width="100%" height={Math.max(300, teamCount * 20 + 100)}>
           <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             <XAxis

@@ -79,14 +79,11 @@ function PlayoffRow({
         <div className="text-navy/65 text-xs">{season.displayName}</div>
       </td>
       <td className="py-3 pr-4 align-top font-body font-bold text-amber-700">
-        <span className="inline-flex items-center gap-1">
-          <span className="text-sm">{'🏆'}</span>
-          <TeamName
-            canonical={season.championName}
-            historic={season.championHistoricName}
-            count={totals.championships.get(season.championTeamID) || 0}
-          />
-        </span>
+        <TeamName
+          canonical={season.championName}
+          historic={season.championHistoricName}
+          count={totals.championships.get(season.championTeamID) || 0}
+        />
       </td>
       <td className="py-3 pr-4 align-top font-body font-medium text-slate-600">
         <TeamName
@@ -153,7 +150,8 @@ export function PlayoffHistoryTable({ playoffs }: { playoffs: PlayoffSeason[] })
   if (!covidInserted) rows.push(<CovidRow key="covid" colSpan={4} />);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
+      <span className="absolute top-2 right-3 text-lg opacity-20 pointer-events-none">🏆</span>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-navy/10 text-left">

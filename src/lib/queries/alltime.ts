@@ -84,8 +84,11 @@ export interface HighGameRecord {
   displayName: string;
   romanNumeral: string;
   matchDate: string | null;
+  isTied: boolean;
+  isPlayoff?: boolean;
 }
 
+// Returns new records (runningMax > prevMax) and ties (bestScore = runningMax = prevMax)
 const HIGH_GAME_PROGRESSION_SQL = `
   WITH allGames AS (
     SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game1 AS score
@@ -122,53 +125,202 @@ const HIGH_GAME_PROGRESSION_SQL = `
       ) AS prevMax
     FROM withRunningMax r
     JOIN seasons sn ON sn.seasonID = r.seasonID
+  ),
+  -- New records
+  newRecords AS (
+    SELECT p.runningMax AS score, p.seasonID, p.week, 0 AS isTied
+    FROM withPrev p
+    WHERE p.runningMax > ISNULL(p.prevMax, 0)
+  ),
+  -- Later-week ties: someone matched the standing record in a different week
+  laterTies AS (
+    SELECT p.runningMax AS score, p.seasonID, p.week, 1 AS isTied
+    FROM withPrev p
+    WHERE p.bestScore = p.runningMax AND p.runningMax = p.prevMax
+  ),
+  combined AS (
+    SELECT * FROM newRecords
+    UNION ALL
+    SELECT * FROM laterTies
   )
   SELECT
-    p.runningMax AS score,
+    c.score,
     b.bowlerName,
     b.slug,
-    p.seasonID,
-    p.week,
+    c.seasonID,
+    c.week,
     sch.nightNumber,
     sn.displayName,
     sn.romanNumeral,
-    sch.matchDate
-  FROM withPrev p
-  JOIN seasons sn ON sn.seasonID = p.seasonID
+    sch.matchDate,
+    c.isTied
+  FROM combined c
+  JOIN seasons sn ON sn.seasonID = c.seasonID
   LEFT JOIN (
     SELECT seasonID, week, MIN(matchDate) AS matchDate, MIN(nightNumber) AS nightNumber
     FROM schedule
     GROUP BY seasonID, week
-  ) sch ON sch.seasonID = p.seasonID AND sch.week = p.week
+  ) sch ON sch.seasonID = c.seasonID AND sch.week = c.week
   CROSS APPLY (
     SELECT TOP 1 ag.bowlerID
     FROM allGames ag
-    WHERE ag.seasonID = p.seasonID AND ag.week = p.week AND ag.score = p.runningMax
+    WHERE ag.seasonID = c.seasonID AND ag.week = c.week AND ag.score = c.score
     ORDER BY ag.bowlerID
   ) topBowler
   JOIN bowlers b ON b.bowlerID = topBowler.bowlerID
-  WHERE p.runningMax > ISNULL(p.prevMax, 0)
-  ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, p.week
+  ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, c.week, c.isTied
 `;
 
-export async function getHighGameProgression(): Promise<HighGameRecord[]> {
+// Same-week ties: another bowler hit the same score in the record-setting week
+const SAME_WEEK_TIES_SQL = `
+  WITH allGames AS (
+    SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game1 AS score
+    FROM scores sc WHERE sc.isPenalty = 0 AND sc.game1 IS NOT NULL
+    UNION ALL
+    SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game2
+    FROM scores sc WHERE sc.isPenalty = 0 AND sc.game2 IS NOT NULL
+    UNION ALL
+    SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game3
+    FROM scores sc WHERE sc.isPenalty = 0 AND sc.game3 IS NOT NULL
+  ),
+  weekBest AS (
+    SELECT ag.seasonID, ag.week, MAX(ag.score) AS bestScore
+    FROM allGames ag GROUP BY ag.seasonID, ag.week
+  ),
+  withRunningMax AS (
+    SELECT wb.seasonID, wb.week, wb.bestScore,
+      MAX(wb.bestScore) OVER (
+        ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, wb.week
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      ) AS runningMax
+    FROM weekBest wb JOIN seasons sn ON sn.seasonID = wb.seasonID
+  ),
+  withPrev AS (
+    SELECT r.seasonID, r.week, r.bestScore, r.runningMax,
+      LAG(r.runningMax) OVER (
+        ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, r.week
+      ) AS prevMax
+    FROM withRunningMax r JOIN seasons sn ON sn.seasonID = r.seasonID
+  ),
+  recordWeeks AS (
+    SELECT p.seasonID, p.week, p.runningMax AS score
+    FROM withPrev p
+    WHERE p.runningMax > ISNULL(p.prevMax, 0)
+  )
+  SELECT rw.score, rw.seasonID, rw.week, b.bowlerName, b.slug
+  FROM recordWeeks rw
+  CROSS APPLY (
+    SELECT DISTINCT ag.bowlerID
+    FROM allGames ag
+    WHERE ag.seasonID = rw.seasonID AND ag.week = rw.week AND ag.score = rw.score
+  ) allHitters
+  JOIN bowlers b ON b.bowlerID = allHitters.bowlerID
+  -- Exclude the "primary" record holder (lowest bowlerID, same as main query picks)
+  WHERE allHitters.bowlerID != (
+    SELECT TOP 1 ag2.bowlerID FROM allGames ag2
+    WHERE ag2.seasonID = rw.seasonID AND ag2.week = rw.week AND ag2.score = rw.score
+    ORDER BY ag2.bowlerID
+  )
+  ORDER BY rw.seasonID, rw.week
+`;
+
+export interface HighGameProgressionResult {
+  records: HighGameRecord[];
+  latestNight: number;
+}
+
+export async function getHighGameProgression(): Promise<HighGameProgressionResult> {
   return cachedQuery('getHighGameProgression', async () => {
     const db = await getDb();
-    const result = await db.request().query<HighGameRecord>(HIGH_GAME_PROGRESSION_SQL);
-    // Deduplicate: if the same score appears from multiple bowlers in the same week,
-    // keep the first (the query already orders deterministically)
-    const seen = new Set<string>();
-    const deduped: HighGameRecord[] = [];
+
+    // Main records + later-week ties
+    const result = await db.request().query<HighGameRecord & { isTied: number }>(
+      HIGH_GAME_PROGRESSION_SQL,
+    );
+
+    // Same-week ties (different bowler, same week, same score)
+    const sameWeekResult = await db.request().query<{
+      score: number; seasonID: number; week: number; bowlerName: string; slug: string;
+    }>(SAME_WEEK_TIES_SQL);
+
+    // Build a lookup of schedule info from the main results
+    const scheduleInfo = new Map<string, { nightNumber: number; displayName: string; romanNumeral: string; matchDate: string | null }>();
     for (const row of result.recordset) {
-      const key = `${row.seasonID}-${row.week}-${row.score}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        deduped.push({
-          ...row,
+      const key = `${row.seasonID}-${row.week}`;
+      if (!scheduleInfo.has(key)) {
+        scheduleInfo.set(key, {
+          nightNumber: row.nightNumber,
+          displayName: row.displayName,
+          romanNumeral: row.romanNumeral,
           matchDate: row.matchDate ? new Date(row.matchDate).toISOString() : null,
         });
       }
     }
-    return deduped;
-  }, [], { sql: HIGH_GAME_PROGRESSION_SQL, dependsOn: ['scores'] });
+
+    // Deduplicate main results
+    const seen = new Set<string>();
+    const records: HighGameRecord[] = [];
+    for (const row of result.recordset) {
+      const key = `${row.seasonID}-${row.week}-${row.score}-${row.slug}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        records.push({
+          ...row,
+          isTied: !!row.isTied,
+          matchDate: row.matchDate ? new Date(row.matchDate).toISOString() : null,
+        });
+      }
+    }
+
+    // Inject same-week ties right after the record they tied
+    for (const tie of sameWeekResult.recordset) {
+      const info = scheduleInfo.get(`${tie.seasonID}-${tie.week}`);
+      if (!info) continue;
+      // Find the index of the record this ties
+      const idx = records.findIndex(
+        (r) => r.seasonID === tie.seasonID && r.week === tie.week && r.score === tie.score && !r.isTied,
+      );
+      if (idx === -1) continue;
+      records.splice(idx + 1, 0, {
+        score: tie.score,
+        bowlerName: tie.bowlerName,
+        slug: tie.slug,
+        seasonID: tie.seasonID,
+        week: tie.week,
+        nightNumber: info.nightNumber,
+        displayName: info.displayName,
+        romanNumeral: info.romanNumeral,
+        matchDate: info.matchDate,
+        isTied: true,
+      });
+    }
+
+    // Geoffrey Berry's playoff 300 (Fall 2022 Playoffs) - not in scores table
+    // but confirmed and displayed as easter egg on his bowler page.
+    // Playoffs were after night 253 (last regular season night of Fall 2022).
+    const depasqualeIdx = records.findIndex(
+      (r) => r.score === 300 && !r.isTied,
+    );
+    if (depasqualeIdx !== -1) {
+      records.splice(depasqualeIdx + 1, 0, {
+        score: 300,
+        bowlerName: 'Geoffrey Berry',
+        slug: 'geoffrey-berry',
+        seasonID: 28,
+        week: 0,
+        nightNumber: 254,
+        displayName: 'Fall 2022',
+        romanNumeral: 'XXVIII',
+        matchDate: '2022-11-14T05:00:00.000Z',
+        isTied: true,
+        isPlayoff: true,
+      });
+    }
+
+    const latestResult = await db.request().query<{ maxNight: number }>(
+      `SELECT MAX(nightNumber) AS maxNight FROM schedule WHERE matchDate <= GETDATE()`,
+    );
+    const latestNight = latestResult.recordset[0]?.maxNight || records[records.length - 1]?.nightNumber || 1;
+    return { records, latestNight };
+  }, [], { sql: HIGH_GAME_PROGRESSION_SQL + SAME_WEEK_TIES_SQL, dependsOn: ['scores'] });
 }

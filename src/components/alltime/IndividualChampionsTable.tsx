@@ -124,7 +124,7 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
   if (!covidInserted) rows.push(<CovidRow key="covid" colSpan={3} />);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-navy/10 text-left">
