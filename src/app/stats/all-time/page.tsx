@@ -9,11 +9,13 @@ import {
   getAllIndividualChampions,
   getAllTimeLeaderboard,
 } from '@/lib/queries';
+import { getHighGameProgression } from '@/lib/queries/alltime';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { AllTimeLeaderboardTable } from '@/components/alltime/AllTimeLeaderboardTable';
 import { PlayoffHistoryTable } from '@/components/alltime/PlayoffHistoryTable';
 import { IndividualChampionsTable } from '@/components/alltime/IndividualChampionsTable';
+import { HighGameProgression } from '@/components/alltime/HighGameProgression';
 
 export const metadata: Metadata = {
   title: 'All-Time Stats | Splitzkrieg',
@@ -22,10 +24,11 @@ export const metadata: Metadata = {
 };
 
 export default async function AllTimeStatsPage() {
-  const [playoffs, individualChampions, leaderboard] = await Promise.all([
+  const [playoffs, individualChampions, leaderboard, highGameRecords] = await Promise.all([
     getAllPlayoffHistory(),
     getAllIndividualChampions(),
     getAllTimeLeaderboard(),
+    getHighGameProgression(),
   ]);
 
   return (
@@ -104,6 +107,28 @@ export default async function AllTimeStatsPage() {
             No individual championship data available.
           </p>
         )}
+      </details>
+
+      {/* Deep Cuts */}
+      <details className="mt-10 group" open>
+        <summary className="cursor-pointer list-none">
+          <SectionHeading>
+            <span className="inline-flex items-center gap-2">
+              Deep Cuts
+              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
+            </span>
+          </SectionHeading>
+        </summary>
+        <p className="font-body text-sm text-navy/50 mt-1 mb-6">
+          Statistical one-offs and record progressions
+        </p>
+
+        {/* High Game Record Progression */}
+        <h3 className="font-heading text-lg text-navy mt-2">High Game Record</h3>
+        <p className="font-body text-sm text-navy/50 mt-1">
+          How the all-time high scratch game record has progressed across seasons
+        </p>
+        <HighGameProgression records={highGameRecords} />
       </details>
 
       <TrailNav current="/stats" />

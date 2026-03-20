@@ -1,5 +1,5 @@
 /**
- * All-time career leaderboard query.
+ * All-time career leaderboard and record progression queries.
  */
 import { getDb, cachedQuery } from '../db';
 
@@ -70,4 +70,105 @@ export async function getAllTimeLeaderboard(): Promise<AllTimeLeaderRow[]> {
     const result = await db.request().query<AllTimeLeaderRow>(GET_ALL_TIME_LEADERBOARD_SQL);
     return result.recordset;
   }, [], { sql: GET_ALL_TIME_LEADERBOARD_SQL, dependsOn: ['scores'] });
+}
+
+/* ── High Game Record Progression ───────────────────────────────── */
+
+export interface HighGameRecord {
+  score: number;
+  bowlerName: string;
+  slug: string;
+  seasonID: number;
+  week: number;
+  nightNumber: number;
+  displayName: string;
+  romanNumeral: string;
+  matchDate: string | null;
+}
+
+const HIGH_GAME_PROGRESSION_SQL = `
+  WITH allGames AS (
+    SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game1 AS score
+    FROM scores sc WHERE sc.isPenalty = 0 AND sc.game1 IS NOT NULL
+    UNION ALL
+    SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game2
+    FROM scores sc WHERE sc.isPenalty = 0 AND sc.game2 IS NOT NULL
+    UNION ALL
+    SELECT sc.bowlerID, sc.seasonID, sc.week, sc.game3
+    FROM scores sc WHERE sc.isPenalty = 0 AND sc.game3 IS NOT NULL
+  ),
+  weekBest AS (
+    SELECT
+      ag.seasonID, ag.week,
+      MAX(ag.score) AS bestScore
+    FROM allGames ag
+    GROUP BY ag.seasonID, ag.week
+  ),
+  withRunningMax AS (
+    SELECT
+      wb.seasonID, wb.week, wb.bestScore,
+      MAX(wb.bestScore) OVER (
+        ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, wb.week
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      ) AS runningMax
+    FROM weekBest wb
+    JOIN seasons sn ON sn.seasonID = wb.seasonID
+  ),
+  withPrev AS (
+    SELECT
+      r.seasonID, r.week, r.bestScore, r.runningMax,
+      LAG(r.runningMax) OVER (
+        ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, r.week
+      ) AS prevMax
+    FROM withRunningMax r
+    JOIN seasons sn ON sn.seasonID = r.seasonID
+  )
+  SELECT
+    p.runningMax AS score,
+    b.bowlerName,
+    b.slug,
+    p.seasonID,
+    p.week,
+    sch.nightNumber,
+    sn.displayName,
+    sn.romanNumeral,
+    sch.matchDate
+  FROM withPrev p
+  JOIN seasons sn ON sn.seasonID = p.seasonID
+  LEFT JOIN (
+    SELECT seasonID, week, MIN(matchDate) AS matchDate, MIN(nightNumber) AS nightNumber
+    FROM schedule
+    GROUP BY seasonID, week
+  ) sch ON sch.seasonID = p.seasonID AND sch.week = p.week
+  CROSS APPLY (
+    SELECT TOP 1 ag.bowlerID
+    FROM allGames ag
+    WHERE ag.seasonID = p.seasonID AND ag.week = p.week AND ag.score = p.runningMax
+    ORDER BY ag.bowlerID
+  ) topBowler
+  JOIN bowlers b ON b.bowlerID = topBowler.bowlerID
+  WHERE p.runningMax > ISNULL(p.prevMax, 0)
+  ORDER BY sn.year, CASE sn.period WHEN 'Spring' THEN 1 ELSE 2 END, p.week
+`;
+
+export async function getHighGameProgression(): Promise<HighGameRecord[]> {
+  return cachedQuery('getHighGameProgression', async () => {
+    const db = await getDb();
+    const result = await db.request().query<HighGameRecord>(HIGH_GAME_PROGRESSION_SQL);
+    // Deduplicate: if the same score appears from multiple bowlers in the same week,
+    // keep the first (the query already orders deterministically)
+    const seen = new Set<string>();
+    const deduped: HighGameRecord[] = [];
+    for (const row of result.recordset) {
+      const key = `${row.seasonID}-${row.week}-${row.score}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push({
+          ...row,
+          matchDate: row.matchDate ? new Date(row.matchDate).toISOString() : null,
+        });
+      }
+    }
+    return deduped;
+  }, [], { sql: HIGH_GAME_PROGRESSION_SQL, dependsOn: ['scores'] });
 }
