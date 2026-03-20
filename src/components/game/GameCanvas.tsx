@@ -12,6 +12,10 @@ import { HapticManager } from './HapticManager';
 import { ReplaySystem } from './ReplaySystem';
 import { getAimFeedback } from './AimPredictor';
 import { DemoAnimation } from './DemoAnimation';
+import { ScoreCard } from './ScoreCard';
+import { WinCelebration } from './WinCelebration';
+import { HallOfFame } from './HallOfFame';
+import { isAdminMode } from './AdminMode';
 import type { Camera, GameState, Vec2, CheatDefinition } from './types';
 import { GAME_CONSTANTS } from './types';
 
@@ -44,6 +48,9 @@ export function GameCanvas() {
   const replayStartTimeRef = useRef<number>(0);
   const soundInitializedRef = useRef<boolean>(false);
   const [showDemo, setShowDemo] = useState(true);
+  const [showHallOfFame, setShowHallOfFame] = useState(false);
+  const [gamePhase, setGamePhase] = useState<string>('demo');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const dpr = window.devicePixelRatio || 1;
@@ -57,13 +64,18 @@ export function GameCanvas() {
     return ctx;
   }, []);
 
-  // Check if demo should be skipped (already seen this session)
+  // Initialize admin mode and check if demo should be skipped
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const admin = isAdminMode();
+      setIsAdmin(admin);
+      stateRef.current = createInitialState(admin);
+
       const seen = sessionStorage.getItem('splitzkrieg-demo-seen');
       if (seen === 'true') {
         setShowDemo(false);
         stateRef.current = { ...stateRef.current, phase: 'idle' };
+        setGamePhase('idle');
       }
     }
   }, []);
@@ -265,6 +277,7 @@ export function GameCanvas() {
             soundRef.current.play('fanfare');
             hapticRef.current.win();
             stateRef.current = transitionState(state, 'win');
+            setGamePhase('win');
           }
         } else if (engine.isBallOutOfBounds() && state.phase === 'rolling') {
           // Ball missed without cheat triggering
@@ -411,6 +424,7 @@ export function GameCanvas() {
 
         if (currentState.attempt >= currentState.maxAttempts) {
           stateRef.current = { ...currentState, phase: 'scorecard' };
+          setGamePhase('scorecard');
         } else {
           engine.resetBall();
           cameraRef.current = createCamera();
@@ -451,6 +465,50 @@ export function GameCanvas() {
     setShowDemo(false);
   }, []);
 
+  const handlePlayAgain = useCallback(() => {
+    const admin = stateRef.current.isAdmin;
+    stateRef.current = createInitialState(admin);
+    stateRef.current = { ...stateRef.current, phase: 'idle' };
+    setGamePhase('idle');
+    setShowHallOfFame(false);
+    engineRef.current?.resetBall();
+    cameraRef.current = createCamera();
+    cheatTriggeredRef.current = false;
+    sessionStorage.setItem('splitzkrieg-demo-seen', 'true');
+  }, []);
+
+  const handleViewHallOfFame = useCallback(() => {
+    setShowHallOfFame(true);
+  }, []);
+
+  const handleNameSubmit = useCallback(async (name: string) => {
+    const state = stateRef.current;
+    // Only persist non-admin wins
+    if (!state.isAdmin) {
+      try {
+        await fetch('/api/game/hall-of-fame', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, attemptCount: state.attempt + 1 }),
+        });
+      } catch {
+        // Silently fail -- don't block the celebration
+      }
+    }
+    setShowHallOfFame(true);
+    setGamePhase('hallOfFame');
+  }, []);
+
+  const handleWinSkip = useCallback(() => {
+    setShowHallOfFame(false);
+    handlePlayAgain();
+  }, [handlePlayAgain]);
+
+  const handleHallOfFameBack = useCallback(() => {
+    setShowHallOfFame(false);
+    handlePlayAgain();
+  }, [handlePlayAgain]);
+
   return (
     <div className="w-full h-full flex items-center justify-center relative">
       <canvas
@@ -463,6 +521,29 @@ export function GameCanvas() {
       />
       {showDemo && stateRef.current.phase === 'demo' && (
         <DemoAnimation onComplete={handleDemoComplete} />
+      )}
+      {isAdmin && (
+        <div className="absolute top-3 right-3 z-10 rounded bg-amber-500/80 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black uppercase">
+          COMMISSIONER MODE
+        </div>
+      )}
+      {gamePhase === 'scorecard' && (
+        <ScoreCard
+          attemptCount={stateRef.current.attempt}
+          cheatsEncountered={stateRef.current.cheatsEncountered}
+          onPlayAgain={handlePlayAgain}
+          onViewHallOfFame={handleViewHallOfFame}
+        />
+      )}
+      {gamePhase === 'win' && !showHallOfFame && (
+        <WinCelebration
+          attemptCount={stateRef.current.attempt + 1}
+          onNameSubmit={handleNameSubmit}
+          onSkip={handleWinSkip}
+        />
+      )}
+      {showHallOfFame && (
+        <HallOfFame onBack={handleHallOfFameBack} />
       )}
     </div>
   );

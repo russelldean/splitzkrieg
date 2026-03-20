@@ -3,14 +3,14 @@ import { NextRequest } from 'next/server';
 
 // Mock the database module
 vi.mock('@/lib/db', () => ({
-  getPool: vi.fn(),
+  getDb: vi.fn(),
 }));
 
 // Import after mocking
-import { getPool } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { GET, POST } from '../hall-of-fame/route';
 
-const mockGetPool = vi.mocked(getPool);
+const mockGetDb = vi.mocked(getDb);
 
 function createRequest(body: unknown): NextRequest {
   return new NextRequest('http://localhost:3000/api/game/hall-of-fame', {
@@ -29,7 +29,7 @@ describe('Hall of Fame API', () => {
     mockQuery = vi.fn().mockResolvedValue({ recordset: [] });
     mockInput = vi.fn().mockReturnThis();
     mockRequest = vi.fn().mockReturnValue({ query: mockQuery, input: mockInput });
-    mockGetPool.mockResolvedValue({ request: mockRequest } as unknown as ReturnType<typeof getPool> extends Promise<infer T> ? T : never);
+    mockGetDb.mockResolvedValue({ request: mockRequest } as unknown as ReturnType<typeof getDb> extends Promise<infer T> ? T : never);
   });
 
   describe('GET', () => {
