@@ -95,33 +95,39 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* This Week's Results CTA */}
+          {/* This Week's Results + Countdown */}
           {seasonSnapshot && (
-            <Link
-              href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
-              className="relative block mt-6 sm:mt-8 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all group ring-1 ring-navy/10"
-            >
-              {/* Background image — Village Lanes blue chairs, parallax */}
+            <div className="relative mt-6 sm:mt-8 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
               <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
-              {/* Semi-transparent overlay for text readability */}
-              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/50 transition-colors" />
-              {/* Content */}
-              <div className="relative flex items-center justify-between px-6 py-4">
-                <div>
-                  <div className="font-heading text-xl sm:text-2xl text-white group-hover:text-red-300 transition-colors">
-                    Week {seasonSnapshot.weekNumber} Results
-                    {latestWeekDate && <span className="font-body text-sm text-white/80 ml-2">{latestWeekDate}</span>}
+              <div className="absolute inset-0 bg-black/60" />
+              <div className="relative flex flex-col sm:flex-row">
+                {/* Left: Week Results link */}
+                <Link
+                  href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
+                  className="flex-1 flex items-center justify-between px-6 py-4 group hover:bg-white/5 transition-colors"
+                >
+                  <div>
+                    <div className="font-heading text-xl sm:text-2xl text-white group-hover:text-red-300 transition-colors">
+                      Week {seasonSnapshot.weekNumber} Results
+                    </div>
+                    {latestWeekDate && <div className="font-body text-sm text-white/70 mt-0.5">{latestWeekDate}</div>}
+                    <div className="hidden sm:block font-body text-sm text-white/50 mt-0.5">
+                      Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
+                    </div>
                   </div>
-                  <div className="hidden sm:block font-body text-sm text-white/80 mt-0.5">
-                    Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
-                  </div>
+                  <svg className="w-5 h-5 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+                {/* Divider */}
+                <div className="hidden sm:block w-px bg-white/15 my-3" />
+                <div className="sm:hidden mx-6 h-px bg-white/15" />
+                {/* Right: Countdown */}
+                <div className="px-6 py-4 flex items-center justify-center">
                   <InlineCountdown targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
-                <svg className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
               </div>
-            </Link>
+            </div>
           )}
 
         </div>

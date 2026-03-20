@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getTargetTime, computeCountdown, getDebugTargetTime } from '@/lib/bowling-time';
 
 interface InlineCountdownProps {
@@ -8,10 +8,64 @@ interface InlineCountdownProps {
   weekNumber: number;
 }
 
-/**
- * Compact countdown that sits inside the Week Results CTA card.
- * Shows "Xd Xh Xm Xs until Week N" in white text.
- */
+function FlipCard({ value }: { value: string }) {
+  const [current, setCurrent] = useState(value);
+  const [previous, setPrevious] = useState(value);
+  const [animating, setAnimating] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (value !== current) {
+      setPrevious(current);
+      setCurrent(value);
+      setAnimating(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setAnimating(false), 600);
+    }
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <div className="flip-card">
+      {/* Static top: always shows NEW value (revealed when top flap folds away) */}
+      <div className="flip-card-top"><span>{current}</span></div>
+      {/* Static bottom: shows OLD value while animating, NEW when done */}
+      <div className="flip-card-bottom"><span>{animating ? previous : current}</span></div>
+
+      {/* Top flap: shows OLD value, folds down to reveal new value behind it */}
+      <div
+        className={`flip-card-flap-top ${animating ? 'flip-active' : ''}`}
+        aria-hidden
+      >
+        <span>{animating ? previous : current}</span>
+      </div>
+
+      {/* Bottom flap: shows NEW value, unfolds down into place over old bottom */}
+      <div
+        className={`flip-card-flap-bot ${animating ? 'flip-active' : ''}`}
+        aria-hidden
+      >
+        <span>{current}</span>
+      </div>
+    </div>
+  );
+}
+
+function FlipUnit({ value, label }: { value: string; label: string }) {
+  const digits = value.split('');
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex gap-[2px]">
+        {digits.map((d, i) => (
+          <FlipCard key={i} value={d} />
+        ))}
+      </div>
+      <span className="flip-label">{label}</span>
+    </div>
+  );
+}
+
 export function InlineCountdown({ targetDate, weekNumber }: InlineCountdownProps) {
   const [mounted, setMounted] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
@@ -38,15 +92,38 @@ export function InlineCountdown({ targetDate, weekNumber }: InlineCountdownProps
 
   const { days, hours, minutes, seconds } = countdown;
 
+  const units = [
+    ...(days > 0 ? [{ value: String(days).padStart(2, '0'), label: 'DAYS' }] : []),
+    { value: String(hours).padStart(2, '0'), label: 'HRS' },
+    { value: String(minutes).padStart(2, '0'), label: 'MIN' },
+    { value: String(seconds).padStart(2, '0'), label: 'SEC' },
+  ];
+
   return (
-    <div className="mt-2 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-md px-3 py-1.5 border border-white/15" suppressHydrationWarning>
-      <span className="font-digital text-lg text-red-300 tabular-nums tracking-wider drop-shadow-[0_0_8px_rgba(252,165,165,0.4)]">
-        {days > 0 && <>{days}d </>}
-        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-      </span>
-      <span className="font-body text-xs text-white/60 uppercase tracking-wider">
-        until Week {weekNumber}
-      </span>
+    <div suppressHydrationWarning>
+      <div className="flex items-start gap-2 sm:gap-3">
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="flex gap-[2px]">
+            {'WK'.split('').map((ch, i) => (
+              <FlipCard key={`wk-${i}`} value={ch} />
+            ))}
+            <div style={{ width: 3 }} />
+            {String(weekNumber).split('').map((ch, i) => (
+              <FlipCard key={`wn-${i}`} value={ch} />
+            ))}
+          </div>
+          <span className="flip-label">NEXT</span>
+        </div>
+        <span className="flip-colon">|</span>
+        {units.map((u, i) => (
+          <div key={u.label} className="flex items-start gap-1.5 sm:gap-2">
+            <FlipUnit value={u.value} label={u.label} />
+            {i < units.length - 1 && (
+              <span className="flip-colon">:</span>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

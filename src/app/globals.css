@@ -416,3 +416,187 @@ body {
   59% { transform: translateX(350px); }
   64%, 100% { transform: translateX(410px); }
 }
+
+/* ── Flip Clock Countdown ─────────────────────────────────────── */
+
+.flip-card {
+  position: relative;
+  width: 28px;
+  height: 38px;
+  perspective: 200px;
+  font-family: var(--font-digital);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 38px;
+  color: #fff;
+}
+
+@media (min-width: 640px) {
+  .flip-card {
+    width: 34px;
+    height: 46px;
+    font-size: 26px;
+    line-height: 46px;
+  }
+}
+
+.flip-card-top,
+.flip-card-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  text-align: center;
+  backface-visibility: hidden;
+}
+
+.flip-card-top {
+  top: 0;
+  background: linear-gradient(to bottom, #2a2a2a, #222);
+  border-bottom: 1px solid #111;
+  border-radius: 4px 4px 0 0;
+}
+
+.flip-card-top span {
+  display: block;
+  line-height: 38px;
+}
+
+@media (min-width: 640px) {
+  .flip-card-top span { line-height: 46px; }
+}
+
+.flip-card-bottom {
+  bottom: 0;
+  background: linear-gradient(to bottom, #1a1a1a, #1f1f1f);
+  border-radius: 0 0 4px 4px;
+}
+
+.flip-card-bottom span {
+  display: block;
+  line-height: 38px;
+  transform: translateY(-50%);
+}
+
+@media (min-width: 640px) {
+  .flip-card-bottom span { line-height: 46px; }
+}
+
+/* Top flap: shows old value, folds down to reveal new value behind */
+.flip-card-flap-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  text-align: center;
+  background: linear-gradient(to bottom, #2a2a2a, #222);
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom center;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flip-card-flap-top.flip-active {
+  opacity: 1;
+  animation: flip-down 0.3s ease-in forwards;
+}
+
+/* Bottom flap: shows new value, unfolds into place after top is done */
+.flip-card-flap-bot {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  text-align: center;
+  background: linear-gradient(to bottom, #1a1a1a, #1f1f1f);
+  border-radius: 0 0 4px 4px;
+  transform-origin: top center;
+  transform: rotateX(90deg);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flip-card-flap-bot span {
+  display: block;
+  line-height: 38px;
+  transform: translateY(-50%);
+}
+
+@media (min-width: 640px) {
+  .flip-card-flap-bot span { line-height: 46px; }
+}
+
+.flip-card-flap-bot.flip-active {
+  opacity: 1;
+  animation: flip-up 0.3s 0.3s ease-out forwards;
+}
+
+@keyframes flip-down {
+  0% { transform: rotateX(0deg); opacity: 1; }
+  100% { transform: rotateX(-90deg); opacity: 1; }
+}
+
+@keyframes flip-up {
+  0% { transform: rotateX(90deg); opacity: 1; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+.flip-card-static {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 38px;
+  font-family: var(--font-digital);
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  background: linear-gradient(to bottom, #2a2a2a 50%, #1a1a1a 50%);
+  border-radius: 4px;
+}
+
+@media (min-width: 640px) {
+  .flip-card-static {
+    width: 34px;
+    height: 46px;
+    font-size: 18px;
+  }
+}
+
+.flip-colon {
+  font-family: var(--font-digital);
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.4);
+  align-self: center;
+  padding-bottom: 14px;
+}
+
+@media (min-width: 640px) {
+  .flip-colon {
+    font-size: 24px;
+    padding-bottom: 16px;
+  }
+}
+
+.flip-label {
+  font-family: var(--font-inter);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+@media (min-width: 640px) {
+  .flip-label {
+    font-size: 10px;
+  }
+}
