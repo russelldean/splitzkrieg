@@ -146,6 +146,10 @@ export class GameEngine {
     return distance > GAME_CONSTANTS.PIN_RADIUS;
   }
 
+  applyCheatForce(x: number, y: number): void {
+    Body.applyForce(this.ball, this.ball.position, { x: x * 0.0001, y: y * 0.0001 });
+  }
+
   isBallOutOfBounds(): boolean {
     const ballPos = this.ball.position;
     // Ball passed the pin (went past top of lane)

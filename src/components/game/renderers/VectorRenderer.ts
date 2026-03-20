@@ -256,20 +256,485 @@ export class VectorRenderer implements GameRenderer {
   }
 
   drawCheatEffect(ctx: CanvasRenderingContext2D, cheatId: string, progress: number): void {
-    // Stub -- filled in by Plan 04 (cheats)
+    switch (cheatId) {
+      case 'slight-curve':
+        this.drawSlightCurveEffect(ctx, progress);
+        break;
+      case 'pin-wobble':
+        this.drawPinWobbleEffect(ctx, progress);
+        break;
+      case 'gutter-widen':
+        this.drawGutterWidenEffect(ctx, progress);
+        break;
+      case 'lane-tilt':
+        this.drawLaneTiltEffect(ctx, progress);
+        break;
+      case 'cat-walk':
+        this.drawCatWalkEffect(ctx, progress);
+        break;
+      case 'janitor-sweep':
+        this.drawJanitorSweepEffect(ctx, progress);
+        break;
+      case 'pigeon':
+        this.drawPigeonEffect(ctx, progress);
+        break;
+      case 'wrong-pins':
+        this.drawWrongPinsEffect(ctx, progress);
+        break;
+      case 'pin-machine':
+        this.drawPinMachineEffect(ctx, progress);
+        break;
+      case 'invading-ball':
+        this.drawInvadingBallEffect(ctx, progress);
+        break;
+    }
+  }
+
+  // --- Physics cheat effects ---
+
+  private drawSlightCurveEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Faint curved trail showing the impossible curve
+    if (progress < 0.3 || progress > 0.9) return;
+    const t = (progress - 0.3) / 0.6;
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = '#ff6666';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    const startX = LANE_WIDTH / 2;
+    const startY = 200;
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(startX + 60 * t, startY - 80 * t, startX + 80 * t, startY - 150 * t);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  private drawPinWobbleEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Draw motion lines around the pin to indicate wobble
+    const pinScreen = worldToScreen(LANE_WIDTH / 2, 60);
+    const wobbleAmount = Math.sin(progress * Math.PI * 8) * 6 * (1 - progress);
+    ctx.save();
+    ctx.globalAlpha = 0.5 * (1 - progress);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + progress * 10;
+      const r = 15 + Math.abs(wobbleAmount);
+      ctx.beginPath();
+      ctx.arc(pinScreen.x + Math.cos(angle) * r, pinScreen.y + Math.sin(angle) * r, 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  private drawGutterWidenEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Overlay wider gutters that grow with progress
+    const expansion = progress * 30;
+    ctx.save();
+    ctx.globalAlpha = 0.6 * progress;
+    ctx.fillStyle = '#1a1a1a';
+
+    // Left expanding gutter
+    const ltTop = worldToScreen(-GUTTER_WIDTH - expansion, 0);
+    const lTop = worldToScreen(expansion, 0);
+    const lBottom = worldToScreen(expansion, LANE_LENGTH);
+    const ltBottom = worldToScreen(-GUTTER_WIDTH - expansion, LANE_LENGTH);
+    ctx.beginPath();
+    ctx.moveTo(ltTop.x, ltTop.y);
+    ctx.lineTo(lTop.x, lTop.y);
+    ctx.lineTo(lBottom.x, lBottom.y);
+    ctx.lineTo(ltBottom.x, ltBottom.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Right expanding gutter
+    const rTop = worldToScreen(LANE_WIDTH - expansion, 0);
+    const rBottom = worldToScreen(LANE_WIDTH - expansion, LANE_LENGTH);
+    const rtTop = worldToScreen(LANE_WIDTH + GUTTER_WIDTH + expansion, 0);
+    const rtBottom = worldToScreen(LANE_WIDTH + GUTTER_WIDTH + expansion, LANE_LENGTH);
+    ctx.beginPath();
+    ctx.moveTo(rTop.x, rTop.y);
+    ctx.lineTo(rtTop.x, rtTop.y);
+    ctx.lineTo(rtBottom.x, rtBottom.y);
+    ctx.lineTo(rBottom.x, rBottom.y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  private drawLaneTiltEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Apply a rotation effect to simulate lane tilting
+    const tiltAngle = progress * 0.08;
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.translate(LANE_WIDTH / 2, LANE_LENGTH / 2);
+    ctx.rotate(tiltAngle);
+    ctx.translate(-LANE_WIDTH / 2, -LANE_LENGTH / 2);
+
+    // Draw a tilted overlay
+    ctx.fillStyle = 'rgba(100, 50, 0, 0.15)';
+    const topLeft = worldToScreen(0, 0);
+    const topRight = worldToScreen(LANE_WIDTH, 0);
+    const bottomRight = worldToScreen(LANE_WIDTH, LANE_LENGTH);
+    const bottomLeft = worldToScreen(0, LANE_LENGTH);
+    ctx.beginPath();
+    ctx.moveTo(topLeft.x, topLeft.y);
+    ctx.lineTo(topRight.x, topRight.y);
+    ctx.lineTo(bottomRight.x, bottomRight.y);
+    ctx.lineTo(bottomLeft.x, bottomLeft.y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // --- Character cheat effects ---
+
+  private drawCatWalkEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Simple cat silhouette walking across the lane at ball height
+    const catX = -50 + (LANE_WIDTH + 100) * progress;
+    const catY = 400; // mid-lane area
+    const screen = worldToScreen(catX, catY);
+    const scale = worldRadiusAtY(1, catY);
+
+    ctx.save();
+    ctx.fillStyle = '#333333';
+
+    // Body (ellipse)
+    ctx.beginPath();
+    ctx.ellipse(screen.x, screen.y, 18 * scale, 10 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head (circle)
+    const headX = screen.x + 14 * scale * (progress > 0.5 ? 1 : -1);
+    ctx.beginPath();
+    ctx.arc(headX, screen.y - 6 * scale, 7 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ears (triangles)
+    ctx.beginPath();
+    ctx.moveTo(headX - 5 * scale, screen.y - 11 * scale);
+    ctx.lineTo(headX - 2 * scale, screen.y - 18 * scale);
+    ctx.lineTo(headX + 1 * scale, screen.y - 11 * scale);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(headX + 2 * scale, screen.y - 11 * scale);
+    ctx.lineTo(headX + 5 * scale, screen.y - 18 * scale);
+    ctx.lineTo(headX + 8 * scale, screen.y - 11 * scale);
+    ctx.fill();
+
+    // Tail (curved line)
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    const tailDir = progress > 0.5 ? -1 : 1;
+    ctx.moveTo(screen.x - 16 * scale * tailDir, screen.y);
+    ctx.quadraticCurveTo(
+      screen.x - 25 * scale * tailDir, screen.y - 15 * scale,
+      screen.x - 20 * scale * tailDir, screen.y - 25 * scale
+    );
+    ctx.stroke();
+
+    // Legs (small lines, animate walking)
+    const legPhase = progress * 20;
+    ctx.lineWidth = 2 * scale;
+    for (let i = 0; i < 4; i++) {
+      const legX = screen.x + (-10 + i * 7) * scale;
+      const legOffset = Math.sin(legPhase + i * Math.PI / 2) * 4 * scale;
+      ctx.beginPath();
+      ctx.moveTo(legX, screen.y + 8 * scale);
+      ctx.lineTo(legX + legOffset, screen.y + 18 * scale);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  private drawJanitorSweepEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Stick figure with broom sweeping from right to left near the pin
+    const janitorX = LANE_WIDTH + 30 - (LANE_WIDTH + 60) * progress;
+    const janitorY = 60; // at pin position
+    const screen = worldToScreen(janitorX, janitorY);
+    const scale = worldRadiusAtY(1, janitorY);
+
+    ctx.save();
+    ctx.strokeStyle = '#888888';
+    ctx.lineWidth = 2 * scale;
+    ctx.lineCap = 'round';
+
+    // Head
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y - 20 * scale, 6 * scale, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(screen.x, screen.y - 14 * scale);
+    ctx.lineTo(screen.x, screen.y + 5 * scale);
+    ctx.stroke();
+
+    // Legs
+    ctx.beginPath();
+    ctx.moveTo(screen.x, screen.y + 5 * scale);
+    ctx.lineTo(screen.x - 6 * scale, screen.y + 18 * scale);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screen.x, screen.y + 5 * scale);
+    ctx.lineTo(screen.x + 6 * scale, screen.y + 18 * scale);
+    ctx.stroke();
+
+    // Arms holding broom
+    const broomAngle = Math.sin(progress * Math.PI * 4) * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(screen.x, screen.y - 8 * scale);
+    ctx.lineTo(screen.x + 15 * scale, screen.y - 2 * scale);
+    ctx.stroke();
+
+    // Broom
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 3 * scale;
+    const broomX = screen.x + 15 * scale;
+    const broomY = screen.y - 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(broomX, broomY);
+    ctx.lineTo(broomX + 12 * scale * Math.cos(broomAngle), broomY + 15 * scale);
+    ctx.stroke();
+
+    // Broom bristles
+    ctx.strokeStyle = '#DAA520';
+    ctx.lineWidth = 1 * scale;
+    const bristleX = broomX + 12 * scale * Math.cos(broomAngle);
+    const bristleY = broomY + 15 * scale;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(bristleX + i * 2 * scale, bristleY);
+      ctx.lineTo(bristleX + i * 3 * scale, bristleY + 6 * scale);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  private drawPigeonEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Pigeon flies in, lands on pin, then lifts it away
+    const pinScreen = worldToScreen(LANE_WIDTH / 2, 60);
+    const scale = worldRadiusAtY(1, 60);
+
+    let birdX: number, birdY: number;
+    if (progress < 0.3) {
+      // Flying in from top-right
+      const t = progress / 0.3;
+      birdX = pinScreen.x + (1 - t) * 100;
+      birdY = pinScreen.y - (1 - t) * 80;
+    } else if (progress < 0.6) {
+      // Sitting on pin
+      birdX = pinScreen.x;
+      birdY = pinScreen.y - 12 * scale;
+    } else {
+      // Flying away with pin (going up)
+      const t = (progress - 0.6) / 0.4;
+      birdX = pinScreen.x - t * 60;
+      birdY = pinScreen.y - 12 * scale - t * 120;
+    }
+
+    ctx.save();
+    ctx.fillStyle = '#777788';
+
+    // Body (oval)
+    ctx.beginPath();
+    ctx.ellipse(birdX, birdY, 10 * scale, 6 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head (circle)
+    ctx.beginPath();
+    ctx.arc(birdX + 8 * scale, birdY - 3 * scale, 4 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beak
+    ctx.fillStyle = '#FFAA00';
+    ctx.beginPath();
+    ctx.moveTo(birdX + 12 * scale, birdY - 3 * scale);
+    ctx.lineTo(birdX + 16 * scale, birdY - 2 * scale);
+    ctx.lineTo(birdX + 12 * scale, birdY - 1 * scale);
+    ctx.closePath();
+    ctx.fill();
+
+    // Wings (flapping)
+    ctx.fillStyle = '#666677';
+    const wingFlap = Math.sin(progress * Math.PI * 12) * 8 * scale;
+    ctx.beginPath();
+    ctx.ellipse(birdX, birdY - wingFlap, 12 * scale, 4 * scale, -0.3, 0, Math.PI);
+    ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#FF3300';
+    ctx.beginPath();
+    ctx.arc(birdX + 9 * scale, birdY - 4 * scale, 1.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // --- Bowling cheat effects ---
+
+  private drawWrongPinsEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Replace single pin with 7-10 split positions
+    if (progress < 0.3) return;
+    const alpha = Math.min((progress - 0.3) / 0.2, 1);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Draw two pins at 7-10 split positions (far left and far right)
+    const leftPos = worldToScreen(25, 60);
+    const rightPos = worldToScreen(LANE_WIDTH - 25, 60);
+    const r = worldRadiusAtY(PIN_RADIUS, 60);
+
+    for (const pos of [leftPos, rightPos]) {
+      ctx.beginPath();
+      ctx.ellipse(pos.x, pos.y, r, r * 1.3, 0, 0, Math.PI * 2);
+      ctx.fillStyle = COLORS.pinBody;
+      ctx.fill();
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Red stripes
+      ctx.beginPath();
+      ctx.ellipse(pos.x, pos.y - r * 0.3, r * 0.8, r * 0.15, 0, 0, Math.PI * 2);
+      ctx.fillStyle = COLORS.pinStripe;
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  private drawPinMachineEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Pin setter machine descending from top
+    const machineY = -60 + progress * 120; // descends from above
+    const machineWidth = LANE_WIDTH * 0.8;
+    const machineHeight = 40;
+    const machineX = (LANE_WIDTH - machineWidth) / 2;
+
+    const topLeft = worldToScreen(machineX, machineY);
+    const topRight = worldToScreen(machineX + machineWidth, machineY);
+    const bottomLeft = worldToScreen(machineX, machineY + machineHeight);
+    const bottomRight = worldToScreen(machineX + machineWidth, machineY + machineHeight);
+
+    ctx.save();
+
+    // Machine body
+    ctx.fillStyle = '#444444';
+    ctx.beginPath();
+    ctx.moveTo(topLeft.x, topLeft.y);
+    ctx.lineTo(topRight.x, topRight.y);
+    ctx.lineTo(bottomRight.x, bottomRight.y);
+    ctx.lineTo(bottomLeft.x, bottomLeft.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Machine details (horizontal lines)
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 3; i++) {
+      const lineY = machineY + (machineHeight * i) / 4;
+      const ll = worldToScreen(machineX, lineY);
+      const lr = worldToScreen(machineX + machineWidth, lineY);
+      ctx.beginPath();
+      ctx.moveTo(ll.x, ll.y);
+      ctx.lineTo(lr.x, lr.y);
+      ctx.stroke();
+    }
+
+    // Clamp arms
+    ctx.fillStyle = '#555555';
+    const clampWidth = 8;
+    for (const xOffset of [machineWidth * 0.25, machineWidth * 0.75]) {
+      const cl = worldToScreen(machineX + xOffset - clampWidth / 2, machineY + machineHeight);
+      const cr = worldToScreen(machineX + xOffset + clampWidth / 2, machineY + machineHeight + 20);
+      ctx.fillRect(cl.x, cl.y, cr.x - cl.x, cr.y - cl.y);
+    }
+
+    ctx.restore();
+  }
+
+  private drawInvadingBallEffect(ctx: CanvasRenderingContext2D, progress: number): void {
+    // Another ball rolling in from the side
+    const invaderX = LANE_WIDTH + 40 - (LANE_WIDTH + 80) * progress;
+    const invaderY = 300 + progress * 200;
+    const screen = worldToScreen(invaderX, invaderY);
+    const r = worldRadiusAtY(BALL_RADIUS, invaderY);
+
+    ctx.save();
+
+    // Invading ball with different color
+    const grad = ctx.createRadialGradient(
+      screen.x - r * 0.3, screen.y - r * 0.3, r * 0.1,
+      screen.x, screen.y, r
+    );
+    grad.addColorStop(0, '#884444');
+    grad.addColorStop(1, '#662222');
+
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Finger holes
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    const holeRadius = r * 0.18;
+    const holeDistance = r * 0.45;
+    const angle = progress * Math.PI * 4;
+    for (const offset of [-0.4, 0, 0.4]) {
+      const hx = screen.x + Math.cos(angle + offset) * holeDistance;
+      const hy = screen.y + Math.sin(angle + offset) * holeDistance;
+      ctx.beginPath();
+      ctx.arc(hx, hy, holeRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   drawCaption(ctx: CanvasRenderingContext2D, text: string, progress: number): void {
     // Centered text with fade based on progress (0 to 1)
-    const alpha = progress < 0.1
-      ? progress / 0.1
+    // Fade in 0-0.2, hold 0.2-0.8, fade out 0.8-1.0
+    const alpha = progress < 0.2
+      ? progress / 0.2
       : progress > 0.8
         ? (1 - progress) / 0.2
         : 1;
 
+    const dpr = (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1;
+    const canvasWidth = ctx.canvas.width / dpr;
+    const canvasHeight = ctx.canvas.height / dpr;
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight * 0.85;
+
     ctx.save();
     ctx.globalAlpha = alpha;
+
+    // Measure text for background pill
     ctx.font = 'bold 20px Inter, sans-serif';
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+    const pillPadX = 16;
+    const pillPadY = 10;
+    const pillW = textWidth + pillPadX * 2;
+    const pillH = 32 + pillPadY;
+    const pillX = centerX - pillW / 2;
+    const pillY = centerY - pillH / 2;
+
+    // Semi-transparent dark background pill
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+    ctx.fill();
+
+    // Caption text
     ctx.fillStyle = COLORS.caption;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -279,9 +744,7 @@ export class VectorRenderer implements GameRenderer {
     ctx.shadowBlur = 6;
     ctx.shadowOffsetY = 2;
 
-    const canvasWidth = ctx.canvas.width / (window?.devicePixelRatio || 1);
-    const canvasHeight = ctx.canvas.height / (window?.devicePixelRatio || 1);
-    ctx.fillText(text, canvasWidth / 2, canvasHeight * 0.85);
+    ctx.fillText(text, centerX, centerY);
 
     ctx.restore();
   }
