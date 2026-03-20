@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-An interactive bowling mini-game where the player tries to convert a 10-pin spare. The twist: it's rigged to be impossible (with an astronomically rare ~1-in-1000 win chance). The game cheats with increasingly absurd interventions. The fun is in the escalating ridiculousness, shareable results, and the rare legendary win.
+An interactive bowling mini-game where the player tries to convert a 10-pin spare. The twist: it's rigged to be impossible (with a rare ~1-in-100 win chance). The game cheats with increasingly absurd interventions. The fun is in the escalating ridiculousness, shareable results, and the rare legendary win.
 
 </domain>
 
@@ -32,7 +32,8 @@ An interactive bowling mini-game where the player tries to convert a 10-pin spar
 - **D-14:** Three categories of cheats: physics cheats (ball curves impossibly, gutter widens, lane tilts), character interruptions (cat walks across, janitor sweeps pin, hand from gutter, pigeon), and bowling-specific comedy (wrong pin set drops, 7-10 split appears, pin machine scoops ball, another bowler's ball invades). NO reality-breaking cheats (no black holes, teleporting, etc).
 - **D-15:** Start with 10 unique cheat animations. Architecture must support adding more later without major refactoring.
 - **D-16:** Every cheat gets a funny one-liner caption during or after it plays. E.g., "The lane seems... wider than before" or "Sir, this is a bowling alley."
-- **D-17:** Astronomically rare win chance (~1 in 1000). When it happens: confetti explosion, screen shakes, disbelief text ("WAIT... DID YOU JUST...?!"). Then a name prompt for the Hall of Fame.
+- **D-17:** Rare win chance (~1 in 100). When it happens: confetti explosion, screen shakes, disbelief text ("WAIT... DID YOU JUST...?!"). Then a name prompt for the Hall of Fame.
+- **D-35:** Lying aim predictor. While aiming, show feedback text about the player's aim quality - but it's ALWAYS wrong. "Definitely going to hit it this time!" when you'll miss. "Terrible aim!" when you're actually aimed perfectly. Another layer of the game gaslighting the player.
 
 ### Score Card & Sharing
 - **D-18:** Score-based end state after a set number of attempts. Shows a branded Splitzkrieg score card with attempt count and laundry list of cheats encountered (no closest-shot distance).
@@ -64,7 +65,7 @@ An interactive bowling mini-game where the player tries to convert a 10-pin spar
 - Number of absurdity tiers and exact pacing
 - Animation approach (sprite-based, procedural, or hybrid)
 - Physics engine / rendering technology choice
-- How to implement the ~1-in-1000 win mechanic
+- How to implement the ~1-in-100 win mechanic
 - Persistence approach for the winners Hall of Fame
 - Number of attempts before showing the score card
 - Slow-mo replay implementation details
