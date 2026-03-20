@@ -101,7 +101,7 @@ export function InlineCountdown({ targetDate, weekNumber }: InlineCountdownProps
 
   return (
     <div suppressHydrationWarning>
-      <div className="flex items-start gap-2 sm:gap-3">
+      <div className="flex items-start gap-1 sm:gap-3">
         <div className="flex flex-col items-center gap-0.5">
           <div className="flex gap-[2px]">
             {'WK'.split('').map((ch, i) => (
@@ -114,9 +114,9 @@ export function InlineCountdown({ targetDate, weekNumber }: InlineCountdownProps
           </div>
           <span className="flip-label">NEXT</span>
         </div>
-        <span className="flip-colon">|</span>
+        <div className="w-px h-[34px] sm:h-[46px] bg-white/50 self-start" />
         {units.map((u, i) => (
-          <div key={u.label} className="flex items-start gap-1.5 sm:gap-2">
+          <div key={u.label} className="flex items-start gap-1 sm:gap-2">
             <FlipUnit value={u.value} label={u.label} />
             {i < units.length - 1 && (
               <span className="flip-colon">:</span>
