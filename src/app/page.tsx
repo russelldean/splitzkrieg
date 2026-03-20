@@ -123,7 +123,7 @@ export default async function Home() {
                 <div className="hidden sm:block w-px bg-white/15 my-3" />
                 <div className="sm:hidden mx-6 h-px bg-white/15" />
                 {/* Right: Countdown */}
-                <div className="px-6 py-4 flex items-center justify-center">
+                <div className="px-6 py-4 flex items-center justify-center overflow-hidden">
                   <InlineCountdown targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
               </div>
