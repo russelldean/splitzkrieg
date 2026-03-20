@@ -1,7 +1,7 @@
 import * as Matter from 'matter-js';
 import { Vec2, GAME_CONSTANTS } from './types';
 
-const { Engine, World, Bodies, Body } = Matter;
+const { Engine, World, Bodies, Body, Events } = Matter;
 
 export class GameEngine {
   private engine: Matter.Engine;
@@ -10,6 +10,8 @@ export class GameEngine {
   private leftWall: Matter.Body;
   private rightWall: Matter.Body;
   private pinStartPosition: Vec2;
+  private pinMadeDynamic = false;
+  private collisionDetected = false;
 
   constructor() {
     this.engine = Engine.create({
@@ -26,6 +28,7 @@ export class GameEngine {
       {
         restitution: 0.3,
         friction: 0.05,
+        frictionAir: 0.001,
         density: 0.01,
         label: 'ball',
       }
@@ -68,9 +71,27 @@ export class GameEngine {
     );
 
     World.add(this.engine.world, [this.ball, this.pin, this.leftWall, this.rightWall]);
+
+    // Collision detection for ball-pin contact
+    Events.on(this.engine, 'collisionStart', (event) => {
+      for (const pair of event.pairs) {
+        const labels = [pair.bodyA.label, pair.bodyB.label];
+        if (labels.includes('ball') && labels.includes('pin')) {
+          this.collisionDetected = true;
+        }
+      }
+    });
   }
 
   update(delta: number): void {
+    // Make pin dynamic when ball is close (within 100px)
+    if (!this.pinMadeDynamic) {
+      const dy = Math.abs(this.ball.position.y - this.pin.position.y);
+      if (dy < 100) {
+        this.makePinDynamic();
+      }
+    }
+
     Engine.update(this.engine, delta);
   }
 
@@ -84,6 +105,21 @@ export class GameEngine {
     Body.setVelocity(this.ball, { x: 0, y: 0 });
     Body.setAngle(this.ball, 0);
     Body.setAngularVelocity(this.ball, 0);
+
+    // Reset pin to static
+    Body.setStatic(this.pin, true);
+    Body.setPosition(this.pin, { x: this.pinStartPosition.x, y: this.pinStartPosition.y });
+    Body.setVelocity(this.pin, { x: 0, y: 0 });
+    Body.setAngle(this.pin, 0);
+    Body.setAngularVelocity(this.pin, 0);
+    this.pinMadeDynamic = false;
+    this.collisionDetected = false;
+  }
+
+  makePinDynamic(): void {
+    if (this.pinMadeDynamic) return;
+    Body.setStatic(this.pin, false);
+    this.pinMadeDynamic = true;
   }
 
   getBallPosition(): Vec2 {
@@ -103,6 +139,7 @@ export class GameEngine {
   }
 
   isPinHit(): boolean {
+    if (this.collisionDetected) return true;
     const dx = this.pin.position.x - this.pinStartPosition.x;
     const dy = this.pin.position.y - this.pinStartPosition.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -121,6 +158,7 @@ export class GameEngine {
   }
 
   destroy(): void {
+    Events.off(this.engine, 'collisionStart');
     World.clear(this.engine.world, false);
     Engine.clear(this.engine);
   }
