@@ -39,7 +39,7 @@ An interactive bowling mini-game where the player tries to convert a 10-pin spar
 - **D-18:** Score-based end state after a set number of attempts. Shows a branded Splitzkrieg score card with attempt count and laundry list of cheats encountered (no closest-shot distance).
 - **D-19:** Styled HTML results page with screenshot prompt (not server-generated OG image). Simple, no image generation API needed.
 - **D-20:** Winners Hall of Fame. When someone hits the rare win, prompt for a name. Track winners on a public list ("1 of 7 humans to ever hit the 10 pin"). Needs a lightweight persistence mechanism (API route or external service).
-- **D-21:** Local leaderboard in localStorage for personal best attempt count.
+- **D-21:** ~~Local leaderboard in localStorage~~ DEFERRED -- not needed for v1.
 
 ### Visual Style
 - **D-22:** Angled/isometric perspective. Elevated view with depth, lane narrows toward the pin. Retro sports game feel.
