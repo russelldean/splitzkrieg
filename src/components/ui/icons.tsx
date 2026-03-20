@@ -37,6 +37,12 @@ export const blogIcon = (
   </svg>
 );
 
+export const gameIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+    <path d="M10 2a2 2 0 00-2 2v1c0 .5-.2 1-.5 1.4-.5.5-.8 1.2-.8 2 0 .5.1 1 .3 1.4-.2.5-.3 1-.3 1.6 0 1.8 1 3.6 3.3 3.6s3.3-1.8 3.3-3.6c0-.6-.1-1.1-.3-1.6.2-.4.3-.9.3-1.4 0-.8-.3-1.5-.8-2-.3-.4-.5-.9-.5-1.4V4a2 2 0 00-2-2z" />
+  </svg>
+);
+
 export const statsIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
     <rect x="2" y="10" width="4" height="8" rx="0.5" />

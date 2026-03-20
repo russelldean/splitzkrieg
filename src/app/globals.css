@@ -612,3 +612,19 @@ body {
     font-size: 11px;
   }
 }
+
+/* 404 wobbling pin animations */
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(3deg); }
+  75% { transform: rotate(-3deg); }
+}
+@keyframes wobble-fast {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(8deg); }
+  40% { transform: rotate(-8deg); }
+  60% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
+}
+.animate-wobble { animation: wobble 2s ease-in-out infinite; }
+.animate-wobble-fast { animation: wobble-fast 0.5s ease-in-out infinite; }
