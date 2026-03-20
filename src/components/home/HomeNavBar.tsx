@@ -58,7 +58,7 @@ export function HomeNavBar({ items }: { items: NavItem[] }) {
   }
 
   return (
-    <nav ref={barRef} className="hidden sm:block relative mt-6 sm:mt-8 border-y border-navy/30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+    <nav ref={barRef} className="hidden sm:block relative mt-6 sm:mt-8 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 border-y border-navy/30">
       <div className="flex items-center divide-x divide-navy/25">
         {items.map((item, i) => {
           const showBadge = mounted && item.newBadgeKey && !seenKeys.has(item.newBadgeKey);

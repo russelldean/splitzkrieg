@@ -17,10 +17,7 @@ import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
-import { CountdownClock } from '@/components/home/CountdownClock';
-import { HomeNavBar } from '@/components/home/HomeNavBar';
-import { SearchBar } from '@/components/layout/SearchBar';
-import { getAllPosts } from '@/lib/blog';
+import { InlineCountdown } from '@/components/home/InlineCountdown';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -75,20 +72,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Milestone Ticker with Search Bar overlay */}
-      <div className="relative">
-        <MilestoneTicker items={allTickerItems} variant="dark" />
-        {/* Search bar floats centered over the ticker on desktop */}
-        <div className="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none z-10">
-          <div className="relative flex items-center">
-            <div className="absolute -left-12 w-12 h-full bg-gradient-to-r from-transparent to-navy" />
-            <div className="absolute -right-12 w-12 h-full bg-gradient-to-l from-transparent to-navy" />
-            <div className="relative pointer-events-auto w-80">
-              <SearchBar />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Milestone Ticker */}
+      <MilestoneTicker items={allTickerItems} variant="dark" />
 
       {/* Hero Section */}
       <section className="relative">
@@ -108,16 +93,6 @@ export default async function Home() {
             <p className="font-body text-sm sm:text-base text-navy/80 -mt-4 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
-          </div>
-
-          {/* Search bar — mobile only (desktop has it in ticker overlay) */}
-          <div className="mt-4 sm:hidden">
-            <SearchBar />
-          </div>
-
-          {/* Countdown Clock — mobile only (desktop uses HeaderCountdown in header) */}
-          <div className="mt-4 sm:hidden">
-            <CountdownClock targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
           </div>
 
           {/* This Week's Results CTA */}
@@ -140,6 +115,7 @@ export default async function Home() {
                   <div className="hidden sm:block font-body text-sm text-white/80 mt-0.5">
                     Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
                   </div>
+                  <InlineCountdown targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
                 <svg className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -148,32 +124,6 @@ export default async function Home() {
             </Link>
           )}
 
-          {/* Explore Nav Bar */}
-          <HomeNavBar items={[
-            { label: 'League Nights', href: '/week', links: [
-              ...(seasonSnapshot ? [{ href: `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`, label: 'This Week' }] : []),
-              { href: '/week', label: 'All Weeks' },
-            ]},
-            { label: 'Seasons', href: '/seasons', links: [
-              ...(seasonSnapshot ? [{ href: `/season/${seasonSnapshot.slug}`, label: 'Current Season' }] : []),
-              { href: '/seasons', label: 'All Seasons' },
-            ]},
-            { label: 'Stats', href: '/stats', links: [
-              ...(seasonSnapshot ? [{ href: `/stats/${seasonSnapshot.slug}`, label: 'Current Season Stats' }] : []),
-              { href: '/stats', label: 'All Season Stats' },
-              { href: '/stats/all-time', label: 'All-Time' },
-              { href: '/milestones', label: 'Milestone Watch' },
-            ]},
-            { label: 'Bowlers', href: '/bowlers?filter=current', links: [
-              { href: '/bowlers?filter=current', label: 'Current Bowlers' },
-              { href: '/bowlers', label: 'All Bowlers' },
-            ]},
-            { label: 'Teams', href: '/teams?filter=current', links: [
-              { href: '/teams?filter=current', label: 'Current Teams' },
-              { href: '/teams', label: 'All Teams' },
-            ]},
-            { label: 'Blog', href: '/blog', links: [], newBadgeKey: (await getAllPosts())[0]?.slug ?? undefined },
-          ]} />
         </div>
       </section>
 

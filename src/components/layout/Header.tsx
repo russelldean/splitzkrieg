@@ -4,7 +4,6 @@ import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
 import { DesktopNav, HeaderSearchWrapper, MobileSearchRow } from './DesktopNav';
 import { getCurrentSeasonSnapshot, getNextBowlingNight } from '@/lib/queries';
-import { HomeHeaderCountdown } from './HomeHeaderCountdown';
 import { bowlersIcon, teamsIcon, seasonsIcon, leagueNightsIcon, blogIcon, statsIcon } from '@/components/ui/icons';
 
 export async function Header() {
@@ -82,10 +81,7 @@ export async function Header() {
               <SearchBar />
             </HeaderSearchWrapper>
 
-            {/* Homepage countdown — shows in header when search bar moves to ticker */}
-            <HomeHeaderCountdown targetDate={nextBowlingNight} />
-
-            {/* Desktop Nav — hidden on homepage where HomeNavBar replaces it */}
+            {/* Desktop Nav */}
             <DesktopNav>
               <NavDropdown
                 label="League Nights"

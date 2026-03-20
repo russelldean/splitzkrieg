@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/lineup-reminder",
-      "schedule": "30 13 * * 5"
+      "schedule": "0 13 * * 5"
     }
   ]
 }

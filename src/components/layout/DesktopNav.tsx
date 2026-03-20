@@ -1,13 +1,10 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+'use client';
+
 import type { ReactNode } from 'react';
 
-/** Hides desktop nav on homepage where HomeNavBar replaces it */
 export function DesktopNav({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  if (pathname === '/') return null;
-
   return (
     <nav className="hidden md:flex items-center gap-6 flex-shrink-0">
       {children}
@@ -15,11 +12,8 @@ export function DesktopNav({ children }: { children: ReactNode }) {
   );
 }
 
-/** Desktop: inline search bar in header row (hidden on homepage) */
+/** Desktop: inline search bar in header row */
 export function HeaderSearchWrapper({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  if (pathname === '/') return null;
-
   return (
     <div className="hidden md:flex flex-1 max-w-md mx-auto">
       {children}
@@ -27,11 +21,8 @@ export function HeaderSearchWrapper({ children }: { children: ReactNode }) {
   );
 }
 
-/** Mobile: full-width search bar below header row (hidden on homepage) */
+/** Mobile: full-width search bar below header row */
 export function MobileSearchRow({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  if (pathname === '/') return null;
-
   return (
     <div className="md:hidden pb-3">
       {children}
