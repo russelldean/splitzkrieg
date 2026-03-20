@@ -16,6 +16,7 @@ A stats-driven site for the Splitzkrieg Bowling League (splitzkrieg.org) — 19 
 - [ ] **Phase 8: Admin Tools** — Score entry UI, lineup submission, blog editor, scoresheet PDF, admin dashboard
 - [x] **Phase 9: Data Backfill and Tooling** — Old schedule imports, division data, reusable backfill scripts (completed 2026-03-14)
 - [ ] **Phase 10: Profile Depth** — Top-ten finishes, streaks, frequent partners, enhanced week reports
+- [ ] **Phase 11: Hit the 10 Pin Mini-Game** — Interactive rigged bowling mini-game with comedy cheats, skins, and Hall of Fame
 
 ## Phase Details
 
@@ -131,6 +132,44 @@ Plans:
   4. Most recent week shows rank, delta from average, and personality text
 **Plans**: TBD
 
+### Phase 11: Hit the 10 Pin Mini-Game
+**Goal**: An interactive bowling mini-game where the player tries to convert a 10-pin spare. The game is rigged to be impossible (~1-in-1000 win chance) with comedy cheats that escalate in absurdity. Features slingshot throw mechanic, three art skins, slow-mo replay, sound/haptics, score card, winners Hall of Fame, and 404 easter egg.
+**Depends on**: None (standalone)
+**Requirements:** [D-01 through D-34]
+**What to build**:
+  - Slingshot drag-and-release throw mechanic with aim arrow and ball curve
+  - Matter.js physics engine with ball, pin, and gutter bodies
+  - Canvas rendering with isometric perspective and bowling alley palette
+  - 10 comedy cheats across 3 categories (physics, character, bowling) with tiered escalation
+  - Slow-mo replay system with funny captions after each cheat
+  - Sound effects (Howler.js) and haptic vibration feedback
+  - Score card with attempt count, cheats encountered, screenshot prompt
+  - Rare win celebration (confetti, screen shake, disbelief text, Hall of Fame name prompt)
+  - Winners Hall of Fame persisted in Azure SQL via API route
+  - Three art skins (vector, pixel art, hand-drawn) with visible toggle
+  - Game page with minimal chrome layout (no site header/footer)
+  - Nav integration and 404 wobbling pin easter egg
+  - Admin mode (game always wins) via URL param or admin cookie
+  - First-load tutorial demo animation
+  - Local leaderboard in localStorage
+**Success Criteria**:
+  1. /game renders a full-viewport mini-game with slingshot throw mechanic
+  2. 10 unique cheats escalate from near-misses to absurd comedy
+  3. Every cheat has a slow-mo replay with funny caption
+  4. Score card shows attempt summary, Hall of Fame persists rare winners
+  5. Three art skins switchable via toggle
+  6. Game accessible from nav bar and 404 easter egg
+  7. Admin mode guarantees a win for demo purposes
+**Plans:** 7 plans
+Plans:
+- [ ] 11-01-PLAN.md — Type contracts, game state machine, slingshot input math, camera tracking (TDD)
+- [ ] 11-02-PLAN.md — Game page layout, Matter.js physics engine, vector renderer, canvas game loop
+- [ ] 11-03-PLAN.md — Pointer input wiring, ball launch, camera follow, demo animation
+- [ ] 11-04-PLAN.md — Cheat system: registry, 10 cheats, tier escalation, renderer integration
+- [ ] 11-05-PLAN.md — Sound effects (Howler.js), haptic feedback, slow-mo replay system
+- [ ] 11-06-PLAN.md — Score card, win celebration, Hall of Fame API + UI, admin mode
+- [ ] 11-07-PLAN.md — Nav integration, 404 easter egg, pixel art + hand-drawn skins, final checkpoint
+
 ## Later Bucket
 
 Items to build when the time is right, not tied to a specific phase:
@@ -162,3 +201,4 @@ Items to build when the time is right, not tied to a specific phase:
 | 8. Admin Tools | Not started | - |
 | 9. Data Backfill and Tooling | Complete | 2026-03-14 |
 | 10. Profile Depth | Not started | - |
+| 11. Hit the 10 Pin Mini-Game | Not started | - |
