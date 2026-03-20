@@ -56,6 +56,9 @@ An interactive bowling mini-game where the player tries to convert a 10-pin spar
 - **D-32:** Minimal chrome on the game page. Small Splitzkrieg logo in the corner. Game takes up most of the viewport. No full nav/footer.
 - **D-33:** Completely standalone. No connection to bowler profiles, scores, or league data.
 
+### Admin Mode
+- **D-34:** Secret admin mode where the game is rigged TO win (always hits the pin). Accessible when logged in as admin or via a secret URL parameter/code. For demo purposes, showing off to league members, or just having fun as the commissioner.
+
 ### Claude's Discretion
 - Starting ball position (fixed center vs draggable left/right)
 - Number of absurdity tiers and exact pacing
@@ -65,6 +68,7 @@ An interactive bowling mini-game where the player tries to convert a 10-pin spar
 - Persistence approach for the winners Hall of Fame
 - Number of attempts before showing the score card
 - Slow-mo replay implementation details
+- How admin mode is activated (admin auth check, secret URL param, Konami code, etc.)
 
 </decisions>
 
