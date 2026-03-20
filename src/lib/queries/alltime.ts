@@ -234,7 +234,7 @@ export async function getHighGameProgression(): Promise<HighGameProgressionResul
     const db = await getDb();
 
     // Main records + later-week ties
-    const result = await db.request().query<HighGameRecord & { isTied: number }>(
+    const result = await db.request().query<Omit<HighGameRecord, 'isTied'> & { isTied: number }>(
       HIGH_GAME_PROGRESSION_SQL,
     );
 
