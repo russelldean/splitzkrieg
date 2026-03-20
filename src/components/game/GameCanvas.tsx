@@ -3,6 +3,8 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { GameEngine } from './GameEngine';
 import { VectorRenderer } from './renderers/VectorRenderer';
+import { PixelRenderer } from './renderers/PixelRenderer';
+import { HandDrawnRenderer } from './renderers/HandDrawnRenderer';
 import { createCamera, updateCamera } from './Camera';
 import { createInitialState, transitionState, shouldWin, advanceTier } from './GameState';
 import { SlingshotInput } from './SlingshotInput';
@@ -16,8 +18,18 @@ import { ScoreCard } from './ScoreCard';
 import { WinCelebration } from './WinCelebration';
 import { HallOfFame } from './HallOfFame';
 import { isAdminMode } from './AdminMode';
-import type { Camera, GameState, Vec2, CheatDefinition } from './types';
+import type { Camera, GameState, GameRenderer, Vec2, CheatDefinition } from './types';
 import { GAME_CONSTANTS } from './types';
+
+const RENDERERS = {
+  vector: () => new VectorRenderer(),
+  pixel: () => new PixelRenderer(),
+  handdrawn: () => new HandDrawnRenderer(),
+} as const;
+
+type SkinType = 'vector' | 'pixel' | 'handdrawn';
+
+const SKIN_STORAGE_KEY = 'splitzkrieg-game-skin';
 
 function getCanvasPos(e: React.PointerEvent, canvas: HTMLCanvasElement): Vec2 {
   const rect = canvas.getBoundingClientRect();
@@ -27,7 +39,7 @@ function getCanvasPos(e: React.PointerEvent, canvas: HTMLCanvasElement): Vec2 {
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
-  const rendererRef = useRef<VectorRenderer | null>(null);
+  const rendererRef = useRef<GameRenderer | null>(null);
   const cameraRef = useRef<Camera>(createCamera());
   const stateRef = useRef<GameState>(createInitialState());
   const rafRef = useRef<number>(0);
@@ -51,6 +63,7 @@ export function GameCanvas() {
   const [showHallOfFame, setShowHallOfFame] = useState(false);
   const [gamePhase, setGamePhase] = useState<string>('demo');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeSkin, setActiveSkin] = useState<SkinType>('vector');
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const dpr = window.devicePixelRatio || 1;
@@ -64,12 +77,20 @@ export function GameCanvas() {
     return ctx;
   }, []);
 
-  // Initialize admin mode and check if demo should be skipped
+  // Initialize admin mode, skin preference, and check if demo should be skipped
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const admin = isAdminMode();
       setIsAdmin(admin);
       stateRef.current = createInitialState(admin);
+
+      // Load saved skin preference
+      const savedSkin = localStorage.getItem(SKIN_STORAGE_KEY) as SkinType | null;
+      if (savedSkin && savedSkin in RENDERERS) {
+        setActiveSkin(savedSkin);
+        stateRef.current = { ...stateRef.current, activeSkin: savedSkin };
+        rendererRef.current = RENDERERS[savedSkin]();
+      }
 
       const seen = sessionStorage.getItem('splitzkrieg-demo-seen');
       if (seen === 'true') {
@@ -166,9 +187,9 @@ export function GameCanvas() {
     const ctx = setupCanvas(canvas);
     if (!ctx) return;
 
-    // Create engine and renderer
+    // Create engine and renderer (use existing renderer if skin was loaded from localStorage)
     const engine = new GameEngine();
-    const renderer = new VectorRenderer();
+    const renderer = rendererRef.current || new VectorRenderer();
     engineRef.current = engine;
     rendererRef.current = renderer;
 
@@ -348,6 +369,9 @@ export function GameCanvas() {
       ctx.save();
       ctx.translate(0, -cameraRef.current.y);
 
+      // Use current renderer from ref (supports live skin switching)
+      const activeRenderer = rendererRef.current || renderer;
+
       // Draw game world
       if (stateRef.current.phase === 'replay') {
         // During replay: draw from recorded frames instead of live physics
@@ -355,42 +379,42 @@ export function GameCanvas() {
         const frameIdx = replayFrameIndexRef.current;
         if (replayFrames.length > 0 && frameIdx < replayFrames.length) {
           const frame = replayFrames[frameIdx];
-          renderer.drawLane(ctx, cameraRef.current);
-          renderer.drawGutters(ctx, cameraRef.current);
-          renderer.drawPin(ctx, frame.pinPos, frame.pinAngle, 0);
-          renderer.drawBall(ctx, frame.ballPos, frame.ballAngle);
+          activeRenderer.drawLane(ctx, cameraRef.current);
+          activeRenderer.drawGutters(ctx, cameraRef.current);
+          activeRenderer.drawPin(ctx, frame.pinPos, frame.pinAngle, 0);
+          activeRenderer.drawBall(ctx, frame.ballPos, frame.ballAngle);
         }
       } else {
         // Normal rendering from live physics
-        renderer.drawLane(ctx, cameraRef.current);
-        renderer.drawGutters(ctx, cameraRef.current);
-        renderer.drawPin(ctx, engine.getPinPosition(), engine.getPinAngle(), 0);
-        renderer.drawBall(ctx, engine.getBallPosition(), engine.getBallAngle());
+        activeRenderer.drawLane(ctx, cameraRef.current);
+        activeRenderer.drawGutters(ctx, cameraRef.current);
+        activeRenderer.drawPin(ctx, engine.getPinPosition(), engine.getPinAngle(), 0);
+        activeRenderer.drawBall(ctx, engine.getBallPosition(), engine.getBallAngle());
       }
 
       // Draw aim arrow and rubberband during aiming phase
       if (stateRef.current.phase === 'aiming') {
         const aimVec = slingshotRef.current.getAimVector();
         if (aimVec) {
-          renderer.drawAimArrow(ctx, engine.getBallPosition(), aimVec);
+          activeRenderer.drawAimArrow(ctx, engine.getBallPosition(), aimVec);
         }
       }
 
       // Draw cheat effects (in camera space for world-positioned effects)
       if (stateRef.current.phase === 'cheat' && activeCheatRef.current) {
-        renderer.drawCheatEffect(ctx, activeCheatRef.current.id, cheatProgressRef.current);
+        activeRenderer.drawCheatEffect(ctx, activeCheatRef.current.id, cheatProgressRef.current);
       }
 
       ctx.restore(); // camera offset
 
       // Draw HUD elements (not affected by camera)
       if (stateRef.current.phase === 'aiming' && predictorTextRef.current) {
-        renderer.drawPredictorText(ctx, predictorTextRef.current);
+        activeRenderer.drawPredictorText(ctx, predictorTextRef.current);
       }
 
       // Draw caption during cheat phase (screen space, not camera space)
       if (stateRef.current.phase === 'cheat' && activeCheatRef.current) {
-        renderer.drawCaption(ctx, activeCheatRef.current.caption, cheatProgressRef.current);
+        activeRenderer.drawCaption(ctx, activeCheatRef.current.caption, cheatProgressRef.current);
       }
 
       // Draw replay caption overlay (show the cheat caption during slow-mo replay)
@@ -399,7 +423,7 @@ export function GameCanvas() {
         const replayElapsed = performance.now() - replayStartTimeRef.current;
         const replayDuration = replayRef.current.getReplayDuration(0.25);
         const replayProgress = replayFrames.length >= 2 ? Math.min(replayElapsed / replayDuration, 1) : 0;
-        renderer.drawCaption(ctx, activeCheatRef.current.caption, replayProgress);
+        activeRenderer.drawCaption(ctx, activeCheatRef.current.caption, replayProgress);
 
         // Draw "Tap to skip" hint
         ctx.save();
@@ -509,6 +533,13 @@ export function GameCanvas() {
     handlePlayAgain();
   }, [handlePlayAgain]);
 
+  const handleSkinChange = useCallback((skin: SkinType) => {
+    setActiveSkin(skin);
+    stateRef.current = { ...stateRef.current, activeSkin: skin };
+    rendererRef.current = RENDERERS[skin]();
+    localStorage.setItem(SKIN_STORAGE_KEY, skin);
+  }, []);
+
   return (
     <div className="w-full h-full flex items-center justify-center relative">
       <canvas
@@ -522,6 +553,42 @@ export function GameCanvas() {
       {showDemo && stateRef.current.phase === 'demo' && (
         <DemoAnimation onComplete={handleDemoComplete} />
       )}
+      {/* Skin Toggle */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+        <button
+          onClick={() => handleSkinChange('vector')}
+          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${activeSkin === 'vector' ? 'bg-white/30 ring-1 ring-white/60' : 'bg-white/10 hover:bg-white/20'}`}
+          aria-label="Vector skin"
+          title="Vector"
+        >
+          <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2">
+            <circle cx="10" cy="10" r="7" />
+          </svg>
+        </button>
+        <button
+          onClick={() => handleSkinChange('pixel')}
+          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${activeSkin === 'pixel' ? 'bg-white/30 ring-1 ring-white/60' : 'bg-white/10 hover:bg-white/20'}`}
+          aria-label="Pixel art skin"
+          title="Pixel"
+        >
+          <svg viewBox="0 0 20 20" className="w-4 h-4" fill="white">
+            <rect x="3" y="3" width="6" height="6" />
+            <rect x="11" y="3" width="6" height="6" />
+            <rect x="3" y="11" width="6" height="6" />
+            <rect x="11" y="11" width="6" height="6" />
+          </svg>
+        </button>
+        <button
+          onClick={() => handleSkinChange('handdrawn')}
+          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${activeSkin === 'handdrawn' ? 'bg-white/30 ring-1 ring-white/60' : 'bg-white/10 hover:bg-white/20'}`}
+          aria-label="Hand-drawn skin"
+          title="Hand-drawn"
+        >
+          <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M4 16L8 4l4 8 4-12" />
+          </svg>
+        </button>
+      </div>
       {isAdmin && (
         <div className="absolute top-3 right-3 z-10 rounded bg-amber-500/80 px-2 py-0.5 text-[10px] font-bold tracking-wider text-black uppercase">
           COMMISSIONER MODE
