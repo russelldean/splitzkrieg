@@ -1,3 +1,19 @@
+<internal_workflow>
+
+**This is an INTERNAL workflow — NOT a user-facing command.**
+
+There is no `/gsd:transition` command. This workflow is invoked automatically by
+`execute-phase` during auto-advance, or inline by the orchestrator after phase
+verification. Users should never be told to run `/gsd:transition`.
+
+**Valid user commands for phase progression:**
+- `/gsd:discuss-phase {N}` — discuss a phase before planning
+- `/gsd:plan-phase {N}` — plan a phase
+- `/gsd:execute-phase {N}` — execute a phase
+- `/gsd:progress` — see roadmap progress
+
+</internal_workflow>
+
 <required_reading>
 
 **Read these files NOW:**
@@ -57,6 +73,30 @@ cat .planning/config.json 2>/dev/null
 ```
 
 </config-check>
+
+**Check for verification debt in this phase:**
+
+```bash
+# Count outstanding items in current phase
+OUTSTANDING=""
+for f in .planning/phases/XX-current/*-UAT.md .planning/phases/XX-current/*-VERIFICATION.md; do
+  [ -f "$f" ] || continue
+  grep -q "result: pending\|result: blocked\|status: partial\|status: human_needed\|status: diagnosed" "$f" && OUTSTANDING="$OUTSTANDING\n$(basename $f)"
+done
+```
+
+**If OUTSTANDING is not empty:**
+
+Append to the completion confirmation message (regardless of mode):
+
+```
+Outstanding verification items in this phase:
+{list filenames}
+
+These will carry forward as debt. Review: `/gsd:audit-uat`
+```
+
+This does NOT block transition — it ensures the user sees the debt before confirming.
 
 **If all plans complete:**
 
