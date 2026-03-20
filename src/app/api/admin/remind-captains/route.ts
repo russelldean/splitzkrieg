@@ -20,13 +20,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { seasonID, week } = await request.json();
+    const { seasonID, week, teamIDs } = await request.json();
     if (!seasonID || !week) {
       return NextResponse.json(
         { error: 'seasonID and week are required' },
         { status: 400 },
       );
     }
+
+    // Optional filter: only remind specific teams
+    const teamIDFilter: Set<number> | null =
+      Array.isArray(teamIDs) && teamIDs.length > 0
+        ? new Set(teamIDs as number[])
+        : null;
 
     const db = await getDb();
 
@@ -54,7 +60,12 @@ export async function POST(request: NextRequest) {
         ORDER BY t.teamName
       `);
 
-    if (result.recordset.length === 0) {
+    // Apply team filter if provided
+    const teams = teamIDFilter
+      ? result.recordset.filter((t) => teamIDFilter.has(t.teamID))
+      : result.recordset;
+
+    if (teams.length === 0) {
       return NextResponse.json({ sent: 0, skipped: 0, message: 'All teams have submitted!' });
     }
 
@@ -75,7 +86,7 @@ export async function POST(request: NextRequest) {
     const noEmail: string[] = [];
     const errors: string[] = [];
 
-    for (const team of result.recordset) {
+    for (const team of teams) {
       if (!team.email) {
         noEmail.push(team.teamName);
         skipped++;

@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
         submitted: submittedTeamIDs.size,
         total: teamsResult.recordset.length,
         teams: teamsResult.recordset.map((t) => ({
+          teamID: t.teamID,
           teamName: t.teamName,
           submitted: submittedTeamIDs.has(t.teamID),
         })),

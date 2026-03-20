@@ -10,7 +10,7 @@ interface DashboardData {
     week: number;
     submitted: number;
     total: number;
-    teams: Array<{ teamName: string; submitted: boolean }>;
+    teams: Array<{ teamID: number; teamName: string; submitted: boolean }>;
   } | null;
   preNightDone: string[];
   postNightDone: string[];
@@ -93,6 +93,7 @@ export default function AdminDashboardPage() {
   const [emailResult, setEmailResult] = useState<string | null>(null);
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindResult, setRemindResult] = useState<string | null>(null);
+  const [selectedTeamIDs, setSelectedTeamIDs] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     async function load() {
@@ -101,6 +102,16 @@ export default function AdminDashboardPage() {
         if (!res.ok) throw new Error('Failed to load dashboard');
         const json = await res.json();
         setData(json);
+        // Default: all unsubmitted teams selected
+        if (json.lineupStatus?.teams) {
+          setSelectedTeamIDs(
+            new Set(
+              json.lineupStatus.teams
+                .filter((t: { submitted: boolean }) => !t.submitted)
+                .map((t: { teamID: number }) => t.teamID),
+            ),
+          );
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load');
       } finally {
@@ -141,14 +152,26 @@ export default function AdminDashboardPage() {
     [data],
   );
 
+  const toggleTeamSelection = useCallback((teamID: number) => {
+    setSelectedTeamIDs((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamID)) next.delete(teamID);
+      else next.add(teamID);
+      return next;
+    });
+  }, []);
+
   const handleRemind = useCallback(async () => {
     if (!data?.season || !data?.lineupStatus) return;
-    const missing = data.lineupStatus.teams.filter((t) => !t.submitted);
-    if (missing.length === 0) return;
+    if (selectedTeamIDs.size === 0) return;
+
+    const selectedNames = data.lineupStatus.teams
+      .filter((t) => selectedTeamIDs.has(t.teamID))
+      .map((t) => t.teamName);
 
     if (
       !confirm(
-        `Send lineup reminders to ${missing.length} team${missing.length !== 1 ? 's' : ''}?`,
+        `Send lineup reminders to ${selectedNames.length} team${selectedNames.length !== 1 ? 's' : ''}?\n\n${selectedNames.join(', ')}`,
       )
     )
       return;
@@ -163,6 +186,7 @@ export default function AdminDashboardPage() {
         body: JSON.stringify({
           seasonID: data.season.seasonID,
           week: data.lineupStatus.week,
+          teamIDs: [...selectedTeamIDs],
         }),
       });
 
@@ -179,7 +203,7 @@ export default function AdminDashboardPage() {
     } finally {
       setRemindLoading(false);
     }
-  }, [data]);
+  }, [data, selectedTeamIDs]);
 
   const handlePublish = useCallback(async () => {
     if (!data?.season) return;
@@ -299,13 +323,24 @@ export default function AdminDashboardPage() {
           {data?.lineupStatus && data.lineupStatus.teams.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 mb-4">
               {data.lineupStatus.teams.map((t) => (
-                <div key={t.teamName} className="flex items-center gap-2 py-0.5">
-                  <div
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      t.submitted ? 'bg-green-500' : 'bg-navy/20'
+                <div key={t.teamID} className="flex items-center gap-2 py-0.5">
+                  {t.submitted ? (
+                    <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                    </div>
+                  ) : (
+                    <input
+                      type="checkbox"
+                      checked={selectedTeamIDs.has(t.teamID)}
+                      onChange={() => toggleTeamSelection(t.teamID)}
+                      className="w-4 h-4 shrink-0 accent-navy cursor-pointer"
+                    />
+                  )}
+                  <span
+                    className={`font-body text-xs truncate ${
+                      t.submitted ? 'text-navy/40' : 'text-navy/70'
                     }`}
-                  />
-                  <span className="font-body text-xs text-navy/70 truncate">
+                  >
                     {t.teamName}
                   </span>
                 </div>
@@ -317,13 +352,13 @@ export default function AdminDashboardPage() {
           {missingLineups > 0 && (
             <button
               onClick={handleRemind}
-              disabled={remindLoading}
+              disabled={remindLoading || selectedTeamIDs.size === 0}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-navy text-cream font-body text-xs font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
             >
               <EmailIcon className="w-4 h-4" />
               {remindLoading
                 ? 'Sending...'
-                : `Remind ${missingLineups} Captain${missingLineups !== 1 ? 's' : ''}`}
+                : `Remind ${selectedTeamIDs.size} Captain${selectedTeamIDs.size !== 1 ? 's' : ''}`}
             </button>
           )}
 
