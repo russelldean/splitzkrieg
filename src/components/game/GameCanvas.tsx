@@ -1,12 +1,13 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { GameEngine } from './GameEngine';
 import { VectorRenderer } from './renderers/VectorRenderer';
 import { createCamera, updateCamera } from './Camera';
 import { createInitialState, transitionState, shouldWin } from './GameState';
 import { SlingshotInput } from './SlingshotInput';
 import { getAimFeedback } from './AimPredictor';
+import { DemoAnimation } from './DemoAnimation';
 import type { Camera, GameState, Vec2 } from './types';
 
 function getCanvasPos(e: React.PointerEvent, canvas: HTMLCanvasElement): Vec2 {
@@ -26,8 +27,7 @@ export function GameCanvas() {
   const slingshotRef = useRef<SlingshotInput>(new SlingshotInput());
   const predictorTextRef = useRef<string>('');
   const resultTimerRef = useRef<number | null>(null);
-  const showDemoRef = useRef<boolean>(true);
-  const demoCallbackRef = useRef<(() => void) | null>(null);
+  const [showDemo, setShowDemo] = useState(true);
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const dpr = window.devicePixelRatio || 1;
@@ -46,7 +46,7 @@ export function GameCanvas() {
     if (typeof window !== 'undefined') {
       const seen = sessionStorage.getItem('splitzkrieg-demo-seen');
       if (seen === 'true') {
-        showDemoRef.current = false;
+        setShowDemo(false);
         stateRef.current = { ...stateRef.current, phase: 'idle' };
       }
     }
@@ -63,11 +63,7 @@ export function GameCanvas() {
     if (state.phase === 'demo') {
       sessionStorage.setItem('splitzkrieg-demo-seen', 'true');
       stateRef.current = transitionState(state, 'start');
-      showDemoRef.current = false;
-      if (demoCallbackRef.current) {
-        demoCallbackRef.current();
-        demoCallbackRef.current = null;
-      }
+      setShowDemo(false);
       return;
     }
 
@@ -259,8 +255,14 @@ export function GameCanvas() {
     };
   }, [setupCanvas]);
 
+  const handleDemoComplete = useCallback(() => {
+    sessionStorage.setItem('splitzkrieg-demo-seen', 'true');
+    stateRef.current = { ...stateRef.current, phase: 'idle' };
+    setShowDemo(false);
+  }, []);
+
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center relative">
       <canvas
         ref={canvasRef}
         className="block max-w-[500px] w-full h-full"
@@ -269,6 +271,9 @@ export function GameCanvas() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       />
+      {showDemo && stateRef.current.phase === 'demo' && (
+        <DemoAnimation onComplete={handleDemoComplete} />
+      )}
     </div>
   );
 }
