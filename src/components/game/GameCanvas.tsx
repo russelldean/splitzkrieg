@@ -235,11 +235,12 @@ export function GameCanvas() {
       const elapsed = timestamp - lastTimeRef.current;
       lastTimeRef.current = timestamp;
 
-      // Delta time clamping per Pitfall 5 -- cap at 32ms (~30fps minimum)
-      const delta = Math.min(elapsed, 32);
-
-      // Update physics
-      engine.update(delta);
+      // Fixed timestep physics at 16ms - run multiple steps if needed
+      const clamped = Math.min(elapsed, 48);
+      const steps = Math.ceil(clamped / 16);
+      for (let i = 0; i < steps; i++) {
+        engine.update(16);
+      }
 
       const state = stateRef.current;
       // Track camera to ball once it's rolling
@@ -265,6 +266,12 @@ export function GameCanvas() {
           timestamp: performance.now(),
         });
 
+        // Debug: log ball position every 30 frames
+        if (Math.random() < 0.03) {
+          const d = engine.debugInfo();
+          console.log(`ROLLING: ball(${d.ballPos.x.toFixed(0)},${d.ballPos.y.toFixed(0)}) pin(${d.pinPos.x.toFixed(0)},${d.pinPos.y.toFixed(0)}) speed=${d.speed.toFixed(2)} vel(${d.vel.x.toFixed(2)},${d.vel.y.toFixed(2)})`);
+        }
+
         // Gutter sound on first entry
         if (engine.isInGutter() && !gutterSoundPlayedRef.current) {
           gutterSoundPlayedRef.current = true;
@@ -273,12 +280,14 @@ export function GameCanvas() {
         }
 
         // Calculate distance from ball to pin (as fraction of lane length)
-        const totalDistance = GAME_CONSTANTS.LANE_LENGTH - 50 - 60; // ball start Y - pin Y
+        const ballStartY = GAME_CONSTANTS.LANE_LENGTH - 50;
+        const totalDistance = ballStartY - pinPos.y;
         const currentDistance = ballPos.y - pinPos.y;
         const travelProgress = 1 - (currentDistance / totalDistance);
 
-        // Trigger cheat when ball is ~80% of the way to the pin
-        if (travelProgress >= 0.8 && !cheatTriggeredRef.current) {
+        // Trigger cheat when ball is ~95% of the way to the pin
+        // TODO: re-enable cheats after core mechanics are solid
+        if (false && travelProgress >= 0.95 && !cheatTriggeredRef.current) {
           cheatTriggeredRef.current = true;
 
           if (shouldWin(state.isAdmin)) {
@@ -340,6 +349,7 @@ export function GameCanvas() {
           }
         } else if ((engine.isBallOutOfBounds() || engine.isBallStalled()) && state.phase === 'rolling') {
           // Ball missed, went out of bounds, or stalled (weak throw)
+          console.log('BALL STOPPED:', { ...engine.debugInfo(), oob: engine.isBallOutOfBounds(), stalled: engine.isBallStalled(), gutter: engine.isInGutter() });
           soundRef.current.stop('roll');
           stateRef.current = {
             ...state,

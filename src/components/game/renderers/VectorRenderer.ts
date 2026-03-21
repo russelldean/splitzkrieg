@@ -52,9 +52,11 @@ function worldToScreen(worldX: number, worldY: number): Vec2 {
   return { x: screenX, y: screenY };
 }
 
+// Objects shrink less than the lane narrows - they're 3D, not flat
+const MIN_OBJECT_SCALE = 0.6;
 function worldRadiusAtY(radius: number, worldY: number): number {
   const t = worldY / LANE_LENGTH;
-  const scale = TOP_WIDTH_RATIO + (1 - TOP_WIDTH_RATIO) * t;
+  const scale = MIN_OBJECT_SCALE + (1 - MIN_OBJECT_SCALE) * t;
   return radius * scale;
 }
 
@@ -122,6 +124,10 @@ export class VectorRenderer implements GameRenderer {
     ctx.closePath();
     ctx.fillStyle = COLORS.laneSurface;
     ctx.fill();
+
+    // Tiny black pit strip right at the wall base (where pins/balls fall in)
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(wallLeftPt.x, wallLeftPt.y - 1, wallRightPt.x - wallLeftPt.x, 6);
 
     // Lane board lines (thin vertical lines for realism)
     const boardCount = 10;
@@ -260,19 +266,20 @@ export class VectorRenderer implements GameRenderer {
 
   drawPin(ctx: CanvasRenderingContext2D, position: Vec2, angle: number, wobble: number): void {
     const screen = worldToScreen(position.x, position.y);
-    // Pin gets a minimum scale so it's always visible even at the far end
-    const scale = Math.max(worldRadiusAtY(1, position.y), 0.55);
+    // Don't draw if pin has flown off screen
+    if (position.x < -100 || position.x > LANE_WIDTH + 200 || position.y < -100 || position.y > LANE_LENGTH + 100) return;
+    const scale = worldRadiusAtY(1, Math.max(0, position.y));
 
     ctx.save();
     ctx.translate(screen.x, screen.y);
     ctx.rotate(angle + Math.sin(wobble) * 0.1);
 
     // Pin shape - tall bowling pin with belly, neck, and head
-    const bellyW = 8 * scale;
-    const bellyH = 11 * scale;
-    const neckW = 3.5 * scale;
-    const neckH = 14 * scale;
-    const headR = 5 * scale;
+    const bellyW = 9 * scale;
+    const bellyH = 12 * scale;
+    const neckW = 4 * scale;
+    const neckH = 20 * scale;
+    const headR = 6 * scale;
 
     // Shadow beneath pin
     ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';

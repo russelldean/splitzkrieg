@@ -21,6 +21,8 @@ export class GameEngine {
     const laneCenter = GAME_CONSTANTS.LANE_WIDTH / 2;
 
     // Ball at the bottom of the lane
+    // Ball and pin use collision filtering so the ball passes through
+    // the pin physically but we still detect the hit
     this.ball = Bodies.circle(
       laneCenter,
       GAME_CONSTANTS.LANE_LENGTH - 50,
@@ -31,6 +33,7 @@ export class GameEngine {
         frictionAir: 0,
         density: 0.01,
         label: 'ball',
+        collisionFilter: { group: -1 },
       }
     );
 
@@ -42,10 +45,12 @@ export class GameEngine {
       GAME_CONSTANTS.PIN_RADIUS,
       {
         restitution: 0.5,
-        friction: 0.1,
-        frictionAir: 0.1,
+        friction: 0,
+        frictionAir: 0,
         density: 0.002,
         label: 'pin',
+        isStatic: true,
+        collisionFilter: { group: -1 },
       }
     );
 
@@ -114,15 +119,14 @@ export class GameEngine {
     // Back of the lane: ball hits the cushion and drops into the pit
     // Absorb most energy, then drift sideways like it's being swept away
     const ballY = this.ball.position.y;
-    if (ballY < 1) {
+    if (ballY < 0) {
       const vel = this.ball.velocity;
       // Cushioned stop at back wall, drift to ball return
       Body.setVelocity(this.ball, {
         x: vel.x * 0.9 + 0.3,
         y: Math.max(vel.y * 0.1, 0),
       });
-      // Clamp position so ball doesn't go past the wall
-      Body.setPosition(this.ball, { x: this.ball.position.x, y: 5 });
+      Body.setPosition(this.ball, { x: this.ball.position.x, y: 0 });
     }
 
     Engine.update(this.engine, delta);
@@ -170,10 +174,22 @@ export class GameEngine {
 
   isPinHit(): boolean {
     if (this.collisionDetected) return true;
-    const dx = this.pin.position.x - this.pinStartPosition.x;
-    const dy = this.pin.position.y - this.pinStartPosition.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    return distance > GAME_CONSTANTS.PIN_RADIUS;
+    // Proximity-based hit detection since ball passes through pin
+    const dx = this.ball.position.x - this.pinStartPosition.x;
+    const dy = this.ball.position.y - this.pinStartPosition.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const hitRadius = GAME_CONSTANTS.BALL_RADIUS + GAME_CONSTANTS.PIN_RADIUS;
+    if (dist < hitRadius) {
+      this.collisionDetected = true;
+      // Make pin dynamic and fling it
+      Body.setStatic(this.pin, false);
+      const nx = dx === 0 ? 0 : -dx / dist;
+      const ny = dy === 0 ? -1 : -dy / dist;
+      Body.setVelocity(this.pin, { x: nx * 12, y: ny * 12 });
+      Body.setAngularVelocity(this.pin, (Math.random() - 0.5) * 0.5);
+      return true;
+    }
+    return false;
   }
 
   applyCheatForce(x: number, y: number): void {
@@ -184,11 +200,20 @@ export class GameEngine {
     return this.inGutter;
   }
 
+  debugInfo() {
+    return {
+      ballPos: this.getBallPosition(),
+      pinPos: this.getPinPosition(),
+      vel: { x: this.ball.velocity.x, y: this.ball.velocity.y },
+      speed: Math.sqrt(this.ball.velocity.x ** 2 + this.ball.velocity.y ** 2),
+    };
+  }
+
   isBallStalled(): boolean {
     const vel = this.ball.velocity;
     const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
-    // Only stalled if slow AND in gutter or past the pin area
-    if (speed >= 0.3) return false;
+    // Only stalled if very slow AND in gutter or past the pin area
+    if (speed >= 0.1) return false;
     return this.inGutter || this.ball.position.y < this.pinStartPosition.y;
   }
 

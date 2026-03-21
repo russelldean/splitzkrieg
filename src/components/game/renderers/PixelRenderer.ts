@@ -36,9 +36,10 @@ function worldToScreen(worldX: number, worldY: number): Vec2 {
   return { x: screenX, y: screenY };
 }
 
+const MIN_OBJECT_SCALE = 0.6;
 function worldRadiusAtY(radius: number, worldY: number): number {
   const t = worldY / LANE_LENGTH;
-  const scale = TOP_WIDTH_RATIO + (1 - TOP_WIDTH_RATIO) * t;
+  const scale = MIN_OBJECT_SCALE + (1 - MIN_OBJECT_SCALE) * t;
   return radius * scale;
 }
 
