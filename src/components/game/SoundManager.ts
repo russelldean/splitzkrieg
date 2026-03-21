@@ -9,6 +9,8 @@ type SoundName = 'roll' | 'impact' | 'woosh' | 'cheat' | 'fanfare' | 'clatter' |
  */
 export class SoundManager {
   private sounds: Howl | null = null;
+  private ambient: Howl | null = null;
+  private ambientId: number | null = null;
   private initialized = false;
   private usePlaceholder = false;
   private audioCtx: AudioContext | null = null;
@@ -29,18 +31,39 @@ export class SoundManager {
           impact:   [2000, 500],        // Ball hits pin
           woosh:    [2500, 400],        // Ball miss / near miss
           cheat:    [2900, 600],        // Generic cheat sound
-          fanfare:  [3500, 3000],       // Win celebration
-          clatter:  [6500, 800],        // Pin falling
-          release:  [7300, 300],        // Ball release snap
+          fanfare:  [3500, 2100],       // Win celebration
+          clatter:  [5600, 800],        // Pin falling
+          release:  [6400, 300],        // Ball release snap
         },
         onloaderror: () => {
-          // Sound file missing or empty -- fall back to placeholder
           this.sounds = null;
           this.usePlaceholder = true;
         },
       });
+
+      this.ambient = new Howl({
+        src: ['/sounds/ambient-loop.webm', '/sounds/ambient-loop.mp3'],
+        loop: true,
+        volume: 0.4,
+        onloaderror: () => {
+          this.ambient = null;
+        },
+      });
     } catch {
       this.usePlaceholder = true;
+    }
+  }
+
+  startAmbient() {
+    if (this.ambient && this.ambientId === null) {
+      this.ambientId = this.ambient.play();
+    }
+  }
+
+  stopAmbient() {
+    if (this.ambient && this.ambientId !== null) {
+      this.ambient.stop(this.ambientId);
+      this.ambientId = null;
     }
   }
 

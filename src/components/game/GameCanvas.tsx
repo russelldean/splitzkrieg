@@ -109,6 +109,7 @@ export function GameCanvas() {
     // Initialize sound on first user interaction (iOS audio unlock)
     if (!soundInitializedRef.current) {
       soundRef.current.init();
+      soundRef.current.startAmbient();
       soundInitializedRef.current = true;
     }
 
