@@ -51,11 +51,11 @@ export interface ReplayFrame {
 
 // Game world constants
 export const GAME_CONSTANTS = {
-  LANE_WIDTH: 200,
-  LANE_LENGTH: 800,
+  LANE_WIDTH: 400,
+  LANE_LENGTH: 500,
   BALL_RADIUS: 12,
   PIN_RADIUS: 8,
-  GUTTER_WIDTH: 30,
+  GUTTER_WIDTH: 45,
   MAX_PULL_DISTANCE: 150,
   MAX_VELOCITY: 15,
   CURVE_FACTOR: 3,

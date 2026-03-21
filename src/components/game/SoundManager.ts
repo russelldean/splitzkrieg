@@ -1,6 +1,6 @@
 import { Howl } from 'howler';
 
-type SoundName = 'roll' | 'impact' | 'woosh' | 'cheat' | 'fanfare' | 'clatter' | 'release';
+type SoundName = 'roll' | 'impact' | 'woosh' | 'cheat' | 'fanfare' | 'clatter' | 'release' | 'gutter';
 
 /**
  * SoundManager wraps Howler.js for game audio.
@@ -34,6 +34,7 @@ export class SoundManager {
           fanfare:  [3500, 2100],       // Win celebration
           clatter:  [5600, 800],        // Pin falling
           release:  [6400, 300],        // Ball release snap
+          gutter:   [6700, 400],        // Ball drops into gutter
         },
         onloaderror: () => {
           this.sounds = null;
@@ -120,6 +121,7 @@ export class SoundManager {
       fanfare:  { freq: 523, duration: 0.8, type: 'square' },
       clatter:  { freq: 180, duration: 0.25, type: 'sawtooth' },
       release:  { freq: 350, duration: 0.1, type: 'sine' },
+      gutter:   { freq: 100, duration: 0.2, type: 'square' },
     };
 
     const c = config[sound];

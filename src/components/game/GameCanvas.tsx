@@ -52,6 +52,8 @@ export function GameCanvas() {
   const activeCheatRef = useRef<CheatDefinition | null>(null);
   const cheatProgressRef = useRef<number>(0);
   const cheatStartTimeRef = useRef<number>(0);
+  const rollStartTimeRef = useRef<number>(0);
+  const gutterSoundPlayedRef = useRef<boolean>(false);
   const cheatTriggeredRef = useRef<boolean>(false);
   const soundRef = useRef<SoundManager>(new SoundManager());
   const hapticRef = useRef<HapticManager>(new HapticManager());
@@ -130,6 +132,25 @@ export function GameCanvas() {
       return;
     }
 
+    // Tap during result to immediately reset for next attempt
+    if (state.phase === 'result') {
+      if (resultTimerRef.current !== null) {
+        clearTimeout(resultTimerRef.current);
+        resultTimerRef.current = null;
+      }
+      if (state.attempt >= state.maxAttempts) {
+        stateRef.current = { ...state, phase: 'scorecard' };
+        setGamePhase('scorecard');
+      } else {
+        engineRef.current?.resetBall();
+        cameraRef.current = createCamera();
+        cheatTriggeredRef.current = false;
+        gutterSoundPlayedRef.current = false;
+        stateRef.current = { ...state, phase: 'idle' };
+      }
+      return;
+    }
+
     if (state.phase === 'idle') {
       const pos = getCanvasPos(e, canvas);
       slingshotRef.current.onPointerDown(pos);
@@ -178,6 +199,7 @@ export function GameCanvas() {
 
       // Start recording frames for replay
       replayRef.current.startRecording();
+      rollStartTimeRef.current = performance.now();
     }
   }, []);
 
@@ -219,12 +241,20 @@ export function GameCanvas() {
       // Update physics
       engine.update(delta);
 
-      // Game state logic during rolling phase
       const state = stateRef.current;
+      // Track camera to ball once it's rolling
+      const ballScreenY = engine.getBallPosition().y;
+      if (state.phase === 'rolling' || state.phase === 'cheat' || state.phase === 'replay') {
+        updateCamera(cameraRef.current, ballScreenY, displayHeight);
+      } else if (state.phase === 'result') {
+        // Snap back toward the ball for reset
+        updateCamera(cameraRef.current, ballScreenY, displayHeight);
+      }
+
+      // Game state logic during rolling phase
       if (state.phase === 'rolling') {
         const ballPos = engine.getBallPosition();
         const pinPos = engine.getPinPosition();
-        updateCamera(cameraRef.current, ballPos.y, displayHeight);
 
         // Capture replay frame every tick during rolling
         replayRef.current.captureFrame({
@@ -234,6 +264,13 @@ export function GameCanvas() {
           pinAngle: engine.getPinAngle(),
           timestamp: performance.now(),
         });
+
+        // Gutter sound on first entry
+        if (engine.isInGutter() && !gutterSoundPlayedRef.current) {
+          gutterSoundPlayedRef.current = true;
+          soundRef.current.play('gutter');
+          soundRef.current.play('woosh');
+        }
 
         // Calculate distance from ball to pin (as fraction of lane length)
         const totalDistance = GAME_CONSTANTS.LANE_LENGTH - 50 - 60; // ball start Y - pin Y
@@ -301,8 +338,8 @@ export function GameCanvas() {
             stateRef.current = transitionState(state, 'win');
             setGamePhase('win');
           }
-        } else if (engine.isBallOutOfBounds() && state.phase === 'rolling') {
-          // Ball missed without cheat triggering
+        } else if ((engine.isBallOutOfBounds() || engine.isBallStalled()) && state.phase === 'rolling') {
+          // Ball missed, went out of bounds, or stalled (weak throw)
           soundRef.current.stop('roll');
           stateRef.current = {
             ...state,
@@ -366,9 +403,11 @@ export function GameCanvas() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-      // Apply camera offset
+      // Apply camera offset, centering the lane vertically on screen
+      const laneScreenHeight = 500; // matches LANE_LENGTH after perspective
+      const verticalPadding = Math.max(0, (displayHeight - laneScreenHeight) / 2);
       ctx.save();
-      ctx.translate(0, -cameraRef.current.y);
+      ctx.translate(0, verticalPadding - cameraRef.current.y);
 
       // Use current renderer from ref (supports live skin switching)
       const activeRenderer = rendererRef.current || renderer;
@@ -435,6 +474,19 @@ export function GameCanvas() {
         ctx.restore();
       }
 
+      // Draw "Tap to try again" prompt during result phase
+      if (stateRef.current.phase === 'result') {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tap to try again', displayWidth / 2, displayHeight / 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.font = '13px sans-serif';
+        ctx.fillText(`Attempt ${stateRef.current.attempt} of ${stateRef.current.maxAttempts}`, displayWidth / 2, displayHeight / 2 + 28);
+        ctx.restore();
+      }
+
       ctx.restore(); // transform reset
 
       rafRef.current = requestAnimationFrame(loop);
@@ -454,6 +506,7 @@ export function GameCanvas() {
           engine.resetBall();
           cameraRef.current = createCamera();
           cheatTriggeredRef.current = false;
+        gutterSoundPlayedRef.current = false;
           stateRef.current = { ...currentState, phase: 'idle' };
         }
       }, 1000);

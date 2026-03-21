@@ -19,16 +19,21 @@ const COLORS = {
 
 const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH } = GAME_CONSTANTS;
 
-const TOP_WIDTH_RATIO = 0.7;
+const TOP_WIDTH_RATIO = 0.18;
 const TOP_WIDTH = LANE_WIDTH * TOP_WIDTH_RATIO;
 const PIXEL_SIZE = 4;
+const PERSPECTIVE_POWER = 2.5;
+
+const X_OFFSET = GUTTER_WIDTH;
 
 function worldToScreen(worldX: number, worldY: number): Vec2 {
-  const t = worldY / LANE_LENGTH;
+  const t = Math.max(0, Math.min(1, worldY / LANE_LENGTH));
+  const screenT = Math.pow(t, 1 / PERSPECTIVE_POWER);
+  const screenY = screenT * LANE_LENGTH;
   const currentWidth = TOP_WIDTH + (LANE_WIDTH - TOP_WIDTH) * t;
   const leftEdge = (LANE_WIDTH - currentWidth) / 2;
-  const screenX = leftEdge + (worldX / LANE_WIDTH) * currentWidth;
-  return { x: screenX, y: worldY };
+  const screenX = X_OFFSET + leftEdge + (worldX / LANE_WIDTH) * currentWidth;
+  return { x: screenX, y: screenY };
 }
 
 function worldRadiusAtY(radius: number, worldY: number): number {

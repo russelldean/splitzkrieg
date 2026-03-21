@@ -5,10 +5,14 @@ const COLORS = {
   laneSurface: '#c4956a',
   laneAccent: '#8b6914',
   gutter: '#2a2a2a',
-  ball: '#1a1a3e',
-  ballHighlight: '#2a2a5e',
+  ball: '#8b1a1a',
+  ballHighlight: '#cc3333',
+  ballSwirl: '#a02020',
   pinBody: '#f5f5f0',
   pinStripe: '#cc3333',
+  backWall: '#2e2e2e',
+  backWallTop: '#3a3a3a',
+  backWallCushion: '#1a1a1a',
   aimArrow: 'rgba(255, 255, 255, 0.6)',
   caption: '#ffffff',
   predictorText: 'rgba(255, 255, 100, 0.8)',
@@ -19,21 +23,33 @@ const COLORS = {
 
 const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH } = GAME_CONSTANTS;
 
-// Isometric perspective: lane narrows at the top (pin end)
-const TOP_WIDTH_RATIO = 0.7;
+// Near-floor-level perspective: lane narrows sharply toward the pins
+const TOP_WIDTH_RATIO = 0.18;
 const TOP_WIDTH = LANE_WIDTH * TOP_WIDTH_RATIO;
 
+// Horizontal offset so the left gutter isn't clipped off the canvas edge
+const X_OFFSET = GUTTER_WIDTH;
+
+// Strong vertical foreshortening: far end is highly compressed,
+// near end (ball area) stretches out like you're crouching behind it
+const PERSPECTIVE_POWER = 2.5;
+
 /**
- * Map a world-space X,Y to the isometric (trapezoidal) screen position.
+ * Map a world-space X,Y to the perspective screen position.
  * Y runs from 0 (pin end / top) to LANE_LENGTH (ball end / bottom).
  * The lane is wider at the bottom and narrower at the top.
+ * Y is also compressed at the far end for depth foreshortening.
  */
 function worldToScreen(worldX: number, worldY: number): Vec2 {
-  const t = worldY / LANE_LENGTH; // 0 at top, 1 at bottom
+  const t = Math.max(0, Math.min(1, worldY / LANE_LENGTH)); // 0 at top, 1 at bottom
+  // Foreshorten Y: compress the far (top) end, stretch the near (bottom) end
+  const screenT = Math.pow(t, 1 / PERSPECTIVE_POWER);
+  const screenY = screenT * LANE_LENGTH;
+
   const currentWidth = TOP_WIDTH + (LANE_WIDTH - TOP_WIDTH) * t;
   const leftEdge = (LANE_WIDTH - currentWidth) / 2;
-  const screenX = leftEdge + (worldX / LANE_WIDTH) * currentWidth;
-  return { x: screenX, y: worldY };
+  const screenX = X_OFFSET + leftEdge + (worldX / LANE_WIDTH) * currentWidth;
+  return { x: screenX, y: screenY };
 }
 
 function worldRadiusAtY(radius: number, worldY: number): number {
@@ -51,7 +67,48 @@ export class VectorRenderer implements GameRenderer {
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, -cameraY, ctx.canvas.width, ctx.canvas.height);
 
-    // Trapezoidal lane shape
+    // Back wall at the end of the lane
+    // From this perspective (looking down the lane), the wall is a narrow
+    // horizontal band rising up from the end of the lane
+    const wallBaseY = 0;
+    const wallBase = worldToScreen(LANE_WIDTH / 2, wallBaseY);
+    const wallLeftPt = worldToScreen(-GUTTER_WIDTH, wallBaseY);
+    const wallRightPt = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, wallBaseY);
+    const wallHeight = 45;
+
+    // Wall face - gradient from dark at bottom (shadow) to lighter at top
+    const wallGrad = ctx.createLinearGradient(0, wallBase.y - wallHeight, 0, wallBase.y);
+    wallGrad.addColorStop(0, '#555555');
+    wallGrad.addColorStop(0.3, '#444444');
+    wallGrad.addColorStop(0.8, '#2a2a2a');
+    wallGrad.addColorStop(1, '#1a1a1a');
+
+    ctx.fillStyle = wallGrad;
+    ctx.beginPath();
+    ctx.moveTo(wallLeftPt.x, wallLeftPt.y - wallHeight);
+    ctx.lineTo(wallRightPt.x, wallRightPt.y - wallHeight);
+    ctx.lineTo(wallRightPt.x, wallRightPt.y);
+    ctx.lineTo(wallLeftPt.x, wallLeftPt.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Top edge - bright highlight like overhead light hitting the top
+    ctx.fillStyle = '#666666';
+    ctx.fillRect(wallLeftPt.x, wallLeftPt.y - wallHeight, wallRightPt.x - wallLeftPt.x, 2);
+
+    // Rubber cushion at the base (the dark strip the ball hits)
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(wallLeftPt.x, wallLeftPt.y - 5, wallRightPt.x - wallLeftPt.x, 5);
+
+    // Subtle horizontal seam line across the middle of the wall
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(wallLeftPt.x, wallLeftPt.y - wallHeight * 0.5);
+    ctx.lineTo(wallRightPt.x, wallRightPt.y - wallHeight * 0.5);
+    ctx.stroke();
+
+    // Trapezoidal lane surface
     const topLeft = worldToScreen(0, 0);
     const topRight = worldToScreen(LANE_WIDTH, 0);
     const bottomLeft = worldToScreen(0, LANE_LENGTH);
@@ -124,60 +181,142 @@ export class VectorRenderer implements GameRenderer {
     const screen = worldToScreen(position.x, position.y);
     const r = worldRadiusAtY(BALL_RADIUS, position.y);
 
-    // Ball body with radial gradient
+    ctx.save();
+
+    // Clip to ball circle
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Base red gradient (highlight top-left for 3D look)
     const grad = ctx.createRadialGradient(
       screen.x - r * 0.3, screen.y - r * 0.3, r * 0.1,
       screen.x, screen.y, r
     );
     grad.addColorStop(0, COLORS.ballHighlight);
-    grad.addColorStop(1, COLORS.ball);
+    grad.addColorStop(0.7, COLORS.ball);
+    grad.addColorStop(1, '#5a0e0e');
 
-    ctx.beginPath();
-    ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
     ctx.fillStyle = grad;
+    ctx.fillRect(screen.x - r, screen.y - r, r * 2, r * 2);
+
+    // Wavy swirl pattern that rotates with the ball
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = COLORS.ballSwirl;
+    ctx.lineWidth = r * 0.18;
+    ctx.lineCap = 'round';
+
+    for (let i = 0; i < 3; i++) {
+      const baseAngle = angle + (i * Math.PI * 2) / 3;
+      ctx.beginPath();
+      for (let t = 0; t <= 1; t += 0.05) {
+        const wave = Math.sin(t * Math.PI * 2.5 + i) * r * 0.3;
+        const dist = t * r * 0.9;
+        const px = screen.x + Math.cos(baseAngle) * dist + Math.cos(baseAngle + Math.PI / 2) * wave;
+        const py = screen.y + Math.sin(baseAngle) * dist + Math.sin(baseAngle + Math.PI / 2) * wave;
+        if (t === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // Pearlescent sheen (lighter arc across the surface)
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(
+      screen.x - r * 0.15, screen.y - r * 0.2,
+      r * 0.7, r * 0.35,
+      -0.5, 0, Math.PI * 2
+    );
     ctx.fill();
 
+    ctx.restore();
+
     // Three finger holes (rotate with angle)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    const holeRadius = r * 0.18;
-    const holeDistance = r * 0.45;
-    const holeAngles = [angle - 0.4, angle, angle + 0.4];
-    for (const hAngle of holeAngles) {
-      const hx = screen.x + Math.cos(hAngle) * holeDistance;
-      const hy = screen.y + Math.sin(hAngle) * holeDistance;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    const holeRadius = r * 0.16;
+    const holeDistance = r * 0.4;
+    // Two finger holes close together + one thumb hole offset
+    const holes = [
+      { a: angle - 0.35, d: holeDistance, s: holeRadius },
+      { a: angle + 0.35, d: holeDistance, s: holeRadius },
+      { a: angle + Math.PI - 0.1, d: holeDistance * 0.7, s: holeRadius * 1.15 },
+    ];
+    for (const h of holes) {
+      const hx = screen.x + Math.cos(h.a) * h.d;
+      const hy = screen.y + Math.sin(h.a) * h.d;
       ctx.beginPath();
-      ctx.arc(hx, hy, holeRadius, 0, Math.PI * 2);
+      ctx.arc(hx, hy, h.s, 0, Math.PI * 2);
       ctx.fill();
+      // Inner shadow for depth
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.arc(hx + h.s * 0.15, hy + h.s * 0.15, h.s * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     }
   }
 
   drawPin(ctx: CanvasRenderingContext2D, position: Vec2, angle: number, wobble: number): void {
     const screen = worldToScreen(position.x, position.y);
-    const r = worldRadiusAtY(PIN_RADIUS, position.y);
+    // Pin gets a minimum scale so it's always visible even at the far end
+    const scale = Math.max(worldRadiusAtY(1, position.y), 0.55);
 
     ctx.save();
     ctx.translate(screen.x, screen.y);
     ctx.rotate(angle + Math.sin(wobble) * 0.1);
 
-    // Pin body (oval / cylinder from above)
+    // Pin shape - tall bowling pin with belly, neck, and head
+    const bellyW = 8 * scale;
+    const bellyH = 11 * scale;
+    const neckW = 3.5 * scale;
+    const neckH = 14 * scale;
+    const headR = 5 * scale;
+
+    // Shadow beneath pin
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
     ctx.beginPath();
-    ctx.ellipse(0, 0, r, r * 1.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(1 * scale, bellyH * 0.4, bellyW * 1.1, 3 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Belly (wide bottom)
     ctx.fillStyle = COLORS.pinBody;
+    ctx.beginPath();
+    ctx.ellipse(0, bellyH * 0.15, bellyW, bellyH, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#ddd';
+
+    // Neck (narrowing above belly)
+    ctx.beginPath();
+    ctx.moveTo(-neckW, -bellyH * 0.3);
+    ctx.quadraticCurveTo(-neckW * 0.8, -bellyH * 0.3 - neckH, 0, -bellyH * 0.3 - neckH);
+    ctx.quadraticCurveTo(neckW * 0.8, -bellyH * 0.3 - neckH, neckW, -bellyH * 0.3);
+    ctx.quadraticCurveTo(bellyW * 0.6, -bellyH * 0.1, -bellyW * 0.6, -bellyH * 0.1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Head (round top)
+    ctx.beginPath();
+    ctx.arc(0, -bellyH * 0.3 - neckH - headR * 0.5, headR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Red stripes on the neck
+    ctx.fillStyle = COLORS.pinStripe;
+    ctx.fillRect(-neckW * 0.9, -bellyH * 0.3 - 2 * scale, neckW * 1.8, 2 * scale);
+    ctx.fillRect(-neckW * 0.9, -bellyH * 0.3 - 5 * scale, neckW * 1.8, 2 * scale);
+
+    // Highlight (sheen on the belly)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.beginPath();
+    ctx.ellipse(-bellyW * 0.25, 0, bellyW * 0.4, bellyH * 0.5, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Outline
+    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
     ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.ellipse(0, bellyH * 0.15, bellyW, bellyH, 0, 0, Math.PI * 2);
     ctx.stroke();
-
-    // Red stripe(s)
-    ctx.beginPath();
-    ctx.ellipse(0, -r * 0.3, r * 0.8, r * 0.15, 0, 0, Math.PI * 2);
-    ctx.fillStyle = COLORS.pinStripe;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.ellipse(0, r * 0.3, r * 0.8, r * 0.15, 0, 0, Math.PI * 2);
-    ctx.fillStyle = COLORS.pinStripe;
-    ctx.fill();
 
     ctx.restore();
   }
