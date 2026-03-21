@@ -26,6 +26,7 @@ import {
   getLeagueMilestones,
   milestoneTickerItems,
 } from '@/lib/queries';
+import { getBowlerGameProfile, getLeagueGameAvgs } from '@/lib/queries/alltime';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
 import { LastWeekHighlight } from '@/components/bowler/LastWeekHighlight';
@@ -34,6 +35,7 @@ import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
 import { GameLog } from '@/components/bowler/GameLog';
 import { YouAreAStar } from '@/components/bowler/YouAreAStar';
+import { GameProfile } from '@/components/bowler/GameProfile';
 import { MilestoneWatch } from '@/components/bowler/MilestoneWatch';
 import { TrailNav } from '@/components/ui/TrailNav';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
@@ -88,7 +90,7 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones, gameProfile, leagueGameAvgs] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
@@ -100,6 +102,8 @@ export default async function BowlerPage({
     getBowlerPatches(bowler.bowlerID),
     getWeeklyHighlights(),
     getLeagueMilestones(),
+    getBowlerGameProfile(slug),
+    getLeagueGameAvgs(),
   ]);
 
   const isBowlerOfTheWeek = botwID === bowler.bowlerID;
@@ -210,6 +214,8 @@ export default async function BowlerPage({
           // EASTER EGG: Mike DePasquale 300 photo, Harper Gordek photo
           easterEgg={slug === 'mike-depasquale' ? { src: '/village-lanes-mp300.jpg', alt: 'Mike\'s 300 - Perfect Game at Village Lanes', width: 4032, height: 3024 } : slug === 'harper-gordek' ? { src: '/IMG_7806.jpeg', alt: 'Harper Gordek', width: 2016, height: 1512 } : undefined}
         />
+
+        {gameProfile && <GameProfile profile={gameProfile} leagueAvgs={leagueGameAvgs} />}
       </div>
 
       <TrailNav current="/bowlers" seasonSlug={currentSlug} />

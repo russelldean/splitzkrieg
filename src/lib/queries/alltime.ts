@@ -3,6 +3,30 @@
  */
 import { getDb, cachedQuery } from '../db';
 
+// ── Game Profile types & constants ──────────────────────────────────────────
+
+export type GameArchetype = 'Fast Starter' | 'Middle Child' | 'Late Bloomer' | 'Flatliner';
+
+export interface GameProfileRow {
+  bowlerName: string;
+  slug: string;
+  nights: number;
+  games: number;
+  avg1: number;
+  avg2: number;
+  avg3: number;
+  overallAvg: number;
+  pctSpread: number;
+  bestGame: 1 | 2 | 3;
+  archetype: GameArchetype;
+  isActive?: boolean;
+}
+
+// Hardcoded: 10th percentile of pct-spread among 27+ game (9+ night) bowlers (as of Spring 2026).
+// Recalibrate at end of season if desired.
+const FLATLINER_PCT_CUTOFF = 1.6131;
+const MIN_NIGHTS = 9; // 27 games / 3 games per night
+
 export interface AllTimeLeaderRow {
   bowlerID: number;
   bowlerName: string;
@@ -323,4 +347,102 @@ export async function getHighGameProgression(): Promise<HighGameProgressionResul
     const latestNight = latestResult.recordset[0]?.maxNight || records[records.length - 1]?.nightNumber || 1;
     return { records, latestNight };
   }, [], { sql: HIGH_GAME_PROGRESSION_SQL + SAME_WEEK_TIES_SQL, dependsOn: ['scores'] });
+}
+
+// ── Game Profiles (Fast Starter / Middle Child / Late Bloomer / Flatliner) ──
+
+function classifyArchetype(avg1: number, avg2: number, avg3: number, pctSpread: number): { bestGame: 1 | 2 | 3; archetype: GameArchetype } {
+  const avgs = [avg1, avg2, avg3] as const;
+  const maxIdx = avgs.indexOf(Math.max(...avgs));
+  const bestGame = (maxIdx + 1) as 1 | 2 | 3;
+
+  if (pctSpread <= FLATLINER_PCT_CUTOFF) {
+    return { bestGame, archetype: 'Flatliner' };
+  }
+
+  const archetypes: GameArchetype[] = ['Fast Starter', 'Middle Child', 'Late Bloomer'];
+  return { bestGame, archetype: archetypes[maxIdx] };
+}
+
+const GAME_PROFILES_SQL = `
+  SELECT b.bowlerName, b.slug, b.isActive,
+    COUNT(*) AS games,
+    AVG(CAST(s.game1 AS FLOAT)) AS avg1,
+    AVG(CAST(s.game2 AS FLOAT)) AS avg2,
+    AVG(CAST(s.game3 AS FLOAT)) AS avg3
+  FROM scores s
+  JOIN bowlers b ON b.bowlerID = s.bowlerID
+  WHERE s.isPenalty = 0
+    AND s.game1 IS NOT NULL
+    AND s.game2 IS NOT NULL
+    AND s.game3 IS NOT NULL
+  GROUP BY b.bowlerName, b.bowlerID, b.slug, b.isActive
+`;
+
+export interface GameProfilesResult {
+  all: GameProfileRow[];
+  leaderboard: GameProfileRow[];  // 27+ games only, for ranked lists
+}
+
+export async function getGameProfiles(): Promise<GameProfilesResult> {
+  return cachedQuery('getGameProfiles', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{
+      bowlerName: string; slug: string; isActive: boolean | null; games: number;
+      avg1: number; avg2: number; avg3: number;
+    }>(GAME_PROFILES_SQL);
+
+    const all: GameProfileRow[] = result.recordset.map(r => {
+      const overallAvg = (r.avg1 + r.avg2 + r.avg3) / 3;
+      const spread = Math.max(r.avg1, r.avg2, r.avg3) - Math.min(r.avg1, r.avg2, r.avg3);
+      const pctSpread = overallAvg > 0 ? (spread / overallAvg) * 100 : 0;
+      const { bestGame, archetype } = classifyArchetype(r.avg1, r.avg2, r.avg3, pctSpread);
+      return {
+        bowlerName: r.bowlerName,
+        slug: r.slug,
+        nights: r.games,
+        games: r.games * 3,
+        avg1: r.avg1,
+        avg2: r.avg2,
+        avg3: r.avg3,
+        overallAvg,
+        pctSpread,
+        bestGame,
+        archetype,
+        isActive: !!r.isActive,
+      };
+    });
+
+    const leaderboard = all.filter(b => b.nights >= MIN_NIGHTS && b.isActive);
+
+    return { all, leaderboard };
+  }, { all: [], leaderboard: [] }, { sql: GAME_PROFILES_SQL, dependsOn: ['scores'] });
+}
+
+export async function getBowlerGameProfile(slug: string): Promise<GameProfileRow | null> {
+  const { all } = await getGameProfiles();
+  return all.find(b => b.slug === slug) ?? null;
+}
+
+export interface LeagueGameAvgs {
+  avg1: number;
+  avg2: number;
+  avg3: number;
+}
+
+const LEAGUE_GAME_AVGS_SQL = `
+  SELECT
+    AVG(CAST(game1 AS FLOAT)) AS avg1,
+    AVG(CAST(game2 AS FLOAT)) AS avg2,
+    AVG(CAST(game3 AS FLOAT)) AS avg3
+  FROM scores
+  WHERE isPenalty = 0 AND game1 IS NOT NULL AND game2 IS NOT NULL AND game3 IS NOT NULL
+`;
+
+export async function getLeagueGameAvgs(): Promise<LeagueGameAvgs> {
+  return cachedQuery('getLeagueGameAvgs', async () => {
+    const db = await getDb();
+    const result = await db.request().query<LeagueGameAvgs>(LEAGUE_GAME_AVGS_SQL);
+    return result.recordset[0];
+  }, { avg1: 0, avg2: 0, avg3: 0 }, { sql: LEAGUE_GAME_AVGS_SQL, dependsOn: ['scores'] });
 }

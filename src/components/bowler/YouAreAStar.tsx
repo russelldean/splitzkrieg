@@ -224,14 +224,9 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
     <section>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between group cursor-pointer"
+        className="flex items-center gap-3 group cursor-pointer"
       >
-        <div className="flex items-center gap-2">
-          <h2 className="font-heading text-2xl text-navy">You Are a Star</h2>
-          <span className="text-sm text-navy/65 font-medium">
-            {totalStars} {totalStars === 1 ? 'highlight' : 'highlights'}
-          </span>
-        </div>
+        <h2 className="font-heading text-2xl text-navy">You Are a Star</h2>
         <svg
           className={`w-5 h-5 text-navy/55 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
@@ -242,6 +237,9 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
+      <span className="text-sm text-navy/65 font-medium font-body">
+        {totalStars} {totalStars === 1 ? 'highlight' : 'highlights'}
+      </span>
       <span className="block w-10 h-0.5 bg-red-600/40 mt-1.5" />
 
       {open && (

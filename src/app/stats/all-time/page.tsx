@@ -130,6 +130,18 @@ export default async function AllTimeStatsPage() {
           How the all-time high scratch game record has progressed across seasons
         </p>
         <HighGameProgression records={highGameRecords} latestNight={latestNight} />
+
+        {/* League Night Profiles */}
+        <h3 className="font-heading text-lg text-navy mt-8">League Night Profiles</h3>
+        <p className="font-body text-sm text-navy/50 mt-1">
+          Are you a Fast Starter, Middle Child, Late Bloomer, or Flatliner?
+        </p>
+        <Link
+          href="/stats/all-time/game-profiles"
+          className="inline-block mt-2 text-sm text-red-600 hover:text-red-700 font-body"
+        >
+          View League Night Profiles &rarr;
+        </Link>
       </details>
 
       <TrailNav current="/stats" />
