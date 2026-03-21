@@ -7,11 +7,10 @@ export class GameEngine {
   private engine: Matter.Engine;
   private ball: Matter.Body;
   private pin: Matter.Body;
-  private leftGutterWall: Matter.Body;
-  private rightGutterWall: Matter.Body;
   private pinStartPosition: Vec2;
   private collisionDetected = false;
   private inGutter = false;
+  private inPit = false;
 
   constructor() {
     this.engine = Engine.create({
@@ -58,27 +57,7 @@ export class GameEngine {
 
     // Outer gutter walls -- ball can leave the lane surface into the gutter
     // channel, but hits the outer wall and rolls forward
-    const gutterWidth = GAME_CONSTANTS.GUTTER_WIDTH;
-    const wallHeight = GAME_CONSTANTS.LANE_LENGTH;
-    const wallThickness = 10;
-
-    this.leftGutterWall = Bodies.rectangle(
-      -gutterWidth - wallThickness / 2,
-      wallHeight / 2,
-      wallThickness,
-      wallHeight,
-      { isStatic: true, restitution: 0.1, label: 'gutterWall' }
-    );
-
-    this.rightGutterWall = Bodies.rectangle(
-      GAME_CONSTANTS.LANE_WIDTH + gutterWidth + wallThickness / 2,
-      wallHeight / 2,
-      wallThickness,
-      wallHeight,
-      { isStatic: true, restitution: 0.1, label: 'gutterWall' }
-    );
-
-    World.add(this.engine.world, [this.ball, this.pin, this.leftGutterWall, this.rightGutterWall]);
+    World.add(this.engine.world, [this.ball, this.pin]);
 
     // Collision detection for ball-pin contact
     Events.on(this.engine, 'collisionStart', (event) => {
@@ -116,17 +95,24 @@ export class GameEngine {
       Body.setVelocity(this.ball, { x: vel.x * 0.3, y: vel.y });
     }
 
-    // Back of the lane: ball hits the cushion and drops into the pit
-    // Absorb most energy, then drift sideways like it's being swept away
+    // Ball drops into the pit behind the pins
+    // Once in the pit, the ball rolls behind/under the pin deck
     const ballY = this.ball.position.y;
-    if (ballY < 0) {
+    if (ballY < 0.2 && !this.inPit) {
+      this.inPit = true;
+    }
+    if (this.inPit) {
       const vel = this.ball.velocity;
-      // Cushioned stop at back wall, drift to ball return
+      // Slow way down as it drops into the pit
       Body.setVelocity(this.ball, {
-        x: vel.x * 0.9 + 0.3,
-        y: Math.max(vel.y * 0.1, 0),
+        x: vel.x * 0.96 + 0.15,
+        y: vel.y * 0.85,
       });
-      Body.setPosition(this.ball, { x: this.ball.position.x, y: 0 });
+      // Clamp so ball doesn't fly past the back wall forever
+      if (ballY < -20) {
+        Body.setPosition(this.ball, { x: this.ball.position.x, y: -20 });
+        Body.setVelocity(this.ball, { x: vel.x * 0.96 + 0.15, y: 0 });
+      }
     }
 
     Engine.update(this.engine, delta);
@@ -150,6 +136,7 @@ export class GameEngine {
     Body.setAngularVelocity(this.pin, 0);
     this.collisionDetected = false;
     this.inGutter = false;
+    this.inPit = false;
   }
 
   makePinDynamic(): void {
@@ -174,6 +161,8 @@ export class GameEngine {
 
   isPinHit(): boolean {
     if (this.collisionDetected) return true;
+    // Ball in the pit rolls behind the pins - no hit possible
+    if (this.inPit) return false;
     // Proximity-based hit detection since ball passes through pin
     const dx = this.ball.position.x - this.pinStartPosition.x;
     const dy = this.ball.position.y - this.pinStartPosition.y;
@@ -214,7 +203,7 @@ export class GameEngine {
     const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
     // Only stalled if very slow AND in gutter or past the pin area
     if (speed >= 0.1) return false;
-    return this.inGutter || this.ball.position.y < this.pinStartPosition.y;
+    return this.inGutter || this.inPit || this.ball.position.y < this.pinStartPosition.y;
   }
 
   isBallOutOfBounds(): boolean {

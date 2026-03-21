@@ -266,12 +266,6 @@ export function GameCanvas() {
           timestamp: performance.now(),
         });
 
-        // Debug: log ball position every 30 frames
-        if (Math.random() < 0.03) {
-          const d = engine.debugInfo();
-          console.log(`ROLLING: ball(${d.ballPos.x.toFixed(0)},${d.ballPos.y.toFixed(0)}) pin(${d.pinPos.x.toFixed(0)},${d.pinPos.y.toFixed(0)}) speed=${d.speed.toFixed(2)} vel(${d.vel.x.toFixed(2)},${d.vel.y.toFixed(2)})`);
-        }
-
         // Gutter sound on first entry
         if (engine.isInGutter() && !gutterSoundPlayedRef.current) {
           gutterSoundPlayedRef.current = true;
@@ -347,9 +341,8 @@ export function GameCanvas() {
             stateRef.current = transitionState(state, 'win');
             setGamePhase('win');
           }
-        } else if ((engine.isBallOutOfBounds() || engine.isBallStalled()) && state.phase === 'rolling') {
+        } else if (engine.isBallOutOfBounds() && state.phase === 'rolling') {
           // Ball missed, went out of bounds, or stalled (weak throw)
-          console.log('BALL STOPPED:', { ...engine.debugInfo(), oob: engine.isBallOutOfBounds(), stalled: engine.isBallStalled(), gutter: engine.isInGutter() });
           soundRef.current.stop('roll');
           stateRef.current = {
             ...state,

@@ -125,7 +125,7 @@ export class VectorRenderer implements GameRenderer {
     ctx.fillStyle = COLORS.laneSurface;
     ctx.fill();
 
-    // Tiny black pit strip right at the wall base (where pins/balls fall in)
+    // Tiny black pit strip right at the wall base
     ctx.fillStyle = '#000000';
     ctx.fillRect(wallLeftPt.x, wallLeftPt.y - 1, wallRightPt.x - wallLeftPt.x, 6);
 
@@ -184,10 +184,22 @@ export class VectorRenderer implements GameRenderer {
   }
 
   drawBall(ctx: CanvasRenderingContext2D, position: Vec2, angle: number): void {
-    const screen = worldToScreen(position.x, position.y);
-    const r = worldRadiusAtY(BALL_RADIUS, position.y);
+    // Always render at the real position
+    const screen = worldToScreen(position.x, Math.max(0, position.y));
+    const r = worldRadiusAtY(BALL_RADIUS, Math.max(0, position.y));
+
+    // The pit strip bottom edge in screen coords - this is where the lane ends
+    // and the ball would sink below the surface
+    const pitClipY = worldToScreen(0, 0).y + 5;
 
     ctx.save();
+
+    // If the ball's center is above the pit edge, clip so the lane hides the bottom
+    if (screen.y < pitClipY) {
+      ctx.beginPath();
+      ctx.rect(0, 0, ctx.canvas.width, pitClipY);
+      ctx.clip();
+    }
 
     // Clip to ball circle
     ctx.beginPath();
