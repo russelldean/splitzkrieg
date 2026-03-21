@@ -1,21 +1,11 @@
 /**
- * All-Time Stats page.
- * Shows team and individual championship history across all seasons.
+ * All-Time Stats hub page.
+ * Directory linking to all-time leaderboards, records, and deep cuts.
  */
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import {
-  getAllPlayoffHistory,
-  getAllIndividualChampions,
-  getAllTimeLeaderboard,
-} from '@/lib/queries';
-import { getHighGameProgression } from '@/lib/queries/alltime';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { AllTimeLeaderboardTable } from '@/components/alltime/AllTimeLeaderboardTable';
-import { PlayoffHistoryTable } from '@/components/alltime/PlayoffHistoryTable';
-import { IndividualChampionsTable } from '@/components/alltime/IndividualChampionsTable';
-import { HighGameProgression } from '@/components/alltime/HighGameProgression';
 
 export const metadata: Metadata = {
   title: 'All-Time Stats | Splitzkrieg',
@@ -23,26 +13,28 @@ export const metadata: Metadata = {
     'All-time leaderboards, records, and championship history across 35+ seasons of Splitzkrieg Bowling League.',
 };
 
-export default async function AllTimeStatsPage() {
-  const [playoffs, individualChampions, leaderboard, highGameProgression] = await Promise.all([
-    getAllPlayoffHistory(),
-    getAllIndividualChampions(),
-    getAllTimeLeaderboard(),
-    getHighGameProgression(),
-  ]);
-  const { records: highGameRecords, latestNight } = highGameProgression;
+function DirectoryItem({ href, title, description }: { href: string; title: string; description: string }) {
+  return (
+    <div>
+      <h3 className="font-heading text-lg text-navy">{title}</h3>
+      <p className="font-body text-sm text-navy/65 mt-1">{description}</p>
+      <Link
+        href={href}
+        className="inline-block mt-2 text-sm text-red-600 hover:text-red-700 font-body"
+      >
+        View {title} &rarr;
+      </Link>
+    </div>
+  );
+}
 
+export default function AllTimeStatsPage() {
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <TrailNav current="/stats" position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
-        <Link
-          href="/stats"
-          className="hover:text-red-600 transition-colors"
-        >
-          Stats
-        </Link>
-        <span className="text-navy/30">/</span>
+        <Link href="/stats" className="hover:text-red-600 transition-colors">Stats</Link>
+        <span className="text-navy/60">/</span>
         <span className="text-navy/70">All-Time</span>
       </div>
 
@@ -53,96 +45,47 @@ export default async function AllTimeStatsPage() {
         35+ seasons of Splitzkrieg bowling history
       </p>
 
-      {/* All-Time Leaderboard */}
-      <details className="mt-10 group">
-        <summary className="cursor-pointer list-none">
-          <SectionHeading>
-            <span className="inline-flex items-center gap-2">
-              Career Leaderboard
-              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
-            </span>
-          </SectionHeading>
-        </summary>
-        <div className="mt-4">
-          <AllTimeLeaderboardTable data={leaderboard} />
+      {/* Leaderboards & Championships */}
+      <div className="mt-10">
+        <SectionHeading>Leaderboards &amp; Championships</SectionHeading>
+        <div className="space-y-6">
+          <DirectoryItem
+            href="/stats/all-time/career-leaderboard"
+            title="Career Leaderboard"
+            description="All-time career stats for every bowler in league history"
+          />
+          <DirectoryItem
+            href="/stats/all-time/team-championships"
+            title="Team Championships"
+            description="Playoff and championship history across all seasons"
+          />
+          <DirectoryItem
+            href="/stats/all-time/individual-champions"
+            title="Individual Champions"
+            description="Scratch and handicap champions across all seasons"
+          />
         </div>
-      </details>
-
-      {/* Team Championship History */}
-      <details className="mt-10 group">
-        <summary className="cursor-pointer list-none">
-          <SectionHeading>
-            <span className="inline-flex items-center gap-2">
-              Team Championships
-              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
-            </span>
-          </SectionHeading>
-        </summary>
-        <div className="mt-4">
-          <PlayoffHistoryTable playoffs={playoffs} />
-        </div>
-
-        {playoffs.length === 0 && (
-          <p className="font-body text-navy/65 italic mt-4">
-            No playoff data available.
-          </p>
-        )}
-      </details>
-
-      {/* Individual Championship History */}
-      <details className="mt-10 group">
-        <summary className="cursor-pointer list-none">
-          <SectionHeading>
-            <span className="inline-flex items-center gap-2">
-              Individual Champions
-              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
-            </span>
-          </SectionHeading>
-        </summary>
-        <div className="mt-4">
-          <IndividualChampionsTable champions={individualChampions} />
-        </div>
-
-        {individualChampions.length === 0 && (
-          <p className="font-body text-navy/65 italic mt-4">
-            No individual championship data available.
-          </p>
-        )}
-      </details>
+      </div>
 
       {/* Deep Cuts */}
-      <details className="mt-10 group" open>
-        <summary className="cursor-pointer list-none">
-          <SectionHeading>
-            <span className="inline-flex items-center gap-2">
-              Deep Cuts
-              <span className="text-navy/30 text-sm font-body font-normal group-open:rotate-90 transition-transform">&#9654;</span>
-            </span>
-          </SectionHeading>
-        </summary>
-        <p className="font-body text-sm text-navy/50 mt-1 mb-6">
+      <div className="mt-10">
+        <SectionHeading>Deep Cuts</SectionHeading>
+        <p className="font-body text-sm text-navy/65 -mt-2 mb-6">
           Statistical one-offs and record progressions
         </p>
-
-        {/* High Game Record Progression */}
-        <h3 className="font-heading text-lg text-navy mt-2">High Game Record</h3>
-        <p className="font-body text-sm text-navy/50 mt-1">
-          How the all-time high scratch game record has progressed across seasons
-        </p>
-        <HighGameProgression records={highGameRecords} latestNight={latestNight} />
-
-        {/* League Night Profiles */}
-        <h3 className="font-heading text-lg text-navy mt-8">League Night Profiles</h3>
-        <p className="font-body text-sm text-navy/50 mt-1">
-          Are you a Fast Starter, Middle Child, Late Bloomer, or Flatliner?
-        </p>
-        <Link
-          href="/stats/all-time/game-profiles"
-          className="inline-block mt-2 text-sm text-red-600 hover:text-red-700 font-body"
-        >
-          View League Night Profiles &rarr;
-        </Link>
-      </details>
+        <div className="space-y-6">
+          <DirectoryItem
+            href="/stats/all-time/high-game-record"
+            title="High Game Record"
+            description="How the all-time high scratch game record has progressed across seasons"
+          />
+          <DirectoryItem
+            href="/stats/all-time/game-profiles"
+            title="League Night Profiles"
+            description="Are you a Fast Starter, Middle Child, Late Bloomer, or Flatliner?"
+          />
+        </div>
+      </div>
 
       <TrailNav current="/stats" />
     </main>

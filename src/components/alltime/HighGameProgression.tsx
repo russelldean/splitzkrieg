@@ -119,7 +119,7 @@ export function HighGameProgression({ records, latestNight }: Props) {
   return (
     <div className="mt-6">
       {/* Chart */}
-      <div className="relative" style={{ height: 320 }}>
+      <div className="high-game-chart relative" style={{ height: 320 }}>
         {/* Chart area */}
         <div className="relative h-full bg-white rounded-lg border border-navy/10 p-2">
           {/* Horizontal grid lines */}
@@ -270,16 +270,30 @@ export function HighGameProgression({ records, latestNight }: Props) {
           <tbody>
             {records.map((r) => {
               const nightsHeld = getNightsHeld(r);
+              const markerIdx = markerGroups.findIndex(
+                g => g.nightNumber === r.nightNumber && g.score === r.score,
+              );
+              const isHighlighted = activeIdx === markerIdx;
 
               return (
                 <tr
                   key={`${r.seasonID}-${r.week}-${r.slug}`}
-                  className={`border-b border-navy/5 last:border-0 ${r.isTied ? 'bg-navy/[0.02]' : ''}`}
+                  className={`border-b border-navy/5 last:border-0 transition-colors ${isHighlighted ? 'bg-amber-50' : r.isTied ? 'bg-navy/[0.02]' : ''}`}
                 >
                   <td className="py-3 pr-4 font-heading text-lg tabular-nums">
-                    <span className={r.isTied ? 'text-navy/60' : 'text-red-600'}>
-                      {r.score}
-                    </span>
+                    <button
+                      onClick={() => {
+                        setActiveIdx(isHighlighted ? null : markerIdx);
+                        if (!isHighlighted) {
+                          document.querySelector('.high-game-chart')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                      className="cursor-pointer hover:underline"
+                    >
+                      <span className={r.isTied ? 'text-navy/60' : 'text-red-600'}>
+                        {r.score}
+                      </span>
+                    </button>
                     {r.isTied && (
                       <span className="ml-2 text-xs font-body text-navy/60 uppercase tracking-wider">
                         Tied
