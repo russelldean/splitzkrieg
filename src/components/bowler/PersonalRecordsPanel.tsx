@@ -18,10 +18,10 @@ interface Props {
 
 function formatFirstNight(summary: BowlerCareerSummary): string {
   if (summary.firstMatchDate) {
-    return formatMatchDate(summary.firstMatchDate, { month: 'short', day: 'numeric', year: 'numeric' }) ?? '\u2014';
+    return formatMatchDate(summary.firstMatchDate, { month: 'short', day: 'numeric', year: 'numeric' }) ?? '--';
   }
   if (summary.firstYear) return String(summary.firstYear);
-  return '\u2014';
+  return '--';
 }
 
 export function PersonalRecordsPanel({ careerSummary, delta, slug }: Props) {
@@ -100,7 +100,7 @@ function RecordCard({
 }) {
   // Show X (bowling strike symbol) for zero counts
   const isStrike = value === 0;
-  const display = value === null ? '\u2014' : isStrike ? 'X' : value;
+  const display = value === null ? '--' : isStrike ? 'X' : value;
   const strikeClass = isStrike ? 'text-red-600/50 font-bold' : '';
 
   const deltaColors = {
