@@ -12,7 +12,7 @@ export default function GameLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="relative w-screen h-screen bg-[#1a1a2e] overflow-hidden">
+    <div className="relative w-screen bg-[#1a1a2e] overflow-hidden" style={{ height: '100dvh' }}>
       <Link
         href="/"
         className="absolute top-3 left-3 z-50 text-white/60 hover:text-white/90 transition-colors font-heading text-xs tracking-widest"
