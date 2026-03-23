@@ -10,7 +10,7 @@ import { mdxComponents } from '@/lib/mdx-components';
 import type { PostMeta } from '@/lib/blog';
 
 export const dynamicParams = true;
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 async function isAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -76,10 +76,15 @@ export default async function BlogPostPage({
 
   // If not published, try preview (admin only)
   if (!meta || !content) {
-    const preview = await getPreviewPost(slug);
-    if (!preview) notFound();
-    meta = preview.meta;
-    content = preview.content;
+    try {
+      const preview = await getPreviewPost(slug);
+      if (!preview) notFound();
+      meta = preview.meta;
+      content = preview.content;
+    } catch (err) {
+      console.error('Blog preview error:', err);
+      notFound();
+    }
   }
 
   const { prev, next } = await getAdjacentPosts(slug);
