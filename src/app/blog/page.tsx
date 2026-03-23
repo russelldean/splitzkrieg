@@ -39,7 +39,7 @@ export default async function BlogPage() {
             The Weekly Email
           </h1>
           <p className="font-body text-sm text-white/85 mt-1 drop-shadow">
-            Recaps from the league nights, not strictly emailed anymore.
+            Recaps from the league, not strictly weekly and not strictly emailed anymore.
           </p>
         </div>
       </div>
