@@ -66,6 +66,18 @@ export function GameCanvas() {
   const [gamePhase, setGamePhase] = useState<string>('demo');
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeSkin, setActiveSkin] = useState<SkinType>('vector');
+  const [showDebug, setShowDebug] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const debugRef = useRef<boolean>(false);
+  const recordingRef = useRef<boolean>(false);
+  const recordingIdRef = useRef<number>(0);
+  const lastCaptureRef = useRef<number>(0);
+
+  // Keep refs in sync for use in game loop
+  useEffect(() => { debugRef.current = showDebug; }, [showDebug]);
+  useEffect(() => { pausedRef.current = isPaused; }, [isPaused]);
+  useEffect(() => { recordingRef.current = isRecording; }, [isRecording]);
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const dpr = window.devicePixelRatio || 1;
@@ -236,10 +248,12 @@ export function GameCanvas() {
       lastTimeRef.current = timestamp;
 
       // Fixed timestep physics at 16ms - run multiple steps if needed
-      const clamped = Math.min(elapsed, 48);
-      const steps = Math.ceil(clamped / 16);
+      // When debug overlay is on, run at 25% speed for easier inspection
+      const timeScale = debugRef.current ? 0.25 : 1;
+      const clamped = Math.min(elapsed, 48) * timeScale;
+      const steps = Math.max(1, Math.ceil(clamped / 16));
       for (let i = 0; i < steps; i++) {
-        engine.update(16);
+        engine.update(clamped / steps);
       }
 
       const state = stateRef.current;
@@ -274,7 +288,7 @@ export function GameCanvas() {
         }
 
         // Calculate distance from ball to pin (as fraction of lane length)
-        const ballStartY = GAME_CONSTANTS.LANE_LENGTH - 50;
+        const ballStartY = GAME_CONSTANTS.LANE_LENGTH - 100;
         const totalDistance = ballStartY - pinPos.y;
         const currentDistance = ballPos.y - pinPos.y;
         const travelProgress = 1 - (currentDistance / totalDistance);
@@ -406,11 +420,9 @@ export function GameCanvas() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-      // Apply camera offset, centering the lane vertically on screen
-      const laneScreenHeight = 500; // matches LANE_LENGTH after perspective
-      const verticalPadding = Math.max(0, (displayHeight - laneScreenHeight) / 2);
+      // Camera offset (disabled for top-down view, renderer handles positioning)
       ctx.save();
-      ctx.translate(0, verticalPadding - cameraRef.current.y);
+      // ctx.translate(0, verticalPadding - cameraRef.current.y);
 
       // Use current renderer from ref (supports live skin switching)
       const activeRenderer = rendererRef.current || renderer;
@@ -424,15 +436,18 @@ export function GameCanvas() {
           const frame = replayFrames[frameIdx];
           activeRenderer.drawLane(ctx, cameraRef.current);
           activeRenderer.drawGutters(ctx, cameraRef.current);
-          activeRenderer.drawPin(ctx, frame.pinPos, frame.pinAngle, 0);
           activeRenderer.drawBall(ctx, frame.ballPos, frame.ballAngle);
+          activeRenderer.drawPin(ctx, frame.pinPos, frame.pinAngle, 0);
         }
       } else {
         // Normal rendering from live physics
+        // Draw order: lane/gutters -> ball -> pin
+        // Ball is always on top of the lane (including back wall/pit strip).
+        // Pin is always on top of the ball (ball rolls behind pin in the pit).
         activeRenderer.drawLane(ctx, cameraRef.current);
         activeRenderer.drawGutters(ctx, cameraRef.current);
-        activeRenderer.drawPin(ctx, engine.getPinPosition(), engine.getPinAngle(), 0);
         activeRenderer.drawBall(ctx, engine.getBallPosition(), engine.getBallAngle());
+        activeRenderer.drawPin(ctx, engine.getPinPosition(), engine.getPinAngle(), 0);
       }
 
       // Draw aim arrow and rubberband during aiming phase
@@ -490,6 +505,73 @@ export function GameCanvas() {
         ctx.restore();
       }
 
+      // Auto-capture frames during rolling when recording is on
+      if (recordingRef.current && (state.phase === 'rolling' || state.phase === 'cheat' || state.phase === 'result')) {
+        const now = performance.now();
+        if (now - lastCaptureRef.current > 200) {
+          lastCaptureRef.current = now;
+          const frameNum = recordingIdRef.current++;
+          canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            const formData = new FormData();
+            formData.append('screenshot', blob, `roll-${String(frameNum).padStart(4, '0')}.png`);
+            try {
+              await fetch('/api/game/debug-screenshot', { method: 'POST', body: formData });
+            } catch { /* silent */ }
+          });
+        }
+      }
+
+      // Debug overlay (screen space)
+      if (debugRef.current && engineRef.current) {
+        const dbg = engineRef.current.debugInfo();
+        const cam = cameraRef.current;
+        const phase = stateRef.current.phase;
+        const attempt = stateRef.current.attempt;
+        const sling = slingshotRef.current.getAimVector();
+
+        ctx.save();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Background panel - top right, below DBG button
+        const panelWidth = 170;
+        const panelX = displayWidth - panelWidth - 4;
+        const panelY = 52;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillRect(panelX, panelY, 170, 186);
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+        ctx.strokeRect(panelX, panelY, 170, 186);
+
+        // Text
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'left';
+        const lines = [
+          `PHASE: ${phase}`,
+          `ATTEMPT: ${attempt}/${stateRef.current.maxAttempts}`,
+          ``,
+          `BALL X: ${dbg.ballPos.x.toFixed(1)}`,
+          `BALL Y: ${dbg.ballPos.y.toFixed(1)}`,
+          `VEL X:  ${dbg.vel.x.toFixed(2)}`,
+          `VEL Y:  ${dbg.vel.y.toFixed(2)}`,
+          `SPEED:  ${dbg.speed.toFixed(2)}`,
+          ``,
+          `PIN X:  ${dbg.pinPos.x.toFixed(1)}`,
+          `PIN Y:  ${dbg.pinPos.y.toFixed(1)}`,
+          ``,
+          `CAM Y:  ${cam.y.toFixed(1)}`,
+          `CANVAS: ${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)}`,
+        ];
+        if (sling) {
+          lines.push(`AIM: ${sling.x.toFixed(1)}, ${sling.y.toFixed(1)}`);
+        }
+        lines.forEach((line, i) => {
+          ctx.fillText(line, panelX + 8, panelY + 14 + i * 12);
+        });
+
+        ctx.restore();
+      }
+
       ctx.restore(); // transform reset
 
       rafRef.current = requestAnimationFrame(loop);
@@ -523,9 +605,13 @@ export function GameCanvas() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Pause when tab is hidden per Pitfall 5
+    // Pause when tab is hidden per Pitfall 5 (don't unpause if manually paused)
     const handleVisibility = () => {
-      pausedRef.current = document.visibilityState === 'hidden';
+      if (document.visibilityState === 'hidden') {
+        pausedRef.current = true;
+      } else if (!isPaused) {
+        pausedRef.current = false;
+      }
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
@@ -644,6 +730,130 @@ export function GameCanvas() {
           <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
             <path d="M4 16L8 4l4 8 4-12" />
           </svg>
+        </button>
+      </div>
+      {/* Debug tools - top right */}
+      <div className="absolute top-12 right-3 z-10 flex flex-col gap-2">
+        <button
+          onClick={() => setShowDebug(d => !d)}
+          className={`w-16 h-16 rounded-lg flex items-center justify-center text-sm font-bold font-mono transition-colors ${showDebug ? 'bg-green-500/50 text-green-200 ring-1 ring-green-400/60' : 'bg-white/10 text-white/40 hover:bg-white/20'}`}
+          aria-label="Toggle debug overlay"
+          title="Debug overlay"
+        >
+          DBG
+        </button>
+        <button
+          onClick={() => {
+            engineRef.current?.resetBall();
+            cameraRef.current = createCamera();
+            cheatTriggeredRef.current = false;
+            gutterSoundPlayedRef.current = false;
+            stateRef.current = { ...stateRef.current, phase: 'idle', attempt: 0, cheatsEncountered: [] };
+            setGamePhase('idle');
+            setShowHallOfFame(false);
+            if (resultTimerRef.current !== null) {
+              clearTimeout(resultTimerRef.current);
+              resultTimerRef.current = null;
+            }
+          }}
+          className="w-16 h-16 rounded-lg flex items-center justify-center text-sm font-bold font-mono bg-red-500/30 text-red-200 hover:bg-red-500/50 transition-colors"
+          aria-label="Reset game"
+          title="Reset"
+        >
+          RST
+        </button>
+        <button
+          onClick={() => {
+            setIsPaused(p => !p);
+            pausedRef.current = !pausedRef.current;
+          }}
+          className={`w-16 h-16 rounded-lg flex items-center justify-center text-sm font-bold font-mono transition-colors ${isPaused ? 'bg-yellow-500/50 text-yellow-200 ring-1 ring-yellow-400/60' : 'bg-white/10 text-white/40 hover:bg-white/20'}`}
+          aria-label="Pause game"
+          title="Pause"
+        >
+          {isPaused ? '▶' : '⏸'}
+        </button>
+        <button
+          onClick={(e) => {
+            const btn = e.currentTarget;
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            btn.textContent = '...';
+            // Capture full viewport with debug info overlay
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const dpr = window.devicePixelRatio || 1;
+            const screenW = window.screen.width;
+            const screenH = window.screen.height;
+            const canvasRect = canvas.getBoundingClientRect();
+            const debugCanvas = document.createElement('canvas');
+            debugCanvas.width = vw * dpr;
+            debugCanvas.height = vh * dpr;
+            const dctx = debugCanvas.getContext('2d')!;
+            dctx.scale(dpr, dpr);
+            // Draw dark background for full viewport
+            dctx.fillStyle = '#1a1a2e';
+            dctx.fillRect(0, 0, vw, vh);
+            // Draw the game canvas in its actual position
+            dctx.drawImage(canvas, canvasRect.left, canvasRect.top, canvasRect.width, canvasRect.height);
+            // Draw red border showing canvas bounds
+            dctx.strokeStyle = 'red';
+            dctx.lineWidth = 2;
+            dctx.strokeRect(canvasRect.left, canvasRect.top, canvasRect.width, canvasRect.height);
+            // Viewport info overlay
+            const lines = [
+              `viewport: ${vw}x${vh}`,
+              `screen: ${screenW}x${screenH} @${dpr}x`,
+              `canvas rect: ${Math.round(canvasRect.width)}x${Math.round(canvasRect.height)} @ (${Math.round(canvasRect.left)},${Math.round(canvasRect.top)})`,
+              `canvas px: ${canvas.width}x${canvas.height}`,
+              `dvh test: ${document.documentElement.clientHeight}`,
+            ];
+            dctx.font = 'bold 12px monospace';
+            lines.forEach((line, i) => {
+              const y = vh - 10 - (lines.length - 1 - i) * 16;
+              dctx.fillStyle = 'rgba(0,0,0,0.7)';
+              dctx.fillRect(4, y - 12, dctx.measureText(line).width + 8, 16);
+              dctx.fillStyle = '#0f0';
+              dctx.fillText(line, 8, y);
+            });
+            debugCanvas.toBlob(async (blob) => {
+              if (!blob) { btn.textContent = '📷'; return; }
+              const formData = new FormData();
+              formData.append('screenshot', blob, `game-debug-${Date.now()}.png`);
+              try {
+                const res = await fetch('/api/game/debug-screenshot', { method: 'POST', body: formData });
+                const data = await res.json();
+                console.log('Screenshot saved:', data.path);
+                btn.textContent = '✅';
+                setTimeout(() => { btn.textContent = '📷'; }, 1000);
+              } catch (e) {
+                console.error('Screenshot failed:', e);
+                btn.textContent = '❌';
+                setTimeout(() => { btn.textContent = '📷'; }, 1500);
+              }
+            });
+          }}
+          className="w-16 h-16 rounded-lg flex items-center justify-center text-sm font-bold font-mono bg-blue-500/30 text-blue-200 hover:bg-blue-500/50 transition-colors"
+          aria-label="Screenshot game"
+          title="Screenshot"
+        >
+          📷
+        </button>
+        <button
+          onClick={() => {
+            if (!isRecording) {
+              // Starting a new recording - clear old frames
+              recordingIdRef.current = 0;
+              lastCaptureRef.current = 0;
+              fetch('/api/game/debug-screenshot?clear=rolls', { method: 'DELETE' }).catch(() => {});
+            }
+            setIsRecording(r => !r);
+          }}
+          className={`w-16 h-16 rounded-lg flex items-center justify-center text-sm font-bold font-mono transition-colors ${isRecording ? 'bg-red-600/60 text-red-100 ring-2 ring-red-400/80 animate-pulse' : 'bg-white/10 text-white/40 hover:bg-white/20'}`}
+          aria-label="Record roll"
+          title="Record roll"
+        >
+          REC
         </button>
       </div>
       {isAdmin && (
