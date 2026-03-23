@@ -20,14 +20,13 @@ function UpdateRow({ update }: { update: Update }) {
       <span className="font-body text-sm text-navy/65 shrink-0">
         {new Date(update.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </span>
-      {update.href ? (
-        <Link href={update.href} className="font-body text-sm text-navy hover:text-red-600 underline decoration-navy/20 hover:decoration-red-600 transition-colors">
-          {update.text}
+      <span className="font-body text-sm text-navy">
+        {update.text}
+      </span>
+      {update.href && (
+        <Link href={update.href} className="font-body text-xs font-semibold text-red-600 hover:text-red-700 transition-colors shrink-0">
+          Link
         </Link>
-      ) : (
-        <span className="font-body text-sm text-navy">
-          {update.text}
-        </span>
       )}
     </div>
   );
