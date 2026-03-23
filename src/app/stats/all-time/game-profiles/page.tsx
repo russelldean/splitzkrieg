@@ -29,6 +29,16 @@ export default async function GameProfilesPage() {
     'Flatliner': all.filter(b => b.archetype === 'Flatliner').length,
   };
 
+  // Active bowler distribution (27+ games, currently active)
+  const active = all.filter(b => b.isActive);
+  const totalActive = active.length;
+  const activeDist = {
+    'Fast Starter': active.filter(b => b.archetype === 'Fast Starter').length,
+    'Middle Child': active.filter(b => b.archetype === 'Middle Child').length,
+    'Late Bloomer': active.filter(b => b.archetype === 'Late Bloomer').length,
+    'Flatliner': active.filter(b => b.archetype === 'Flatliner').length,
+  };
+
   // Sort by how much their best game exceeds their avg (relative %)
   const bestGamePct = (b: typeof leaderboard[0]) => {
     const avgs = [b.avg1, b.avg2, b.avg3];
@@ -81,8 +91,18 @@ export default async function GameProfilesPage() {
         Find your personal game profile at the bottom of <Link href="/bowlers" className="text-red-600 hover:text-red-700">your bowler page</Link>.
       </p>
 
-      {/* Distribution summary */}
-      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Distribution summary — Active / 27+ Games */}
+      <p className="mt-6 font-heading text-sm text-navy mb-2">Active / 27+ Games ({totalActive})</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <DistCard archetype="Fast Starter" count={activeDist['Fast Starter']} total={totalActive} desc="Best in Game 1" color="bg-orange-50 border-orange-200" />
+        <DistCard archetype="Middle Child" count={activeDist['Middle Child']} total={totalActive} desc="Best in Game 2" color="bg-purple-50 border-purple-200" />
+        <DistCard archetype="Late Bloomer" count={activeDist['Late Bloomer']} total={totalActive} desc="Best in Game 3" color="bg-emerald-50 border-emerald-200" />
+        <DistCard archetype="Flatliner" count={activeDist['Flatliner']} total={totalActive} desc="Consistent all night" color="bg-slate-50 border-slate-200" />
+      </div>
+
+      {/* Distribution summary — All Bowlers */}
+      <p className="mt-5 font-heading text-sm text-navy mb-2">All Bowlers ({totalAll})</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <DistCard archetype="Fast Starter" count={dist['Fast Starter']} total={totalAll} desc="Best in Game 1" color="bg-orange-50 border-orange-200" />
         <DistCard archetype="Middle Child" count={dist['Middle Child']} total={totalAll} desc="Best in Game 2" color="bg-purple-50 border-purple-200" />
         <DistCard archetype="Late Bloomer" count={dist['Late Bloomer']} total={totalAll} desc="Best in Game 3" color="bg-emerald-50 border-emerald-200" />

@@ -90,36 +90,38 @@ export default function BlogEditorPage({
     }
   }, [title, slugEdited]);
 
-  // Auto-save after 30s of idle
-  const resetIdleTimer = useCallback(() => {
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    idleTimerRef.current = setTimeout(() => {
-      if (postId && !saving) {
-        handleSave(false);
-      }
-    }, 30000);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId, saving]);
+  // Auto-save after 30s of idle — only after post has loaded
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+  const loadedRef = useRef(false);
 
   useEffect(() => {
-    resetIdleTimer();
+    if (!loading && post) loadedRef.current = true;
+  }, [loading, post]);
+
+  useEffect(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      if (postId && !saving && loadedRef.current) {
+        handleSaveRef.current(false);
+      }
+    }, 30000);
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  }, [title, content, excerpt, type, resetIdleTimer]);
+  }, [title, content, excerpt, type, postId, saving]);
 
   // Ctrl+S handler
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        if (postId && !saving) handleSave(false);
+        if (postId && !saving && loadedRef.current) handleSaveRef.current(false);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId, saving, title, slug, content, excerpt, type]);
+  }, [postId, saving]);
 
   async function handleSave(publish: boolean | null) {
     if (!postId) return;
