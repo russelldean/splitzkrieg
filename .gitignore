@@ -44,3 +44,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 debug-screenshots/
+
+# audio source files (production uses .mp3/.webm)
+public/sounds/*.wav
+public/sounds/parts/
+gutter_thud.wav

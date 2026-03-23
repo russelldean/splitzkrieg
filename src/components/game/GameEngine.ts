@@ -24,7 +24,7 @@ export class GameEngine {
     // the pin physically but we still detect the hit
     this.ball = Bodies.circle(
       laneCenter,
-      GAME_CONSTANTS.LANE_LENGTH - 50,
+      GAME_CONSTANTS.LANE_LENGTH - 100,
       GAME_CONSTANTS.BALL_RADIUS,
       {
         restitution: 0.3,
@@ -37,10 +37,12 @@ export class GameEngine {
     );
 
     // 10-pin: back row, far right corner of the pin triangle
-    const tenPinX = GAME_CONSTANTS.LANE_WIDTH - GAME_CONSTANTS.PIN_RADIUS - 5;
+    // Pin sits on the lane surface just before the pit
+    const tenPinX = GAME_CONSTANTS.LANE_WIDTH - GAME_CONSTANTS.PIN_RADIUS - 1;
+    const tenPinY = GAME_CONSTANTS.PIN_Y;
     this.pin = Bodies.circle(
       tenPinX,
-      -2,
+      tenPinY,
       GAME_CONSTANTS.PIN_RADIUS,
       {
         restitution: 0.5,
@@ -53,7 +55,7 @@ export class GameEngine {
       }
     );
 
-    this.pinStartPosition = { x: tenPinX, y: -2 };
+    this.pinStartPosition = { x: tenPinX, y: tenPinY };
 
     // Outer gutter walls -- ball can leave the lane surface into the gutter
     // channel, but hits the outer wall and rolls forward
@@ -95,23 +97,29 @@ export class GameEngine {
       Body.setVelocity(this.ball, { x: vel.x * 0.3, y: vel.y });
     }
 
-    // Ball drops into the pit behind the pins
-    // Once in the pit, the ball rolls behind/under the pin deck
+    // Ball drops into the pit behind the pins (Y < 0)
+    // The pit runs from Y=0 down to Y=-PIT_DEPTH, with the back wall at the far end
     const ballY = this.ball.position.y;
     if (ballY < 0.2 && !this.inPit) {
       this.inPit = true;
     }
     if (this.inPit) {
       const vel = this.ball.velocity;
-      // Slow way down as it drops into the pit
+      // Ball rolls through the pit with steady sideways drift
+      // and gradual forward momentum loss
       Body.setVelocity(this.ball, {
-        x: vel.x * 0.96 + 0.15,
-        y: vel.y * 0.85,
+        x: vel.x * 0.995 + 0.5,
+        y: vel.y * 0.96,
       });
-      // Clamp so ball doesn't fly past the back wall forever
-      if (ballY < -20) {
-        Body.setPosition(this.ball, { x: this.ball.position.x, y: -20 });
-        Body.setVelocity(this.ball, { x: vel.x * 0.96 + 0.15, y: 0 });
+      // Clamp at back wall
+      const pitBottom = -GAME_CONSTANTS.PIT_DEPTH;
+      if (ballY < pitBottom) {
+        Body.setPosition(this.ball, { x: this.ball.position.x, y: pitBottom });
+        Body.setVelocity(this.ball, { x: vel.x * 0.995 + 0.5, y: 0 });
+      }
+      // Ball has rolled off the side of the pit - end the turn
+      if (this.ball.position.x > GAME_CONSTANTS.LANE_WIDTH + GAME_CONSTANTS.BALL_RADIUS) {
+        Body.setPosition(this.ball, { x: this.ball.position.x, y: pitBottom - GAME_CONSTANTS.BALL_RADIUS });
       }
     }
 
@@ -124,7 +132,7 @@ export class GameEngine {
 
   resetBall(): void {
     const laneCenter = GAME_CONSTANTS.LANE_WIDTH / 2;
-    Body.setPosition(this.ball, { x: laneCenter, y: GAME_CONSTANTS.LANE_LENGTH - 50 });
+    Body.setPosition(this.ball, { x: laneCenter, y: GAME_CONSTANTS.LANE_LENGTH - 100 });
     Body.setVelocity(this.ball, { x: 0, y: 0 });
     Body.setAngle(this.ball, 0);
     Body.setAngularVelocity(this.ball, 0);
@@ -208,8 +216,10 @@ export class GameEngine {
 
   isBallOutOfBounds(): boolean {
     const ballPos = this.ball.position;
-    // Ball passed the pin (went past top of lane)
-    if (ballPos.y < -GAME_CONSTANTS.BALL_RADIUS * 2) return true;
+    // Ball hit the back wall of the pit
+    if (ballPos.y < -(GAME_CONSTANTS.PIT_DEPTH + GAME_CONSTANTS.BALL_RADIUS)) return true;
+    // Ball rolled off the side in the pit
+    if (this.inPit && ballPos.x > GAME_CONSTANTS.LANE_WIDTH + GAME_CONSTANTS.GUTTER_WIDTH + GAME_CONSTANTS.BALL_RADIUS) return true;
     // Ball went past bottom of lane
     if (ballPos.y > GAME_CONSTANTS.LANE_LENGTH + GAME_CONSTANTS.BALL_RADIUS * 2) return true;
     return false;
