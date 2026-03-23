@@ -42,7 +42,8 @@ export async function getNewBlogBadgeId(): Promise<string | null> {
     if (!slug) return null;
     // Auto-expire after 14 days
     if (ts && Date.now() - parseInt(ts, 10) > BADGE_TTL_MS) return null;
-    return slug;
+    // Return full value (slug|ts) as badge ID so re-promoting resets localStorage
+    return val;
   } catch {
     return null;
   }
