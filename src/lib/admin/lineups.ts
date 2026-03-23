@@ -337,6 +337,7 @@ const LP_TEAM_MAP: Record<string, string> = {
   'Lucky Strikes': '696e61463d649815687f78bb',
   'Pin-Ups': '696e614b3d649815687f7917',
   'Smoke-A-Bowl': '696e61533d649815687f7989',
+  'Smoke-a-Bowl': '696e61533d649815687f7989',
   'Sparadigm Shift': '696e61643d649815687f7a6d',
   'Stinky Cheese': '696e61553d649815687f79aa',
   'The Boom Kings': '696e615c3d649815687f7a07',
@@ -400,6 +401,12 @@ export async function pushLineupsToLP(
       if (!loadRes.ok) {
         errors.push(`Failed to load LP team "${teamName}": ${loadRes.status}`);
         continue;
+      }
+
+      const contentType = loadRes.headers.get('content-type') || '';
+      if (!contentType.includes('json')) {
+        errors.push(`LP returned HTML for "${teamName}" - cookie is likely expired or invalid`);
+        break; // No point trying other teams with a bad cookie
       }
 
       const teamData = await loadRes.json();
