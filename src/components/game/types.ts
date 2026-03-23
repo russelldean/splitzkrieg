@@ -50,14 +50,28 @@ export interface ReplayFrame {
 }
 
 // Game world constants
+// Proportions based on real bowling lane specs scaled to 400-unit lane width:
+//   Real lane width: 42" -> 400 units (1 unit = 0.105")
+//   Real ball diameter: 8.6" -> 82 units (radius 41)
+//   Real pin diameter (widest): 4.7" -> 45 units (radius ~22)
+//   Real gutter width: 9.25" -> 88 units
+//   Real pit depth: ~8' behind pins -> 200 units (compressed for gameplay)
+//
+// Layout (Y axis, top-down view, Y=0 at pin end):
+//   Y = LANE_LENGTH (1200): ball start (foul line end)
+//   Y = PIN_Y (~5): pin deck (where the 10-pin sits)
+//   Y = 0: lane surface ends, pit begins
+//   Y = -PIT_DEPTH (-80): back wall
 export const GAME_CONSTANTS = {
   LANE_WIDTH: 400,
-  LANE_LENGTH: 500,
-  BALL_RADIUS: 18,
-  PIN_RADIUS: 10,
-  GUTTER_WIDTH: 45,
+  LANE_LENGTH: 1200,       // Stretched for top-down (real ratio would be ~6800)
+  BALL_RADIUS: 28,         // Shrunk from real-scale 41 for better visual feel on phone
+  PIN_RADIUS: 45,          // 50% bigger than 30 for more visual impact
+  GUTTER_WIDTH: 88,        // Real: 9.25" = 88 units
+  PIT_DEPTH: 80,           // Pit behind pins
+  PIN_Y: 5,                // Pin sits at the very end of the lane, just before pit
   MAX_PULL_DISTANCE: 150,
-  MAX_VELOCITY: 15,
+  MAX_VELOCITY: 25,        // Faster to cover the longer lane
   CURVE_FACTOR: 3,
   MAX_ATTEMPTS: 10,
   WIN_PROBABILITY: 0.01,

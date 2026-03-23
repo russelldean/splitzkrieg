@@ -9,6 +9,8 @@ const COLORS = {
   ballHighlight: '#2a2a5e',
   pinBody: '#f5f5f0',
   pinStripe: '#cc3333',
+  pit: '#0a0a0a',
+  wall: '#333333',
   aimArrow: 'rgba(255, 255, 255, 0.6)',
   caption: '#ffffff',
   predictorText: 'rgba(255, 255, 100, 0.8)',
@@ -17,11 +19,14 @@ const COLORS = {
   boardLine: 'rgba(139, 105, 20, 0.3)',
 } as const;
 
-const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH } = GAME_CONSTANTS;
+const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH, PIT_DEPTH } = GAME_CONSTANTS;
 
-const TOP_WIDTH_RATIO = 0.18;
-const TOP_WIDTH = LANE_WIDTH * TOP_WIDTH_RATIO;
-const PERSPECTIVE_POWER = 2.5;
+// Top-down view: scale world coords to fit the canvas (matches VectorRenderer)
+const TOTAL_WIDTH = LANE_WIDTH + GUTTER_WIDTH * 2;
+const TOTAL_HEIGHT = PIT_DEPTH + LANE_LENGTH + 60;
+const SCALE = Math.min(480 / TOTAL_WIDTH, 810 / TOTAL_HEIGHT);
+const X_OFFSET = (500 - TOTAL_WIDTH * SCALE) / 2;
+const Y_OFFSET = (832 - TOTAL_HEIGHT * SCALE) / 2;
 
 // Seeded random for consistent wobble per frame
 let wobbleSeed = 0;
@@ -34,23 +39,14 @@ function resetWobbleSeed(seed: number): void {
   wobbleSeed = Math.abs(Math.floor(seed * 1000)) || 1;
 }
 
-const X_OFFSET = GUTTER_WIDTH;
-
 function worldToScreen(worldX: number, worldY: number): Vec2 {
-  const t = Math.max(0, Math.min(1, worldY / LANE_LENGTH));
-  const screenT = Math.pow(t, 1 / PERSPECTIVE_POWER);
-  const screenY = screenT * LANE_LENGTH;
-  const currentWidth = TOP_WIDTH + (LANE_WIDTH - TOP_WIDTH) * t;
-  const leftEdge = (LANE_WIDTH - currentWidth) / 2;
-  const screenX = X_OFFSET + leftEdge + (worldX / LANE_WIDTH) * currentWidth;
+  const screenX = X_OFFSET + (worldX + GUTTER_WIDTH) * SCALE;
+  const screenY = Y_OFFSET + (worldY + PIT_DEPTH) * SCALE;
   return { x: screenX, y: screenY };
 }
 
-const MIN_OBJECT_SCALE = 0.6;
-function worldRadiusAtY(radius: number, worldY: number): number {
-  const t = worldY / LANE_LENGTH;
-  const scale = MIN_OBJECT_SCALE + (1 - MIN_OBJECT_SCALE) * t;
-  return radius * scale;
+function worldRadius(radius: number): number {
+  return radius * SCALE;
 }
 
 /** Add jitter to a coordinate */
@@ -130,39 +126,41 @@ export class HandDrawnRenderer implements GameRenderer {
 
   drawLane(ctx: CanvasRenderingContext2D, camera: Camera): void {
     resetWobbleSeed(42);
-    const cameraY = camera.y;
+    const dpr = (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1;
+    const canvasWidth = ctx.canvas.width / dpr;
+    const canvasHeight = ctx.canvas.height / dpr;
 
     // Dark background
     ctx.fillStyle = COLORS.background;
-    ctx.fillRect(0, -cameraY, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Trapezoidal lane with sketchy edges
-    const topLeft = worldToScreen(0, 0);
-    const topRight = worldToScreen(LANE_WIDTH, 0);
-    const bottomLeft = worldToScreen(0, LANE_LENGTH);
-    const bottomRight = worldToScreen(LANE_WIDTH, LANE_LENGTH);
+    // Pit area
+    const pitTL = worldToScreen(0, -PIT_DEPTH);
+    const pitBR = worldToScreen(LANE_WIDTH, 0);
+    ctx.fillStyle = COLORS.pit;
+    ctx.fillRect(pitTL.x, pitTL.y, pitBR.x - pitTL.x, pitBR.y - pitTL.y);
 
-    // Fill lane surface
-    ctx.beginPath();
-    ctx.moveTo(topLeft.x, topLeft.y);
-    ctx.lineTo(topRight.x, topRight.y);
-    ctx.lineTo(bottomRight.x, bottomRight.y);
-    ctx.lineTo(bottomLeft.x, bottomLeft.y);
-    ctx.closePath();
+    // Back wall
+    const wallTL = worldToScreen(-GUTTER_WIDTH, -PIT_DEPTH);
+    const wallBR = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, -PIT_DEPTH);
+    const wallHeight = 12 * SCALE;
+    ctx.fillStyle = COLORS.wall;
+    ctx.fillRect(wallTL.x, wallTL.y - wallHeight, wallBR.x - wallTL.x, wallHeight);
+
+    // Lane surface (rectangle in top-down)
+    const laneTL = worldToScreen(0, 0);
+    const laneBR = worldToScreen(LANE_WIDTH, LANE_LENGTH);
     ctx.fillStyle = COLORS.laneSurface;
-    ctx.fill();
+    ctx.fillRect(laneTL.x, laneTL.y, laneBR.x - laneTL.x, laneBR.y - laneTL.y);
 
     // Crosshatch wood texture
-    crosshatch(ctx, topLeft.x, 0, LANE_WIDTH, LANE_LENGTH, 12, 'rgba(139, 105, 20, 0.15)');
+    crosshatch(ctx, laneTL.x, laneTL.y, laneBR.x - laneTL.x, laneBR.y - laneTL.y, 12, 'rgba(139, 105, 20, 0.15)');
 
     // Wobbly lane border lines
     ctx.strokeStyle = COLORS.boardLine;
     ctx.lineWidth = 1;
-
-    // Left edge
-    wobblyLine(ctx, topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y, 3);
-    // Right edge
-    wobblyLine(ctx, topRight.x, topRight.y, bottomRight.x, bottomRight.y, 3);
+    wobblyLine(ctx, laneTL.x, laneTL.y, laneTL.x, laneBR.y, 3);
+    wobblyLine(ctx, laneBR.x, laneTL.y, laneBR.x, laneBR.y, 3);
 
     // Board lines (wobbly)
     const boardCount = 10;
@@ -175,48 +173,68 @@ export class HandDrawnRenderer implements GameRenderer {
       wobblyLine(ctx, top.x, top.y, bottom.x, bottom.y, 2);
     }
 
-    // Arrow markers
-    this.drawLaneArrows(ctx, LANE_LENGTH / 3);
-    this.drawLaneArrows(ctx, (LANE_LENGTH * 2) / 3);
+    // Lane markers: chevrons at midpoint, dots near foul line
+    this.drawLaneChevrons(ctx, LANE_LENGTH / 2);
+    this.drawLaneDots(ctx, (LANE_LENGTH * 3) / 4);
 
     // Foul line (wobbly)
-    const foulY = LANE_LENGTH - 80;
+    const foulY = LANE_LENGTH - 160;
     const foulLeft = worldToScreen(0, foulY);
     const foulRight = worldToScreen(LANE_WIDTH, foulY);
     ctx.strokeStyle = COLORS.foulLine;
     ctx.lineWidth = 2.5;
     wobblyLine(ctx, foulLeft.x, foulLeft.y, foulRight.x, foulRight.y, 4);
+
+    // Lane/pit boundary line
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(laneTL.x, laneTL.y);
+    ctx.lineTo(laneBR.x, laneTL.y);
+    ctx.stroke();
   }
 
-  private drawLaneArrows(ctx: CanvasRenderingContext2D, worldY: number): void {
-    const arrowPositions = [0.3, 0.4, 0.5, 0.6, 0.7];
-    ctx.fillStyle = COLORS.laneAccent;
+  private drawLaneDots(ctx: CanvasRenderingContext2D, worldY: number): void {
+    const dotPositions = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+    ctx.fillStyle = '#6b4c0a';
 
-    for (const frac of arrowPositions) {
+    for (const frac of dotPositions) {
       const pos = worldToScreen(LANE_WIDTH * frac, worldY);
-      const dotR = worldRadiusAtY(3, worldY);
+      const dotR = worldRadius(3);
       sketchyCircle(ctx, pos.x, pos.y, dotR, 8);
       ctx.fill();
     }
+  }
 
-    // Central arrow (sketchy triangle)
-    const centerPos = worldToScreen(LANE_WIDTH * 0.5, worldY);
-    const arrowSize = worldRadiusAtY(6, worldY);
-    ctx.beginPath();
-    ctx.moveTo(jitter(centerPos.x), jitter(centerPos.y - arrowSize));
-    ctx.quadraticCurveTo(
-      jitter(centerPos.x - arrowSize * 0.3), jitter(centerPos.y),
-      jitter(centerPos.x - arrowSize * 0.6), jitter(centerPos.y + arrowSize * 0.5)
-    );
-    ctx.lineTo(jitter(centerPos.x + arrowSize * 0.6), jitter(centerPos.y + arrowSize * 0.5));
-    ctx.closePath();
-    ctx.fill();
+  private drawLaneChevrons(ctx: CanvasRenderingContext2D, worldY: number): void {
+    const positions = [
+      { xFrac: 0.5, yOff: 0 },
+      { xFrac: 0.5 - 0.08, yOff: 20 },  { xFrac: 0.5 + 0.08, yOff: 20 },
+      { xFrac: 0.5 - 0.16, yOff: 40 },  { xFrac: 0.5 + 0.16, yOff: 40 },
+      { xFrac: 0.5 - 0.24, yOff: 60 },  { xFrac: 0.5 + 0.24, yOff: 60 },
+    ];
+    const s = worldRadius(12);
+
+    ctx.fillStyle = '#5a3d08';
+    for (const p of positions) {
+      const pos = worldToScreen(LANE_WIDTH * p.xFrac, worldY + p.yOff);
+      // Sketchy chevron triangle pointing up (toward pins)
+      ctx.beginPath();
+      ctx.moveTo(jitter(pos.x), jitter(pos.y - s * 0.6));
+      ctx.quadraticCurveTo(
+        jitter(pos.x - s * 0.2), jitter(pos.y),
+        jitter(pos.x - s * 0.4), jitter(pos.y + s * 0.4)
+      );
+      ctx.lineTo(jitter(pos.x + s * 0.4), jitter(pos.y + s * 0.4));
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 
   drawBall(ctx: CanvasRenderingContext2D, position: Vec2, angle: number): void {
     resetWobbleSeed(position.x * 7 + position.y * 13);
     const screen = worldToScreen(position.x, position.y);
-    const r = worldRadiusAtY(BALL_RADIUS, position.y);
+    const r = worldRadius(BALL_RADIUS);
 
     // Ball body (sketchy circle with visible strokes)
     ctx.fillStyle = COLORS.ball;
@@ -253,29 +271,92 @@ export class HandDrawnRenderer implements GameRenderer {
   drawPin(ctx: CanvasRenderingContext2D, position: Vec2, angle: number, wobble: number): void {
     resetWobbleSeed(position.x * 11 + position.y * 17);
     const screen = worldToScreen(position.x, position.y);
-    const r = worldRadiusAtY(PIN_RADIUS, position.y);
+    if (position.x < -100 || position.x > LANE_WIDTH + 200 || position.y < -300 || position.y > LANE_LENGTH + 100) return;
+    const s = SCALE;
 
     ctx.save();
     ctx.translate(screen.x, screen.y);
     ctx.rotate(angle + Math.sin(wobble) * 0.1);
 
-    // Pin body (sketchy ellipse)
-    ctx.fillStyle = COLORS.pinBody;
-    sketchyEllipse(ctx, 0, 0, r, r * 1.3, 14);
+    // Tall pin: belly low, long taper to neck, round head on top (1.5x visual scale)
+    const bellyW = 15 * s;
+    const baseW = 12.75 * s;
+    const neckW = 5.25 * s;
+    const headR = 8.25 * s;
+    const totalH = 78 * s;
+    const halfH = totalH / 2;
+
+    const base = halfH;
+    const bellyY = halfH - totalH * 0.3;
+    const neckY = -halfH + totalH * 0.18;
+    const headY = -halfH + totalH * 0.08;
+    const crown = -halfH;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    sketchyEllipse(ctx, 1, base + 2 * s, baseW * 1.05, 3 * s, 8);
     ctx.fill();
 
-    // Outline
+    // Pin silhouette (sketchy bezier, matching VectorRenderer shape)
+    ctx.fillStyle = COLORS.pinBody;
+    ctx.beginPath();
+    // Right side, bottom to top
+    ctx.moveTo(jitter(baseW), jitter(base));
+    ctx.bezierCurveTo(
+      jitter(bellyW * 1.02), jitter(base),
+      jitter(bellyW * 1.05), jitter(bellyY + (base - bellyY) * 0.4),
+      jitter(bellyW), jitter(bellyY)
+    );
+    ctx.bezierCurveTo(
+      jitter(bellyW * 0.9), jitter(bellyY - (bellyY - neckY) * 0.35),
+      jitter(neckW * 1.5), jitter(neckY + (bellyY - neckY) * 0.2),
+      jitter(neckW), jitter(neckY)
+    );
+    ctx.bezierCurveTo(
+      jitter(neckW), jitter(neckY - (neckY - headY) * 0.3),
+      jitter(headR * 1.05), jitter(headY + headR * 0.5),
+      jitter(headR), jitter(headY)
+    );
+    ctx.bezierCurveTo(
+      jitter(headR), jitter(headY - headR * 0.55),
+      jitter(headR * 0.55), jitter(crown),
+      jitter(0), jitter(crown)
+    );
+    // Left side, top to bottom
+    ctx.bezierCurveTo(
+      jitter(-headR * 0.55), jitter(crown),
+      jitter(-headR), jitter(headY - headR * 0.55),
+      jitter(-headR), jitter(headY)
+    );
+    ctx.bezierCurveTo(
+      jitter(-headR * 1.05), jitter(headY + headR * 0.5),
+      jitter(-neckW), jitter(neckY - (neckY - headY) * 0.3),
+      jitter(-neckW), jitter(neckY)
+    );
+    ctx.bezierCurveTo(
+      jitter(-neckW * 1.5), jitter(neckY + (bellyY - neckY) * 0.2),
+      jitter(-bellyW * 0.9), jitter(bellyY - (bellyY - neckY) * 0.35),
+      jitter(-bellyW), jitter(bellyY)
+    );
+    ctx.bezierCurveTo(
+      jitter(-bellyW * 1.05), jitter(bellyY + (base - bellyY) * 0.4),
+      jitter(-bellyW * 1.02), jitter(base),
+      jitter(-baseW), jitter(base)
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Sketchy outline
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
-    sketchyEllipse(ctx, 0, 0, r, r * 1.3, 14);
     ctx.stroke();
 
-    // Red stripes (sketchy ellipses)
+    // Red stripes at neck
     ctx.fillStyle = COLORS.pinStripe;
-    sketchyEllipse(ctx, 0, -r * 0.3, r * 0.8, r * 0.15, 10);
+    const sw = neckW * 2;
+    sketchyEllipse(ctx, 0, neckY - 1.5 * s, sw, 1.2 * s, 8);
     ctx.fill();
-
-    sketchyEllipse(ctx, 0, r * 0.3, r * 0.8, r * 0.15, 10);
+    sketchyEllipse(ctx, 0, neckY - 6 * s, sw, 1.2 * s, 8);
     ctx.fill();
 
     ctx.restore();
@@ -285,46 +366,33 @@ export class HandDrawnRenderer implements GameRenderer {
     resetWobbleSeed(99);
     ctx.fillStyle = COLORS.gutter;
 
-    // Left gutter (filled shape with wobbly edges)
-    const ltTop = worldToScreen(-GUTTER_WIDTH, 0);
-    const ltBottom = worldToScreen(-GUTTER_WIDTH, LANE_LENGTH);
-    const lTop = worldToScreen(0, 0);
-    const lBottom = worldToScreen(0, LANE_LENGTH);
-
-    ctx.beginPath();
-    ctx.moveTo(jitter(ltTop.x, 2), ltTop.y);
-    ctx.lineTo(jitter(lTop.x, 2), lTop.y);
-    ctx.lineTo(jitter(lBottom.x, 2), lBottom.y);
-    ctx.lineTo(jitter(ltBottom.x, 2), ltBottom.y);
-    ctx.closePath();
-    ctx.fill();
+    // Left gutter
+    const lgTL = worldToScreen(-GUTTER_WIDTH, -PIT_DEPTH);
+    const lgBR = worldToScreen(0, LANE_LENGTH);
+    ctx.fillRect(lgTL.x, lgTL.y, lgBR.x - lgTL.x, lgBR.y - lgTL.y);
 
     // Right gutter
-    const rTop = worldToScreen(LANE_WIDTH, 0);
-    const rBottom = worldToScreen(LANE_WIDTH, LANE_LENGTH);
-    const rtTop = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, 0);
-    const rtBottom = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, LANE_LENGTH);
-
-    ctx.beginPath();
-    ctx.moveTo(jitter(rTop.x, 2), rTop.y);
-    ctx.lineTo(jitter(rtTop.x, 2), rtTop.y);
-    ctx.lineTo(jitter(rtBottom.x, 2), rtBottom.y);
-    ctx.lineTo(jitter(rBottom.x, 2), rBottom.y);
-    ctx.closePath();
-    ctx.fill();
+    const rgTL = worldToScreen(LANE_WIDTH, -PIT_DEPTH);
+    const rgBR = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, LANE_LENGTH);
+    ctx.fillRect(rgTL.x, rgTL.y, rgBR.x - rgTL.x, rgBR.y - rgTL.y);
 
     // Add sketchy texture lines on gutters
     ctx.strokeStyle = 'rgba(60, 60, 60, 0.3)';
     ctx.lineWidth = 0.5;
-    for (let y = 0; y < LANE_LENGTH; y += 30) {
-      const ll = worldToScreen(-GUTTER_WIDTH, y);
-      const lr = worldToScreen(0, y);
-      wobblyLine(ctx, ll.x, ll.y, lr.x, lr.y, 1);
-
-      const rl = worldToScreen(LANE_WIDTH, y);
-      const rr = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, y);
-      wobblyLine(ctx, rl.x, rl.y, rr.x, rr.y, 1);
+    const laneTop = worldToScreen(0, 0);
+    const laneBot = worldToScreen(0, LANE_LENGTH);
+    for (let screenY = lgTL.y; screenY < lgBR.y; screenY += 30) {
+      wobblyLine(ctx, lgTL.x, screenY, lgBR.x, screenY, 1);
+      wobblyLine(ctx, rgTL.x, screenY, rgBR.x, screenY, 1);
     }
+
+    // Gutter inner edge lines (wobbly)
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 1;
+    wobblyLine(ctx, laneTop.x, lgTL.y, laneBot.x, lgBR.y, 2);
+    const rTop = worldToScreen(LANE_WIDTH, -PIT_DEPTH);
+    const rBot = worldToScreen(LANE_WIDTH, LANE_LENGTH);
+    wobblyLine(ctx, rTop.x, rTop.y, rBot.x, rBot.y, 2);
   }
 
   drawAimArrow(ctx: CanvasRenderingContext2D, origin: Vec2, direction: Vec2): void {
@@ -372,405 +440,8 @@ export class HandDrawnRenderer implements GameRenderer {
     ctx.restore();
   }
 
-  drawCheatEffect(ctx: CanvasRenderingContext2D, cheatId: string, progress: number): void {
-    resetWobbleSeed(cheatId.length * 31 + Math.floor(progress * 100));
-    switch (cheatId) {
-      case 'slight-curve':
-        this.drawSlightCurveEffect(ctx, progress);
-        break;
-      case 'pin-wobble':
-        this.drawPinWobbleEffect(ctx, progress);
-        break;
-      case 'gutter-widen':
-        this.drawGutterWidenEffect(ctx, progress);
-        break;
-      case 'lane-tilt':
-        this.drawLaneTiltEffect(ctx, progress);
-        break;
-      case 'cat-walk':
-        this.drawCatWalkEffect(ctx, progress);
-        break;
-      case 'janitor-sweep':
-        this.drawJanitorSweepEffect(ctx, progress);
-        break;
-      case 'pigeon':
-        this.drawPigeonEffect(ctx, progress);
-        break;
-      case 'wrong-pins':
-        this.drawWrongPinsEffect(ctx, progress);
-        break;
-      case 'pin-machine':
-        this.drawPinMachineEffect(ctx, progress);
-        break;
-      case 'invading-ball':
-        this.drawInvadingBallEffect(ctx, progress);
-        break;
-    }
-  }
-
-  private drawSlightCurveEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    if (progress < 0.3 || progress > 0.9) return;
-    const t = (progress - 0.3) / 0.6;
-    ctx.save();
-    ctx.globalAlpha = 0.3;
-    ctx.strokeStyle = '#ff6666';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    const startX = LANE_WIDTH / 2;
-    const startY = 200;
-    ctx.moveTo(jitter(startX), jitter(startY));
-    ctx.quadraticCurveTo(
-      jitter(startX + 60 * t, 4), jitter(startY - 80 * t, 4),
-      jitter(startX + 80 * t, 4), jitter(startY - 150 * t, 4)
-    );
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  private drawPinWobbleEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const pinScreen = worldToScreen(LANE_WIDTH / 2, 60);
-    const wobbleAmount = Math.sin(progress * Math.PI * 8) * 6 * (1 - progress);
-    ctx.save();
-    ctx.globalAlpha = 0.5 * (1 - progress);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 4; i++) {
-      const a = (i / 4) * Math.PI * 2 + progress * 10;
-      const r = 15 + Math.abs(wobbleAmount);
-      const sx = pinScreen.x + Math.cos(a) * r;
-      const sy = pinScreen.y + Math.sin(a) * r;
-      sketchyCircle(ctx, sx, sy, 3, 6);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  private drawGutterWidenEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const expansion = progress * 30;
-    ctx.save();
-    ctx.globalAlpha = 0.6 * progress;
-    ctx.fillStyle = '#1a1a1a';
-
-    const ltTop = worldToScreen(-GUTTER_WIDTH - expansion, 0);
-    const lTop = worldToScreen(expansion, 0);
-    const lBottom = worldToScreen(expansion, LANE_LENGTH);
-    const ltBottom = worldToScreen(-GUTTER_WIDTH - expansion, LANE_LENGTH);
-    ctx.beginPath();
-    ctx.moveTo(jitter(ltTop.x), ltTop.y);
-    ctx.lineTo(jitter(lTop.x), lTop.y);
-    ctx.lineTo(jitter(lBottom.x), lBottom.y);
-    ctx.lineTo(jitter(ltBottom.x), ltBottom.y);
-    ctx.closePath();
-    ctx.fill();
-
-    const rTop = worldToScreen(LANE_WIDTH - expansion, 0);
-    const rBottom = worldToScreen(LANE_WIDTH - expansion, LANE_LENGTH);
-    const rtTop = worldToScreen(LANE_WIDTH + GUTTER_WIDTH + expansion, 0);
-    const rtBottom = worldToScreen(LANE_WIDTH + GUTTER_WIDTH + expansion, LANE_LENGTH);
-    ctx.beginPath();
-    ctx.moveTo(jitter(rTop.x), rTop.y);
-    ctx.lineTo(jitter(rtTop.x), rtTop.y);
-    ctx.lineTo(jitter(rtBottom.x), rtBottom.y);
-    ctx.lineTo(jitter(rBottom.x), rBottom.y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  private drawLaneTiltEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const tiltAngle = progress * 0.08;
-    ctx.save();
-    ctx.globalAlpha = 0.4;
-    ctx.translate(LANE_WIDTH / 2, LANE_LENGTH / 2);
-    ctx.rotate(tiltAngle);
-    ctx.translate(-LANE_WIDTH / 2, -LANE_LENGTH / 2);
-    ctx.fillStyle = 'rgba(100, 50, 0, 0.15)';
-    const topLeft = worldToScreen(0, 0);
-    const topRight = worldToScreen(LANE_WIDTH, 0);
-    const bottomRight = worldToScreen(LANE_WIDTH, LANE_LENGTH);
-    const bottomLeft = worldToScreen(0, LANE_LENGTH);
-    ctx.beginPath();
-    ctx.moveTo(jitter(topLeft.x), jitter(topLeft.y));
-    ctx.lineTo(jitter(topRight.x), jitter(topRight.y));
-    ctx.lineTo(jitter(bottomRight.x), jitter(bottomRight.y));
-    ctx.lineTo(jitter(bottomLeft.x), jitter(bottomLeft.y));
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  private drawCatWalkEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const catX = -50 + (LANE_WIDTH + 100) * progress;
-    const catY = 400;
-    const screen = worldToScreen(catX, catY);
-    const scale = worldRadiusAtY(1, catY);
-
-    ctx.save();
-
-    // Body (sketchy ellipse)
-    ctx.fillStyle = '#333333';
-    sketchyEllipse(ctx, screen.x, screen.y, 18 * scale, 10 * scale, 10);
-    ctx.fill();
-    ctx.strokeStyle = '#222222';
-    ctx.lineWidth = 1;
-    sketchyEllipse(ctx, screen.x, screen.y, 18 * scale, 10 * scale, 10);
-    ctx.stroke();
-
-    // Head
-    const headX = screen.x + 14 * scale * (progress > 0.5 ? 1 : -1);
-    sketchyCircle(ctx, headX, screen.y - 6 * scale, 7 * scale, 8);
-    ctx.fill();
-
-    // Ears (wobbly triangles)
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 1.5;
-    wobblyLine(ctx, headX - 5 * scale, screen.y - 11 * scale, headX - 2 * scale, screen.y - 18 * scale, 1);
-    wobblyLine(ctx, headX - 2 * scale, screen.y - 18 * scale, headX + 1 * scale, screen.y - 11 * scale, 1);
-    wobblyLine(ctx, headX + 2 * scale, screen.y - 11 * scale, headX + 5 * scale, screen.y - 18 * scale, 1);
-    wobblyLine(ctx, headX + 5 * scale, screen.y - 18 * scale, headX + 8 * scale, screen.y - 11 * scale, 1);
-
-    // Tail (wobbly curve)
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 2 * scale;
-    const tailDir = progress > 0.5 ? -1 : 1;
-    ctx.beginPath();
-    ctx.moveTo(screen.x - 16 * scale * tailDir, screen.y);
-    ctx.quadraticCurveTo(
-      jitter(screen.x - 25 * scale * tailDir, 3), jitter(screen.y - 15 * scale, 3),
-      jitter(screen.x - 20 * scale * tailDir, 3), jitter(screen.y - 25 * scale, 3)
-    );
-    ctx.stroke();
-
-    // Stick-figure legs
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 2 * scale;
-    const legPhase = progress * 20;
-    for (let i = 0; i < 4; i++) {
-      const legX = screen.x + (-10 + i * 7) * scale;
-      const legOffset = Math.sin(legPhase + i * Math.PI / 2) * 4 * scale;
-      wobblyLine(ctx, legX, screen.y + 8 * scale, legX + legOffset, screen.y + 18 * scale, 1);
-    }
-
-    ctx.restore();
-  }
-
-  private drawJanitorSweepEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const janitorX = LANE_WIDTH + 30 - (LANE_WIDTH + 60) * progress;
-    const janitorY = 60;
-    const screen = worldToScreen(janitorX, janitorY);
-    const scale = worldRadiusAtY(1, janitorY);
-
-    ctx.save();
-    ctx.strokeStyle = '#888888';
-    ctx.lineWidth = 2 * scale;
-    ctx.lineCap = 'round';
-
-    // Head (sketchy circle)
-    sketchyCircle(ctx, screen.x, screen.y - 20 * scale, 6 * scale, 8);
-    ctx.stroke();
-
-    // Body (wobbly line)
-    wobblyLine(ctx, screen.x, screen.y - 14 * scale, screen.x, screen.y + 5 * scale, 2);
-
-    // Legs (wobbly)
-    wobblyLine(ctx, screen.x, screen.y + 5 * scale, screen.x - 6 * scale, screen.y + 18 * scale, 2);
-    wobblyLine(ctx, screen.x, screen.y + 5 * scale, screen.x + 6 * scale, screen.y + 18 * scale, 2);
-
-    // Arms
-    wobblyLine(ctx, screen.x, screen.y - 8 * scale, screen.x + 15 * scale, screen.y - 2 * scale, 2);
-
-    // Broom
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 3 * scale;
-    const broomAngle = Math.sin(progress * Math.PI * 4) * 0.3;
-    const broomX = screen.x + 15 * scale;
-    const broomY = screen.y - 2 * scale;
-    wobblyLine(ctx, broomX, broomY, broomX + 12 * scale * Math.cos(broomAngle), broomY + 15 * scale, 2);
-
-    // Bristles (short wobbly lines)
-    ctx.strokeStyle = '#DAA520';
-    ctx.lineWidth = 1 * scale;
-    const bristleX = broomX + 12 * scale * Math.cos(broomAngle);
-    const bristleY = broomY + 15 * scale;
-    for (let i = -3; i <= 3; i++) {
-      wobblyLine(ctx, bristleX + i * 2 * scale, bristleY, bristleX + i * 3 * scale, bristleY + 6 * scale, 1);
-    }
-
-    ctx.restore();
-  }
-
-  private drawPigeonEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const pinScreen = worldToScreen(LANE_WIDTH / 2, 60);
-    const scale = worldRadiusAtY(1, 60);
-
-    let birdX: number, birdY: number;
-    if (progress < 0.3) {
-      const t = progress / 0.3;
-      birdX = pinScreen.x + (1 - t) * 100;
-      birdY = pinScreen.y - (1 - t) * 80;
-    } else if (progress < 0.6) {
-      birdX = pinScreen.x;
-      birdY = pinScreen.y - 12 * scale;
-    } else {
-      const t = (progress - 0.6) / 0.4;
-      birdX = pinScreen.x - t * 60;
-      birdY = pinScreen.y - 12 * scale - t * 120;
-    }
-
-    ctx.save();
-
-    // Body (sketchy ellipse)
-    ctx.fillStyle = '#777788';
-    sketchyEllipse(ctx, birdX, birdY, 10 * scale, 6 * scale, 10);
-    ctx.fill();
-    ctx.strokeStyle = '#666677';
-    ctx.lineWidth = 1;
-    sketchyEllipse(ctx, birdX, birdY, 10 * scale, 6 * scale, 10);
-    ctx.stroke();
-
-    // Head
-    sketchyCircle(ctx, birdX + 8 * scale, birdY - 3 * scale, 4 * scale, 8);
-    ctx.fill();
-
-    // Beak (wobbly triangle)
-    ctx.fillStyle = '#FFAA00';
-    ctx.beginPath();
-    ctx.moveTo(jitter(birdX + 12 * scale), jitter(birdY - 3 * scale));
-    ctx.lineTo(jitter(birdX + 16 * scale), jitter(birdY - 2 * scale));
-    ctx.lineTo(jitter(birdX + 12 * scale), jitter(birdY - 1 * scale));
-    ctx.closePath();
-    ctx.fill();
-
-    // Wings (sketchy arc)
-    ctx.fillStyle = '#666677';
-    const wingFlap = Math.sin(progress * Math.PI * 12) * 8 * scale;
-    sketchyEllipse(ctx, birdX, birdY - wingFlap, 12 * scale, 4 * scale, 8);
-    ctx.fill();
-
-    // Eye
-    ctx.fillStyle = '#FF3300';
-    sketchyCircle(ctx, birdX + 9 * scale, birdY - 4 * scale, 1.5 * scale, 6);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  private drawWrongPinsEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    if (progress < 0.3) return;
-    const alpha = Math.min((progress - 0.3) / 0.2, 1);
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-
-    const leftPos = worldToScreen(25, 60);
-    const rightPos = worldToScreen(LANE_WIDTH - 25, 60);
-    const r = worldRadiusAtY(PIN_RADIUS, 60);
-
-    for (const pos of [leftPos, rightPos]) {
-      ctx.fillStyle = COLORS.pinBody;
-      sketchyEllipse(ctx, pos.x, pos.y, r, r * 1.3, 12);
-      ctx.fill();
-      ctx.strokeStyle = '#ddd';
-      ctx.lineWidth = 0.5;
-      sketchyEllipse(ctx, pos.x, pos.y, r, r * 1.3, 12);
-      ctx.stroke();
-
-      ctx.fillStyle = COLORS.pinStripe;
-      sketchyEllipse(ctx, pos.x, pos.y - r * 0.3, r * 0.8, r * 0.15, 8);
-      ctx.fill();
-    }
-
-    ctx.restore();
-  }
-
-  private drawPinMachineEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const machineY = -60 + progress * 120;
-    const machineWidth = LANE_WIDTH * 0.8;
-    const machineHeight = 40;
-    const machineX = (LANE_WIDTH - machineWidth) / 2;
-
-    const topLeft = worldToScreen(machineX, machineY);
-    const topRight = worldToScreen(machineX + machineWidth, machineY);
-    const bottomLeft = worldToScreen(machineX, machineY + machineHeight);
-    const bottomRight = worldToScreen(machineX + machineWidth, machineY + machineHeight);
-
-    ctx.save();
-
-    // Sketchy machine body
-    ctx.fillStyle = '#444444';
-    ctx.beginPath();
-    ctx.moveTo(jitter(topLeft.x), jitter(topLeft.y));
-    ctx.lineTo(jitter(topRight.x), jitter(topRight.y));
-    ctx.lineTo(jitter(bottomRight.x), jitter(bottomRight.y));
-    ctx.lineTo(jitter(bottomLeft.x), jitter(bottomLeft.y));
-    ctx.closePath();
-    ctx.fill();
-
-    // Crosshatch on machine
-    crosshatch(ctx, topLeft.x, topLeft.y, topRight.x - topLeft.x, machineHeight, 6, 'rgba(100, 100, 100, 0.3)');
-
-    // Wobbly detail lines
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 1;
-    for (let i = 1; i <= 3; i++) {
-      const lineY = machineY + (machineHeight * i) / 4;
-      const ll = worldToScreen(machineX, lineY);
-      const lr = worldToScreen(machineX + machineWidth, lineY);
-      wobblyLine(ctx, ll.x, ll.y, lr.x, lr.y, 2);
-    }
-
-    // Clamp arms (wobbly rectangles)
-    ctx.fillStyle = '#555555';
-    const clampWidth = 8;
-    for (const xOffset of [machineWidth * 0.25, machineWidth * 0.75]) {
-      const cl = worldToScreen(machineX + xOffset - clampWidth / 2, machineY + machineHeight);
-      const cr = worldToScreen(machineX + xOffset + clampWidth / 2, machineY + machineHeight + 20);
-      ctx.beginPath();
-      ctx.moveTo(jitter(cl.x), jitter(cl.y));
-      ctx.lineTo(jitter(cr.x), jitter(cl.y));
-      ctx.lineTo(jitter(cr.x), jitter(cr.y));
-      ctx.lineTo(jitter(cl.x), jitter(cr.y));
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    ctx.restore();
-  }
-
-  private drawInvadingBallEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const invaderX = LANE_WIDTH + 40 - (LANE_WIDTH + 80) * progress;
-    const invaderY = 300 + progress * 200;
-    const screen = worldToScreen(invaderX, invaderY);
-    const r = worldRadiusAtY(BALL_RADIUS, invaderY);
-
-    ctx.save();
-
-    // Sketchy ball
-    ctx.fillStyle = '#662222';
-    sketchyCircle(ctx, screen.x, screen.y, r, 14);
-    ctx.fill();
-
-    // Highlight scribble
-    ctx.strokeStyle = 'rgba(136, 68, 68, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(screen.x - r * 0.2, screen.y - r * 0.2, r * 0.4, -0.5, 1);
-    ctx.stroke();
-
-    // Finger holes
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    const holeRadius = r * 0.18;
-    const holeDistance = r * 0.45;
-    const angle = progress * Math.PI * 4;
-    for (const offset of [-0.4, 0, 0.4]) {
-      const hx = screen.x + Math.cos(angle + offset) * holeDistance;
-      const hy = screen.y + Math.sin(angle + offset) * holeDistance;
-      sketchyCircle(ctx, hx, hy, holeRadius, 6);
-      ctx.fill();
-    }
-
-    ctx.restore();
+  drawCheatEffect(ctx: CanvasRenderingContext2D, _cheatId: string, _progress: number): void {
+    // TODO: re-implement cheat effects for top-down view
   }
 
   drawCaption(ctx: CanvasRenderingContext2D, text: string, progress: number): void {

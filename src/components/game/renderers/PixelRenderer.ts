@@ -9,6 +9,8 @@ const COLORS = {
   ballHighlight: '#2a2a5e',
   pinBody: '#f5f5f0',
   pinStripe: '#cc3333',
+  pit: '#0a0a0a',
+  wall: '#333333',
   aimArrow: 'rgba(255, 255, 255, 0.6)',
   caption: '#ffffff',
   predictorText: 'rgba(255, 255, 100, 0.8)',
@@ -17,30 +19,25 @@ const COLORS = {
   boardLine: 'rgba(139, 105, 20, 0.4)',
 } as const;
 
-const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH } = GAME_CONSTANTS;
+const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH, PIT_DEPTH } = GAME_CONSTANTS;
 
-const TOP_WIDTH_RATIO = 0.18;
-const TOP_WIDTH = LANE_WIDTH * TOP_WIDTH_RATIO;
 const PIXEL_SIZE = 4;
-const PERSPECTIVE_POWER = 2.5;
 
-const X_OFFSET = GUTTER_WIDTH;
+// Top-down view: scale world coords to fit the canvas (matches VectorRenderer)
+const TOTAL_WIDTH = LANE_WIDTH + GUTTER_WIDTH * 2;
+const TOTAL_HEIGHT = PIT_DEPTH + LANE_LENGTH + 60;
+const SCALE = Math.min(480 / TOTAL_WIDTH, 810 / TOTAL_HEIGHT);
+const X_OFFSET = (500 - TOTAL_WIDTH * SCALE) / 2;
+const Y_OFFSET = (832 - TOTAL_HEIGHT * SCALE) / 2;
 
 function worldToScreen(worldX: number, worldY: number): Vec2 {
-  const t = Math.max(0, Math.min(1, worldY / LANE_LENGTH));
-  const screenT = Math.pow(t, 1 / PERSPECTIVE_POWER);
-  const screenY = screenT * LANE_LENGTH;
-  const currentWidth = TOP_WIDTH + (LANE_WIDTH - TOP_WIDTH) * t;
-  const leftEdge = (LANE_WIDTH - currentWidth) / 2;
-  const screenX = X_OFFSET + leftEdge + (worldX / LANE_WIDTH) * currentWidth;
+  const screenX = X_OFFSET + (worldX + GUTTER_WIDTH) * SCALE;
+  const screenY = Y_OFFSET + (worldY + PIT_DEPTH) * SCALE;
   return { x: screenX, y: screenY };
 }
 
-const MIN_OBJECT_SCALE = 0.6;
-function worldRadiusAtY(radius: number, worldY: number): number {
-  const t = worldY / LANE_LENGTH;
-  const scale = MIN_OBJECT_SCALE + (1 - MIN_OBJECT_SCALE) * t;
-  return radius * scale;
+function worldRadius(radius: number): number {
+  return radius * SCALE;
 }
 
 /** Snap coordinate to pixel grid and draw a pixel block */
@@ -88,69 +85,90 @@ export class PixelRenderer implements GameRenderer {
 
   drawLane(ctx: CanvasRenderingContext2D, camera: Camera): void {
     ctx.imageSmoothingEnabled = false;
-    const cameraY = camera.y;
+    const dpr = (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1;
+    const canvasWidth = ctx.canvas.width / dpr;
+    const canvasHeight = ctx.canvas.height / dpr;
 
     // Dark background
     ctx.fillStyle = COLORS.background;
-    ctx.fillRect(0, -cameraY, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Trapezoidal lane shape filled with pixel blocks
-    const topLeft = worldToScreen(0, 0);
-    const topRight = worldToScreen(LANE_WIDTH, 0);
-    const bottomLeft = worldToScreen(0, LANE_LENGTH);
-    const bottomRight = worldToScreen(LANE_WIDTH, LANE_LENGTH);
+    // Pit area (dark floor behind the pins)
+    const pitTL = worldToScreen(0, -PIT_DEPTH);
+    const pitBR = worldToScreen(LANE_WIDTH, 0);
+    ctx.fillStyle = COLORS.pit;
+    ctx.fillRect(pitTL.x, pitTL.y, pitBR.x - pitTL.x, pitBR.y - pitTL.y);
 
-    // Fill lane row by row with pixel blocks
+    // Back wall
+    const wallTL = worldToScreen(-GUTTER_WIDTH, -PIT_DEPTH);
+    const wallBR = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, -PIT_DEPTH);
+    const wallHeight = 12 * SCALE;
+    ctx.fillStyle = COLORS.wall;
+    ctx.fillRect(wallTL.x, wallTL.y - wallHeight, wallBR.x - wallTL.x, wallHeight);
+
+    // Lane surface (rectangle in top-down)
+    const laneTL = worldToScreen(0, 0);
+    const laneBR = worldToScreen(LANE_WIDTH, LANE_LENGTH);
     ctx.fillStyle = COLORS.laneSurface;
-    for (let y = 0; y < LANE_LENGTH; y += PIXEL_SIZE) {
-      const t = y / LANE_LENGTH;
-      const leftX = topLeft.x + (bottomLeft.x - topLeft.x) * t;
-      const rightX = topRight.x + (bottomRight.x - topRight.x) * t;
-      for (let x = leftX; x < rightX; x += PIXEL_SIZE) {
-        drawPixel(ctx, x, y, PIXEL_SIZE);
-      }
-    }
+    ctx.fillRect(laneTL.x, laneTL.y, laneBR.x - laneTL.x, laneBR.y - laneTL.y);
 
     // Board lines as pixel columns
     ctx.fillStyle = COLORS.boardLine;
     const boardCount = 10;
     for (let i = 1; i < boardCount; i++) {
       const fraction = i / boardCount;
-      for (let y = 0; y < LANE_LENGTH; y += PIXEL_SIZE * 3) {
-        const pos = worldToScreen(LANE_WIDTH * fraction, y);
-        drawPixel(ctx, pos.x, pos.y, PIXEL_SIZE);
+      const top = worldToScreen(LANE_WIDTH * fraction, 0);
+      const bottom = worldToScreen(LANE_WIDTH * fraction, LANE_LENGTH);
+      for (let y = top.y; y < bottom.y; y += PIXEL_SIZE * 3) {
+        drawPixel(ctx, top.x, y, PIXEL_SIZE);
       }
     }
 
-    // Lane arrow dots
-    this.drawLaneArrows(ctx, LANE_LENGTH / 3);
-    this.drawLaneArrows(ctx, (LANE_LENGTH * 2) / 3);
+    // Lane markers: chevrons at midpoint, dots near foul line
+    this.drawLaneChevrons(ctx, LANE_LENGTH / 2);
+    this.drawLaneDots(ctx, (LANE_LENGTH * 3) / 4);
 
     // Foul line
-    const foulY = LANE_LENGTH - 80;
+    const foulY = LANE_LENGTH - 160;
     ctx.fillStyle = COLORS.foulLine;
     const foulLeft = worldToScreen(0, foulY);
     const foulRight = worldToScreen(LANE_WIDTH, foulY);
     drawPixelLine(ctx, foulLeft.x, foulLeft.y, foulRight.x, foulRight.y, PIXEL_SIZE);
     drawPixelLine(ctx, foulLeft.x, foulLeft.y + PIXEL_SIZE, foulRight.x, foulRight.y + PIXEL_SIZE, PIXEL_SIZE);
+
+    // Lane/pit boundary line
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    drawPixelLine(ctx, laneTL.x, laneTL.y, laneBR.x, laneTL.y, PIXEL_SIZE);
   }
 
-  private drawLaneArrows(ctx: CanvasRenderingContext2D, worldY: number): void {
-    const arrowPositions = [0.3, 0.4, 0.5, 0.6, 0.7];
-    ctx.fillStyle = COLORS.laneAccent;
-    for (const frac of arrowPositions) {
+  private drawLaneDots(ctx: CanvasRenderingContext2D, worldY: number): void {
+    const dotPositions = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+    ctx.fillStyle = '#6b4c0a';
+    for (const frac of dotPositions) {
       const pos = worldToScreen(LANE_WIDTH * frac, worldY);
-      const r = worldRadiusAtY(3, worldY);
+      const r = worldRadius(3);
       drawPixelCircle(ctx, pos.x, pos.y, r, PIXEL_SIZE);
     }
+  }
 
-    // Central arrow (pixel triangle)
-    const centerPos = worldToScreen(LANE_WIDTH * 0.5, worldY);
-    const arrowSize = worldRadiusAtY(6, worldY);
-    for (let row = 0; row < arrowSize; row += PIXEL_SIZE) {
-      const halfWidth = (arrowSize - row) * 0.6;
-      for (let col = -halfWidth; col <= halfWidth; col += PIXEL_SIZE) {
-        drawPixel(ctx, centerPos.x + col, centerPos.y - arrowSize + row, PIXEL_SIZE);
+  private drawLaneChevrons(ctx: CanvasRenderingContext2D, worldY: number): void {
+    const positions = [
+      { xFrac: 0.5, yOff: 0 },
+      { xFrac: 0.5 - 0.08, yOff: 20 },  { xFrac: 0.5 + 0.08, yOff: 20 },
+      { xFrac: 0.5 - 0.16, yOff: 40 },  { xFrac: 0.5 + 0.16, yOff: 40 },
+      { xFrac: 0.5 - 0.24, yOff: 60 },  { xFrac: 0.5 + 0.24, yOff: 60 },
+    ];
+    const arrowSize = worldRadius(12);
+
+    ctx.fillStyle = '#5a3d08';
+    for (const p of positions) {
+      const pos = worldToScreen(LANE_WIDTH * p.xFrac, worldY + p.yOff);
+      // Pixel triangle pointing up (toward pins)
+      for (let row = 0; row < arrowSize; row += PIXEL_SIZE) {
+        const halfWidth = (arrowSize - row) * 0.4;
+        for (let col = -halfWidth; col <= halfWidth; col += PIXEL_SIZE) {
+          drawPixel(ctx, pos.x + col, pos.y - arrowSize * 0.6 + row, PIXEL_SIZE);
+        }
       }
     }
   }
@@ -158,7 +176,7 @@ export class PixelRenderer implements GameRenderer {
   drawBall(ctx: CanvasRenderingContext2D, position: Vec2, angle: number): void {
     ctx.imageSmoothingEnabled = false;
     const screen = worldToScreen(position.x, position.y);
-    const r = worldRadiusAtY(BALL_RADIUS, position.y);
+    const r = worldRadius(BALL_RADIUS);
 
     // Ball body
     ctx.fillStyle = COLORS.ball;
@@ -183,20 +201,62 @@ export class PixelRenderer implements GameRenderer {
   drawPin(ctx: CanvasRenderingContext2D, position: Vec2, angle: number, wobble: number): void {
     ctx.imageSmoothingEnabled = false;
     const screen = worldToScreen(position.x, position.y);
-    const r = worldRadiusAtY(PIN_RADIUS, position.y);
+    if (position.x < -100 || position.x > LANE_WIDTH + 200 || position.y < -300 || position.y > LANE_LENGTH + 100) return;
+    const s = SCALE;
 
     ctx.save();
     ctx.translate(screen.x, screen.y);
     ctx.rotate(angle + Math.sin(wobble) * 0.1);
 
-    // Pin body (pixel ellipse)
-    ctx.fillStyle = COLORS.pinBody;
-    drawPixelEllipse(ctx, 0, 0, r, r * 1.3, PIXEL_SIZE);
+    // USBC regulation pin profile, pixelated
+    const pinScale = 75 * s / 15; // 1.5x visual scale
 
-    // Red stripes
+    // [inches from base, radius in inches]
+    const profile: [number, number][] = [
+      [0, 1.015], [0.75, 1.415], [2.25, 1.955], [3.375, 2.255],
+      [4.5, 2.383], [5.875, 2.280], [8.625, 1.235], [9.375, 0.985],
+      [10.0, 0.890], [10.875, 0.935], [11.75, 1.045], [13.5, 1.274],
+      [14.5, 0.9], [15.0, 0],
+    ];
+
+    const totalH = 15 * pinScale;
+    const halfH = totalH / 2;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    drawPixelEllipse(ctx, 1, halfH + 2, profile[0][1] * pinScale * 1.3, 3 * s, PIXEL_SIZE);
+
+    // Interpolate radius at any Y
+    function radiusAtY(inchesFromBase: number): number {
+      for (let i = 0; i < profile.length - 1; i++) {
+        if (inchesFromBase >= profile[i][0] && inchesFromBase <= profile[i + 1][0]) {
+          const t = (inchesFromBase - profile[i][0]) / (profile[i + 1][0] - profile[i][0]);
+          return profile[i][1] + (profile[i + 1][1] - profile[i][1]) * t;
+        }
+      }
+      return 0;
+    }
+
+    // Draw row by row
+    ctx.fillStyle = COLORS.pinBody;
+    for (let screenY = -halfH; screenY <= halfH; screenY += PIXEL_SIZE) {
+      const inchesFromBase = (halfH - screenY) / pinScale;
+      const r = radiusAtY(inchesFromBase) * pinScale;
+      for (let px = -r; px <= r; px += PIXEL_SIZE) {
+        drawPixel(ctx, px, screenY, PIXEL_SIZE);
+      }
+    }
+
+    // Red stripes at neck (10" from base)
     ctx.fillStyle = COLORS.pinStripe;
-    drawPixelEllipse(ctx, 0, -r * 0.3, r * 0.7, PIXEL_SIZE, PIXEL_SIZE);
-    drawPixelEllipse(ctx, 0, r * 0.3, r * 0.7, PIXEL_SIZE, PIXEL_SIZE);
+    const neckY = halfH - 10.0 * pinScale;
+    const sw = 0.89 * pinScale * 1.8;
+    for (let px = -sw; px <= sw; px += PIXEL_SIZE) {
+      drawPixel(ctx, px, neckY, PIXEL_SIZE);
+      drawPixel(ctx, px, neckY + PIXEL_SIZE, PIXEL_SIZE);
+      drawPixel(ctx, px, neckY - 1.2 * pinScale, PIXEL_SIZE);
+      drawPixel(ctx, px, neckY - 1.2 * pinScale + PIXEL_SIZE, PIXEL_SIZE);
+    }
 
     ctx.restore();
   }
@@ -206,23 +266,23 @@ export class PixelRenderer implements GameRenderer {
     ctx.fillStyle = COLORS.gutter;
 
     // Left gutter
-    for (let y = 0; y < LANE_LENGTH; y += PIXEL_SIZE) {
-      const t = y / LANE_LENGTH;
-      const gutterLeft = worldToScreen(-GUTTER_WIDTH, y);
-      const laneLeft = worldToScreen(0, y);
-      for (let x = gutterLeft.x; x < laneLeft.x; x += PIXEL_SIZE) {
-        drawPixel(ctx, x, y, PIXEL_SIZE);
-      }
-    }
+    const lgTL = worldToScreen(-GUTTER_WIDTH, -PIT_DEPTH);
+    const lgBR = worldToScreen(0, LANE_LENGTH);
+    ctx.fillRect(lgTL.x, lgTL.y, lgBR.x - lgTL.x, lgBR.y - lgTL.y);
 
     // Right gutter
-    for (let y = 0; y < LANE_LENGTH; y += PIXEL_SIZE) {
-      const rLane = worldToScreen(LANE_WIDTH, y);
-      const rGutter = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, y);
-      for (let x = rLane.x; x < rGutter.x; x += PIXEL_SIZE) {
-        drawPixel(ctx, x, y, PIXEL_SIZE);
-      }
-    }
+    const rgTL = worldToScreen(LANE_WIDTH, -PIT_DEPTH);
+    const rgBR = worldToScreen(LANE_WIDTH + GUTTER_WIDTH, LANE_LENGTH);
+    ctx.fillRect(rgTL.x, rgTL.y, rgBR.x - rgTL.x, rgBR.y - rgTL.y);
+
+    // Gutter inner edge lines
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    const liTop = worldToScreen(0, -PIT_DEPTH);
+    const liBot = worldToScreen(0, LANE_LENGTH);
+    drawPixelLine(ctx, liTop.x, liTop.y, liBot.x, liBot.y, PIXEL_SIZE);
+    const riTop = worldToScreen(LANE_WIDTH, -PIT_DEPTH);
+    const riBot = worldToScreen(LANE_WIDTH, LANE_LENGTH);
+    drawPixelLine(ctx, riTop.x, riTop.y, riBot.x, riBot.y, PIXEL_SIZE);
   }
 
   drawAimArrow(ctx: CanvasRenderingContext2D, origin: Vec2, direction: Vec2): void {
@@ -264,318 +324,8 @@ export class PixelRenderer implements GameRenderer {
     drawPixel(ctx, endX, endY, PIXEL_SIZE);
   }
 
-  drawCheatEffect(ctx: CanvasRenderingContext2D, cheatId: string, progress: number): void {
-    ctx.imageSmoothingEnabled = false;
-    switch (cheatId) {
-      case 'slight-curve':
-        this.drawSlightCurveEffect(ctx, progress);
-        break;
-      case 'pin-wobble':
-        this.drawPinWobbleEffect(ctx, progress);
-        break;
-      case 'gutter-widen':
-        this.drawGutterWidenEffect(ctx, progress);
-        break;
-      case 'lane-tilt':
-        this.drawLaneTiltEffect(ctx, progress);
-        break;
-      case 'cat-walk':
-        this.drawCatWalkEffect(ctx, progress);
-        break;
-      case 'janitor-sweep':
-        this.drawJanitorSweepEffect(ctx, progress);
-        break;
-      case 'pigeon':
-        this.drawPigeonEffect(ctx, progress);
-        break;
-      case 'wrong-pins':
-        this.drawWrongPinsEffect(ctx, progress);
-        break;
-      case 'pin-machine':
-        this.drawPinMachineEffect(ctx, progress);
-        break;
-      case 'invading-ball':
-        this.drawInvadingBallEffect(ctx, progress);
-        break;
-    }
-  }
-
-  private drawSlightCurveEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    if (progress < 0.3 || progress > 0.9) return;
-    const t = (progress - 0.3) / 0.6;
-    ctx.save();
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#ff6666';
-    const startX = LANE_WIDTH / 2;
-    const startY = 200;
-    const steps = 10;
-    for (let i = 0; i < steps; i++) {
-      const st = i / steps * t;
-      const px = startX + 80 * st * st;
-      const py = startY - 150 * st;
-      drawPixel(ctx, px, py, PIXEL_SIZE);
-    }
-    ctx.restore();
-  }
-
-  private drawPinWobbleEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const pinScreen = worldToScreen(LANE_WIDTH / 2, 60);
-    const wobbleAmount = Math.sin(progress * Math.PI * 8) * 6 * (1 - progress);
-    ctx.save();
-    ctx.globalAlpha = 0.5 * (1 - progress);
-    ctx.fillStyle = '#ffffff';
-    for (let i = 0; i < 4; i++) {
-      const a = (i / 4) * Math.PI * 2 + progress * 10;
-      const r = 15 + Math.abs(wobbleAmount);
-      drawPixel(ctx, pinScreen.x + Math.cos(a) * r, pinScreen.y + Math.sin(a) * r, PIXEL_SIZE);
-    }
-    ctx.restore();
-  }
-
-  private drawGutterWidenEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const expansion = progress * 30;
-    ctx.save();
-    ctx.globalAlpha = 0.6 * progress;
-    ctx.fillStyle = '#1a1a1a';
-    for (let y = 0; y < LANE_LENGTH; y += PIXEL_SIZE * 2) {
-      const left = worldToScreen(expansion, y);
-      for (let x = 0; x < expansion; x += PIXEL_SIZE) {
-        drawPixel(ctx, left.x - x, y, PIXEL_SIZE);
-      }
-      const right = worldToScreen(LANE_WIDTH - expansion, y);
-      for (let x = 0; x < expansion; x += PIXEL_SIZE) {
-        drawPixel(ctx, right.x + x, y, PIXEL_SIZE);
-      }
-    }
-    ctx.restore();
-  }
-
-  private drawLaneTiltEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const tiltAngle = progress * 0.08;
-    ctx.save();
-    ctx.globalAlpha = 0.4;
-    ctx.translate(LANE_WIDTH / 2, LANE_LENGTH / 2);
-    ctx.rotate(tiltAngle);
-    ctx.translate(-LANE_WIDTH / 2, -LANE_LENGTH / 2);
-    ctx.fillStyle = 'rgba(100, 50, 0, 0.15)';
-    for (let y = 0; y < LANE_LENGTH; y += PIXEL_SIZE * 4) {
-      const left = worldToScreen(0, y);
-      const right = worldToScreen(LANE_WIDTH, y);
-      for (let x = left.x; x < right.x; x += PIXEL_SIZE * 4) {
-        drawPixel(ctx, x, y, PIXEL_SIZE);
-      }
-    }
-    ctx.restore();
-  }
-
-  private drawCatWalkEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const catX = -50 + (LANE_WIDTH + 100) * progress;
-    const catY = 400;
-    const screen = worldToScreen(catX, catY);
-    const scale = worldRadiusAtY(1, catY);
-
-    ctx.save();
-    ctx.fillStyle = '#333333';
-
-    // Pixel body (rectangle)
-    for (let px = -16 * scale; px <= 16 * scale; px += PIXEL_SIZE) {
-      for (let py = -8 * scale; py <= 8 * scale; py += PIXEL_SIZE) {
-        drawPixel(ctx, screen.x + px, screen.y + py, PIXEL_SIZE);
-      }
-    }
-
-    // Pixel head
-    const headX = screen.x + 14 * scale * (progress > 0.5 ? 1 : -1);
-    drawPixelCircle(ctx, headX, screen.y - 6 * scale, 6 * scale, PIXEL_SIZE);
-
-    // Pixel ears (small blocks)
-    drawPixel(ctx, headX - 4 * scale, screen.y - 14 * scale, PIXEL_SIZE);
-    drawPixel(ctx, headX + 2 * scale, screen.y - 14 * scale, PIXEL_SIZE);
-
-    // Legs (pixel columns)
-    const legPhase = progress * 20;
-    for (let i = 0; i < 4; i++) {
-      const legX = screen.x + (-10 + i * 7) * scale;
-      const legOffset = Math.sin(legPhase + i * Math.PI / 2) * 3 * scale;
-      drawPixel(ctx, legX + legOffset, screen.y + 10 * scale, PIXEL_SIZE);
-      drawPixel(ctx, legX + legOffset, screen.y + 14 * scale, PIXEL_SIZE);
-    }
-
-    ctx.restore();
-  }
-
-  private drawJanitorSweepEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const janitorX = LANE_WIDTH + 30 - (LANE_WIDTH + 60) * progress;
-    const janitorY = 60;
-    const screen = worldToScreen(janitorX, janitorY);
-    const scale = worldRadiusAtY(1, janitorY);
-
-    ctx.save();
-    ctx.fillStyle = '#888888';
-
-    // Head (pixel circle)
-    drawPixelCircle(ctx, screen.x, screen.y - 20 * scale, 5 * scale, PIXEL_SIZE);
-
-    // Body (pixel column)
-    for (let py = -14 * scale; py <= 5 * scale; py += PIXEL_SIZE) {
-      drawPixel(ctx, screen.x, screen.y + py, PIXEL_SIZE);
-    }
-
-    // Legs
-    for (let py = 5 * scale; py <= 16 * scale; py += PIXEL_SIZE) {
-      drawPixel(ctx, screen.x - 4 * scale, screen.y + py, PIXEL_SIZE);
-      drawPixel(ctx, screen.x + 4 * scale, screen.y + py, PIXEL_SIZE);
-    }
-
-    // Broom handle
-    ctx.fillStyle = '#8B4513';
-    drawPixelLine(ctx, screen.x + 8 * scale, screen.y - 8 * scale, screen.x + 20 * scale, screen.y + 10 * scale, PIXEL_SIZE);
-
-    // Broom bristles
-    ctx.fillStyle = '#DAA520';
-    for (let i = -3; i <= 3; i++) {
-      drawPixel(ctx, screen.x + 20 * scale + i * 2 * scale, screen.y + 12 * scale, PIXEL_SIZE);
-      drawPixel(ctx, screen.x + 20 * scale + i * 2 * scale, screen.y + 16 * scale, PIXEL_SIZE);
-    }
-
-    ctx.restore();
-  }
-
-  private drawPigeonEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const pinScreen = worldToScreen(LANE_WIDTH / 2, 60);
-    const scale = worldRadiusAtY(1, 60);
-
-    let birdX: number, birdY: number;
-    if (progress < 0.3) {
-      const t = progress / 0.3;
-      birdX = pinScreen.x + (1 - t) * 100;
-      birdY = pinScreen.y - (1 - t) * 80;
-    } else if (progress < 0.6) {
-      birdX = pinScreen.x;
-      birdY = pinScreen.y - 12 * scale;
-    } else {
-      const t = (progress - 0.6) / 0.4;
-      birdX = pinScreen.x - t * 60;
-      birdY = pinScreen.y - 12 * scale - t * 120;
-    }
-
-    ctx.save();
-    ctx.fillStyle = '#777788';
-
-    // Body (pixel rectangle)
-    for (let px = -8 * scale; px <= 8 * scale; px += PIXEL_SIZE) {
-      for (let py = -4 * scale; py <= 4 * scale; py += PIXEL_SIZE) {
-        drawPixel(ctx, birdX + px, birdY + py, PIXEL_SIZE);
-      }
-    }
-
-    // Head
-    drawPixelCircle(ctx, birdX + 8 * scale, birdY - 3 * scale, 3 * scale, PIXEL_SIZE);
-
-    // Beak
-    ctx.fillStyle = '#FFAA00';
-    drawPixel(ctx, birdX + 12 * scale, birdY - 3 * scale, PIXEL_SIZE);
-
-    // Wings (flapping)
-    ctx.fillStyle = '#666677';
-    const wingFlap = Math.sin(progress * Math.PI * 12) * 6 * scale;
-    drawPixel(ctx, birdX - 4 * scale, birdY - wingFlap, PIXEL_SIZE);
-    drawPixel(ctx, birdX, birdY - wingFlap, PIXEL_SIZE);
-    drawPixel(ctx, birdX + 4 * scale, birdY - wingFlap, PIXEL_SIZE);
-
-    // Eye
-    ctx.fillStyle = '#FF3300';
-    drawPixel(ctx, birdX + 9 * scale, birdY - 4 * scale, PIXEL_SIZE);
-
-    ctx.restore();
-  }
-
-  private drawWrongPinsEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    if (progress < 0.3) return;
-    const alpha = Math.min((progress - 0.3) / 0.2, 1);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-
-    const leftPos = worldToScreen(25, 60);
-    const rightPos = worldToScreen(LANE_WIDTH - 25, 60);
-    const r = worldRadiusAtY(PIN_RADIUS, 60);
-
-    for (const pos of [leftPos, rightPos]) {
-      ctx.fillStyle = COLORS.pinBody;
-      drawPixelEllipse(ctx, pos.x, pos.y, r, r * 1.3, PIXEL_SIZE);
-      ctx.fillStyle = COLORS.pinStripe;
-      drawPixelEllipse(ctx, pos.x, pos.y - r * 0.3, r * 0.7, PIXEL_SIZE, PIXEL_SIZE);
-    }
-
-    ctx.restore();
-  }
-
-  private drawPinMachineEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const machineY = -60 + progress * 120;
-    const machineWidth = LANE_WIDTH * 0.8;
-    const machineHeight = 40;
-    const machineX = (LANE_WIDTH - machineWidth) / 2;
-
-    ctx.save();
-    ctx.fillStyle = '#444444';
-
-    // Machine body as pixel blocks
-    for (let y = machineY; y < machineY + machineHeight; y += PIXEL_SIZE) {
-      const left = worldToScreen(machineX, y);
-      const right = worldToScreen(machineX + machineWidth, y);
-      for (let x = left.x; x < right.x; x += PIXEL_SIZE) {
-        drawPixel(ctx, x, y, PIXEL_SIZE);
-      }
-    }
-
-    // Machine detail lines
-    ctx.fillStyle = '#666666';
-    for (let i = 1; i <= 3; i++) {
-      const lineY = machineY + (machineHeight * i) / 4;
-      const ll = worldToScreen(machineX, lineY);
-      const lr = worldToScreen(machineX + machineWidth, lineY);
-      drawPixelLine(ctx, ll.x, ll.y, lr.x, lr.y, PIXEL_SIZE);
-    }
-
-    // Clamp arms
-    ctx.fillStyle = '#555555';
-    for (const xOffset of [machineWidth * 0.25, machineWidth * 0.75]) {
-      const clampPos = worldToScreen(machineX + xOffset, machineY + machineHeight);
-      for (let py = 0; py < 20; py += PIXEL_SIZE) {
-        drawPixel(ctx, clampPos.x, clampPos.y + py, PIXEL_SIZE);
-        drawPixel(ctx, clampPos.x + PIXEL_SIZE, clampPos.y + py, PIXEL_SIZE);
-      }
-    }
-
-    ctx.restore();
-  }
-
-  private drawInvadingBallEffect(ctx: CanvasRenderingContext2D, progress: number): void {
-    const invaderX = LANE_WIDTH + 40 - (LANE_WIDTH + 80) * progress;
-    const invaderY = 300 + progress * 200;
-    const screen = worldToScreen(invaderX, invaderY);
-    const r = worldRadiusAtY(BALL_RADIUS, invaderY);
-
-    ctx.save();
-    ctx.fillStyle = '#662222';
-    drawPixelCircle(ctx, screen.x, screen.y, r, PIXEL_SIZE);
-
-    // Highlight
-    ctx.fillStyle = '#884444';
-    drawPixelCircle(ctx, screen.x - r * 0.3, screen.y - r * 0.3, r * 0.3, PIXEL_SIZE);
-
-    // Holes
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    const holeDistance = r * 0.45;
-    const holeRadius = r * 0.18;
-    const angle = progress * Math.PI * 4;
-    for (const offset of [-0.4, 0, 0.4]) {
-      const hx = screen.x + Math.cos(angle + offset) * holeDistance;
-      const hy = screen.y + Math.sin(angle + offset) * holeDistance;
-      drawPixelCircle(ctx, hx, hy, holeRadius, PIXEL_SIZE);
-    }
-
-    ctx.restore();
+  drawCheatEffect(ctx: CanvasRenderingContext2D, _cheatId: string, _progress: number): void {
+    // TODO: re-implement cheat effects for top-down view
   }
 
   drawCaption(ctx: CanvasRenderingContext2D, text: string, progress: number): void {
@@ -608,7 +358,6 @@ export class PixelRenderer implements GameRenderer {
 
     // Background (pixel blocks for retro feel)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    // Snap to pixel grid
     const snapX = Math.floor(pillX / PIXEL_SIZE) * PIXEL_SIZE;
     const snapY = Math.floor(pillY / PIXEL_SIZE) * PIXEL_SIZE;
     const snapW = Math.ceil(pillW / PIXEL_SIZE) * PIXEL_SIZE;
