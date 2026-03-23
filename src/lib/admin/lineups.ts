@@ -363,10 +363,15 @@ export async function pushLineupsToLP(
   const errors: string[] = [];
   let pushed = 0;
 
+  // Normalize cookie - accept raw value or full "connect.sid=..." format
+  const cookieHeader = cookie.startsWith('connect.sid=')
+    ? cookie
+    : `connect.sid=${cookie}`;
+
   const headers: Record<string, string> = {
     Accept: 'application/json, text/plain, */*',
     'Content-Type': 'application/json;charset=UTF-8',
-    Cookie: cookie,
+    Cookie: cookieHeader,
     'User-Agent':
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
     Origin: LP_BASE,
