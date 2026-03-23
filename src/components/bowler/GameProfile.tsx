@@ -19,7 +19,7 @@ const ARCHETYPE_STYLE: Record<string, { heroColor: string; desc: string; dotColo
   'Fast Starter': { heroColor: 'text-orange-700', desc: 'You come out hot in Game 1', dotColor: '#c2410c' },
   'Middle Child': { heroColor: 'text-purple-700', desc: 'You peak in Game 2', dotColor: '#7e22ce' },
   'Late Bloomer': { heroColor: 'text-emerald-700', desc: 'You save your best for Game 3', dotColor: '#15803d' },
-  'Flatliner':    { heroColor: 'text-slate-700',   desc: 'Consistent across all 3 games', dotColor: NAVY },
+  'Flatliner':    { heroColor: 'text-sky-700',      desc: 'Consistent across all 3 games', dotColor: '#0369a1' },
 };
 
 function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, leagueAvgs, dotColor }: {
@@ -245,20 +245,38 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
       <span className="block w-10 h-0.5 bg-red-600/40 mt-1.5" />
 
       {revealed && (
-        <div className="mt-4 flex items-start gap-5" key={animateKey}>
-          {/* Animated chart box */}
-          <AnimatedShapeBox
-            avg1={profile.avg1}
-            avg2={profile.avg2}
-            avg3={profile.avg3}
-            bestGame={profile.bestGame}
-            isFlatliner={isFlatliner}
-            animate={true}
-            leagueAvgs={leagueAvgs}
-            dotColor={style.dotColor}
-          />
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5" key={animateKey}>
+          {/* Archetype hero - shown above chart on mobile, after chart on desktop */}
+          <div
+            className="sm:hidden"
+            style={{
+              opacity: 0,
+              animation: 'fadeIn 0.6s ease-out 0.3s forwards',
+            }}
+          >
+            <div className={`font-heading text-3xl ${style.heroColor}`}>
+              {profile.archetype}
+            </div>
+            <p className="text-sm text-navy/60 font-body mt-0.5">
+              {style.desc}
+            </p>
+          </div>
 
-          {/* Archetype info */}
+          {/* Animated chart box */}
+          <div className="flex-shrink-0">
+            <AnimatedShapeBox
+              avg1={profile.avg1}
+              avg2={profile.avg2}
+              avg3={profile.avg3}
+              bestGame={profile.bestGame}
+              isFlatliner={isFlatliner}
+              animate={true}
+              leagueAvgs={leagueAvgs}
+              dotColor={style.dotColor}
+            />
+          </div>
+
+          {/* Archetype info - desktop shows full block, mobile shows remaining details */}
           <div
             className="min-w-0 pt-1"
             style={{
@@ -266,21 +284,23 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
               animation: 'fadeIn 0.6s ease-out 2.4s forwards',
             }}
           >
-            <div className="text-sm text-navy/60 font-body">Your Profile:</div>
-            <div className={`font-heading text-3xl sm:text-4xl ${style.heroColor} -mt-0.5`}>
-              {profile.archetype}
+            <div className="hidden sm:block">
+              <div className="text-sm text-navy/60 font-body">Your Profile:</div>
+              <div className={`font-heading text-4xl ${style.heroColor} -mt-0.5`}>
+                {profile.archetype}
+              </div>
+              <p className="text-sm text-navy/60 font-body mt-1">
+                {style.desc}
+              </p>
             </div>
-            <p className="text-sm text-navy/60 font-body mt-1">
-              {style.desc}
-            </p>
-            <div className="text-sm text-navy/80 font-semibold font-body mt-2 tabular-nums">
+            <div className="text-sm text-navy/80 font-semibold font-body sm:mt-2 tabular-nums">
               {isFlatliner
                 ? `${profile.pctSpread.toFixed(1)}% variance`
                 : `${profile.pctSpread.toFixed(1)}% skew`}
             </div>
             <Link
               href="/stats/all-time/game-profiles"
-              className="inline-block mt-3 text-sm text-red-600 hover:text-red-700 font-body"
+              className="inline-block mt-2 sm:mt-3 text-sm text-red-600 hover:text-red-700 font-body"
             >
               League Night Profiles &rarr;
             </Link>

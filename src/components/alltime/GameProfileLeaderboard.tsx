@@ -54,29 +54,57 @@ export function GameProfileLeaderboard({ title, subtitle, bowlers, sortLabel, in
         {visible.map((b, i) => {
           const pcts = [b.avg1, b.avg2, b.avg3].map(v => ((v / b.overallAvg) - 1) * 100);
           return (
-            <div
-              key={b.slug}
-              className="grid grid-cols-[2.5rem_1fr_4.5rem_4.5rem_4.5rem_4rem] gap-x-2 px-4 py-2.5 border-b border-navy/5 last:border-b-0 items-center hover:bg-navy/[0.02] transition-colors"
-            >
-              <span className="text-right text-sm text-navy/60 font-body tabular-nums">{i + 1}</span>
-              <Link
-                href={`/bowler/${b.slug}`}
-                className="text-navy font-medium text-sm hover:text-red-600 transition-colors truncate"
-              >
-                {b.bowlerName}
-              </Link>
-              {pcts.map((pct, gi) => {
-                const isBest = (gi + 1) === b.bestGame && !invertSkew;
-                return (
-                  <span key={gi} className={`text-right font-body tabular-nums ${isBest ? 'text-navy font-semibold' : 'text-navy/60'}`}>
-                    <span className={`text-sm ${pct >= 0 ? 'text-green-700' : 'text-red-600'} ${isBest ? 'font-semibold' : ''}`}>
-                      {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+            <div key={b.slug}>
+              {/* Desktop row */}
+              <div className="hidden sm:grid grid-cols-[2.5rem_1fr_4.5rem_4.5rem_4.5rem_4rem] gap-x-2 px-4 py-2.5 border-b border-navy/5 last:border-b-0 items-center hover:bg-navy/[0.02] transition-colors">
+                <span className="text-right text-sm text-navy/60 font-body tabular-nums">{i + 1}</span>
+                <Link
+                  href={`/bowler/${b.slug}`}
+                  className="text-navy font-medium text-sm hover:text-red-600 transition-colors truncate"
+                >
+                  {b.bowlerName}
+                </Link>
+                {pcts.map((pct, gi) => {
+                  const isBest = (gi + 1) === b.bestGame && !invertSkew;
+                  return (
+                    <span key={gi} className={`text-right font-body tabular-nums ${isBest ? 'text-navy font-semibold' : 'text-navy/60'}`}>
+                      <span className={`text-sm ${pct >= 0 ? 'text-green-700' : 'text-red-600'} ${isBest ? 'font-semibold' : ''}`}>
+                        {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+                      </span>
+                      <span className="block text-[10px] text-navy/70">{[b.avg1, b.avg2, b.avg3][gi].toFixed(1)}</span>
                     </span>
-                    <span className="block text-[10px] text-navy/70">{[b.avg1, b.avg2, b.avg3][gi].toFixed(1)}</span>
-                  </span>
-                );
-              })}
-              <span className="text-right text-sm text-navy/65 font-body tabular-nums">{b.games}</span>
+                  );
+                })}
+                <span className="text-right text-sm text-navy/65 font-body tabular-nums">{b.games}</span>
+              </div>
+
+              {/* Mobile row */}
+              <div className="sm:hidden px-4 py-3 border-b border-navy/5 last:border-b-0">
+                <div className="flex items-baseline gap-1.5 mb-1.5">
+                  <span className="text-navy/60 font-body tabular-nums text-sm">{i + 1}.</span>
+                  <Link
+                    href={`/bowler/${b.slug}`}
+                    className="text-navy font-medium text-sm hover:text-red-600 transition-colors"
+                  >
+                    {b.bowlerName}
+                  </Link>
+                  <span className="text-[10px] text-navy/50 font-body tabular-nums">{b.games}g</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {pcts.map((pct, gi) => {
+                    const isBest = (gi + 1) === b.bestGame && !invertSkew;
+                    return (
+                      <div key={gi} className="text-center font-body tabular-nums">
+                        <span className="block text-[10px] text-navy/60 mb-0.5">G{gi + 1}</span>
+                        <span className={`text-sm ${pct >= 0 ? 'text-green-700' : 'text-red-600'} ${isBest ? 'font-semibold' : ''}`}>
+                          {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+                        </span>
+                        <span className="block text-[10px] text-navy/70">{[b.avg1, b.avg2, b.avg3][gi].toFixed(1)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           );
         })}
