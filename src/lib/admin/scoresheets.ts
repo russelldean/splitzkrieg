@@ -66,6 +66,45 @@ function calcHandicap(avg: number | null): number | null {
 }
 
 /**
+ * Calculate 27-game rolling averages for all bowlers going into a given week.
+ * Looks across ALL seasons, not just the current one.
+ * Returns Map<bowlerID, flooredAvg>.
+ */
+async function getRollingAverages(
+  db: Awaited<ReturnType<typeof getDb>>,
+  seasonID: number,
+  week: number,
+): Promise<Map<number, number>> {
+  const avgResult = await db.request()
+    .input('seasonID', sql.Int, seasonID)
+    .input('week', sql.Int, week)
+    .query<{ bowlerID: number; incomingAvg: number }>(
+      `SELECT b.bowlerID,
+        (SELECT TOP 1 x.avg27 FROM (
+          SELECT AVG(CAST(g.val AS FLOAT)) AS avg27
+          FROM (
+            SELECT TOP 27 x2.val
+            FROM scores s2
+            CROSS APPLY (VALUES (s2.game1),(s2.game2),(s2.game3)) AS x2(val)
+            WHERE s2.bowlerID = b.bowlerID AND s2.isPenalty = 0 AND x2.val IS NOT NULL
+              AND (s2.seasonID < @seasonID OR (s2.seasonID = @seasonID AND s2.week < @week))
+            ORDER BY s2.seasonID DESC, s2.week DESC
+          ) g
+        ) x) AS incomingAvg
+      FROM bowlers b
+      WHERE b.bowlerID IN (SELECT DISTINCT bowlerID FROM scores WHERE isPenalty = 0)`,
+    );
+
+  const avgMap = new Map<number, number>();
+  for (const row of avgResult.recordset) {
+    if (row.incomingAvg != null) {
+      avgMap.set(row.bowlerID, Math.floor(row.incomingAvg));
+    }
+  }
+  return avgMap;
+}
+
+/**
  * Get matchups for a given week with bowler info.
  * Uses lineup submissions if available, otherwise falls back to previous week scores.
  */
@@ -75,6 +114,9 @@ export async function getMatchupsForWeek(
   source: 'lineups' | 'lastweek' = 'lineups',
 ): Promise<ScoresheetMatch[]> {
   const db = await getDb();
+
+  // Pre-calculate 27-game rolling averages for all bowlers (cross-season)
+  const rollingAvgMap = await getRollingAverages(db, seasonID, week);
 
   // Get schedule matchups for this week
   const scheduleResult = await db
@@ -183,21 +225,7 @@ export async function getMatchupsForWeek(
             ? (row.bowlerName || 'TBD')
             : row.newBowlerName || 'TBD';
 
-          let avg: number | null = null;
-          if (row.bowlerID) {
-            const avgResult = await db
-              .request()
-              .input('bowlerID', sql.Int, row.bowlerID)
-              .input('seasonID', sql.Int, seasonID)
-              .input('week', sql.Int, week)
-              .query<{ incomingAvg: number }>(
-                `SELECT TOP 1 incomingAvg
-                 FROM scores
-                 WHERE bowlerID = @bowlerID AND seasonID = @seasonID AND week < @week AND isPenalty = 0
-                 ORDER BY week DESC`,
-              );
-            avg = avgResult.recordset[0]?.incomingAvg ?? null;
-          }
+          const avg = row.bowlerID ? (rollingAvgMap.get(row.bowlerID) ?? null) : null;
 
           teamBowlers.push({ name, side, incomingAvg: avg, handicap: calcHandicap(avg), rosterSource: 'lineup' });
         }
@@ -215,9 +243,8 @@ export async function getMatchupsForWeek(
             .query<{
               bowlerID: number;
               bowlerName: string;
-              incomingAvg: number | null;
             }>(
-              `SELECT s.bowlerID, b.bowlerName, s.incomingAvg
+              `SELECT s.bowlerID, b.bowlerName
                FROM scores s
                JOIN bowlers b ON s.bowlerID = b.bowlerID
                WHERE s.seasonID = @seasonID AND s.week = @prevWeek
@@ -226,11 +253,12 @@ export async function getMatchupsForWeek(
             );
 
           for (const row of prevResult.recordset) {
+            const avg = rollingAvgMap.get(row.bowlerID) ?? null;
             teamBowlers.push({
               name: row.bowlerName,
               side,
-              incomingAvg: row.incomingAvg,
-              handicap: calcHandicap(row.incomingAvg),
+              incomingAvg: avg,
+              handicap: calcHandicap(avg),
               rosterSource: 'lastweek',
             });
           }

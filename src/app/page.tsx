@@ -12,12 +12,15 @@ import {
   getSeasonMatchResults,
   getLeagueMilestones,
   milestoneTickerItems,
+  getNewBlogBadgeId,
 } from '@/lib/queries';
+import { getPostBySlug } from '@/lib/blog';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 import { InlineCountdown } from '@/components/home/InlineCountdown';
+import { PromotedBlogCard } from '@/components/home/PromotedBlogCard';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -25,12 +28,17 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
     getNextBowlingNights(),
     getLeagueMilestones(),
+    getNewBlogBadgeId(),
   ]);
+
+  // Fetch promoted blog post if badge is active
+  const promotedSlug = blogBadgeId?.split('|')[0] ?? null;
+  const promotedPost = promotedSlug ? await getPostBySlug(promotedSlug) : undefined;
   const [nextBowlingNight, followingBowlingNight] = bowlingNights;
 
   // Merge milestone achievements into the ticker, sorted alphabetically by name
@@ -167,6 +175,13 @@ export default async function Home() {
             <SeasonSnapshot snapshot={seasonSnapshot} />
           </div>
         </div>
+
+        {/* Promoted Blog Post */}
+        {promotedPost && (
+          <div className="mt-6">
+            <PromotedBlogCard post={promotedPost} />
+          </div>
+        )}
       </section>
     </div>
   );
