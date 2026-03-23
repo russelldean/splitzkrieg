@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { HighGameRecord } from '@/lib/queries/alltime';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '';
@@ -300,14 +301,7 @@ export function HighGameProgression({ records, latestNight }: Props) {
                       </span>
                     )}
                     {r.isPlayoff && (
-                      <span className="ml-1 text-xs font-body text-sky-600/60 uppercase tracking-wider">
-                        Playoffs
-                      </span>
-                    )}
-                    {isCurrentRecord(r) && (
-                      <span className="ml-2 text-xs font-body text-amber-600 uppercase tracking-wider">
-                        Current
-                      </span>
+                      <InfoTooltip text="Playoff game" className="ml-1 inline-flex align-middle" />
                     )}
                   </td>
                   <td className="py-3 pr-4 font-body">

@@ -2,6 +2,7 @@ import type { BowlerCareerSummary } from '@/lib/queries';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import type { WeekDelta } from './LastWeekHighlight';
 
 // EASTER EGG: Geoffrey Berry playoff 300 note
@@ -123,14 +124,7 @@ function RecordCard({
           </span>
         )}
         {note && (
-          <span className="relative group cursor-help">
-            <svg className="w-4 h-4 text-navy/30 hover:text-navy/60 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-            </svg>
-            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-navy text-cream text-xs font-body rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg">
-              {note}
-            </span>
-          </span>
+          <InfoTooltip text={note} />
         )}
       </div>
     </div>
