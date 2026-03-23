@@ -420,9 +420,7 @@ export function GameCanvas() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-      // Camera offset (disabled for top-down view, renderer handles positioning)
       ctx.save();
-      // ctx.translate(0, verticalPadding - cameraRef.current.y);
 
       // Use current renderer from ref (supports live skin switching)
       const activeRenderer = rendererRef.current || renderer;
@@ -823,7 +821,6 @@ export function GameCanvas() {
               try {
                 const res = await fetch('/api/game/debug-screenshot', { method: 'POST', body: formData });
                 const data = await res.json();
-                console.log('Screenshot saved:', data.path);
                 btn.textContent = '✅';
                 setTimeout(() => { btn.textContent = '📷'; }, 1000);
               } catch (e) {

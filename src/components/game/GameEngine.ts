@@ -147,10 +147,6 @@ export class GameEngine {
     this.inPit = false;
   }
 
-  makePinDynamic(): void {
-    // No-op, pin is always dynamic now
-  }
-
   getBallPosition(): Vec2 {
     return { x: this.ball.position.x, y: this.ball.position.y };
   }
