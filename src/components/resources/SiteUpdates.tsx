@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 interface Update {
   date: string;
   text: string;
   tag: 'fix' | 'feat';
+  href?: string;
 }
 
 const COLLAPSED_COUNT = 5;
@@ -18,9 +20,15 @@ function UpdateRow({ update }: { update: Update }) {
       <span className="font-body text-sm text-navy/65 shrink-0">
         {new Date(update.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </span>
-      <span className="font-body text-sm text-navy">
-        {update.text}
-      </span>
+      {update.href ? (
+        <Link href={update.href} className="font-body text-sm text-navy hover:text-red-600 underline decoration-navy/20 hover:decoration-red-600 transition-colors">
+          {update.text}
+        </Link>
+      ) : (
+        <span className="font-body text-sm text-navy">
+          {update.text}
+        </span>
+      )}
     </div>
   );
 }
