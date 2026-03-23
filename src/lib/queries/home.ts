@@ -26,6 +26,19 @@ export async function getNextBowlingNight(): Promise<string | null> {
   return next;
 }
 
+/** Check if the "new blog post" badge should show in the nav */
+export async function hasNewBlogPost(): Promise<boolean> {
+  try {
+    const db = await getDb();
+    const result = await db.request().query<{ settingValue: string }>(
+      `SELECT settingValue FROM leagueSettings WHERE settingKey = 'newBlogPost'`
+    );
+    return result.recordset[0]?.settingValue === '1';
+  } catch {
+    return false;
+  }
+}
+
 export interface Milestone {
   bowlerID: number;
   bowlerName: string;

@@ -3,13 +3,14 @@ import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
 import { DesktopNav, HeaderSearchWrapper, MobileSearchRow } from './DesktopNav';
-import { getCurrentSeasonSnapshot, getNextBowlingNight } from '@/lib/queries';
+import { getCurrentSeasonSnapshot, getNextBowlingNight, hasNewBlogPost } from '@/lib/queries';
 import { bowlersIcon, teamsIcon, seasonsIcon, leagueNightsIcon, blogIcon, statsIcon } from '@/components/ui/icons';
 
 export async function Header() {
-  const [snapshot, nextBowlingNight] = await Promise.all([
+  const [snapshot, nextBowlingNight, newBlogPost] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getNextBowlingNight(),
+    hasNewBlogPost(),
   ]);
   const currentSeasonSlug = snapshot?.slug ?? null;
   const currentSeasonLabel = snapshot
@@ -54,6 +55,7 @@ export async function Header() {
       links: [
         { href: '/blog', label: 'All Posts' },
       ],
+      ...(newBlogPost ? { badge: 'New' } : {}),
     },
   ];
 
@@ -127,12 +129,17 @@ export async function Header() {
               />
               <Link
                 href="/blog"
-                className="flex items-center gap-1.5 text-sm font-body text-navy/70 hover:text-navy transition-colors"
+                className="relative flex items-center gap-1.5 text-sm font-body text-navy/70 hover:text-navy transition-colors"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
                 Blog
+                {newBlogPost && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-600 text-white rounded-full leading-none">
+                    New
+                  </span>
+                )}
               </Link>
             </DesktopNav>
 

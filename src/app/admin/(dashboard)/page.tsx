@@ -471,6 +471,30 @@ function EmailIcon({ className }: { className?: string }) {
 
 function EasterEggs() {
   const [hotFunCountdown, setHotFunCountdown] = useState<number | null>(null);
+  const [blogBadge, setBlogBadge] = useState<boolean | null>(null);
+  const [blogBadgeLoading, setBlogBadgeLoading] = useState(false);
+
+  // Load blog badge state
+  useEffect(() => {
+    fetch('/api/admin/new-blog-badge')
+      .then(r => r.json())
+      .then(d => setBlogBadge(d.active))
+      .catch(() => {});
+  }, []);
+
+  const toggleBlogBadge = useCallback(async () => {
+    const next = !blogBadge;
+    setBlogBadgeLoading(true);
+    try {
+      const res = await fetch('/api/admin/new-blog-badge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: next }),
+      });
+      if (res.ok) setBlogBadge(next);
+    } catch { /* ignore */ }
+    finally { setBlogBadgeLoading(false); }
+  }, [blogBadge]);
 
   const triggerHotFun = useCallback(() => {
     window.open('/?hotfun=5', '_blank');
@@ -490,25 +514,46 @@ function EasterEggs() {
     <div className="mt-8 bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden">
       <div className="px-5 py-4 border-b border-navy/10">
         <h2 className="font-heading text-sm text-navy">Easter Eggs</h2>
-        <p className="font-body text-xs text-navy/40 mt-0.5">Manual triggers for live moments</p>
+        <p className="font-body text-xs text-navy/60 mt-0.5">Manual triggers for live moments</p>
       </div>
-      <div className="p-5">
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={triggerHotFun}
-            disabled={hotFunCountdown !== null}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-red-600 text-white font-body text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {hotFunCountdown !== null ? (
-              <>HOT FUN in {hotFunCountdown}...</>
-            ) : (
-              <>HOT FUN</>
-            )}
-          </button>
+      <div className="p-5 space-y-4">
+        <div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={triggerHotFun}
+              disabled={hotFunCountdown !== null}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-red-600 text-white font-body text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {hotFunCountdown !== null ? (
+                <>HOT FUN in {hotFunCountdown}...</>
+              ) : (
+                <>HOT FUN</>
+              )}
+            </button>
+          </div>
+          <p className="font-body text-xs text-navy/60 mt-1">
+            Opens homepage and fires animation after 5 seconds
+          </p>
         </div>
-        <p className="font-body text-xs text-navy/40 mt-2">
-          Opens homepage and fires animation after 5 seconds
-        </p>
+
+        <div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleBlogBadge}
+              disabled={blogBadgeLoading || blogBadge === null}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-md font-body text-xs font-semibold transition-colors disabled:opacity-50 ${
+                blogBadge
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-navy/10 text-navy hover:bg-navy/20'
+              }`}
+            >
+              {blogBadge ? 'NEW Blog Badge: ON' : 'NEW Blog Badge: OFF'}
+            </button>
+          </div>
+          <p className="font-body text-xs text-navy/60 mt-1">
+            Shows a red &quot;New&quot; badge next to Blog in the nav bar
+          </p>
+        </div>
       </div>
     </div>
   );
