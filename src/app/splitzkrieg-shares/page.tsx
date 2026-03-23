@@ -178,9 +178,9 @@ export default function SplitzkriegSharesPage() {
                 {/* Center dot */}
                 <circle cx="120" cy="12" r="0.8" fill="currentColor" className="text-navy" />
                 {/* Stuff piled on table */}
-                <text x="95" y="49" fontSize="14">&#x1F423;</text>
-                <text x="118" y="49" fontSize="12">&#x1F419;</text>
-                <text x="140" y="49" fontSize="12">&#x1F994;</text>
+                <text x="95" y="49" fontSize="16">&#x1F423;</text>
+                <text x="118" y="49" fontSize="14">&#x1F419;</text>
+                <text x="140" y="49" fontSize="14">&#x1F994;</text>
                 {/* Sad stick figure */}
                 <circle cx="40" cy="22" r="6" fill="currentColor" className="text-navy" />
                 {/* Frown */}
@@ -195,12 +195,14 @@ export default function SplitzkriegSharesPage() {
                 {/* Legs */}
                 <line x1="40" y1="50" x2="34" y2="65" stroke="currentColor" strokeWidth="2" className="text-navy" />
                 <line x1="40" y1="50" x2="46" y2="65" stroke="currentColor" strokeWidth="2" className="text-navy" />
-                {/* Animated tears - left */}
-                <circle cx="36" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-l 2s ease-in infinite' }} />
-                <circle cx="36" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-l 2s ease-in infinite 1s' }} />
-                {/* Animated tears - right */}
-                <circle cx="44" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-r 2s ease-in infinite 0.5s' }} />
-                <circle cx="44" cy="23" r="1.3" fill="#2b7bb5" style={{ animation: 'tear-fall-r 2s ease-in infinite 1.5s' }} />
+                {/* Animated tears - left eye */}
+                <circle cx="36" cy="23" r="1.5" fill="#1a5a8a" style={{ animation: 'tear-fall-l 1.6s ease-in infinite' }} />
+                <circle cx="36" cy="23" r="1.5" fill="#1a5a8a" style={{ animation: 'tear-fall-l 1.6s ease-in infinite 0.8s' }} />
+                <circle cx="37" cy="23" r="1.3" fill="#1a5a8a" style={{ animation: 'tear-fall-l 2s ease-in infinite 0.4s' }} />
+                {/* Animated tears - right eye */}
+                <circle cx="44" cy="23" r="1.5" fill="#1a5a8a" style={{ animation: 'tear-fall-r 1.6s ease-in infinite 0.3s' }} />
+                <circle cx="44" cy="23" r="1.5" fill="#1a5a8a" style={{ animation: 'tear-fall-r 1.6s ease-in infinite 1.1s' }} />
+                <circle cx="43" cy="23" r="1.3" fill="#1a5a8a" style={{ animation: 'tear-fall-r 2s ease-in infinite 0.7s' }} />
               </svg>
             </div>
           </div>
