@@ -86,7 +86,6 @@ export function MobileNav({ groups }: MobileNavProps) {
               <div className="flex items-center gap-2 text-navy/80 uppercase text-xs font-heading tracking-widest mb-1.5 px-1 pb-1.5 border-b border-navy/15">
                 <span className="w-4 h-4">{group.icon}</span>
                 {group.title}
-                {group.badge && <NewBlogBadge badgeId={group.badge} />}
               </div>
               <div className="space-y-0.5">
                 {group.links.map((link) => (
@@ -94,9 +93,10 @@ export function MobileNav({ groups }: MobileNavProps) {
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2 text-base font-body font-medium text-navy rounded-lg hover:bg-cream-dark active:bg-cream-dark transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-base font-body font-medium text-navy rounded-lg hover:bg-cream-dark active:bg-cream-dark transition-colors"
                   >
                     {link.label}
+                    {group.badge && link.href === '/blog' && <NewBlogBadge badgeId={group.badge} />}
                   </Link>
                 ))}
               </div>
