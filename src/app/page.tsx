@@ -128,13 +128,13 @@ export default async function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </Link>
-                {/* Divider */}
+                {/* Countdown disabled temporarily — animation broken
                 <div className="hidden sm:block w-px bg-white/15 my-3" />
                 <div className="sm:hidden mx-6 h-px bg-white/15" />
-                {/* Right: Countdown */}
                 <div className="px-6 py-4 flex items-center justify-center overflow-hidden">
                   <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
+                */}
               </div>
             </div>
           )}
