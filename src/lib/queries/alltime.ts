@@ -24,7 +24,7 @@ export interface GameProfileRow {
 
 // Hardcoded: 10th percentile of pct-spread among 27+ game (9+ night) bowlers (as of Spring 2026).
 // Recalibrate at end of season if desired.
-const FLATLINER_PCT_CUTOFF = 1.6131;
+const FLATLINER_PCT_CUTOFF = 1.5977;
 const MIN_NIGHTS = 9; // 27 games / 3 games per night
 
 export interface AllTimeLeaderRow {
