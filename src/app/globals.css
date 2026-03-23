@@ -140,6 +140,75 @@ body {
   animation-delay: var(--fall-delay, 0s);
 }
 
+/* Stick figure runners - dash across screen left to right */
+@utility animate-hot-fun-runner {
+  animation: hot-fun-runner var(--runner-dur, 4s) linear forwards;
+  animation-delay: var(--runner-delay, 0s);
+  opacity: 0;
+}
+@keyframes hot-fun-runner {
+  0% { transform: translateX(-80px); opacity: 0; }
+  5% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(calc(100vw + 80px)); opacity: 0; }
+}
+
+/* Stick figure runners - dash right to left */
+@utility animate-hot-fun-runner-rev {
+  animation: hot-fun-runner-rev var(--runner-dur, 4s) linear forwards;
+  animation-delay: var(--runner-delay, 0s);
+  opacity: 0;
+}
+@keyframes hot-fun-runner-rev {
+  0% { transform: translateX(calc(100vw + 80px)); opacity: 0; }
+  5% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-80px); opacity: 0; }
+}
+
+/* Stick figure runner - goes halfway, pauses, turns around and exits left */
+@utility animate-hot-fun-runner-turn {
+  animation: hot-fun-runner-turn var(--runner-dur, 7s) linear forwards;
+  animation-delay: var(--runner-delay, 0s);
+  opacity: 0;
+}
+@keyframes hot-fun-runner-turn {
+  0% { transform: translateX(-80px) scaleX(1); opacity: 0; }
+  3% { opacity: 1; }
+  40% { transform: translateX(50vw) scaleX(1); opacity: 1; }
+  42% { transform: translateX(50vw) scaleX(0); opacity: 1; }
+  44% { transform: translateX(50vw) scaleX(-1); opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-80px) scaleX(-1); opacity: 0; }
+}
+
+/* Walking leg swing */
+@utility animate-hot-fun-leg-l {
+  animation: hot-fun-leg-l 0.25s ease-in-out infinite alternate;
+}
+@utility animate-hot-fun-leg-r {
+  animation: hot-fun-leg-r 0.25s ease-in-out infinite alternate;
+}
+@keyframes hot-fun-leg-l {
+  0% { transform: rotate(-20deg); }
+  100% { transform: rotate(20deg); }
+}
+@keyframes hot-fun-leg-r {
+  0% { transform: rotate(20deg); }
+  100% { transform: rotate(-20deg); }
+}
+
+@utility animate-bowling-colors {
+  animation: bowling-colors 4s ease-in-out infinite;
+}
+@keyframes bowling-colors {
+  0%, 100% { color: #ff4444; }
+  20% { color: #ff8800; }
+  40% { color: #ffcc00; }
+  60% { color: #44cc44; }
+  80% { color: #4488ff; }
+}
+
 @keyframes neon-pulse {
   0%, 100% { opacity: 1; filter: brightness(1); }
   50% { opacity: 0.85; filter: brightness(1.2); }
@@ -224,7 +293,13 @@ body {
   .animate-hot-fun-zoom,
   .animate-emoji-fall,
   .animate-border-glow,
-  .animate-neon-pulse {
+  .animate-neon-pulse,
+  .animate-bowling-colors,
+  .animate-hot-fun-runner,
+  .animate-hot-fun-runner-rev,
+  .animate-hot-fun-runner-turn,
+  .animate-hot-fun-leg-l,
+  .animate-hot-fun-leg-r {
     animation: none;
   }
 }

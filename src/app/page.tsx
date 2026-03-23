@@ -5,7 +5,7 @@ import { formatMatchDate } from '@/lib/bowling-time';
 import {
   getWeeklyHighlights,
   getCurrentSeasonSnapshot,
-  getNextBowlingNight,
+  getNextBowlingNights,
   getSeasonBySlug,
   getSeasonStandings,
   getSeasonSchedule,
@@ -25,12 +25,13 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, nextBowlingNight, leagueMilestones] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
-    getNextBowlingNight(),
+    getNextBowlingNights(),
     getLeagueMilestones(),
   ]);
+  const [nextBowlingNight, followingBowlingNight] = bowlingNights;
 
   // Merge milestone achievements into the ticker, sorted alphabetically by name
   const allTickerItems = [...weeklyHighlights, ...milestoneTickerItems(leagueMilestones)]
@@ -124,7 +125,7 @@ export default async function Home() {
                 <div className="sm:hidden mx-6 h-px bg-white/15" />
                 {/* Right: Countdown */}
                 <div className="px-6 py-4 flex items-center justify-center overflow-hidden">
-                  <InlineCountdown targetDate={nextBowlingNight} weekNumber={nextWeekNumber} />
+                  <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
               </div>
             </div>

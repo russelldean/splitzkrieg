@@ -443,6 +443,9 @@ export default function AdminDashboardPage() {
           <span className="font-body text-xs text-navy">View Blog</span>
         </Link>
       </div>
+
+      {/* Easter Eggs */}
+      <EasterEggs />
     </div>
   );
 }
@@ -463,5 +466,50 @@ function EmailIcon({ className }: { className?: string }) {
       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
       <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
     </svg>
+  );
+}
+
+function EasterEggs() {
+  const [hotFunCountdown, setHotFunCountdown] = useState<number | null>(null);
+
+  const triggerHotFun = useCallback(() => {
+    window.open('/?hotfun=5', '_blank');
+    setHotFunCountdown(5);
+    const interval = setInterval(() => {
+      setHotFunCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  return (
+    <div className="mt-8 bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden">
+      <div className="px-5 py-4 border-b border-navy/10">
+        <h2 className="font-heading text-sm text-navy">Easter Eggs</h2>
+        <p className="font-body text-xs text-navy/40 mt-0.5">Manual triggers for live moments</p>
+      </div>
+      <div className="p-5">
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={triggerHotFun}
+            disabled={hotFunCountdown !== null}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-red-600 text-white font-body text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {hotFunCountdown !== null ? (
+              <>HOT FUN in {hotFunCountdown}...</>
+            ) : (
+              <>HOT FUN</>
+            )}
+          </button>
+        </div>
+        <p className="font-body text-xs text-navy/40 mt-2">
+          Opens homepage and fires animation after 5 seconds
+        </p>
+      </div>
+    </div>
   );
 }

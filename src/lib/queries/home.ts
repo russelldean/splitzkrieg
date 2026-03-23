@@ -4,19 +4,26 @@
 import { cache } from 'react';
 import { getDb, cachedQuery } from '../db';
 
-const GET_NEXT_BOWLING_NIGHT_SQL = `/* v2: skip today if past bowling time */
-  SELECT TOP 1 matchDate
+const GET_NEXT_BOWLING_NIGHTS_SQL = `/* v3: include today, return next 2 distinct dates */
+  SELECT DISTINCT TOP 2 matchDate
   FROM schedule
-  WHERE matchDate > CAST(GETDATE() AS DATE)
+  WHERE matchDate >= CAST(GETDATE() AS DATE)
   ORDER BY matchDate ASC
 `;
 
-export async function getNextBowlingNight(): Promise<string | null> {
-  return cachedQuery('getNextBowlingNight', async () => {
+export async function getNextBowlingNights(): Promise<[string | null, string | null]> {
+  return (await cachedQuery('getNextBowlingNights', async () => {
     const db = await getDb();
-    const result = await db.request().query<{ matchDate: Date }>(GET_NEXT_BOWLING_NIGHT_SQL);
-    return result.recordset[0]?.matchDate?.toISOString() ?? null;
-  }, null, { sql: GET_NEXT_BOWLING_NIGHT_SQL });
+    const result = await db.request().query<{ matchDate: Date }>(GET_NEXT_BOWLING_NIGHTS_SQL);
+    const dates = result.recordset.map(r => r.matchDate.toISOString());
+    return [dates[0] ?? null, dates[1] ?? null] as [string | null, string | null];
+  }, null, { sql: GET_NEXT_BOWLING_NIGHTS_SQL })) ?? [null, null];
+}
+
+/** @deprecated Use getNextBowlingNights() instead */
+export async function getNextBowlingNight(): Promise<string | null> {
+  const [next] = await getNextBowlingNights();
+  return next;
 }
 
 export interface Milestone {
