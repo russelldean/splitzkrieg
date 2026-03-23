@@ -59,11 +59,11 @@ export default async function BlogPage() {
               href={`/blog/${featured.slug}`}
               className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-navy/10 hover:border-navy/20"
             >
-              {featured.heroImage ? (
+              {(featured.cardImage || featured.heroImage) ? (
                 <div className="relative h-44 sm:h-56 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={featured.heroImage}
+                    src={featured.cardImage || featured.heroImage!}
                     alt=""
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />

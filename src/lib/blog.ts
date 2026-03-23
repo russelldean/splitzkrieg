@@ -14,6 +14,7 @@ export interface PostMeta {
   week?: number;
   heroImage?: string;
   heroFocalY?: number;
+  cardImage?: string;
 }
 
 /**
@@ -38,6 +39,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
     ...(post.week != null ? { week: post.week } : {}),
     ...(post.heroImage ? { heroImage: post.heroImage } : {}),
     ...(post.heroFocalY != null ? { heroFocalY: post.heroFocalY } : {}),
+    ...(post.cardImage ? { cardImage: post.cardImage } : {}),
   }));
 }
 

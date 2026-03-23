@@ -48,6 +48,7 @@ export default function BlogEditorPage({
   const [week, setWeek] = useState('');
   const [heroImage, setHeroImage] = useState('');
   const [heroFocalY, setHeroFocalY] = useState('');
+  const [cardImage, setCardImage] = useState('');
 
   // Resolve params
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function BlogEditorPage({
       setWeek(p.week != null ? String(p.week) : '');
       setHeroImage(p.heroImage ?? '');
       setHeroFocalY(p.heroFocalY != null ? String(p.heroFocalY) : '');
+      setCardImage(p.cardImage ?? '');
     } catch {
       setSaveStatus('error');
     } finally {
@@ -139,6 +141,7 @@ export default function BlogEditorPage({
       week: week ? parseInt(week, 10) : null,
       heroImage: heroImage || null,
       heroFocalY: heroFocalY ? parseFloat(heroFocalY) : null,
+      cardImage: cardImage || null,
     };
 
     // Handle publish state
@@ -397,6 +400,18 @@ export default function BlogEditorPage({
               onChange={(e) => setHeroFocalY(e.target.value)}
               className="w-full px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
               placeholder="0.45"
+            />
+          </div>
+          <div>
+            <label className="block font-body text-xs text-navy/60 mb-1">
+              Card Image
+            </label>
+            <input
+              type="text"
+              value={cardImage}
+              onChange={(e) => setCardImage(e.target.value)}
+              className="w-full px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+              placeholder="/card-image.jpg (optional, falls back to hero)"
             />
           </div>
         </div>
