@@ -7,6 +7,7 @@ interface SiteUpdate {
   date: string;
   text: string;
   tag: 'fix' | 'feat';
+  href?: string;
 }
 
 interface Suggestion {
@@ -29,6 +30,7 @@ export default function AdminUpdatesPage() {
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newText, setNewText] = useState('');
   const [newTag, setNewTag] = useState<'feat' | 'fix'>('feat');
+  const [newHref, setNewHref] = useState('');
   const [adding, setAdding] = useState(false);
 
   // Suggestions
@@ -42,6 +44,7 @@ export default function AdminUpdatesPage() {
   const [editText, setEditText] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editTag, setEditTag] = useState<'feat' | 'fix'>('feat');
+  const [editHref, setEditHref] = useState('');
 
   const loadUpdates = useCallback(async () => {
     try {
@@ -68,13 +71,14 @@ export default function AdminUpdatesPage() {
       const res = await fetch('/api/admin/updates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: newDate, text: newText.trim(), tag: newTag }),
+        body: JSON.stringify({ date: newDate, text: newText.trim(), tag: newTag, ...(newHref.trim() ? { href: newHref.trim() } : {}) }),
       });
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || 'Failed to add');
       }
       setNewText('');
+      setNewHref('');
       setShowAdd(false);
       await loadUpdates();
     } catch (err) {
@@ -103,6 +107,7 @@ export default function AdminUpdatesPage() {
     setEditText(u.text);
     setEditDate(u.date);
     setEditTag(u.tag);
+    setEditHref(u.href ?? '');
   }
 
   async function saveEdit() {
@@ -113,7 +118,7 @@ export default function AdminUpdatesPage() {
       const res = await fetch(`/api/admin/updates/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: editDate, text: editText.trim(), tag: editTag }),
+        body: JSON.stringify({ date: editDate, text: editText.trim(), tag: editTag, href: editHref.trim() || null }),
       });
       if (!res.ok) throw new Error('Failed to save');
       setEditingId(null);
@@ -339,6 +344,16 @@ export default function AdminUpdatesPage() {
                 className="w-full px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
               />
             </div>
+            <div className="w-[140px]">
+              <label className="block font-body text-xs text-navy/60 mb-1">Link (optional)</label>
+              <input
+                type="text"
+                value={newHref}
+                onChange={(e) => setNewHref(e.target.value)}
+                placeholder="/bowlers"
+                className="w-full px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+              />
+            </div>
             <button
               onClick={handleAdd}
               disabled={adding || !newText.trim()}
@@ -416,6 +431,16 @@ export default function AdminUpdatesPage() {
                             className="w-full px-2 py-1.5 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
                           />
                         </div>
+                        <div className="w-[140px]">
+                          <label className="block font-body text-xs text-navy/60 mb-1">Link</label>
+                          <input
+                            type="text"
+                            value={editHref}
+                            onChange={(e) => setEditHref(e.target.value)}
+                            placeholder="/bowlers"
+                            className="w-full px-2 py-1.5 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+                          />
+                        </div>
                         <button
                           onClick={saveEdit}
                           disabled={saving === u.id}
@@ -443,7 +468,10 @@ export default function AdminUpdatesPage() {
                       >
                         {u.tag}
                       </span>
-                      <span className="font-body text-sm text-navy flex-1">{u.text}</span>
+                      <span className="font-body text-sm text-navy flex-1">
+                        {u.text}
+                        {u.href && <span className="text-navy/30 ml-1.5 text-xs">{u.href}</span>}
+                      </span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
                           onClick={() => startEdit(u)}

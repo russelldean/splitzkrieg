@@ -12,6 +12,7 @@ export interface SiteUpdate {
   date: string;       // YYYY-MM-DD
   text: string;
   tag: 'fix' | 'feat';
+  href?: string;
   sortOrder: number;
   createdAt: string;
 }
@@ -23,6 +24,7 @@ function rowToUpdate(row: Record<string, unknown>): SiteUpdate {
     date: d.toISOString().split('T')[0],
     text: row.text as string,
     tag: (row.tag as 'fix' | 'feat') ?? 'feat',
+    ...(row.href ? { href: row.href as string } : {}),
     sortOrder: (row.sortOrder as number) ?? 0,
     createdAt: row.createdDate
       ? (row.createdDate as Date).toISOString()
@@ -40,7 +42,7 @@ export async function getAllUpdates(): Promise<SiteUpdate[]> {
       db
         .request()
         .query(
-          'SELECT updateID, updateDate, text, tag, sortOrder, createdDate FROM siteUpdates ORDER BY updateDate DESC, sortOrder DESC',
+          'SELECT updateID, updateDate, text, tag, href, sortOrder, createdDate FROM siteUpdates ORDER BY updateDate DESC, sortOrder DESC',
         ),
     'getAllUpdates',
   );
@@ -54,6 +56,7 @@ export async function createUpdate(data: {
   date: string;
   text: string;
   tag: string;
+  href?: string;
 }): Promise<number> {
   const db = await getDb();
   // sortOrder = max existing sortOrder for that date + 1
@@ -64,11 +67,12 @@ export async function createUpdate(data: {
         .input('date', sql.Date, data.date)
         .input('text', sql.NVarChar(500), data.text)
         .input('tag', sql.VarChar(10), data.tag)
+        .input('href', sql.NVarChar(200), data.href ?? null)
         .query(`
           DECLARE @maxSort INT;
           SELECT @maxSort = ISNULL(MAX(sortOrder), -1) FROM siteUpdates WHERE updateDate = @date;
-          INSERT INTO siteUpdates (updateDate, text, tag, sortOrder)
-          VALUES (@date, @text, @tag, @maxSort + 1);
+          INSERT INTO siteUpdates (updateDate, text, tag, href, sortOrder)
+          VALUES (@date, @text, @tag, @href, @maxSort + 1);
           SELECT SCOPE_IDENTITY() AS id;
         `),
     'createUpdate',
@@ -115,7 +119,7 @@ export async function createUpdates(
  */
 export async function updateUpdate(
   id: number,
-  data: Partial<{ date: string; text: string; tag: string }>,
+  data: Partial<{ date: string; text: string; tag: string; href: string | null }>,
 ): Promise<void> {
   const db = await getDb();
   const setClauses: string[] = [];
@@ -132,6 +136,10 @@ export async function updateUpdate(
   if (data.tag !== undefined) {
     req.input('tag', sql.VarChar(10), data.tag);
     setClauses.push('tag = @tag');
+  }
+  if (data.href !== undefined) {
+    req.input('href', sql.NVarChar(200), data.href);
+    setClauses.push('href = @href');
   }
 
   if (setClauses.length === 0) return;
