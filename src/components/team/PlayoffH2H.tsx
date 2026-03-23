@@ -64,7 +64,7 @@ export function PlayoffH2H({ matchups }: Props) {
   if (matchups.length === 0) return null;
 
   return (
-    <section>
+    <section id="playoff-h2h" className="scroll-mt-20">
       <SectionHeading>Playoff Head-to-Head</SectionHeading>
 
       <div className="border border-navy/10 rounded-xl overflow-hidden bg-white shadow-sm">
