@@ -61,9 +61,8 @@ function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, le
   const leaguePathD = `M ${leaguePts.map(p => `${p.x},${p.y}`).join(' L ')}`;
   const labels = ['G1', 'G2', 'G3'];
 
-  // Percentage deltas between adjacent games (bowler)
-  const delta12 = avg1 > 0 ? ((avg2 - avg1) / avg1) * 100 : 0;
-  const delta23 = avg2 > 0 ? ((avg3 - avg2) / avg2) * 100 : 0;
+  // Percentage difference from overall average per game (matches leaderboard)
+  const gamePcts = [avg1, avg2, avg3].map(v => bowlerOverall > 0 ? ((v / bowlerOverall) - 1) * 100 : 0);
 
   // Path length for draw animation
   const pathRef = useRef<SVGPathElement>(null);
@@ -163,36 +162,38 @@ function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, le
           );
         })}
 
-        {/* Delta labels */}
-        {[
-          { delta: delta12, x: (bowlerPts[0].x + bowlerPts[1].x) / 2, y: (bowlerPts[0].y + bowlerPts[1].y) / 2, delay: '1.5s' },
-          { delta: delta23, x: (bowlerPts[1].x + bowlerPts[2].x) / 2, y: (bowlerPts[1].y + bowlerPts[2].y) / 2, delay: '2.1s' },
-        ].map(({ delta, x, y, delay }, i) => (
-          <text
-            key={i}
-            x={x}
-            y={y - 14}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight={600}
-            fill={delta >= 0 ? '#16a34a' : RED}
-            opacity={0.8}
-            fontFamily="var(--font-body)"
-            style={animate ? {
-              opacity: 0,
-              animation: `fadeIn 0.45s ease-out ${delay} forwards`,
-            } : undefined}
-          >
-            {delta >= 0 ? '+' : ''}{delta.toFixed(1)}%
-          </text>
-        ))}
+        {/* Per-game % from average labels */}
+        {bowlerPts.map((p, i) => {
+          const pct = gamePcts[i];
+          const delay = `${1.5 + i * 0.3}s`;
+          return (
+            <text
+              key={`pct-${i}`}
+              x={p.x}
+              y={p.y - 14}
+              textAnchor="middle"
+              fontSize={11}
+              fontWeight={600}
+              fill={pct >= 0 ? '#16a34a' : RED}
+              opacity={0.8}
+              fontFamily="var(--font-body)"
+              style={animate ? {
+                opacity: 0,
+                animation: `fadeIn 0.45s ease-out ${delay} forwards`,
+              } : undefined}
+            >
+              {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+            </text>
+          );
+        })}
 
-        {/* Legend */}
+        {/* Legend - centered top with background pill */}
         <g style={animate ? { opacity: 0, animation: 'fadeIn 0.45s ease-out 2.25s forwards' } : undefined}>
-          <line x1={w - 100} y1={10} x2={w - 78} y2={10} stroke={NAVY} strokeWidth={3} strokeLinecap="round" />
-          <text x={w - 74} y={14} fontSize={12} fill={NAVY} opacity={0.85} fontWeight={500} fontFamily="var(--font-body)">You</text>
-          <line x1={w - 100} y1={26} x2={w - 78} y2={26} stroke={LEAGUE_COLOR} strokeWidth={2.5} strokeDasharray="5 3" strokeLinecap="round" />
-          <text x={w - 74} y={30} fontSize={12} fill={LEAGUE_COLOR} fontWeight={500} fontFamily="var(--font-body)">League</text>
+          <rect x={w / 2 - 68} y={-2} width={144} height={20} rx={10} fill={NAVY} fillOpacity={0.06} />
+          <line x1={w / 2 - 48} y1={8} x2={w / 2 - 28} y2={8} stroke={NAVY} strokeWidth={3} strokeLinecap="round" />
+          <text x={w / 2 - 24} y={12} fontSize={10} fill={NAVY} opacity={0.85} fontWeight={500} fontFamily="var(--font-body)">You</text>
+          <line x1={w / 2 + 8} y1={8} x2={w / 2 + 28} y2={8} stroke={LEAGUE_COLOR} strokeWidth={2.5} strokeDasharray="5 3" strokeLinecap="round" />
+          <text x={w / 2 + 32} y={12} fontSize={10} fill={LEAGUE_COLOR} fontWeight={500} fontFamily="var(--font-body)">League</text>
         </g>
       </svg>
 
