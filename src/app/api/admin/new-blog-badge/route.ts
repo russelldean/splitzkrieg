@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
   const result = await db.request().query<{ settingValue: string }>(
     `SELECT settingValue FROM leagueSettings WHERE settingKey = 'newBlogPost'`
   );
-  const active = result.recordset[0]?.settingValue === '1';
+  const val = result.recordset[0]?.settingValue ?? '0';
+  const active = val !== '0';
   return NextResponse.json({ active });
 }
 
@@ -34,8 +35,10 @@ export async function POST(request: NextRequest) {
 
   const { active } = (await request.json()) as { active: boolean };
   const db = await getDb();
+  // Store a timestamp when turning on (acts as unique badge ID), '0' when off
+  const value = active ? String(Date.now()) : '0';
   await db.request().query(
-    `UPDATE leagueSettings SET settingValue = '${active ? '1' : '0'}' WHERE settingKey = 'newBlogPost'`
+    `UPDATE leagueSettings SET settingValue = '${value}' WHERE settingKey = 'newBlogPost'`
   );
 
   // Revalidate all pages that show the header

@@ -26,16 +26,17 @@ export async function getNextBowlingNight(): Promise<string | null> {
   return next;
 }
 
-/** Check if the "new blog post" badge should show in the nav */
-export async function hasNewBlogPost(): Promise<boolean> {
+/** Check if the "new blog post" badge should show in the nav. Returns badge ID or null. */
+export async function getNewBlogBadgeId(): Promise<string | null> {
   try {
     const db = await getDb();
     const result = await db.request().query<{ settingValue: string }>(
       `SELECT settingValue FROM leagueSettings WHERE settingKey = 'newBlogPost'`
     );
-    return result.recordset[0]?.settingValue === '1';
+    const val = result.recordset[0]?.settingValue ?? '0';
+    return val !== '0' ? val : null;
   } catch {
-    return false;
+    return null;
   }
 }
 

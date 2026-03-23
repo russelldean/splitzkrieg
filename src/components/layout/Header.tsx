@@ -3,14 +3,15 @@ import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
 import { DesktopNav, HeaderSearchWrapper, MobileSearchRow } from './DesktopNav';
-import { getCurrentSeasonSnapshot, getNextBowlingNight, hasNewBlogPost } from '@/lib/queries';
+import { getCurrentSeasonSnapshot, getNextBowlingNight, getNewBlogBadgeId } from '@/lib/queries';
+import { NewBlogBadge } from './NewBlogBadge';
 import { bowlersIcon, teamsIcon, seasonsIcon, leagueNightsIcon, blogIcon, statsIcon } from '@/components/ui/icons';
 
 export async function Header() {
-  const [snapshot, nextBowlingNight, newBlogPost] = await Promise.all([
+  const [snapshot, nextBowlingNight, blogBadgeId] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getNextBowlingNight(),
-    hasNewBlogPost(),
+    getNewBlogBadgeId(),
   ]);
   const currentSeasonSlug = snapshot?.slug ?? null;
   const currentSeasonLabel = snapshot
@@ -55,7 +56,7 @@ export async function Header() {
       links: [
         { href: '/blog', label: 'All Posts' },
       ],
-      ...(newBlogPost ? { badge: 'New' } : {}),
+      ...(blogBadgeId ? { badge: blogBadgeId } : {}),
     },
   ];
 
@@ -135,11 +136,7 @@ export async function Header() {
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
                 Blog
-                {newBlogPost && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-600 text-white rounded-full leading-none">
-                    New
-                  </span>
-                )}
+                {blogBadgeId && <NewBlogBadge badgeId={blogBadgeId} />}
               </Link>
             </DesktopNav>
 

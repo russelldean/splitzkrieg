@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { NewBlogBadge } from './NewBlogBadge';
 
 interface NavLink {
   href: string;
@@ -85,11 +86,7 @@ export function MobileNav({ groups }: MobileNavProps) {
               <div className="flex items-center gap-2 text-navy/80 uppercase text-xs font-heading tracking-widest mb-1.5 px-1 pb-1.5 border-b border-navy/15">
                 <span className="w-4 h-4">{group.icon}</span>
                 {group.title}
-                {group.badge && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-600 text-white rounded-full leading-none normal-case">
-                    {group.badge}
-                  </span>
-                )}
+                {group.badge && <NewBlogBadge badgeId={group.badge} />}
               </div>
               <div className="space-y-0.5">
                 {group.links.map((link) => (
