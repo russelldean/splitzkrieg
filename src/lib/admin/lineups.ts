@@ -356,6 +356,7 @@ export async function pushLineupsToLP(
   cookie: string,
   seasonID: number,
   week: number,
+  teamID?: number,
 ): Promise<{ pushed: number; errors: string[] }> {
   const db = await getDb();
   const errors: string[] = [];
@@ -371,8 +372,11 @@ export async function pushLineupsToLP(
     Referer: LP_BASE + '/all-teams-center',
   };
 
-  // Get all submissions for this week
-  const submissions = await getLineups(seasonID, week);
+  // Get submissions for this week, optionally filtered to a single team
+  let submissions = await getLineups(seasonID, week);
+  if (teamID) {
+    submissions = submissions.filter((s) => s.teamID === teamID);
+  }
 
   for (const submission of submissions) {
     const teamName = submission.teamName;

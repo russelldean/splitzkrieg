@@ -13,7 +13,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const { cookie, seasonID, week } = await request.json();
+    const { cookie, seasonID, week, teamID } = await request.json();
 
     if (!cookie || !seasonID || !week) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const result = await pushLineupsToLP(cookie, seasonID, week);
+    const result = await pushLineupsToLP(cookie, seasonID, week, teamID);
 
     return NextResponse.json(result);
   } catch (err) {
