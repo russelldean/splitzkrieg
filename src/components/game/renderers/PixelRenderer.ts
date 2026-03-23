@@ -26,9 +26,15 @@ const PIXEL_SIZE = 4;
 // Top-down view: scale world coords to fit the canvas (matches VectorRenderer)
 const TOTAL_WIDTH = LANE_WIDTH + GUTTER_WIDTH * 2;
 const TOTAL_HEIGHT = PIT_DEPTH + LANE_LENGTH + 60;
-const SCALE = Math.min(480 / TOTAL_WIDTH, 810 / TOTAL_HEIGHT);
-const X_OFFSET = (500 - TOTAL_WIDTH * SCALE) / 2;
-const Y_OFFSET = (832 - TOTAL_HEIGHT * SCALE) / 2;
+let SCALE = 0.6;
+let X_OFFSET = 0;
+let Y_OFFSET = 0;
+
+function updateLayout(canvasWidth: number, canvasHeight: number) {
+  SCALE = Math.min((canvasWidth - 20) / TOTAL_WIDTH, (canvasHeight - 20) / TOTAL_HEIGHT);
+  X_OFFSET = (canvasWidth - TOTAL_WIDTH * SCALE) / 2;
+  Y_OFFSET = (canvasHeight - TOTAL_HEIGHT * SCALE) / 2;
+}
 
 function worldToScreen(worldX: number, worldY: number): Vec2 {
   const screenX = X_OFFSET + (worldX + GUTTER_WIDTH) * SCALE;
@@ -88,6 +94,7 @@ export class PixelRenderer implements GameRenderer {
     const dpr = (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1;
     const canvasWidth = ctx.canvas.width / dpr;
     const canvasHeight = ctx.canvas.height / dpr;
+    updateLayout(canvasWidth, canvasHeight);
 
     // Dark background
     ctx.fillStyle = COLORS.background;

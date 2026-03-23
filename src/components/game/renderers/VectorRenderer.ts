@@ -26,10 +26,16 @@ const { LANE_WIDTH, LANE_LENGTH, BALL_RADIUS, PIN_RADIUS, GUTTER_WIDTH, PIT_DEPT
 // Top-down view: scale world coords to fit the canvas
 const TOTAL_WIDTH = LANE_WIDTH + GUTTER_WIDTH * 2;    // 576
 const TOTAL_HEIGHT = PIT_DEPTH + LANE_LENGTH + 60;     // 1340
-// Scale to fit: must fit both width (~500px) and height (~832px)
-const SCALE = Math.min(480 / TOTAL_WIDTH, 810 / TOTAL_HEIGHT);  // ~0.60
-const X_OFFSET = (500 - TOTAL_WIDTH * SCALE) / 2;  // Center horizontally
-const Y_OFFSET = (832 - TOTAL_HEIGHT * SCALE) / 2; // Center vertically
+// Dynamic scale/offset — updated each frame from actual canvas size
+let SCALE = 0.6;
+let X_OFFSET = 0;
+let Y_OFFSET = 0;
+
+function updateLayout(canvasWidth: number, canvasHeight: number) {
+  SCALE = Math.min((canvasWidth - 20) / TOTAL_WIDTH, (canvasHeight - 20) / TOTAL_HEIGHT);
+  X_OFFSET = (canvasWidth - TOTAL_WIDTH * SCALE) / 2;
+  Y_OFFSET = (canvasHeight - TOTAL_HEIGHT * SCALE) / 2;
+}
 
 /**
  * Top-down: world X,Y maps directly to screen with scale.
@@ -55,6 +61,7 @@ export class VectorRenderer implements GameRenderer {
     const dpr = (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1;
     const canvasWidth = ctx.canvas.width / dpr;
     const canvasHeight = ctx.canvas.height / dpr;
+    updateLayout(canvasWidth, canvasHeight);
 
     // Dark background
     ctx.fillStyle = COLORS.background;
