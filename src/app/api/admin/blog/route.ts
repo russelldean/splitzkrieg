@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       week,
       heroImage,
       heroFocalY,
+      cardImage,
       publishedAt,
     } = body;
 
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
       week: week ?? null,
       heroImage: heroImage ?? null,
       heroFocalY: heroFocalY ?? null,
+      cardImage: cardImage ?? null,
       publishedAt: publishedAt ?? null,
     });
 
