@@ -470,7 +470,11 @@ export default function AdminUpdatesPage() {
                       </span>
                       <span className="font-body text-sm text-navy flex-1">
                         {u.text}
-                        {u.href && <span className="text-navy/30 ml-1.5 text-xs">{u.href}</span>}
+                        {u.href && (
+                          <a href={u.href} target="_blank" className="ml-2 text-xs font-semibold text-red-600 hover:text-red-700 transition-colors">
+                            Link
+                          </a>
+                        )}
                       </span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
