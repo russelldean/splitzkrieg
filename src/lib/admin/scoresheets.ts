@@ -372,7 +372,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
 
     // Lane assignment top right
     doc.setFontSize(11);
-    doc.setTextColor(120);
+    doc.setTextColor(80);
     doc.text(lanes, pageW - 50, 50, { align: 'right' });
 
     // Week info top left
@@ -396,7 +396,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
 
     // "vs."
     doc.setFontSize(28);
-    doc.setTextColor(150);
+    doc.setTextColor(100);
     doc.text('vs.', pageW / 2, centerY + 55, { align: 'center' });
 
     // Away team name
@@ -449,7 +449,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
       const awayAbbr = match.awayTeamAbbr;
 
       let rowY = h2hStartY + 20;
-      doc.setTextColor(140);
+      doc.setTextColor(100);
       doc.setFont('helvetica', 'bold');
       doc.text('Date', col1X + 30, rowY, { align: 'center' });
       doc.text(homeAbbr, col1X + 105, rowY, { align: 'center' });
@@ -468,7 +468,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
       if (rightCol.length > 0) doc.line(col2X, rowY, col2X + 185, rowY);
       rowY += 12;
 
-      doc.setTextColor(80);
+      doc.setTextColor(60);
       for (let j = 0; j < 5; j++) {
         const left = leftCol[j];
         const right = rightCol[j];
@@ -521,7 +521,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
 
       // Column sub-headers
       sRowY += 14;
-      doc.setTextColor(140);
+      doc.setTextColor(100);
       doc.setFontSize(8);
       doc.text('#', sCol1X, sRowY);
       doc.text('Team', sCol1X + 18, sRowY);
@@ -538,7 +538,7 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
       if (divB.length > 0) doc.line(sCol2X, sRowY, sCol2X + 190, sRowY);
       sRowY += 12;
 
-      doc.setTextColor(80);
+      doc.setTextColor(60);
       doc.setFontSize(9);
       const maxRows = Math.max(divA.length, divB.length);
       for (let j = 0; j < maxRows; j++) {
@@ -568,12 +568,6 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
     doc.setDrawColor(navy);
     doc.setLineWidth(2);
     doc.line(50, pageH - 45, pageW - 50, pageH - 45);
-
-    doc.setFontSize(10);
-    doc.setTextColor(navy);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Find more data at splitzkrieg.com', pageW / 2, pageH - 28, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
 
     // ===== PAGE 2: Scoring grid =====
     doc.addPage();
@@ -615,8 +609,8 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
 
     // Header (week only, lanes are on cover page)
     doc.setFontSize(10);
-    doc.setTextColor(120);
-    doc.text(`Week ${match.week}`, 40, 30);
+    doc.setTextColor(80);
+    doc.text(`Week ${match.week}`, 40, 40);
 
     // Check roster source per team
     const homeSource = homeBowlers[0]?.rosterSource;
@@ -624,14 +618,14 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
     const fallbackMsg = "Last Week's Lineup - Please Submit Lineups before 5pm Monday";
 
     // Home team fallback warning
-    let homeTableY = 50;
+    let homeTableY = 90;
     if (homeSource === 'lastweek') {
       doc.setFontSize(8);
-      doc.setTextColor(100);
+      doc.setTextColor(70);
       doc.setFont('helvetica', 'italic');
-      doc.text(fallbackMsg, 40, 42);
+      doc.text(fallbackMsg, 40, 82);
       doc.setFont('helvetica', 'normal');
-      homeTableY = 54;
+      homeTableY = 94;
     }
 
     // Turkey emoji above home team's turkeys column (facing left - default)
@@ -717,11 +711,11 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
     const afterHomeY = (doc as any).lastAutoTable?.finalY ?? 300;
 
     // Away team fallback warning
-    const awayGap = 40;
+    const awayGap = 50;
     let awayTableY = afterHomeY + awayGap;
     if (awaySource === 'lastweek') {
       doc.setFontSize(8);
-      doc.setTextColor(100);
+      doc.setTextColor(70);
       doc.setFont('helvetica', 'italic');
       doc.text(fallbackMsg, 40, afterHomeY + awayGap - 8);
       doc.setFont('helvetica', 'normal');
@@ -786,9 +780,9 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
     const afterAwayY = (doc as any).lastAutoTable?.finalY ?? 550;
 
     // New bowler warning note
-    const noteY = afterAwayY + 30;
+    const noteY = afterAwayY + 20;
     doc.setFontSize(8);
-    doc.setTextColor(100);
+    doc.setTextColor(70);
     doc.setFont('helvetica', 'bold');
     doc.text('NEW BOWLER WITH NO AVERAGE ON YOUR TEAM?', 40, noteY);
     doc.setFont('helvetica', 'normal');
@@ -800,22 +794,22 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
     doc.text('Record the team total the screen is showing and we will fix as needed.', 40, noteY + 48);
     doc.text('The ACCURATE game score for team = (Screen total) - (New bowler game score)', 40, noteY + 58);
 
-    // Feedback prompt
+    // Feedback prompt + site reference
     doc.setFontSize(10);
     doc.setTextColor(navy);
     doc.setFont('helvetica', 'bold');
     doc.text(
       'Something noteworthy happen on the lanes tonight?',
       40,
-      noteY + 80,
+      noteY + 76,
     );
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(100);
+    doc.setTextColor(70);
     doc.text(
-      'Tell us at splitzkrieg.com - look for the speech bubble icon in the bottom right corner.',
+      'Head to splitzkrieg.com and look for the speech bubble icon in the bottom right corner.',
       40,
-      noteY + 93,
+      noteY + 89,
     );
   }
 
