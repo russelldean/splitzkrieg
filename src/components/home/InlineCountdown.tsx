@@ -93,7 +93,7 @@ export function InlineCountdown({ targetDate, weekNumber }: InlineCountdownProps
   const { days, hours, minutes, seconds } = countdown;
 
   const units = [
-    ...(days > 0 ? [{ value: String(days).padStart(2, '0'), label: 'DAYS' }] : []),
+    { value: String(days).padStart(2, '0'), label: 'DAYS' },
     { value: String(hours).padStart(2, '0'), label: 'HRS' },
     { value: String(minutes).padStart(2, '0'), label: 'MIN' },
     { value: String(seconds).padStart(2, '0'), label: 'SEC' },
