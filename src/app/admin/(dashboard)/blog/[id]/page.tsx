@@ -264,13 +264,28 @@ export default function BlogEditorPage({
           )}
 
           {post.publishedAt ? (
-            <button
-              onClick={() => handleSave(false)}
-              disabled={saving}
-              className="px-4 py-2 rounded-lg font-body text-sm bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors disabled:opacity-50"
-            >
-              Unpublish
-            </button>
+            <>
+              <button
+                onClick={() => handleSave(false)}
+                disabled={saving}
+                className="px-4 py-2 rounded-lg font-body text-sm bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors disabled:opacity-50"
+              >
+                Unpublish
+              </button>
+              <button
+                onClick={async () => {
+                  const res = await fetch('/api/admin/new-blog-badge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug }),
+                  });
+                  if (res.ok) alert('NEW badge is live for this post!');
+                }}
+                className="px-4 py-2 rounded-lg font-body text-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Promote
+              </button>
+            </>
           ) : (
             <button
               onClick={() => handleSave(true)}

@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
   );
   const val = result.recordset[0]?.settingValue ?? '0';
   const active = val !== '0';
-  return NextResponse.json({ active });
+  const slug = active ? val.split('|')[0] : null;
+  return NextResponse.json({ active, slug });
 }
 
 export async function POST(request: NextRequest) {
@@ -33,10 +34,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
 
-  const { active } = (await request.json()) as { active: boolean };
+  const { slug } = (await request.json()) as { slug?: string };
   const db = await getDb();
-  // Store a timestamp when turning on (acts as unique badge ID), '0' when off
-  const value = active ? String(Date.now()) : '0';
+  // Store "slug|timestamp" when promoting, '0' to clear
+  const value = slug ? `${slug}|${Date.now()}` : '0';
   await db.request().query(
     `UPDATE leagueSettings SET settingValue = '${value}' WHERE settingKey = 'newBlogPost'`
   );
@@ -44,5 +45,5 @@ export async function POST(request: NextRequest) {
   // Revalidate all pages that show the header
   revalidatePath('/', 'layout');
 
-  return NextResponse.json({ active });
+  return NextResponse.json({ active: !!slug, slug: slug ?? null });
 }

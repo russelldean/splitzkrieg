@@ -26,7 +26,9 @@ export async function getNextBowlingNight(): Promise<string | null> {
   return next;
 }
 
-/** Check if the "new blog post" badge should show in the nav. Returns badge ID or null. */
+const BADGE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+
+/** Check if the "new blog post" badge should show. Returns slug or null. */
 export async function getNewBlogBadgeId(): Promise<string | null> {
   try {
     const db = await getDb();
@@ -34,7 +36,13 @@ export async function getNewBlogBadgeId(): Promise<string | null> {
       `SELECT settingValue FROM leagueSettings WHERE settingKey = 'newBlogPost'`
     );
     const val = result.recordset[0]?.settingValue ?? '0';
-    return val !== '0' ? val : null;
+    if (val === '0') return null;
+    // Format: "slug|timestamp"
+    const [slug, ts] = val.split('|');
+    if (!slug) return null;
+    // Auto-expire after 14 days
+    if (ts && Date.now() - parseInt(ts, 10) > BADGE_TTL_MS) return null;
+    return slug;
   } catch {
     return null;
   }

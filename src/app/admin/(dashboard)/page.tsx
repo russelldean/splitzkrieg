@@ -471,30 +471,29 @@ function EmailIcon({ className }: { className?: string }) {
 
 function EasterEggs() {
   const [hotFunCountdown, setHotFunCountdown] = useState<number | null>(null);
-  const [blogBadge, setBlogBadge] = useState<boolean | null>(null);
+  const [blogBadge, setBlogBadge] = useState<{ active: boolean; slug: string | null } | null>(null);
   const [blogBadgeLoading, setBlogBadgeLoading] = useState(false);
 
   // Load blog badge state
   useEffect(() => {
     fetch('/api/admin/new-blog-badge')
       .then(r => r.json())
-      .then(d => setBlogBadge(d.active))
+      .then(d => setBlogBadge({ active: d.active, slug: d.slug }))
       .catch(() => {});
   }, []);
 
-  const toggleBlogBadge = useCallback(async () => {
-    const next = !blogBadge;
+  const clearBlogBadge = useCallback(async () => {
     setBlogBadgeLoading(true);
     try {
       const res = await fetch('/api/admin/new-blog-badge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: next }),
+        body: JSON.stringify({}),
       });
-      if (res.ok) setBlogBadge(next);
+      if (res.ok) setBlogBadge({ active: false, slug: null });
     } catch { /* ignore */ }
     finally { setBlogBadgeLoading(false); }
-  }, [blogBadge]);
+  }, []);
 
   const triggerHotFun = useCallback(() => {
     window.open('/?hotfun=5', '_blank');
@@ -538,20 +537,22 @@ function EasterEggs() {
 
         <div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggleBlogBadge}
-              disabled={blogBadgeLoading || blogBadge === null}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-md font-body text-xs font-semibold transition-colors disabled:opacity-50 ${
-                blogBadge
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-navy/10 text-navy hover:bg-navy/20'
-              }`}
-            >
-              {blogBadge ? 'NEW Blog Badge: ON' : 'NEW Blog Badge: OFF'}
-            </button>
+            {blogBadge?.active ? (
+              <button
+                onClick={clearBlogBadge}
+                disabled={blogBadgeLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-body text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                NEW Badge: ON ({blogBadge.slug})
+              </button>
+            ) : (
+              <span className="font-body text-xs text-navy/60">
+                NEW Badge: OFF (use Promote button in blog editor)
+              </span>
+            )}
           </div>
           <p className="font-body text-xs text-navy/60 mt-1">
-            Shows a red &quot;New&quot; badge next to Blog in the nav bar
+            Promote a post from the blog editor. Badge auto-expires after 2 weeks.
           </p>
         </div>
       </div>
