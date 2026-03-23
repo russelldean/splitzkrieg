@@ -105,7 +105,7 @@ export default function BlogEditorPage({
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     idleTimerRef.current = setTimeout(() => {
       if (postId && !saving && loadedRef.current) {
-        handleSaveRef.current(false);
+        handleSaveRef.current(null);
       }
     }, 30000);
     return () => {
@@ -118,7 +118,7 @@ export default function BlogEditorPage({
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        if (postId && !saving && loadedRef.current) handleSaveRef.current(false);
+        if (postId && !saving && loadedRef.current) handleSaveRef.current(null);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
