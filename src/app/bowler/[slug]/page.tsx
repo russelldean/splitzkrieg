@@ -38,6 +38,7 @@ import { YouAreAStar } from '@/components/bowler/YouAreAStar';
 import { GameProfile } from '@/components/bowler/GameProfile';
 import { MilestoneWatch } from '@/components/bowler/MilestoneWatch';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { StickyContextBar } from '@/components/ui/StickyContextBar';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
 import { computePersonalMilestones } from '@/lib/milestone-config';
 
@@ -175,6 +176,10 @@ export default async function BowlerPage({
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <TrailNav current="/bowlers" seasonSlug={currentSlug} position="top" />
+      <StickyContextBar
+        name={careerSummary?.bowlerName ?? bowler.bowlerName}
+        detail={currentAvg ? `${currentAvg} avg` : undefined}
+      />
       <BowlerHero
         careerSummary={careerSummary}
         currentAvg={currentAvg}

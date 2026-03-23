@@ -35,6 +35,7 @@ import { HeadToHead } from '@/components/team/HeadToHead';
 import { GhostTeamH2H } from '@/components/team/GhostTeamH2H';
 import { PlayoffH2H } from '@/components/team/PlayoffH2H';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { StickyContextBar } from '@/components/ui/StickyContextBar';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import type { GhostTeamMatchup } from '@/lib/queries';
 
@@ -183,6 +184,7 @@ export default async function TeamPage({
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <TrailNav current="/teams" seasonSlug={currentSlug} position="top" />
+      <StickyContextBar name={team.teamName} />
       <TeamHero
         team={team}
         rosterCount={rosterCount}
