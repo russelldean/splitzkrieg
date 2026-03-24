@@ -23,10 +23,10 @@ function LeaderCard({ title, leaders, playoffCutoff, isAvg = false }: { title: s
   const topValue = leaders[0].value;
   return (
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
-      <div className="px-3 py-1.5 bg-navy/[0.03] border-b border-navy/10">
-        <h3 className="font-heading text-sm text-navy/70">{title}</h3>
+      <div className="px-3 py-1 bg-navy/[0.03] border-b border-navy/10">
+        <h3 className="font-heading text-sm text-navy/70 leading-tight">{title}</h3>
       </div>
-      <div className="py-1">
+      <div className="py-0.5">
         {leaders.map((entry, i) => {
           const inPlayoffs = i < cutoffIdx;
           const isTop = entry.value === topValue;

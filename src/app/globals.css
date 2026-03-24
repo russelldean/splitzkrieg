@@ -321,6 +321,9 @@ body {
 .blog-prose h3 {
   @apply font-heading text-xl text-navy mt-8 mb-3;
 }
+.blog-prose .week-recap h3 {
+  @apply mt-0 mb-0 text-base;
+}
 .blog-prose blockquote {
   @apply border-l-4 border-red/30 pl-4 italic text-navy/60 my-6;
 }

@@ -140,8 +140,8 @@ function CompactStandingsCard({
 }) {
   return (
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
-      <div className="px-3 py-1.5 bg-navy/[0.03] border-b border-navy/10">
-        <h3 className="font-heading text-sm text-navy/70">{divName}</h3>
+      <div className="px-3 py-1 bg-navy/[0.03] border-b border-navy/10">
+        <h3 className="font-heading text-sm text-navy/70 leading-tight">{divName}</h3>
       </div>
       <table className="w-full text-sm font-body">
         <thead>
@@ -163,7 +163,7 @@ function CompactStandingsCard({
                 }`}
               >
                 <td className="px-3 py-1.5 text-navy/65 tabular-nums">{i + 1}</td>
-                <td className="px-3 py-1.5">
+                <td className="px-3 py-1.5 whitespace-nowrap">
                   <Link
                     href={`/team/${row.teamSlug}`}
                     className="text-navy hover:text-red-600 transition-colors"

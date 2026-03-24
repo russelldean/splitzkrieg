@@ -25,7 +25,7 @@ function SectionHeader({ title, href, linkText }: { title: string; href: string;
   return (
     <div className="flex items-center justify-between mb-2">
       <h3 className="font-heading text-lg text-navy/80">{title}</h3>
-      <Link href={href} className="text-sm font-body text-navy/50 hover:text-red-600 transition-colors">
+      <Link href={href} className="text-sm font-body text-navy/60 hover:text-red-600 transition-colors">
         {linkText} &rarr;
       </Link>
     </div>
@@ -119,7 +119,7 @@ export async function WeekRecap({ season, seasonSlug, week }: WeekRecapProps) {
         const formatted = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
         return (
           <p className="font-body text-navy/80 text-center text-lg mt-4">
-            See you on {formatted}.
+            Next League Night is {formatted}.
           </p>
         );
       })()}

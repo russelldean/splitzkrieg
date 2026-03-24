@@ -81,8 +81,9 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
         <div className="mb-6">
           {!bare && <h3 className={compact ? "font-heading text-lg text-navy/80 mb-2" : "font-heading text-lg text-navy mb-3"}>Milestones &amp; Personal Bests</h3>}
           {careerMilestones.length > 0 && (
-            <div className="bg-white border border-navy/10 border-l-4 border-l-amber-500/60 rounded-lg p-3 shadow-sm mb-4">
-              <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Career Milestones</h3>
+            <div className={`bg-white border border-navy/10 border-l-4 border-l-amber-500/60 rounded-lg shadow-sm mb-4 ${compact ? 'overflow-hidden' : 'p-3'}`}>
+              <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>Career Milestones</h3>
+              <div className={compact ? "px-3 py-1" : ""}>
               {careerMilestones.map((m, i) => (
                 <div key={`${m.slug}-${m.category}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                   <span className="truncate mr-2">
@@ -95,12 +96,14 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                   </span>
                 </div>
               ))}
+              </div>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {debuts.length > 0 && (
-              <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-                <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Splitzkrieg Debuts</h3>
+              <div className={`bg-white border border-navy/10 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
+                <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>Splitzkrieg Debuts</h3>
+                <div className={compact ? "px-3 py-1" : ""}>
                 {debuts.map(b => (
                   <div key={b.bowlerID} className="text-sm font-body py-0.5">
                     <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
@@ -108,11 +111,13 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                     </Link>
                   </div>
                 ))}
+                </div>
               </div>
             )}
             {allTimeHighGames.length > 0 && (
-              <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-                <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Game</h3>
+              <div className={`bg-white border border-navy/10 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
+                <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>All-Time High Game</h3>
+                <div className={compact ? "px-3 py-1" : ""}>
                 {allTimeHighGames.map((b, i) => (
                   <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                     <span className="truncate mr-2">
@@ -124,11 +129,13 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                     <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
                   </div>
                 ))}
+                </div>
               </div>
             )}
             {allTimeHighSeries.length > 0 && (
-              <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm">
-                <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">All-Time High Series</h3>
+              <div className={`bg-white border border-navy/10 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
+                <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>All-Time High Series</h3>
+                <div className={compact ? "px-3 py-1" : ""}>
                 {allTimeHighSeries.map((b, i) => (
                   <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                     <span className="truncate mr-2">
@@ -140,6 +147,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                     <span className="tabular-nums text-navy/60 shrink-0">{b.score}</span>
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </div>

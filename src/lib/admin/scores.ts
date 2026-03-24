@@ -8,6 +8,7 @@ import sql from 'mssql';
 import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
+import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
 import type { StagedMatch, PersonalBest } from './types';
 
 export type { PersonalBest };
@@ -599,4 +600,116 @@ export async function bumpCacheAndPublish(
   } catch {
     // Cache dir may not exist or read-only on Vercel
   }
+}
+
+/**
+ * Detect and record career milestones achieved in a specific week.
+ * Mirrors scripts/record-milestones.mjs logic.
+ */
+export async function recordMilestones(
+  seasonID: number,
+  week: number,
+): Promise<number> {
+  const db = await getDb();
+
+  const STAT_KEY_MAP: Record<MilestoneCategory, string> = {
+    totalGames: 'totalGamesBowled',
+    totalPins: 'totalPins',
+    games200Plus: 'games200Plus',
+    series600Plus: 'series600Plus',
+    totalTurkeys: 'totalTurkeys',
+  };
+
+  const CONTRIB_KEY_MAP: Record<MilestoneCategory, string> = {
+    totalGames: 'gamesAdded',
+    totalPins: 'pinsAdded',
+    games200Plus: 'g200Added',
+    series600Plus: 's600Added',
+    totalTurkeys: 'turkeysAdded',
+  };
+
+  // Cumulative stats through this week
+  const statsRes = await db.request()
+    .input('seasonID', sql.Int, seasonID)
+    .input('week', sql.Int, week)
+    .query(`
+      SELECT sc.bowlerID, b.bowlerName,
+        COUNT(*) * 3 AS totalGamesBowled,
+        SUM(sc.scratchSeries) AS totalPins,
+        SUM(CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END
+          + CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END
+          + CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END) AS games200Plus,
+        SUM(CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
+        SUM(ISNULL(sc.turkeys, 0)) AS totalTurkeys
+      FROM scores sc
+      JOIN bowlers b ON sc.bowlerID = b.bowlerID
+      WHERE sc.isPenalty = 0
+        AND (sc.seasonID < @seasonID OR (sc.seasonID = @seasonID AND sc.week <= @week))
+      GROUP BY sc.bowlerID, b.bowlerName
+    `);
+
+  // This week's contributions
+  const contribRes = await db.request()
+    .input('seasonID', sql.Int, seasonID)
+    .input('week', sql.Int, week)
+    .query(`
+      SELECT sc.bowlerID,
+        3 AS gamesAdded,
+        sc.scratchSeries AS pinsAdded,
+        (CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END
+         + CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END
+         + CASE WHEN sc.game3 >= 200 THEN 1 ELSE 0 END) AS g200Added,
+        CASE WHEN sc.scratchSeries >= 600 THEN 1 ELSE 0 END AS s600Added,
+        ISNULL(sc.turkeys, 0) AS turkeysAdded
+      FROM scores sc
+      WHERE sc.seasonID = @seasonID AND sc.week = @week AND sc.isPenalty = 0
+    `);
+
+  const contribMap = new Map(contribRes.recordset.map((c: Record<string, unknown>) => [c.bowlerID, c]));
+
+  // Existing milestones to avoid duplicates
+  const existingRes = await db.request()
+    .query('SELECT bowlerID, category, threshold FROM bowlerMilestones');
+  const existingSet = new Set(
+    existingRes.recordset.map((r: Record<string, unknown>) => `${r.bowlerID}-${r.category}-${r.threshold}`)
+  );
+
+  // Delete any milestones already recorded for this specific week (re-confirm safe)
+  await db.request()
+    .input('seasonID', sql.Int, seasonID)
+    .input('week', sql.Int, week)
+    .query('DELETE FROM bowlerMilestones WHERE seasonID = @seasonID AND week = @week');
+
+  let inserted = 0;
+
+  for (const bowler of statsRes.recordset) {
+    const contrib = contribMap.get(bowler.bowlerID) as Record<string, number> | undefined;
+
+    for (const [category, config] of Object.entries(MILESTONE_THRESHOLDS) as [MilestoneCategory, (typeof MILESTONE_THRESHOLDS)[MilestoneCategory]][]) {
+      const current = bowler[STAT_KEY_MAP[category]] as number;
+      const weekAdded = contrib ? (contrib[CONTRIB_KEY_MAP[category]] as number) : 0;
+      const prior = current - weekAdded;
+
+      for (const threshold of config.thresholds) {
+        if (current >= threshold && prior < threshold) {
+          const key = `${bowler.bowlerID}-${category}-${threshold}`;
+          if (!existingSet.has(key)) {
+            await db.request()
+              .input('bowlerID', sql.Int, bowler.bowlerID)
+              .input('category', sql.VarChar(30), category)
+              .input('threshold', sql.Int, threshold)
+              .input('seasonID', sql.Int, seasonID)
+              .input('week', sql.Int, week)
+              .query(`
+                INSERT INTO bowlerMilestones (bowlerID, category, threshold, seasonID, week)
+                VALUES (@bowlerID, @category, @threshold, @seasonID, @week)
+              `);
+            inserted++;
+          }
+        }
+      }
+    }
+  }
+
+  return inserted;
 }

@@ -5,6 +5,7 @@ import {
   insertScores,
   runMatchResults,
   runPatches,
+  recordMilestones,
   bumpCacheAndPublish,
 } from '@/lib/admin/scores';
 import type { StagedMatch } from '@/lib/admin/types';
@@ -51,7 +52,10 @@ export async function POST(request: NextRequest) {
     // 4. Run patches for this season and week
     const patches = await runPatches(seasonID, week);
 
-    // 5. Bump cache versions
+    // 5. Record career milestones
+    const milestoneCount = await recordMilestones(seasonID, week);
+
+    // 6. Bump cache versions
     await bumpCacheAndPublish(seasonID, week);
 
     return NextResponse.json({
@@ -60,6 +64,7 @@ export async function POST(request: NextRequest) {
       personalBests,
       matchResultCount,
       patches,
+      milestoneCount,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
