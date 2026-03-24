@@ -1104,15 +1104,21 @@ function BowlerRow({
       <td className="py-1.5 px-1">
         <input
           type="number"
-          value={bowler.turkeys}
-          onChange={(e) =>
+          value={bowler.turkeys || ''}
+          onChange={(e) => {
+            const parsed = parseInt(e.target.value, 10);
             onUpdate(
               matchIdx,
               bowlerIdx,
               'turkeys',
-              parseInt(e.target.value, 10) || 0,
-            )
-          }
+              isNaN(parsed) ? 0 : parsed,
+            );
+          }}
+          onBlur={(e) => {
+            if (e.target.value === '') {
+              onUpdate(matchIdx, bowlerIdx, 'turkeys', 0);
+            }
+          }}
           disabled={bowler.isPenalty}
           min={0}
           max={12}
