@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const title = `Season ${romanNumeral} - Week ${week} Recap`;
     const slug = `season-${romanNumeral.toLowerCase()}-week-${week}-recap`;
 
-    const content = `<!-- Write your recap here -->
+    const content = `{/* Write your recap here */}
 
 <WeekRecap season="${romanNumeral}" seasonSlug="${seasonSlug}" week="${week}" />
 `;
