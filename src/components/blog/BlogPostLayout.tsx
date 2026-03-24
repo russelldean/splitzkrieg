@@ -122,33 +122,59 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
 
         {/* Prev/next navigation */}
         <nav className="flex justify-between gap-4">
-          {prev ? (
+          {next ? (
             <Link
-              href={`/blog/${prev.slug}`}
+              href={`/blog/${next.slug}`}
               className="group flex-1 min-w-0"
             >
-              <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
-                Newer
-              </span>
-              <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
-                {prev.title}
-              </span>
+              <div className="flex items-center gap-3">
+                {(next.cardImage || next.heroImage) && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-navy/10">
+                    <img
+                      src={next.cardImage || next.heroImage}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
+                    Previous
+                  </span>
+                  <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
+                    {next.title}
+                  </span>
+                </div>
+              </div>
             </Link>
           ) : (
             <div className="flex-1" />
           )}
 
-          {next ? (
+          {prev ? (
             <Link
-              href={`/blog/${next.slug}`}
-              className="group flex-1 min-w-0 text-right"
+              href={`/blog/${prev.slug}`}
+              className="group flex-1 min-w-0"
             >
-              <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
-                Older
-              </span>
-              <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
-                {next.title}
-              </span>
+              <div className="flex items-center gap-3 justify-end">
+                <div className="min-w-0 text-right">
+                  <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
+                    Next
+                  </span>
+                  <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
+                    {prev.title}
+                  </span>
+                </div>
+                {(prev.cardImage || prev.heroImage) && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-navy/10">
+                    <img
+                      src={prev.cardImage || prev.heroImage}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+              </div>
             </Link>
           ) : (
             <div className="flex-1" />
