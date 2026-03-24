@@ -49,29 +49,31 @@ export async function POST(request: NextRequest) {
         `UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedSeasonID'`,
       );
 
-    // Write .published-week file
+    // Write .published-week file and bump cache versions
+    // These are local-only operations; on Vercel the filesystem is read-only
+    // so we skip silently -- the DB updates and revalidation are what matter
     const projectRoot = process.cwd();
     const tag = `s${seasonID}-w${week}`;
-    const tagPath = path.join(projectRoot, '.published-week');
-    fs.writeFileSync(tagPath, tag + '\n');
 
-    // Bump .data-versions.json (scores channel)
-    const versionsPath = path.join(projectRoot, '.data-versions.json');
-    let versions: Record<string, Record<string, number>> = {};
     try {
-      versions = JSON.parse(fs.readFileSync(versionsPath, 'utf-8'));
-    } catch {
-      // File doesn't exist yet
-    }
+      const tagPath = path.join(projectRoot, '.published-week');
+      fs.writeFileSync(tagPath, tag + '\n');
 
-    if (!versions.scores) versions.scores = {};
-    const key = String(seasonID);
-    versions.scores[key] = (versions.scores[key] || 1) + 1;
-    fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n');
+      const versionsPath = path.join(projectRoot, '.data-versions.json');
+      let versions: Record<string, Record<string, number>> = {};
+      try {
+        versions = JSON.parse(fs.readFileSync(versionsPath, 'utf-8'));
+      } catch {
+        // File doesn't exist yet
+      }
 
-    // Clear local cache files for this season
-    const cacheDir = path.join(projectRoot, '.next', 'cache', 'sql', 'v1');
-    try {
+      if (!versions.scores) versions.scores = {};
+      const key = String(seasonID);
+      versions.scores[key] = (versions.scores[key] || 1) + 1;
+      fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n');
+
+      // Clear local cache files for this season
+      const cacheDir = path.join(projectRoot, '.next', 'cache', 'sql', 'v1');
       const files = fs.readdirSync(cacheDir);
       for (const f of files) {
         if (f.includes(`-${seasonID}_`) || f.includes(`-${seasonID}-`)) {
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch {
-      // Cache dir may not exist
+      // Read-only filesystem on Vercel or cache dir missing -- safe to skip
     }
 
     // Trigger ISR revalidation

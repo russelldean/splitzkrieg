@@ -581,7 +581,11 @@ export async function bumpCacheAndPublish(
   if (!versions.schedule) versions.schedule = {};
   versions.schedule[key] = (versions.schedule[key] || 1) + 1;
 
-  fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n');
+  try {
+    fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n');
+  } catch {
+    // Read-only filesystem on Vercel -- skip, cache busts on next deploy
+  }
 
   // Clear local cache files for this season
   const cacheDir = path.join(projectRoot, '.next', 'cache', 'sql', 'v1');
@@ -593,6 +597,6 @@ export async function bumpCacheAndPublish(
       }
     }
   } catch {
-    // Cache dir may not exist
+    // Cache dir may not exist or read-only on Vercel
   }
 }
