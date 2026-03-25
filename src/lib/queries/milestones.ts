@@ -147,13 +147,21 @@ interface AllTimeStats {
   totalTurkeys: number;
 }
 
+const ALL_TIME_KEY_MAP: Record<MilestoneCategory, keyof AllTimeStats> = {
+  totalGames: 'totalGamesBowled',
+  totalPins: 'totalPins',
+  games200Plus: 'games200Plus',
+  series600Plus: 'series600Plus',
+  totalTurkeys: 'totalTurkeys',
+};
+
 function countBowlersAtThreshold(
   allTimeStats: AllTimeStats[],
   category: MilestoneCategory,
   threshold: number,
 ): number {
-  const key = STAT_KEY_MAP[category];
-  return allTimeStats.filter((s) => (s[key] as number) >= threshold).length;
+  const key = ALL_TIME_KEY_MAP[category];
+  return allTimeStats.filter((s) => s[key] >= threshold).length;
 }
 
 function computeLeagueMilestones(
