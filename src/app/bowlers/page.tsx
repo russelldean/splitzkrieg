@@ -59,9 +59,6 @@ export default async function BowlersPage() {
         </Suspense>
         <BackToTop />
       </div>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <TrailNav current="/bowlers" />
-      </div>
     </div>
   );
 }

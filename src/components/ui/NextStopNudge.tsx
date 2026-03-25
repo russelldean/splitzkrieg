@@ -66,7 +66,7 @@ export function NextStopNudge({ currentPage, seasonSlug }: NextStopNudgeProps) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-wide font-semibold text-red-600 font-body">
-              Keep exploring
+              Up next
             </p>
             <p className="text-lg font-heading text-navy">
               {nextStop.title}

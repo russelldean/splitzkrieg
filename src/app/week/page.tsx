@@ -4,7 +4,6 @@
  */
 import type { Metadata } from 'next';
 import { getAllSeasonNavList, getSeasonWeekSummaries, getCurrentSeasonSnapshot, getDataCompleteness } from '@/lib/queries';
-import { TrailNav } from '@/components/ui/TrailNav';
 import { BackToTop } from '@/components/ui/BackToTop';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SeasonAccordion } from '@/components/week/SeasonAccordion';
@@ -59,8 +58,6 @@ export default async function WeeksIndexPage() {
         </div>
       </section>
     <main id="top" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-      <TrailNav current="/week" position="top" />
-
       <SeasonAccordion
         seasons={allSeasons.map((season) => ({
           seasonID: season.seasonID,
@@ -75,7 +72,6 @@ export default async function WeeksIndexPage() {
 
       <BackToTop />
 
-      <TrailNav current="/week" />
     </main>
     </>
   );

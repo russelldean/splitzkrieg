@@ -233,7 +233,6 @@ export default async function BowlerPage({
         <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} patches={patches} />
       </div>
 
-      <TrailNav current="/bowlers" seasonSlug={currentSlug} />
     </main>
   );
 }

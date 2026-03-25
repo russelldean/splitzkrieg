@@ -182,12 +182,12 @@ export default async function SeasonStatsPage({
           champions={champions}
         />
 
+        <NextStopNudge currentPage="stats" />
+
         <div id="stats">
           <FullStatsTable stats={fullStats} minGames={minGames} champions={champions} />
         </div>
       </div>
-
-      <NextStopNudge currentPage="stats" />
     </main>
   );
 }

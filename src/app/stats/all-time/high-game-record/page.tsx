@@ -5,7 +5,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getHighGameProgression } from '@/lib/queries/alltime';
-import { TrailNav } from '@/components/ui/TrailNav';
 import { HighGameProgression } from '@/components/alltime/HighGameProgression';
 
 export const metadata: Metadata = {
@@ -19,7 +18,6 @@ export default async function HighGameRecordPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-      <TrailNav current="/stats" position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link href="/stats" className="hover:text-red-600 transition-colors">Stats</Link>
         <span className="text-navy/60">/</span>
@@ -39,7 +37,6 @@ export default async function HighGameRecordPage() {
         <HighGameProgression records={records} latestNight={latestNight} />
       </div>
 
-      <TrailNav current="/stats" />
     </main>
   );
 }

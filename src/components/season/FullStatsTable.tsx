@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { usePostHog } from 'posthog-js/react';
 import type { SeasonFullStatsRow, SeasonIndividualChampions } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { ScrollableTable } from '@/components/ui/ScrollableTable';
@@ -76,6 +77,7 @@ function getChampionTitles(champions: SeasonIndividualChampions | null): Map<num
 }
 
 export function FullStatsTable({ stats, minGames, champions }: Props) {
+  const posthog = usePostHog();
   const championTitles = useMemo(() => getChampionTitles(champions), [champions]);
   const [genderTab, setGenderTab] = useState<GenderTab>('all');
   const [sortColumn, setSortColumn] = useState<SortColumn>('scratchAvg');
@@ -157,7 +159,10 @@ export function FullStatsTable({ stats, minGames, champions }: Props) {
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setGenderTab(tab.key)}
+            onClick={() => {
+              setGenderTab(tab.key);
+              posthog.capture('stats_tab_switched', { tab: tab.label, tab_key: tab.key });
+            }}
             className={`px-4 py-2 text-sm font-body rounded-t transition-colors ${
               genderTab === tab.key
                 ? 'bg-navy text-cream font-semibold'

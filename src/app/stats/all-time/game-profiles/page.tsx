@@ -7,7 +7,6 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getGameProfiles } from '@/lib/queries/alltime';
 import type { GameProfileRow, GameArchetype } from '@/lib/queries/alltime';
-import { TrailNav } from '@/components/ui/TrailNav';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GameProfileLeaderboard } from '@/components/alltime/GameProfileLeaderboard';
 
@@ -72,7 +71,6 @@ export default async function GameProfilesPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-      <TrailNav current="/stats" position="top" />
       <div className="flex items-center gap-2 text-sm font-body text-navy/65 mb-4">
         <Link href="/stats" className="hover:text-red-600 transition-colors">Stats</Link>
         <span className="text-navy/30">/</span>
@@ -147,7 +145,6 @@ export default async function GameProfilesPage() {
         />
       </div>
 
-      <TrailNav current="/stats" />
     </main>
   );
 }

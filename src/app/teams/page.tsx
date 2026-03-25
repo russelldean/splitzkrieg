@@ -55,9 +55,6 @@ export default async function TeamsPage() {
         />
       )}
     </main>
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-12">
-      <TrailNav current="/teams" />
-    </div>
     </>
   );
 }

@@ -221,7 +221,6 @@ export default async function TeamPage({
         )}
       </div>
 
-      <TrailNav current="/teams" seasonSlug={currentSlug} />
     </main>
   );
 }
