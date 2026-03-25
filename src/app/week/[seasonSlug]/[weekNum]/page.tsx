@@ -15,6 +15,7 @@ import {
   getAllSeasonNavList,
   getPairwiseH2H,
   getWeekCareerMilestones,
+  getSeasonStandings,
 } from '@/lib/queries';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekSchedulePreview } from '@/components/season/WeekSchedulePreview';
@@ -108,12 +109,15 @@ export default async function WeekPage({
   // Fetch career milestones achieved this week (e.g., 50,000 career pins)
   const careerMilestones = isFutureWeek ? [] : await getWeekCareerMilestones(season.seasonID, weekNum);
 
-  // Fetch H2H summaries for future week matchups
-  const h2hSummaries = isFutureWeek
-    ? await getPairwiseH2H(
-        weekSchedule.map(s => ({ team1ID: s.homeTeamID, team2ID: s.awayTeamID }))
-      )
-    : [];
+  // Fetch H2H summaries and standings for future week matchups
+  const [h2hSummaries, standings] = isFutureWeek
+    ? await Promise.all([
+        getPairwiseH2H(
+          weekSchedule.map(s => ({ team1ID: s.homeTeamID, team2ID: s.awayTeamID }))
+        ),
+        getSeasonStandings(season.seasonID),
+      ])
+    : [[], []];
 
   // Prev/next week navigation
   const weekIdx = sortedWeeks.indexOf(weekNum);
@@ -226,7 +230,7 @@ export default async function WeekPage({
         </div>
       ) : isFutureWeek ? (
         /* Future week: show schedule with H2H records */
-        <WeekSchedulePreview schedule={weekSchedule} h2hSummaries={h2hSummaries} />
+        <WeekSchedulePreview schedule={weekSchedule} h2hSummaries={h2hSummaries} standings={standings} />
       ) : (
         <>
           {/* Bowler & Team of the Week — top-level awards */}
