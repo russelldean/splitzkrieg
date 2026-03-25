@@ -18,6 +18,7 @@ import {
   getSeasonStandings,
   getWeekCareerMilestones,
 } from '@/lib/queries';
+import { getMatchResultsSummary } from '@/lib/queries/blog';
 import { WeekStats } from '@/components/season/WeekStats';
 import { ExitRamp } from '@/components/tracking/ExitRamp';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
@@ -26,6 +27,7 @@ import { DiscoverySection } from '@/components/blog/DiscoverySection';
 import { getSiteUpdates } from '@/lib/queries/updates';
 import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
 import { CompactLeaderboardPreview } from '@/components/blog/CompactLeaderboardPreview';
+import Link from 'next/link';
 
 interface WeekRecapProps {
   season: string;
@@ -39,25 +41,21 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData || isNaN(weekNum)) return null;
 
-  const [allScores, allSchedule, allMatchResults, standings, careerMilestones, siteUpdates] = await Promise.all([
+  const [allScores, allSchedule, allMatchResults, standings, careerMilestones, siteUpdates, weekMatchDetails] = await Promise.all([
     getSeasonWeeklyScores(seasonData.seasonID),
     getSeasonSchedule(seasonData.seasonID),
     getSeasonMatchResults(seasonData.seasonID),
     getSeasonStandings(seasonData.seasonID),
     getWeekCareerMilestones(seasonData.seasonID, weekNum),
     getSiteUpdates(),
+    getMatchResultsSummary(seasonData.seasonID, weekNum),
   ]);
 
   const weekScores = allScores.filter(s => s.week === weekNum);
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 
-  // Compute condensed results summary
-  const matchCount = weekMatchResults.length;
-  const sweepCount = weekMatchResults.filter(r => {
-    const t1Total = (r.team1GamePts ?? 0) + (r.team1BonusPts ?? 0);
-    const t2Total = (r.team2GamePts ?? 0) + (r.team2BonusPts ?? 0);
-    return t1Total === 4 || t2Total === 4;
-  }).length;
+  // Find Cloud 9 matches (one team won all 9 available points)
+  const cloud9Matches = weekMatchDetails.filter(r => r.team1TotalPts === 9 || r.team2TotalPts === 9);
 
   return (
     <div className="week-recap space-y-6">
@@ -74,13 +72,57 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
         compact
       />
 
-      {/* Weekly Results (condensed) */}
+      {/* Weekly Results — Cloud 9 */}
       <TrackVisibility section="recap-results" page="blog-recap">
         <div>
           <h3 className="font-heading text-lg text-navy/80 mb-1">Weekly Results</h3>
           <p className="font-body text-sm text-navy/65 mb-2">
-            {matchCount} match{matchCount !== 1 ? 'es' : ''} bowled.{sweepCount > 0 ? ` ${sweepCount} sweep${sweepCount !== 1 ? 's' : ''}.` : ''}
+            {cloud9Matches.length === 0
+              ? 'No teams on Cloud 9 this week.'
+              : `${cloud9Matches.length} team${cloud9Matches.length !== 1 ? 's' : ''} on Cloud 9.`}
           </p>
+          {cloud9Matches.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {cloud9Matches.map((m, i) => {
+                // Winner (higher pts) always on left
+                const flip = m.team2TotalPts > m.team1TotalPts;
+                const leftName = flip ? m.team2Name : m.team1Name;
+                const leftSlug = flip ? m.team2Slug : m.team1Slug;
+                const leftPts = flip ? m.team2TotalPts : m.team1TotalPts;
+                const leftSeries = flip ? m.team2Series : m.team1Series;
+                const rightName = flip ? m.team1Name : m.team2Name;
+                const rightSlug = flip ? m.team1Slug : m.team2Slug;
+                const rightPts = flip ? m.team1TotalPts : m.team2TotalPts;
+                const rightSeries = flip ? m.team1Series : m.team2Series;
+                return (
+                  <div key={i} className="bg-white border border-navy/10 rounded-lg shadow-sm px-4 py-3">
+                    <div className="flex items-center justify-between gap-2 font-body text-sm">
+                      <div className="flex-1 min-w-0 truncate font-semibold">
+                        <Link href={`/team/${leftSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                          {leftName}
+                        </Link>
+                      </div>
+                      <div className="flex items-center gap-3 tabular-nums text-xs text-navy/60 shrink-0">
+                        <span className="font-bold text-navy">{leftPts}</span>
+                        <span className="text-navy/30">-</span>
+                        <span>{rightPts}</span>
+                      </div>
+                      <div className="flex-1 min-w-0 truncate text-right">
+                        <Link href={`/team/${rightSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                          {rightName}
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-1 font-body text-xs text-navy/60">
+                      <span>{leftSeries?.toLocaleString()}</span>
+                      <span>Series</span>
+                      <span>{rightSeries?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <ExitRamp href={`/week/${seasonSlug}/${weekNum}`} section="results" linkText="Full match results" />
         </div>
       </TrackVisibility>
@@ -89,6 +131,7 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
       <TrackVisibility section="recap-standings" page="blog-recap">
         <div>
           <h3 className="font-heading text-lg text-navy/80 mb-1">Standings</h3>
+          <p className="font-body text-sm text-navy/65 mb-2">If the season ended today, playoff teams are:</p>
           <CompactStandingsPreview standings={standings} weekNumber={weekNum} />
           <div className="mt-2">
             <ExitRamp href={`/season/${seasonSlug}`} section="standings" linkText="Full standings and XP breakdown" />

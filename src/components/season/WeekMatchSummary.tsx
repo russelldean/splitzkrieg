@@ -73,33 +73,45 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week, com
     { matchup, t1Pts, t2Pts, mvpBowler }: typeof rows[number],
     idx: number,
   ) => {
-    const homeWon = t1Pts != null && t2Pts != null && t1Pts > t2Pts;
-    const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
     const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
     const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
+
+    // Put higher-pts team on the left; keep original order if tied or no results
+    const flip = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
+    const leftName = flip ? matchup.awayTeamName : matchup.homeTeamName;
+    const leftSlug = flip ? matchup.awayTeamSlug : matchup.homeTeamSlug;
+    const leftPts = flip ? t2Pts : t1Pts;
+    const leftWon = leftPts != null && leftPts > (flip ? t1Pts! : t2Pts!);
+    const leftForfeit = flip ? awayForfeit : homeForfeit;
+    const rightName = flip ? matchup.homeTeamName : matchup.awayTeamName;
+    const rightSlug = flip ? matchup.homeTeamSlug : matchup.awayTeamSlug;
+    const rightPts = flip ? t1Pts : t2Pts;
+    const rightWon = rightPts != null && rightPts > (flip ? t2Pts! : t1Pts!);
+    const rightForfeit = flip ? homeForfeit : awayForfeit;
+
     return (
       <div key={idx} className="block bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
         <div className={`flex items-center justify-between font-body ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'}`}>
-          <div className={`flex-1 min-w-0 truncate ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-            {homeForfeit ? (
-              <GhostTeamLink className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'} />
+          <div className={`flex-1 min-w-0 truncate ${leftWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+            {leftForfeit ? (
+              <GhostTeamLink className={leftWon ? 'font-semibold text-navy' : 'text-navy/70'} />
             ) : (
-              <Link href={`/team/${matchup.homeTeamSlug}`} className="hover:text-red-600 transition-colors">
-                <TeamName name={matchup.homeTeamName} />
+              <Link href={`/team/${leftSlug}`} className="hover:text-red-600 transition-colors">
+                <TeamName name={leftName} />
               </Link>
             )}
           </div>
           <div className={`tabular-nums text-center shrink-0 ${compact ? 'px-1' : 'px-3'}`}>
-            <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t1Pts ?? '-'}</span>
+            <span className={leftWon ? 'font-semibold text-navy' : 'text-navy/70'}>{leftPts ?? '-'}</span>
             <span className="text-navy/30 mx-1">-</span>
-            <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
+            <span className={rightWon ? 'font-semibold text-navy' : 'text-navy/70'}>{rightPts ?? '-'}</span>
           </div>
-          <div className={`flex-1 min-w-0 truncate text-right ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-            {awayForfeit ? (
-              <GhostTeamLink className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'} />
+          <div className={`flex-1 min-w-0 truncate text-right ${rightWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
+            {rightForfeit ? (
+              <GhostTeamLink className={rightWon ? 'font-semibold text-navy' : 'text-navy/70'} />
             ) : (
-              <Link href={`/team/${matchup.awayTeamSlug}`} className="hover:text-red-600 transition-colors">
-                <TeamName name={matchup.awayTeamName} />
+              <Link href={`/team/${rightSlug}`} className="hover:text-red-600 transition-colors">
+                <TeamName name={rightName} />
               </Link>
             )}
           </div>

@@ -8,6 +8,7 @@ interface SiteUpdate {
   text: string;
   tag: 'fix' | 'feat';
   href?: string;
+  description?: string;
 }
 
 interface Suggestion {
@@ -16,6 +17,7 @@ interface Suggestion {
   tag: string;
   sha: string;
   selected?: boolean;
+  description?: string;
 }
 
 export default function AdminUpdatesPage() {
@@ -31,6 +33,7 @@ export default function AdminUpdatesPage() {
   const [newText, setNewText] = useState('');
   const [newTag, setNewTag] = useState<'feat' | 'fix'>('feat');
   const [newHref, setNewHref] = useState('');
+  const [newDescription, setNewDescription] = useState('');
   const [adding, setAdding] = useState(false);
 
   // Suggestions
@@ -45,6 +48,7 @@ export default function AdminUpdatesPage() {
   const [editDate, setEditDate] = useState('');
   const [editTag, setEditTag] = useState<'feat' | 'fix'>('feat');
   const [editHref, setEditHref] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
   const loadUpdates = useCallback(async () => {
     try {
@@ -71,7 +75,7 @@ export default function AdminUpdatesPage() {
       const res = await fetch('/api/admin/updates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: newDate, text: newText.trim(), tag: newTag, ...(newHref.trim() ? { href: newHref.trim() } : {}) }),
+        body: JSON.stringify({ date: newDate, text: newText.trim(), tag: newTag, ...(newHref.trim() ? { href: newHref.trim() } : {}), ...(newDescription.trim() ? { description: newDescription.trim() } : {}) }),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -79,6 +83,7 @@ export default function AdminUpdatesPage() {
       }
       setNewText('');
       setNewHref('');
+      setNewDescription('');
       setShowAdd(false);
       await loadUpdates();
     } catch (err) {
@@ -108,6 +113,7 @@ export default function AdminUpdatesPage() {
     setEditDate(u.date);
     setEditTag(u.tag);
     setEditHref(u.href ?? '');
+    setEditDescription(u.description ?? '');
   }
 
   async function saveEdit() {
@@ -118,7 +124,7 @@ export default function AdminUpdatesPage() {
       const res = await fetch(`/api/admin/updates/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: editDate, text: editText.trim(), tag: editTag, href: editHref.trim() || null }),
+        body: JSON.stringify({ date: editDate, text: editText.trim(), tag: editTag, href: editHref.trim() || null, description: editDescription.trim() || null }),
       });
       if (!res.ok) throw new Error('Failed to save');
       setEditingId(null);
@@ -171,7 +177,7 @@ export default function AdminUpdatesPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: selected.map((s) => ({ date: s.date, text: s.text, tag: s.tag })),
+          items: selected.map((s) => ({ date: s.date, text: s.text, tag: s.tag, ...(s.description?.trim() ? { description: s.description.trim() } : {}) })),
         }),
       });
       if (!res.ok) throw new Error('Failed to add suggestions');
@@ -295,6 +301,21 @@ export default function AdminUpdatesPage() {
                     <span className="font-mono text-xs text-navy/30 shrink-0">{s.sha}</span>
                   </div>
                   <p className="font-body text-sm text-navy mt-0.5">{s.text}</p>
+                  {s.tag === 'feat' && s.selected && (
+                    <input
+                      type="text"
+                      value={s.description ?? ''}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSuggestions((prev) =>
+                          prev.map((item, i) => i === idx ? { ...item, description: e.target.value } : item),
+                        );
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="Friendly description for recap cards (optional)"
+                      className="mt-1.5 w-full px-2 py-1 rounded-md border border-navy/15 font-body text-xs text-navy/70 focus:outline-none focus:border-navy/30"
+                    />
+                  )}
                 </div>
               </label>
             ))}
@@ -351,6 +372,16 @@ export default function AdminUpdatesPage() {
                 value={newHref}
                 onChange={(e) => setNewHref(e.target.value)}
                 placeholder="/bowlers"
+                className="w-full px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block font-body text-xs text-navy/60 mb-1">Friendly description (optional)</label>
+              <input
+                type="text"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="Shown on recap discovery cards"
                 className="w-full px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
               />
             </div>
@@ -441,6 +472,16 @@ export default function AdminUpdatesPage() {
                             className="w-full px-2 py-1.5 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
                           />
                         </div>
+                        <div className="flex-1 min-w-[200px]">
+                          <label className="block font-body text-xs text-navy/60 mb-1">Friendly description</label>
+                          <input
+                            type="text"
+                            value={editDescription}
+                            onChange={(e) => setEditDescription(e.target.value)}
+                            placeholder="Shown on recap cards"
+                            className="w-full px-2 py-1.5 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+                          />
+                        </div>
                         <button
                           onClick={saveEdit}
                           disabled={saving === u.id}
@@ -474,6 +515,9 @@ export default function AdminUpdatesPage() {
                           <a href={u.href} target="_blank" className="ml-2 text-xs font-semibold text-red-600 hover:text-red-700 transition-colors">
                             Link
                           </a>
+                        )}
+                        {u.description && (
+                          <span className="block text-xs text-navy/50 mt-0.5">{u.description}</span>
                         )}
                       </span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">

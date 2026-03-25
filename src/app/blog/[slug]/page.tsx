@@ -1,29 +1,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { draftMode } from 'next/headers';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent } from '@/lib/blog';
 import { getBlogPostBySlug } from '@/lib/admin/blog-db';
-import { verifyToken } from '@/lib/admin/auth';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
 import { mdxComponents } from '@/lib/mdx-components';
 import { getSiteUpdates } from '@/lib/queries/updates';
 import type { PostMeta } from '@/lib/blog';
 
 export const dynamicParams = true;
-export const dynamic = 'force-dynamic';
 
-async function isAdmin(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin-token')?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  return payload?.role === 'admin';
-}
-
-/** Try to load a post for preview (unpublished), returns null if not admin or not found */
+/** Load an unpublished post from DB for draft preview */
 async function getPreviewPost(slug: string): Promise<{ meta: PostMeta; content: string } | null> {
-  if (!(await isAdmin())) return null;
   const post = await getBlogPostBySlug(slug);
   if (!post || !post.content) return null;
   return {
@@ -70,13 +59,14 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const { isEnabled: isDraft } = await draftMode();
 
   // Try published post first
   let meta = await getPostBySlug(slug);
   let content = meta ? await getPostContent(slug) : undefined;
 
-  // If not published, try preview (admin only)
-  if (!meta || !content) {
+  // If not published and draft mode is on, try preview from DB
+  if ((!meta || !content) && isDraft) {
     try {
       const preview = await getPreviewPost(slug);
       if (!preview) notFound();
@@ -87,6 +77,8 @@ export default async function BlogPostPage({
       notFound();
     }
   }
+
+  if (!meta || !content) notFound();
 
   const [{ prev, next }, siteUpdates] = await Promise.all([
     getAdjacentPosts(slug),

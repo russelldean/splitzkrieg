@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Single create
-    const { date, text, tag, href } = body;
+    const { date, text, tag, href, description } = body;
     if (!date || !text) {
       return NextResponse.json(
         { error: 'date and text are required' },
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const id = await createUpdate({ date, text, tag: tag ?? 'feat', href });
+    const id = await createUpdate({ date, text, tag: tag ?? 'feat', href, description });
     revalidatePath('/resources', 'page');
     return NextResponse.json({ id });
   } catch (err) {

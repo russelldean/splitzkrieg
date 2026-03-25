@@ -11,20 +11,25 @@ export async function CompactLeaderboardPreview({ seasonSlug, week }: Props) {
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData) return null;
 
-  const [mensScratch, womensScratch] = await Promise.all([
+  const [mensScratch, womensScratch, hcp] = await Promise.all([
     getLeaderboardSnapshot(seasonData.seasonID, week, 'M', 'avg'),
     getLeaderboardSnapshot(seasonData.seasonID, week, 'F', 'avg'),
+    getLeaderboardSnapshot(seasonData.seasonID, week, null, 'hcpAvg'),
   ]);
 
   const mensTop3 = mensScratch.slice(0, 3);
   const womensTop3 = womensScratch.slice(0, 3);
+  const hcpTop3 = hcp.slice(0, 3);
 
   if (mensTop3.length === 0 && womensTop3.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <LeaderColumn title="Men's Scratch Avg" leaders={mensTop3} />
       <LeaderColumn title="Women's Scratch Avg" leaders={womensTop3} />
+      {hcpTop3.length > 0 && (
+        <LeaderColumn title="Handicap Avg" leaders={hcpTop3} />
+      )}
     </div>
   );
 }

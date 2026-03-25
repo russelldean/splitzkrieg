@@ -10,6 +10,7 @@ export interface SiteUpdateEntry {
   text: string;
   tag: 'fix' | 'feat';
   href?: string;
+  description?: string;
 }
 
 /**
@@ -27,8 +28,9 @@ export async function getSiteUpdates(): Promise<SiteUpdateEntry[]> {
           text: string;
           tag: string;
           href: string | null;
+          description: string | null;
         }>(`
-          SELECT updateDate, text, tag, href
+          SELECT updateDate, text, tag, href, description
           FROM siteUpdates
           ORDER BY updateDate DESC, sortOrder DESC
         `),
@@ -39,6 +41,7 @@ export async function getSiteUpdates(): Promise<SiteUpdateEntry[]> {
       text: row.text,
       tag: (row.tag as 'fix' | 'feat') ?? 'feat',
       ...(row.href ? { href: row.href } : {}),
+      ...(row.description ? { description: row.description } : {}),
     }));
   } catch (err) {
     console.warn('getSiteUpdates: DB unavailable', err);

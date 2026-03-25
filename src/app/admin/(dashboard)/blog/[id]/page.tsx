@@ -254,7 +254,7 @@ export default function BlogEditorPage({
             <button
               onClick={async () => {
                 await handleSave(null);
-                window.open(`/blog/${slug}`, '_blank');
+                window.open(`/api/admin/draft?slug=${encodeURIComponent(slug)}`, '_blank');
               }}
               disabled={saving || !slug}
               className="px-4 py-2 rounded-lg font-body text-sm bg-navy/10 text-navy hover:bg-navy/20 transition-colors disabled:opacity-50"

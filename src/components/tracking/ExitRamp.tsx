@@ -28,7 +28,7 @@ export function ExitRamp({ href, section, linkText, className }: ExitRampProps) 
       onClick={handleClick}
       className={
         className ??
-        'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-navy/[0.06] font-body text-sm font-semibold text-navy/80 hover:bg-red-600 hover:text-white transition-colors'
+        'inline-flex items-center gap-1 font-body text-sm text-red-600 hover:text-red-700 transition-colors'
       }
     >
       {linkText}
