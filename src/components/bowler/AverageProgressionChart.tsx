@@ -114,7 +114,7 @@ export function AverageProgressionChart({ history, bowlerName }: Props) {
   const labelMap = new Map(seasonLabels.map(sl => [sl.index, sl.label]));
 
   return (
-    <div id="avg-progression" className="scroll-mt-20 bg-white rounded-lg border border-navy/10 p-6" ref={chartRef}>
+    <div id="avg-progression" className="scroll-mt-20 bg-white rounded-lg border border-navy/10 px-3 py-5 sm:p-6" ref={chartRef}>
       <div className="flex items-start justify-between mb-6">
         <div>
           {bowlerName && (
@@ -137,7 +137,7 @@ export function AverageProgressionChart({ history, bowlerName }: Props) {
         </button>
       </div>
       <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+        <LineChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
           <XAxis
             dataKey="index"
             ticks={seasonLabels.map(sl => sl.index)}
@@ -154,7 +154,7 @@ export function AverageProgressionChart({ history, bowlerName }: Props) {
             tick={{ fontSize: 11, fill: '#1B2A4A', opacity: 0.6 }}
             tickLine={false}
             axisLine={false}
-            width={40}
+            width={32}
           />
           <Tooltip
             labelFormatter={(label) => {

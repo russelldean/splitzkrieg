@@ -188,7 +188,6 @@ export default async function SeasonStatsPage({
       </div>
 
       <NextStopNudge currentPage="stats" />
-      <TrailNav current="/stats" seasonSlug={slug} seasonRoman={season.romanNumeral} />
     </main>
   );
 }

@@ -271,7 +271,6 @@ export default async function WeekPage({
       )}
 
       <NextStopNudge currentPage="week" seasonSlug={seasonSlug} />
-      <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} />
     </main>
   );
 }

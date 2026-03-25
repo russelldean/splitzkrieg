@@ -154,17 +154,7 @@ export default async function SeasonPage({
         </div>
       </div>
 
-      <div className="mt-8 pt-6 border-t border-navy/10 text-center">
-        <p className="font-body text-sm text-navy/65">
-          Looking for individual stats and playoff standings?{' '}
-          <Link href={`/stats/${slug}`} className="text-red-600 hover:text-red-700 transition-colors font-medium">
-            View Season Stats &rarr;
-          </Link>
-        </p>
-      </div>
-
       <NextStopNudge currentPage="season" seasonSlug={slug} />
-      <TrailNav current="/seasons" seasonSlug={slug} seasonRoman={season.romanNumeral} />
     </main>
   );
 }

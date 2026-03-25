@@ -164,7 +164,6 @@ export default async function MilestonesPage() {
       )}
 
       <NextStopNudge currentPage="milestones" />
-      <TrailNav current="/stats" />
     </main>
   );
 }

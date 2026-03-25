@@ -22,7 +22,6 @@ interface SeasonDirectoryProps {
 }
 
 export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, subheading, hideHeading }: SeasonDirectoryProps) {
-  const isStats = trailCurrent === '/stats';
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <TrailNav current={trailCurrent} position="top" />
@@ -71,28 +70,24 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                     </span>
                   )}
                 </div>
-                <div className="flex gap-4 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4">
                   <Link
                     href={`/season/${current.slug}`}
-                    className={`text-sm transition-colors ${
-                      isStats ? 'font-medium text-navy/40 hover:text-navy' : 'font-semibold text-red-600/70 hover:text-red-600'
-                    }`}
+                    className="px-3 py-1 rounded-full text-sm font-body font-semibold border border-navy/40 text-navy hover:bg-navy hover:text-cream transition-all"
                   >
-                    Standings &rarr;
+                    Standings
                   </Link>
                   <Link
                     href={`/stats/${current.slug}`}
-                    className={`text-sm transition-colors ${
-                      isStats ? 'font-semibold text-red-600/70 hover:text-red-600' : 'font-medium text-navy/40 hover:text-navy'
-                    }`}
+                    className="px-3 py-1 rounded-full text-sm font-body font-semibold border border-navy/40 text-navy hover:bg-navy hover:text-cream transition-all"
                   >
-                    Leaderboards &rarr;
+                    Leaderboards
                   </Link>
                   <Link
                     href={`/week#season-${current.slug}`}
-                    className="text-sm font-medium text-navy/60 hover:text-navy transition-colors"
+                    className="px-3 py-1 rounded-full text-sm font-body font-semibold border border-navy/40 text-navy hover:bg-navy hover:text-cream transition-all"
                   >
-                    League Nights &rarr;
+                    League Nights
                   </Link>
                 </div>
               </div>
@@ -135,26 +130,22 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-3 shrink-0">
+                    <div className="flex gap-1.5 shrink-0">
                       <Link
                         href={`/season/${season.slug}`}
-                        className={`text-xs font-body transition-colors ${
-                          isStats ? 'font-medium text-navy/35 hover:text-navy' : 'font-semibold text-red-600/60 hover:text-red-600'
-                        }`}
+                        className="px-2.5 py-0.5 rounded-full text-xs font-body font-semibold border border-navy/40 text-navy/70 hover:bg-navy hover:text-cream transition-all"
                       >
                         Standings
                       </Link>
                       <Link
                         href={`/stats/${season.slug}`}
-                        className={`text-xs font-body transition-colors ${
-                          isStats ? 'font-semibold text-red-600/60 hover:text-red-600' : 'font-medium text-navy/35 hover:text-navy'
-                        }`}
+                        className="px-2.5 py-0.5 rounded-full text-xs font-body font-semibold border border-navy/40 text-navy/70 hover:bg-navy hover:text-cream transition-all"
                       >
                         Stats
                       </Link>
                       <Link
                         href={`/week#season-${season.slug}`}
-                        className="text-xs font-body font-medium text-navy/35 hover:text-navy transition-colors"
+                        className="px-2.5 py-0.5 rounded-full text-xs font-body font-semibold border border-navy/40 text-navy/70 hover:bg-navy hover:text-cream transition-all"
                       >
                         Nights
                       </Link>

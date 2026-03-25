@@ -9,12 +9,9 @@ function getTrail(seasonSlug?: string, weekNumber?: number, weekFallbackAnchor?:
       ? `/week#season-${weekFallbackAnchor}`
       : '/week';
   return [
-    { label: seasonSlug ? `Week${weekNumber ? ` ${weekNumber}` : 's'}${s}` : 'League Nights', href: weekHref, key: '/week' },
-    { label: seasonSlug ? `Season${s}` : 'Seasons', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
-    { label: seasonSlug ? `Stats${s}` : 'Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
-    { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
-    { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
-    { label: 'Blog', href: '/blog', key: '/blog' },
+    { label: seasonSlug && weekNumber ? `Week ${weekNumber} Results` : 'Week Results', href: weekHref, key: '/week' },
+    { label: 'Standings & Highlights', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
+    { label: 'Leaderboards & Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
   ];
 }
 
@@ -43,21 +40,81 @@ export async function TrailNav({ current, position = 'bottom', seasonSlug, weekN
   }
 
   const trail = getTrail(seasonSlug, resolvedWeekNumber, weekFallbackAnchor, resolvedRoman);
+
+  if (position === 'top') {
+    // Index pages: Seasons / Bowlers / Teams
+    const browseTrail = [
+      { label: 'Seasons', href: '/seasons', key: '/seasons' },
+      { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
+      { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
+    ];
+    const isBrowsePage = browseTrail.some((t) => t.key === current);
+
+    if (isBrowsePage) {
+      return (
+        <nav className="mb-5">
+          <div className="flex items-center gap-1 -mx-1 px-1">
+            {browseTrail.map((item) => {
+              const isCurrent = item.key === current;
+              return (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className={`text-center px-3 py-1.5 rounded-lg font-body text-sm leading-tight transition-all ${
+                    isCurrent
+                      ? 'bg-navy text-cream font-semibold'
+                      : 'text-navy/60 hover:text-navy hover:bg-navy/[0.06]'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="border-b border-navy/20 mt-3" />
+        </nav>
+      );
+    }
+
+    // Season-scoped pages: Week Results / Standings / Leaderboards
+    if (!seasonSlug) return null;
+    const idx = trail.findIndex((t) => t.key === current);
+    if (idx === -1) return null;
+    return (
+      <nav className="mb-5">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          {trail.map((item) => {
+            const isCurrent = item.key === current;
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                className={`text-center px-3 py-1.5 rounded-lg font-body text-sm leading-tight transition-all ${
+                  isCurrent
+                    ? 'bg-navy text-cream font-semibold'
+                    : 'text-navy/60 hover:text-navy hover:bg-navy/[0.06]'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+        <div className="border-b border-navy/20 mt-3" />
+      </nav>
+    );
+  }
+
+  // Bottom position: prev/next style (kept for pages that still use it)
   const idx = trail.findIndex((t) => t.key === current);
   if (idx === -1) return null;
 
   const prev = idx > 0 ? trail[idx - 1] : null;
   const next = idx < trail.length - 1 ? trail[idx + 1] : null;
 
-  const wrapperClass = position === 'top'
-    ? 'mb-5'
-    : 'mt-12';
-
   return (
-    <nav className={wrapperClass}>
-      {position === 'bottom' && (
-        <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-4" />
-      )}
+    <nav className="mt-12">
+      <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-4" />
       <div className="flex items-center justify-between">
         {prev ? (
           <Link
@@ -86,9 +143,6 @@ export async function TrailNav({ current, position = 'bottom', seasonSlug, weekN
           <span />
         )}
       </div>
-      {position === 'top' && (
-        <div className="border-b border-navy/20 mt-4" />
-      )}
     </nav>
   );
 }
