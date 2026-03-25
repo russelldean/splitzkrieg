@@ -52,16 +52,17 @@ Exceptions:
 | Role | Size | Weight | Line Height | Tailwind Class |
 |------|------|--------|-------------|----------------|
 | Body | 16px (sm: 18px) | 400 | 1.625 | `text-base sm:text-lg leading-relaxed font-body` |
-| Label / Exit Ramp | 14px | 500 | 1.4 | `text-sm font-medium font-body` |
+| Label / Exit Ramp | 14px | 600 | 1.4 | `text-sm font-semibold font-body` |
 | Section Heading | 18px | 400 | 1.2 | `text-lg font-heading` |
 | Page Heading | 24px | 400 | 1.2 | `text-2xl font-heading` |
 
-Source: Existing blog-prose class, SectionHeading component, WeekRecap SectionHeader.
+Source: Existing blog-prose class, SectionHeading component, WeekRecap SectionHeader. Weight consolidation: project uses `font-semibold` (161 occurrences) over `font-medium` (67), so 400 + 600 is the canonical pair.
 
 Phase-specific rules:
 - NextStopNudge destination label: 16px font-heading (not body), to feel like a section title, not a utility link
+- NextStopNudge "Keep exploring" label: 14px `text-sm uppercase tracking-wide text-navy/60 font-semibold`. The uppercase + tracking-wide treatment provides sufficient visual subordination without needing a smaller size.
 - NextStopNudge description: 14px font-body at text-navy/70 (above 60% opacity floor)
-- Exit ramp link text: 14px font-medium, not font-heading (these are utility links, not content headings)
+- Exit ramp link text: 14px font-semibold, not font-heading (these are utility links, not content headings)
 - RecapCallout (new feature announcement at top): 16px font-body font-semibold for the headline, 14px font-body for description
 
 ---
@@ -92,6 +93,12 @@ Opacity rules (per CLAUDE.md):
 - Text minimum opacity: 60% (`text-navy/60` is the floor)
 - Existing patterns to preserve: `text-navy/80` for section headings, `text-navy/65` for secondary descriptions
 - New components must use `text-navy/70` or higher for all readable text
+
+---
+
+## Visual Focal Point
+
+Primary focal point: RecapCallout (when present, its red left border and "NEW" badge anchor the eye at page top). When no callout is active, the awards section serves as the primary visual anchor via its accent-colored badges and high-contrast card layout.
 
 ---
 
@@ -144,7 +151,7 @@ Opacity rules (per CLAUDE.md):
 ### NextStopNudge
 
 - **Layout:** Full-width card with white background, `border border-navy/10`, `rounded-xl`, `p-4 sm:p-5`
-- **Content:** Left side: "Keep exploring" label (12px uppercase tracking-wide text-navy/60) + destination title (16px font-heading text-navy) + description (14px font-body text-navy/70). Right side: right arrow icon (20x20).
+- **Content:** Left side: "Keep exploring" label (14px uppercase tracking-wide font-semibold text-navy/60) + destination title (16px font-heading text-navy) + description (14px font-body text-navy/70). Right side: right arrow icon (20x20).
 - **Hover state:** `shadow-md border-red-600/30` (matches existing ExploreLink hover pattern)
 - **Touch target:** entire card is tappable, minimum 64px height
 - **Placement:** After page content, before TrailNav. Separated by `mt-8` from content.
@@ -154,7 +161,7 @@ Opacity rules (per CLAUDE.md):
 ### RecapCallout
 
 - **Layout:** `bg-red-600/[0.08] border-l-4 border-red-600 rounded-r-lg p-4`
-- **Content:** "NEW" badge (inline, `bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full`) + headline (16px semibold) + description (14px text-navy/75) + link
+- **Content:** "NEW" badge (inline, `bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full`) + headline (16px font-semibold) + description (14px text-navy/75) + link
 - **Placement:** First element in recap, before awards section
 - **Condition:** Only renders when `callout` prop is provided (not every week has a new feature)
 
@@ -197,7 +204,7 @@ Rationale: YouAreAStar and GameProfile are personality content with universal ap
 | Primary CTA (exit ramp, results) | "Full match results" |
 | Primary CTA (exit ramp, leaderboards) | "All season leaderboards" |
 | Primary CTA (exit ramp, milestones) | "All milestones and personal bests" |
-| NextStopNudge label | "Keep exploring" (12px uppercase, not a heading) |
+| NextStopNudge label | "Keep exploring" (14px uppercase font-semibold, not a heading) |
 | NextStopNudge: week -> season | Title: "Season Standings" / Desc: "See where every team stands after this week" |
 | NextStopNudge: season -> stats | Title: "Season Leaderboards" / Desc: "Who leads the averages, high games, and series" |
 | NextStopNudge: stats -> milestones | Title: "Milestones" / Desc: "Career landmarks hit this season" |
@@ -225,7 +232,7 @@ This phase does NOT implement a separate dark mode or bowling alley mode. Per D-
 |-------------|---------------|
 | High contrast | All text at navy/60 minimum opacity on cream background. White card backgrounds provide strong contrast. |
 | Large tap targets | ExitRamp: 44px min height. NextStopNudge: 64px min height (entire card tappable). |
-| No tiny text | Smallest text in new components: 12px (NextStopNudge "Keep exploring" label). All content text 14px+. |
+| No tiny text | Smallest text in new components: 14px (labels, descriptions). All content text 14px+. |
 | Readable on small screens | Single column layout on mobile for all new components. No horizontal scrolling. |
 
 ---
