@@ -43,6 +43,7 @@ const seasonRoman = getArg('--season=') ?? 'XXXV';
 const customSlug = getArg('--slug=');
 const customSubject = getArg('--subject=');
 const customTeaser = getArg('--teaser=');
+const bullets = args.filter(a => a.startsWith('--bullet=')).map(a => a.slice('--bullet='.length));
 const toAddress = getArg('--to=') ?? 'splitzkrieg-bowlers@googlegroups.com';
 const dryRun = args.includes('--dry-run');
 
@@ -57,6 +58,7 @@ if (!weekNum && !customSlug) {
   console.error('  --slug=SLUG       Custom blog post slug');
   console.error('  --subject=TEXT    Custom email subject');
   console.error('  --teaser=TEXT     Teaser paragraph for the email body');
+  console.error('  --bullet=TEXT     Add a bullet point to "What\'s new" section (can use multiple times)');
   console.error('  --to=EMAIL        Recipient (default: splitzkrieg-bowlers@googlegroups.com)');
   console.error('  --dry-run         Print email without sending');
   process.exit(1);
@@ -98,6 +100,16 @@ const html = `<!DOCTYPE html>
               <p style="margin: 0 0 24px; color: #333; font-size: 16px; line-height: 1.6;">
                 ${teaser}
               </p>
+              ${bullets.length > 0 ? `
+              <div style="margin: 0 0 24px; padding: 16px; background-color: #faf7f2; border-radius: 8px;">
+                <p style="margin: 0 0 8px; color: #1a1f3d; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                  What's new on the site
+                </p>
+                <ul style="margin: 0; padding: 0 0 0 18px; color: #333; font-size: 15px; line-height: 1.8;">
+                  ${bullets.map(b => `<li>${b}</li>`).join('\n                  ')}
+                </ul>
+              </div>
+              ` : ''}
               <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                 <tr>
                   <td style="background-color: #c41e3a; border-radius: 6px;">
@@ -132,6 +144,10 @@ async function main() {
   console.log('  Subject: ' + subject);
   console.log('  Blog:    ' + blogUrl);
   console.log('  Teaser:  ' + teaser.substring(0, 80) + (teaser.length > 80 ? '...' : ''));
+  if (bullets.length > 0) {
+    console.log('  Bullets: ' + bullets.length + ' item(s)');
+    bullets.forEach((b, i) => console.log('    ' + (i + 1) + '. ' + b));
+  }
   console.log('');
 
   if (dryRun) {
