@@ -57,7 +57,7 @@ export default async function BlogPage() {
             {/* Featured latest post */}
             <Link
               href={`/blog/${featured.slug}`}
-              className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-navy/10 hover:border-navy/20"
+              className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md active:scale-[0.98] active:shadow-none transition-all border border-navy/10 hover:border-navy/20"
             >
               {(featured.cardImage || featured.heroImage) ? (
                 <div className="relative h-44 sm:h-56 overflow-hidden">
@@ -103,7 +103,7 @@ export default async function BlogPage() {
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}
-                className="group block bg-white rounded-xl border border-navy/10 shadow-sm hover:shadow-md hover:border-navy/20 transition-all overflow-hidden"
+                className="group block bg-white rounded-xl border border-navy/10 shadow-sm hover:shadow-md hover:border-navy/20 active:scale-[0.98] active:shadow-none transition-all overflow-hidden"
               >
                 <div className="p-5 flex items-start gap-4">
                   <div className="flex-1 min-w-0">
