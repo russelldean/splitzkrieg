@@ -42,11 +42,11 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm min-h-[180px] overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-amber-50 border-b border-amber-200">
-        <h3 className="font-heading text-lg text-navy">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm overflow-hidden">
+      <div className="flex items-baseline justify-between px-4 py-2 bg-amber-50 border-b border-amber-200">
+        <h3 className="font-heading text-sm text-navy">
           Season {strikeX(snapshot.romanNumeral)}
-          <span className="ml-2 text-sm font-body text-navy/50">Week {snapshot.weekNumber}</span>
+          <span className="ml-1.5 font-body text-xs text-navy/50">Week {snapshot.weekNumber}</span>
         </h3>
         <Link
           href={`/stats/${snapshot.slug}`}
@@ -55,10 +55,10 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           Full leaderboards &rarr;
         </Link>
       </div>
-      <div className="p-6">
+      <div className="px-4 py-3">
 
       {/* Aggregate stats */}
-      <div className="flex justify-around items-start mb-4 pb-4 border-b border-navy/5">
+      <div className="flex justify-around items-start mb-3 pb-3 border-b border-navy/5">
         <StatValue label="Bowlers" value={snapshot.totalBowlers} />
         {snapshot.expectedLeagueAverage > 0
           ? <StatValue label="League Avg / Expected" value={`${snapshot.leagueAverage.toFixed(1)} / ${snapshot.expectedLeagueAverage.toFixed(1)}`} />

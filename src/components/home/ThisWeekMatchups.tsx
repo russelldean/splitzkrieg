@@ -25,12 +25,9 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 shadow-sm overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-amber-50 border-b border-amber-200">
+      <div className="flex items-baseline justify-between px-4 py-2 bg-amber-50 border-b border-amber-200">
         <div>
-          <h3 className="font-heading text-lg text-navy">Up Next</h3>
-          <p className="text-xs font-body text-navy/65">
-            Week {weekNumber}{dateStr && <> &middot; {dateStr}</>}
-          </p>
+          <h3 className="font-heading text-sm text-navy">Up Next <span className="font-body text-xs text-navy/50 ml-1">Week {weekNumber}{dateStr && <> &middot; {dateStr}</>}</span></h3>
         </div>
         <Link
           href={`/week/${seasonSlug}/${weekNumber}`}
@@ -39,7 +36,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
           Details &rarr;
         </Link>
       </div>
-      <div className="px-6 py-5">
+      <div className="px-4 py-3">
 
       <div className="space-y-1.5">
         {matchups.map((m, i) => {
@@ -50,28 +47,28 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
           const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
 
           return (
-            <div key={i} className="flex items-center justify-between py-1.5 border-b border-navy/5 last:border-0">
+            <div key={i} className="flex items-center justify-between py-1 border-b border-navy/5 last:border-0">
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/team/${m.homeTeamSlug}`}
-                  className={`text-sm hover:text-red-600 transition-colors ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}
+                  className={`text-xs hover:text-red-600 transition-colors ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}
                 >
                   {m.homeTeamName}
                 </Link>
               </div>
               {hasResults ? (
-                <div className="text-center px-2 tabular-nums text-sm shrink-0">
+                <div className="text-center px-2 tabular-nums text-xs shrink-0">
                   <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/65'}>{t1Pts ?? '-'}</span>
                   <span className="text-navy/40 mx-1">-</span>
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/65'}>{t2Pts ?? '-'}</span>
                 </div>
               ) : (
-                <span className="text-navy/25 text-xs px-2">vs</span>
+                <span className="text-navy/25 text-[11px] px-1.5">vs</span>
               )}
               <div className="flex-1 min-w-0 text-right">
                 <Link
                   href={`/team/${m.awayTeamSlug}`}
-                  className={`text-sm hover:text-red-600 transition-colors ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}
+                  className={`text-xs hover:text-red-600 transition-colors ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}
                 >
                   {m.awayTeamName}
                 </Link>
