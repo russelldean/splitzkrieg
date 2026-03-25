@@ -175,10 +175,10 @@ Plans:
 **Goal:** Help users naturally find and explore the full depth of the site. Rethink the blog recap format (hub-and-spoke to guided paths), improve cross-page discovery, leverage PostHog analytics data to understand current usage patterns, and design navigation that leads people deeper without overwhelming them.
 **Requirements**: [D-01 through D-25]
 **Depends on:** Phase 6
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
-- [ ] 12-01-PLAN.md — Tracking components (ExitRamp, TrackVisibility) + bowler profile reorder
+- [x] 12-01-PLAN.md — Tracking components (ExitRamp, TrackVisibility) + bowler profile reorder
 - [ ] 12-02-PLAN.md — WeekRecap condensed redesign with exit ramps + DiscoverySection
 - [ ] 12-03-PLAN.md — NextStopNudge component + destination page integration
 - [ ] 12-04-PLAN.md — Email template update, updates feed surfacing, visual checkpoint
