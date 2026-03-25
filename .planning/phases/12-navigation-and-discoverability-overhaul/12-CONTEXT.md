@@ -47,8 +47,6 @@ Help users naturally find and explore the full depth of the site. Rethink the bl
 
 ### Mobile Readability at the Bowling Alley
 - **D-23:** Primary at-the-alley usage is on phones in a dark bowling alley by 50+ year old bowlers. All navigation, discovery UI, and recap content must be readable in that context -- high contrast, large tap targets, no tiny text.
-- **D-24:** Consider a "dark bowling alley bad eyes" mode -- either auto-detect (time-based, bowling night hours 8-11pm ET Tuesday) or manual toggle. Larger fonts, higher contrast, simplified layout for at-the-alley consumption vs. next-day desk browsing.
-- **D-25:** PostHog data already shows bowling night traffic spike (8-11pm ET). Any readability mode could key off that pattern.
 
 ### Claude's Discretion
 - Exact component design for inline exit ramps and "next stop" nudges
@@ -136,6 +134,7 @@ Help users naturally find and explore the full depth of the site. Rethink the bl
 - "You haven't seen this yet" personalized nudging (would require user identity/cookies beyond PostHog)
 - Full redesign of the nav bar/menu structure (current nav works, discovery is the problem not navigation)
 - Phase 11 mini-game integration with nav (already scoped in Phase 11 plan 07)
+- "Dark bowling alley bad eyes" readability mode -- auto-detect (time-based, 8-11pm ET Tuesday) or manual toggle with larger fonts, higher contrast, simplified layout. PostHog data shows bowling night traffic spike that could trigger it. Deferred to a future phase -- this phase ships baseline readability compliance (44px tap targets, 60% opacity floor) instead.
 
 </deferred>
 
