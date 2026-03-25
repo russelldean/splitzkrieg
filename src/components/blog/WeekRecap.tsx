@@ -122,7 +122,12 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
               })}
             </div>
           )}
-          <ExitRamp href={`/week/${seasonSlug}/${weekNum}`} section="results" linkText="Full match results" />
+          <ExitRamp
+            href={`/week/${seasonSlug}/${weekNum}`}
+            section="results"
+            linkText="Full Weekly Report"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-lg bg-red-600 font-body text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm"
+          />
         </div>
       </TrackVisibility>
 
