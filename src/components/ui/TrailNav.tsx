@@ -42,25 +42,20 @@ export async function TrailNav({ current, position = 'bottom', seasonSlug, weekN
   const trail = getTrail(seasonSlug, resolvedWeekNumber, weekFallbackAnchor, resolvedRoman);
 
   if (position === 'top') {
-    // Index pages: Seasons / Bowlers / Teams
-    const browseTrail = [
-      { label: 'Seasons', href: '/seasons', key: '/seasons' },
-      { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
-      { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
-    ];
-    const isBrowsePage = browseTrail.some((t) => t.key === current);
-
-    if (isBrowsePage) {
+    // Season-scoped pages take priority when seasonSlug is present
+    if (seasonSlug) {
+      const idx = trail.findIndex((t) => t.key === current);
+      if (idx === -1) return null;
       return (
         <nav className="mb-5">
-          <div className="flex items-center gap-1 -mx-1 px-1">
-            {browseTrail.map((item) => {
+          <div className="flex gap-1 -mx-1 px-1">
+            {trail.map((item) => {
               const isCurrent = item.key === current;
               return (
                 <Link
                   key={item.key}
                   href={item.href}
-                  className={`text-center px-3 py-1.5 rounded-lg font-body text-sm leading-tight transition-all ${
+                  className={`flex-1 text-center px-2 py-1.5 rounded-lg font-body text-sm leading-tight transition-all ${
                     isCurrent
                       ? 'bg-navy text-cream font-semibold'
                       : 'text-navy/60 hover:text-navy hover:bg-navy/[0.06]'
@@ -76,20 +71,25 @@ export async function TrailNav({ current, position = 'bottom', seasonSlug, weekN
       );
     }
 
-    // Season-scoped pages: Week Results / Standings / Leaderboards
-    if (!seasonSlug) return null;
-    const idx = trail.findIndex((t) => t.key === current);
-    if (idx === -1) return null;
+    // Index pages: Seasons / Bowlers / Teams
+    const browseTrail = [
+      { label: 'Seasons', href: '/seasons', key: '/seasons' },
+      { label: 'Bowlers', href: '/bowlers?filter=current', key: '/bowlers' },
+      { label: 'Teams', href: '/teams?filter=current', key: '/teams' },
+    ];
+    const isBrowsePage = browseTrail.some((t) => t.key === current);
+    if (!isBrowsePage) return null;
+
     return (
       <nav className="mb-5">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide -mx-1 px-1">
-          {trail.map((item) => {
+        <div className="flex gap-1 -mx-1 px-1">
+          {browseTrail.map((item) => {
             const isCurrent = item.key === current;
             return (
               <Link
                 key={item.key}
                 href={item.href}
-                className={`text-center px-3 py-1.5 rounded-lg font-body text-sm leading-tight transition-all ${
+                className={`flex-1 text-center px-2 py-1.5 rounded-lg font-body text-sm leading-tight transition-all ${
                   isCurrent
                     ? 'bg-navy text-cream font-semibold'
                     : 'text-navy/60 hover:text-navy hover:bg-navy/[0.06]'

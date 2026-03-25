@@ -50,7 +50,7 @@ export default async function BowlersPage() {
           </div>
         </div>
       </section>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
         <TrailNav current="/bowlers" position="top" />
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
