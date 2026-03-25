@@ -24,8 +24,8 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
   const dateStr = formatMatchDate(matchDate, { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-6">
-      <div className="flex items-baseline justify-between mb-5">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm overflow-hidden">
+      <div className="flex items-baseline justify-between px-6 py-3 bg-navy/[0.04] border-b border-navy/10">
         <div>
           <h3 className="font-heading text-lg text-navy">Up Next</h3>
           <p className="text-xs font-body text-navy/65">
@@ -39,6 +39,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
           Details &rarr;
         </Link>
       </div>
+      <div className="px-6 py-5">
 
       <div className="space-y-1.5">
         {matchups.map((m, i) => {
@@ -78,6 +79,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

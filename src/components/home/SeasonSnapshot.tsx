@@ -42,21 +42,20 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-6 min-h-[180px]">
-      <div className="flex items-baseline justify-between mb-1">
-        <h3 className="font-heading text-lg text-navy">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm min-h-[180px] overflow-hidden">
+      <div className="flex items-baseline justify-between px-6 py-3 bg-navy">
+        <h3 className="font-heading text-lg text-white">
           Season {strikeX(snapshot.romanNumeral)}
+          <span className="ml-2 text-sm font-body text-white/50">Week {snapshot.weekNumber}</span>
         </h3>
         <Link
           href={`/stats/${snapshot.slug}`}
-          className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
+          className="text-xs font-body text-white/60 hover:text-white transition-colors"
         >
           Full leaderboards &rarr;
         </Link>
       </div>
-      <p className="inline-block text-xs font-body font-semibold text-navy/70 bg-navy/[0.06] px-2 py-0.5 rounded mb-4 tabular-nums">
-        Week {snapshot.weekNumber}
-      </p>
+      <div className="p-6">
 
       {/* Aggregate stats */}
       <div className="flex justify-around items-start mb-4 pb-4 border-b border-navy/5">
@@ -101,7 +100,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           </div>
         )}
       </div>
-
+      </div>
     </div>
   );
 }
