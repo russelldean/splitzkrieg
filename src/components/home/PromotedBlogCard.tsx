@@ -14,10 +14,10 @@ export function PromotedBlogCard({ post }: Props) {
       href={`/blog/${post.slug}`}
       className="group block bg-navy rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
     >
-      <div className="relative">
+      <div>
         {/* Full-width image banner */}
         {image && (
-          <div className="relative w-full h-44 sm:h-52 overflow-hidden">
+          <div className="relative w-full h-48 sm:h-56 overflow-hidden">
             <Image
               src={image}
               alt={post.title}
@@ -25,12 +25,11 @@ export function PromotedBlogCard({ post }: Props) {
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 1024px) 100vw, 960px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/40 to-transparent" />
           </div>
         )}
 
-        {/* Content overlaid on gradient */}
-        <div className={`${image ? '-mt-16 relative z-10' : ''} px-5 pb-5 pt-4`}>
+        {/* Content below image */}
+        <div className="px-5 pb-5 pt-4">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
               New Post
