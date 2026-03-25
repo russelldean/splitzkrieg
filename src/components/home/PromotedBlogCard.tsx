@@ -17,13 +17,13 @@ export function PromotedBlogCard({ post }: Props) {
       <div>
         {/* Full-width image banner */}
         {image && (
-          <div className="relative w-full h-48 sm:h-56 overflow-hidden">
+          <div className="overflow-hidden">
             <Image
               src={image}
               alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 1024px) 100vw, 960px"
+              width={960}
+              height={540}
+              className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
             />
           </div>
         )}
