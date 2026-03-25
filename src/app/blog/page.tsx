@@ -4,7 +4,7 @@ import { getAllPosts } from '@/lib/blog';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
-import updates, { lastUpdated } from '@/content/updates';
+import updates, { lastUpdated } from '../../../content/updates';
 
 export const revalidate = 3600;
 

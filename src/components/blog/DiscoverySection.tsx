@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import updates from '@/content/updates';
+import updates from '../../../content/updates';
 
 interface Props {
   seasonSlug: string;
