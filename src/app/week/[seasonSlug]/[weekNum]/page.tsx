@@ -16,11 +16,9 @@ import {
   getPairwiseH2H,
   getWeekCareerMilestones,
 } from '@/lib/queries';
-import { WeeklyResults } from '@/components/season/WeeklyResults';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekSchedulePreview } from '@/components/season/WeekSchedulePreview';
 import { WeekStats } from '@/components/season/WeekStats';
-import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
@@ -239,26 +237,13 @@ export default async function WeekPage({
           {/* Match Results */}
           <SectionHeading>Match Results</SectionHeading>
 
-          {/* Match summary scoreboard */}
+          {/* Match cards — click to expand individual match details */}
           <WeekMatchSummary
             weekScores={weekScores}
             schedule={weekSchedule}
             matchResults={weekMatchResults}
             week={weekNum}
           />
-
-          {/* Detailed match results — collapsed by default */}
-          <div className="mt-6">
-            <CollapsibleSection title="Full Match Details">
-              <WeeklyResults
-                weeklyScores={weekScores}
-                schedule={weekSchedule}
-                matchResults={weekMatchResults}
-                totalWeeks={0}
-                detailOnly
-              />
-            </CollapsibleSection>
-          </div>
 
           {/* XP Rankings — below match details */}
           <div className="mt-6">
