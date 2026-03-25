@@ -55,8 +55,8 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
   const hasDivisions = standings.some(r => r.divisionName !== null);
 
   return (
-    <div className="bg-cream rounded-xl border border-navy/10 shadow-sm h-full flex flex-col overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-navy/[0.06] border-b border-navy/10">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm h-full flex flex-col overflow-hidden">
+      <div className="flex items-baseline justify-between px-6 py-3 bg-amber-50 border-b border-amber-200">
         <h3 className="font-heading text-lg text-navy">Standings</h3>
         <Link
           href={`/season/${seasonSlug}`}

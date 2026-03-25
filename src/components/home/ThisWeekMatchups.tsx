@@ -24,8 +24,8 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
   const dateStr = formatMatchDate(matchDate, { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
-    <div className="bg-cream rounded-xl border border-navy/10 shadow-sm overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-navy/[0.06] border-b border-navy/10">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm overflow-hidden">
+      <div className="flex items-baseline justify-between px-6 py-3 bg-amber-50 border-b border-amber-200">
         <div>
           <h3 className="font-heading text-lg text-navy">Up Next</h3>
           <p className="text-xs font-body text-navy/65">
