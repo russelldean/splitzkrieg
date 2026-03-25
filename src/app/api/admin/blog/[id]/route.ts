@@ -69,10 +69,10 @@ export async function PUT(
 
     // Revalidate on every save
     if (body.slug) {
-      revalidatePath(`/blog/${body.slug}`, 'page');
+      revalidatePath(`/blog/${body.slug}`);
     }
-    revalidatePath('/blog', 'page');
-    revalidatePath('/', 'page');
+    revalidatePath('/blog');
+    revalidatePath('/');
 
     return NextResponse.json({ updated: true });
   } catch (err) {
