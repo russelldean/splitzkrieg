@@ -49,7 +49,7 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
 
         return (
           <div key={season.seasonID} id={`season-${season.slug}`} className="scroll-mt-20">
-            <div className={`rounded-xl border overflow-hidden ${isFirst ? 'border-navy/10 border-l-4 border-l-red-600/40 bg-white shadow-sm' : 'border-navy/8 bg-white shadow-sm'}`}>
+            <div className={`rounded-xl border overflow-hidden ${isFirst ? 'border-navy/10 border-l-4 border-l-navy/30 bg-white shadow-sm' : 'border-navy/8 bg-white shadow-sm'}`}>
               {/* Season header */}
               <button
                 onClick={() => toggleSeason(season.seasonID)}

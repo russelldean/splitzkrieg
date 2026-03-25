@@ -190,6 +190,16 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
           </p>
         );
       })()}
+
+      {/* Bottom CTA — repeat the weekly report link */}
+      <div className="text-center pt-2">
+        <ExitRamp
+          href={`/week/${seasonSlug}/${weekNum}`}
+          section="results-bottom"
+          linkText="Full Weekly Report"
+          className="inline-flex items-center gap-1.5 px-5 py-3 min-h-[44px] rounded-lg bg-red-600 font-body text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm"
+        />
+      </div>
     </div>
   );
 }

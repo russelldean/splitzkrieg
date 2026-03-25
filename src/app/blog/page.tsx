@@ -51,7 +51,7 @@ export default async function BlogPage() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {posts.length === 0 ? (
-          <div className="bg-white rounded-xl border border-navy/10 shadow-sm border-l-4 border-l-navy/30 px-8 py-12 shadow-sm text-center">
+          <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-8 py-12 text-center">
             <p className="font-body text-lg text-navy/70 leading-relaxed">
               No posts yet. Check back after the next league night.
             </p>

@@ -47,7 +47,7 @@ function MilestoneGroup({
 }) {
   const colors = CATEGORY_COLORS[category];
   return (
-    <div className={`rounded-lg border ${colors.border} overflow-hidden`}>
+    <div className={`rounded-lg border ${colors.border} shadow-sm overflow-hidden`}>
       <div className={`px-4 py-2 ${colors.bg}`}>
         <h3 className={`font-heading text-base ${colors.text}`}>
           {formatThreshold(category, threshold)}
@@ -110,7 +110,7 @@ export default async function MilestonesPage() {
               return (
                 <div
                   key={`${m.bowlerID}-${m.category}-${m.threshold}-${i}`}
-                  className={`flex items-center gap-3 rounded-lg border ${colors.border} ${colors.bg} px-4 py-3`}
+                  className={`flex items-center gap-3 rounded-lg border ${colors.border} ${colors.bg} shadow-sm px-4 py-3`}
                 >
                   <span className="text-lg">&#10003;</span>
                   <div>

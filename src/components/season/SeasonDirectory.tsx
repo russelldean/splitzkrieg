@@ -42,7 +42,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
           {(() => {
             const current = seasons[0];
             return (
-              <div className="mb-8 p-6 bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-xl shadow-sm">
+              <div className="mb-8 p-6 bg-white border border-navy/10 border-l-4 border-l-navy/30 rounded-xl shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-body text-xs sm:text-sm uppercase tracking-wider text-navy/70 bg-navy/10 px-1.5 py-0.5 rounded font-semibold">
                     Current Season
