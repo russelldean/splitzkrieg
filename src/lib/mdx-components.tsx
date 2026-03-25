@@ -1,11 +1,26 @@
 import Link from 'next/link';
 import type { MDXComponents } from 'mdx/types';
+import type { ReactNode } from 'react';
 import { TopPerformers } from '@/components/blog/TopPerformers';
 import { MilestonesBlock } from '@/components/blog/MilestonesBlock';
 import { MatchResultsSummary } from '@/components/blog/MatchResultsSummary';
 import { StandingsSnapshot } from '@/components/blog/StandingsSnapshot';
 import { WeekRecap } from '@/components/blog/WeekRecap';
 import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
+
+function toSlug(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+function Bowler({ children }: { children: ReactNode }) {
+  const name = typeof children === 'string' ? children : String(children);
+  return <Link href={`/bowler/${toSlug(name)}`} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
+}
+
+function Team({ children }: { children: ReactNode }) {
+  const name = typeof children === 'string' ? children : String(children);
+  return <Link href={`/team/${toSlug(name)}`} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
+}
 
 export const mdxComponents: MDXComponents = {
   h1: ({ children }) => <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-4">{children}</h1>,
@@ -26,4 +41,6 @@ export const mdxComponents: MDXComponents = {
   StandingsSnapshot,
   WeekRecap,
   LeaderboardSnapshot,
+  Bowler,
+  Team,
 } as MDXComponents;

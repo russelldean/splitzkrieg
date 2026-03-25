@@ -88,7 +88,7 @@ export default async function BlogPostPage({
   return (
     <BlogPostLayout meta={meta} prev={prev} next={next} updates={siteUpdates}>
       {!meta.title ? null : (
-        <MDXRemote source={content} components={mdxComponents} />
+        <MDXRemote source={content.replace(/<(\/?)bowler>/gi, '<$1Bowler>').replace(/<(\/?)team>/gi, '<$1Team>')} components={mdxComponents} />
       )}
     </BlogPostLayout>
   );
