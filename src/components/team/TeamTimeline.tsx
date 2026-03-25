@@ -105,7 +105,7 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
         </span>
       </div>
 
-      <div className="overflow-x-auto bg-white border border-navy/10 rounded-lg">
+      <div className="overflow-x-auto bg-white border border-navy/10 rounded-lg shadow-sm">
         <table className="min-w-max text-xs font-body">
           <thead>
             <tr className="bg-navy/[0.03]">

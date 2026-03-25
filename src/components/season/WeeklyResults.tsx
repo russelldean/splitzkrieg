@@ -177,7 +177,7 @@ export function WeeklyResults({ weeklyScores, schedule, matchResults, totalWeeks
           const matchCount = matchups.length || (teamScores ? Math.ceil(teamScores.size / 2) : 0);
 
           return (
-            <div key={week} className="border border-navy/10 rounded-lg overflow-hidden">
+            <div key={week} className="border border-navy/10 rounded-lg shadow-sm overflow-hidden">
               <button
                 onClick={() => toggleWeek(week)}
                 className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"

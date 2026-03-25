@@ -38,7 +38,7 @@ export function TeamHero({ team, rosterCount, seasonsActive, franchiseNames, sha
 
       {/* Current season standing callout */}
       {currentStanding && (
-        <div className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg">
+        <div className="flex items-center gap-4 mt-6 px-4 py-3 bg-navy/[0.04] border border-navy/10 rounded-lg shadow-sm">
           <div className="text-center shrink-0">
             <div className="font-body text-xs text-navy/65 uppercase tracking-wide">Current Rank</div>
             <div className="font-heading text-2xl text-navy mt-0.5">

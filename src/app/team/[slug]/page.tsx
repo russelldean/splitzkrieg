@@ -54,7 +54,7 @@ function GhostTeamAllTime({ ghostH2H, ghostWinPct }: { ghostH2H: GhostTeamMatchu
   return (
     <section>
       <SectionHeading>All-Time Record</SectionHeading>
-      <div className="bg-white border border-navy/10 rounded-xl p-5">
+      <div className="bg-white border border-navy/10 rounded-xl shadow-sm p-5">
         <div className="flex items-center gap-6">
           <div className="text-center">
             <div className="font-heading text-3xl text-navy tabular-nums">
@@ -83,7 +83,7 @@ function GhostTeamExplainer() {
   return (
     <section>
       <SectionHeading>About the Ghost Team</SectionHeading>
-      <div className="bg-white border border-navy/10 rounded-xl p-5 space-y-3 font-body text-navy/75 text-base leading-relaxed">
+      <div className="bg-white border border-navy/10 rounded-xl shadow-sm p-5 space-y-3 font-body text-navy/75 text-base leading-relaxed">
         <p>
           When a team forfeits (or there&rsquo;s an odd number of teams in the league), they receive no points - but
           the opposing team doesn&rsquo;t automatically get three free wins. They bowl against the

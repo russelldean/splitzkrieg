@@ -105,7 +105,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                 {seasons.slice(1).map((season) => (
                   <div
                     key={season.seasonID}
-                    className="flex items-center justify-between gap-2 px-4 py-3.5 bg-white rounded-xl border border-navy/8 hover:border-navy/15 hover:shadow-sm transition-all group"
+                    className="flex items-center justify-between gap-2 px-4 py-3.5 bg-white rounded-xl border border-navy/8 shadow-sm hover:border-navy/15 hover:shadow-md transition-all group"
                   >
                     <div className="min-w-0">
                       <div className="flex items-baseline gap-2">

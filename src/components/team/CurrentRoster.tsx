@@ -27,7 +27,7 @@ export function CurrentRoster({ roster }: Props) {
         {roster.map((member) => (
           <li
             key={member.bowlerID}
-            className="flex items-center justify-between px-4 py-3 bg-white border border-navy/10 rounded-lg"
+            className="flex items-center justify-between px-4 py-3 bg-white border border-navy/10 rounded-lg shadow-sm"
           >
             <div className="flex flex-col">
               <Link

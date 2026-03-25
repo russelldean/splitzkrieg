@@ -23,7 +23,7 @@ export function LastWeekHighlight({ week }: Props) {
   const dateStr = formatMatchDate(week.matchDate, { month: 'short', day: 'numeric' });
 
   return (
-    <section className="bg-white rounded-lg border border-navy/10 px-5 py-3">
+    <section className="bg-white rounded-lg border border-navy/10 shadow-sm px-5 py-3">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-heading text-lg text-navy whitespace-nowrap">Last Week</span>

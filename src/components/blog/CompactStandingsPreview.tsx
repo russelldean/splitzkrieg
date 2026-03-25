@@ -33,7 +33,7 @@ export function CompactStandingsPreview({ standings, weekNumber }: Props) {
           : top3;
 
         return (
-          <div key={divName} className="bg-white rounded-lg border border-navy/10 overflow-hidden">
+          <div key={divName} className="bg-white rounded-lg border border-navy/10 shadow-sm overflow-hidden">
             {hasDivisions && divName !== '__none__' && (
               <div className="px-3 py-1 bg-navy/[0.03] border-b border-navy/10">
                 <span className="font-body text-xs text-navy/65 uppercase tracking-wider">{divName}</span>

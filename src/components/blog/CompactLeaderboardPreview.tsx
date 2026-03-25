@@ -38,7 +38,7 @@ function LeaderColumn({ title, leaders }: { title: string; leaders: Array<{ bowl
   if (leaders.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-lg border border-navy/10 overflow-hidden">
+    <div className="bg-white rounded-lg border border-navy/10 shadow-sm overflow-hidden">
       <div className="px-3 py-1 bg-navy/[0.03] border-b border-navy/10">
         <h4 className="font-heading text-sm text-navy/70 leading-tight">{title}</h4>
       </div>

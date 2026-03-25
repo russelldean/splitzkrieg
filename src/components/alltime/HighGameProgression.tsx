@@ -122,7 +122,7 @@ export function HighGameProgression({ records, latestNight }: Props) {
       {/* Chart */}
       <div className="high-game-chart relative" style={{ height: 320 }}>
         {/* Chart area */}
-        <div className="relative h-full bg-white rounded-lg border border-navy/10 p-2">
+        <div className="relative h-full bg-white rounded-lg border border-navy/10 shadow-sm p-2">
           {/* Horizontal grid lines */}
           {[0.25, 0.5, 0.75].map(pct => (
             <div
@@ -247,7 +247,7 @@ export function HighGameProgression({ records, latestNight }: Props) {
       </div>
 
       {/* Timeline table below */}
-      <div className="overflow-x-auto mt-14 bg-white rounded-lg border border-navy/10 px-4 py-2">
+      <div className="overflow-x-auto mt-14 bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-navy/10 text-left">

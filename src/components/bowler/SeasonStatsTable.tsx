@@ -19,7 +19,7 @@ export function SeasonStatsTable({ seasons }: Props) {
     return (
       <section>
         <SectionHeading>Season Stats</SectionHeading>
-        <div className="bg-white rounded-lg border border-navy/10 p-6">
+        <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-6">
           <EmptyState title="No season data available" />
         </div>
       </section>

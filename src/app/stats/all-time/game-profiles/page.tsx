@@ -158,7 +158,7 @@ function DistCard({ archetype, count, total, desc, color }: {
 }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div className={`rounded-lg border px-3 py-2.5 ${color}`}>
+    <div className={`rounded-lg border shadow-sm px-3 py-2.5 ${color}`}>
       <div className="font-heading text-sm text-navy">{archetype}</div>
       <div className="font-heading text-2xl text-navy tabular-nums">{count}</div>
       <div className="text-[11px] text-navy/65 font-body">{pct}% &middot; {desc}</div>

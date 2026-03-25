@@ -143,7 +143,7 @@ export default async function ResourcesPage() {
                     return (
                       <div
                         key={link.label}
-                        className="bg-white rounded-lg p-5 border border-navy/10"
+                        className="bg-white rounded-lg p-5 border border-navy/10 shadow-sm"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -163,7 +163,7 @@ export default async function ResourcesPage() {
                   }
 
                   const isInternal = link.href.startsWith('/');
-                  const cardClass = "bg-white rounded-lg p-5 border border-navy/10 hover:border-navy/20 hover:shadow-sm transition-all group";
+                  const cardClass = "bg-white rounded-lg p-5 border border-navy/10 shadow-sm hover:border-navy/20 hover:shadow-md transition-all group";
                   const cardContent = (
                     <div className="flex items-start justify-between gap-3">
                       <div>

@@ -12,7 +12,7 @@ export function PromotedBlogCard({ post }: Props) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group block bg-white rounded-xl border border-navy/10 border-l-4 border-l-red-600/30 overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
+      className="group block bg-white rounded-xl border border-navy/10 shadow-sm border-l-4 border-l-red-600/30 overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
     >
       <div className="flex flex-col sm:flex-row">
         {/* Image */}

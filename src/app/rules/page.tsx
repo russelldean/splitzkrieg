@@ -32,7 +32,7 @@ export default function RulesPage() {
 
       <div className="space-y-8">
         {/* League Rules */}
-        <section className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-red-600/40 px-8 py-8 shadow-sm">
+        <section className="bg-white rounded-xl border border-navy/10 shadow-sm border-l-4 border-l-red-600/40 px-8 py-8 shadow-sm">
           <div className="font-body text-lg text-navy/70 leading-relaxed space-y-3 max-w-lg mx-auto">
             <p>Rules are important.</p>
             <p>We play by our own rules.</p>
@@ -41,7 +41,7 @@ export default function RulesPage() {
         </section>
 
         {/* Historical Data Note */}
-        <section className="bg-white rounded-xl border border-navy/10 border-l-4 border-l-navy/30 px-8 py-8 shadow-sm">
+        <section className="bg-white rounded-xl border border-navy/10 shadow-sm border-l-4 border-l-navy/30 px-8 py-8 shadow-sm">
           <h2 id="numbers" className="font-heading text-xl md:text-2xl text-navy mb-4">
             A Note on the Numbers
           </h2>

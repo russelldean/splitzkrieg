@@ -29,7 +29,7 @@ export function PersonalRecordsPanel({ careerSummary, delta, slug }: Props) {
     return (
       <section>
         <SectionHeading>Personal Records</SectionHeading>
-        <div className="bg-white rounded-lg border border-navy/10 border-l-4 border-l-red-600/30 p-6">
+        <div className="bg-white rounded-lg border border-navy/10 shadow-sm border-l-4 border-l-red-600/30 p-6">
           <EmptyState title="No games recorded yet" />
         </div>
       </section>
@@ -39,7 +39,7 @@ export function PersonalRecordsPanel({ careerSummary, delta, slug }: Props) {
   return (
     <section>
       <SectionHeading>Personal Records</SectionHeading>
-      <div className="bg-white rounded-lg border border-navy/10 border-l-4 border-l-red-600/30 p-6">
+      <div className="bg-white rounded-lg border border-navy/10 shadow-sm border-l-4 border-l-red-600/30 p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6">
           <RecordCard label="First Night" value={formatFirstNight(careerSummary)} />
           <RecordCard

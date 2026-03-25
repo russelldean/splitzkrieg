@@ -78,7 +78,7 @@ function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, le
   const baselineY = padTop + usableH - ((1.0 - min) / range) * usableH;
 
   return (
-    <div className="bg-white rounded-lg border border-navy/10 p-4 flex-shrink-0">
+    <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-4 flex-shrink-0">
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
         {/* "avg" baseline at 1.0 */}
         <line x1={padX - 8} y1={baselineY} x2={w - padX + 8} y2={baselineY}

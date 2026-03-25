@@ -33,7 +33,7 @@ export function MilestoneWatch({ milestones }: Props) {
           return (
             <div
               key={m.category}
-              className="bg-white rounded-lg border border-navy/10 px-4 py-3"
+              className="bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-3"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

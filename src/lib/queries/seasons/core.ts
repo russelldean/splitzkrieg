@@ -200,3 +200,84 @@ export const getTotalPinsKnockedDown = cache(async (): Promise<number> => {
   }, [], { sql: TOTAL_PINS_SQL, dependsOn: ['scores'] });
   return rows[0]?.totalPins ?? 0;
 });
+
+/* ───────────────────────────────────────────────────────────
+ * League-wide cumulative stats (for About page)
+ * ─────────────────────────────────────────────────────────── */
+
+export interface LeagueStats {
+  totalSeasons: number;
+  totalBowlers: number;
+  totalTeams: number;
+  totalGames: number;
+  totalPins: number;
+  totalTurkeys: number;
+  games200Plus: number;
+  games300: number;
+  series600Plus: number;
+  series700Plus: number;
+  perfectSeriesCount: number;
+  highGame: number;
+  highSeries: number;
+  bowlersWithTurkey: number;
+  bowlersWith200: number;
+  bowlersWith300: number;
+  bowlersWith600: number;
+  bowlersWith700: number;
+  distinctChampionTeams: number;
+}
+
+const LEAGUE_STATS_SQL = `
+  SELECT
+    (SELECT COUNT(*) FROM seasons) AS totalSeasons,
+    (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0) AS totalBowlers,
+    (SELECT COUNT(*) FROM teams) AS totalTeams,
+    (SELECT COUNT(*) * 3 FROM scores WHERE isPenalty = 0) AS totalGames,
+    (SELECT SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT) + CAST(game3 AS BIGINT)) FROM scores WHERE isPenalty = 0) AS totalPins,
+    (SELECT SUM(ISNULL(turkeys, 0)) FROM scores WHERE isPenalty = 0) AS totalTurkeys,
+    (SELECT SUM(
+      CASE WHEN game1 >= 200 THEN 1 ELSE 0 END +
+      CASE WHEN game2 >= 200 THEN 1 ELSE 0 END +
+      CASE WHEN game3 >= 200 THEN 1 ELSE 0 END
+    ) FROM scores WHERE isPenalty = 0) AS games200Plus,
+    (SELECT SUM(
+      CASE WHEN game1 = 300 THEN 1 ELSE 0 END +
+      CASE WHEN game2 = 300 THEN 1 ELSE 0 END +
+      CASE WHEN game3 = 300 THEN 1 ELSE 0 END
+    ) FROM scores WHERE isPenalty = 0) AS games300,
+    (SELECT COUNT(*) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 600) AS series600Plus,
+    (SELECT COUNT(*) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 700) AS series700Plus,
+    (SELECT COUNT(*) FROM scores WHERE isPenalty = 0 AND scratchSeries = 900) AS perfectSeriesCount,
+    (SELECT MAX(v) FROM (
+      SELECT MAX(game1) AS v FROM scores WHERE isPenalty = 0
+      UNION ALL SELECT MAX(game2) FROM scores WHERE isPenalty = 0
+      UNION ALL SELECT MAX(game3) FROM scores WHERE isPenalty = 0
+    ) g) AS highGame,
+    (SELECT MAX(scratchSeries) FROM scores WHERE isPenalty = 0) AS highSeries,
+    (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND ISNULL(turkeys, 0) > 0) AS bowlersWithTurkey,
+    (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND (game1 >= 200 OR game2 >= 200 OR game3 >= 200)) AS bowlersWith200,
+    (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND (game1 = 300 OR game2 = 300 OR game3 = 300)) AS bowlersWith300,
+    (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 600) AS bowlersWith600,
+    (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 700) AS bowlersWith700,
+    (SELECT COUNT(DISTINCT winnerTeamID) FROM seasonChampions WHERE championshipType = 'team' AND winnerTeamID IS NOT NULL) AS distinctChampionTeams
+`;
+
+export const getLeagueStats = cache(async (): Promise<LeagueStats> => {
+  return cachedQuery(
+    'getLeagueStats',
+    async () => {
+      const db = await getDb();
+      const result = await db.request().query<LeagueStats>(LEAGUE_STATS_SQL);
+      return result.recordset[0];
+    },
+    {
+      totalSeasons: 0, totalBowlers: 0, totalTeams: 0, totalGames: 0,
+      totalPins: 0, totalTurkeys: 0, games200Plus: 0, games300: 0,
+      series600Plus: 0, series700Plus: 0, perfectSeriesCount: 0,
+      highGame: 0, highSeries: 0,
+      bowlersWithTurkey: 0, bowlersWith200: 0, bowlersWith300: 0,
+      bowlersWith600: 0, bowlersWith700: 0, distinctChampionTeams: 0,
+    },
+    { sql: LEAGUE_STATS_SQL, dependsOn: ['scores'] },
+  );
+});

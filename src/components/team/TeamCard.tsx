@@ -14,7 +14,7 @@ export function TeamCard({ team }: Props) {
   return (
     <Link
       href={`/team/${team.slug}`}
-      className="group block bg-white border border-navy/10 rounded-lg p-5 hover:shadow-md hover:border-navy/20 transition-all"
+      className="group block bg-white border border-navy/10 rounded-lg shadow-sm p-5 hover:shadow-md hover:border-navy/20 transition-all"
     >
       <h3 className="font-heading text-lg text-navy group-hover:text-red-600 transition-colors mb-2">
         {isGhost ? (

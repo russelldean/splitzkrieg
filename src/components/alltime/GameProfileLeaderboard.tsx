@@ -39,7 +39,7 @@ export function GameProfileLeaderboard({ title, subtitle, bowlers, sortLabel, in
       <p className="font-body text-xs text-navy/60 -mt-2 mb-4">Bowlers with 27+ games</p>
       {note && <p className="font-body text-xs text-navy/65 -mt-1 mb-4 italic">{note}</p>}
 
-      <div className="bg-white rounded-lg border border-navy/10 overflow-hidden">
+      <div className="bg-white rounded-lg border border-navy/10 shadow-sm overflow-hidden">
         {/* Header */}
         <div className="hidden sm:grid grid-cols-[2.5rem_1fr_4.5rem_4.5rem_4.5rem_4rem] gap-x-2 px-4 py-2 border-b border-navy/10 text-xs text-navy/65 font-body">
           <span className="text-right">#</span>

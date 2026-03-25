@@ -48,7 +48,7 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
       </div>
 
       {/* Letter jump nav */}
-      <nav className="flex flex-wrap gap-1 mb-10 bg-white rounded-xl border border-navy/8 px-3 py-2.5" aria-label="Jump to letter">
+      <nav className="flex flex-wrap gap-1 mb-10 bg-white rounded-xl border border-navy/8 shadow-sm px-3 py-2.5" aria-label="Jump to letter">
         {letters.map((letter) => (
           <a
             key={letter}
@@ -65,7 +65,7 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
           <section
             key={letter}
             id={`letter-${letter}`}
-            className="bg-white rounded-xl border border-navy/8 overflow-hidden"
+            className="bg-white rounded-xl border border-navy/8 shadow-sm overflow-hidden"
           >
             <div className="px-5 py-3 border-b border-navy/6 bg-navy/[0.02]">
               <h2 className="font-heading text-xl text-navy">

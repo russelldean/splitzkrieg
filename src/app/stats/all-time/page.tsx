@@ -75,7 +75,7 @@ export default async function AllTimeStatsPage() {
             <h3 className="font-heading text-lg text-navy">Career Leaderboard</h3>
             <p className="font-body text-sm text-navy/65 mt-1">All-time career stats for every bowler in league history</p>
             {top3Games.length > 0 && (
-              <div className="mt-2 bg-white border border-navy/10 rounded-lg overflow-hidden">
+              <div className="mt-2 bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
                 {top3Games.map((row, i) => (
                   <div key={row.slug} className="flex items-center justify-between px-3 py-1.5 text-sm font-body border-b border-navy/5 last:border-b-0">
                     <span className="truncate">
@@ -101,7 +101,7 @@ export default async function AllTimeStatsPage() {
             <h3 className="font-heading text-lg text-navy">Team Championships</h3>
             <p className="font-body text-sm text-navy/65 mt-1">Playoff and championship history across all seasons</p>
             {latestPlayoff && (
-              <div className="mt-2 bg-white border border-navy/10 rounded-lg px-3 py-2">
+              <div className="mt-2 bg-white border border-navy/10 rounded-lg shadow-sm px-3 py-2">
                 <p className="font-body text-sm text-navy">
                   <span className="text-navy/65">Latest:</span>{' '}
                   <span className="font-semibold">{latestPlayoff.championHistoricName ?? latestPlayoff.championName}</span>
@@ -121,7 +121,7 @@ export default async function AllTimeStatsPage() {
             <h3 className="font-heading text-lg text-navy">Individual Champions</h3>
             <p className="font-body text-sm text-navy/65 mt-1">Scratch and handicap champions across all seasons</p>
             {latestIndividual && (
-              <div className="mt-2 bg-white border border-navy/10 rounded-lg px-3 py-2 font-body text-sm">
+              <div className="mt-2 bg-white border border-navy/10 rounded-lg shadow-sm px-3 py-2 font-body text-sm">
                 <p className="text-navy/65 mb-1">{latestIndividual.displayName}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-0.5">
                   {latestIndividual.mensScratchName && (
@@ -166,7 +166,7 @@ export default async function AllTimeStatsPage() {
             <h3 className="font-heading text-lg text-navy">High Game Record</h3>
             <p className="font-body text-sm text-navy/65 mt-1">How the all-time high scratch game record has progressed across seasons</p>
             {recordHolders.length > 0 && (
-              <div className="mt-2 bg-white border border-navy/10 rounded-lg px-3 py-2">
+              <div className="mt-2 bg-white border border-navy/10 rounded-lg shadow-sm px-3 py-2">
                 <p className="font-body text-sm text-navy">
                   <span className="text-navy/65">Current record:</span>{' '}
                   <span className="font-bold text-2xl tabular-nums">{currentRecordScore}</span>
@@ -190,7 +190,7 @@ export default async function AllTimeStatsPage() {
           <div>
             <h3 className="font-heading text-lg text-navy">League Night Profiles</h3>
             <p className="font-body text-sm text-navy/65 mt-1">Are you a Fast Starter, Middle Child, Late Bloomer, or Flatliner?</p>
-            <div className="mt-2 bg-white border border-navy/10 rounded-lg px-3 py-2">
+            <div className="mt-2 bg-white border border-navy/10 rounded-lg shadow-sm px-3 py-2">
               <div className="flex flex-wrap gap-x-4 gap-y-0.5 font-body text-sm">
                 {(Object.entries(archetypeCounts) as [string, number][]).map(([archetype, count]) => (
                   <span key={archetype} className="text-navy">

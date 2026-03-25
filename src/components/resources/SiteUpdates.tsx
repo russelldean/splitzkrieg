@@ -41,7 +41,7 @@ export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastU
           </span>
         )}
       </div>
-      <div className="bg-white rounded-lg border border-navy/10">
+      <div className="bg-white rounded-lg border border-navy/10 shadow-sm">
         <div className="divide-y divide-navy/5 max-h-80 overflow-y-auto">
           {updates.map((update, i) => (
             <UpdateRow key={i} update={update} />

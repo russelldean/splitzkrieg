@@ -74,11 +74,11 @@ export function TeamSeasonByseason({ seasons, bowlersBySeason, currentTeamName, 
           return (
             <div key={season.seasonID}>
               {showOldSeasonNote && (
-                <div className="px-4 py-3 mb-1 bg-navy/[0.02] border border-navy/10 rounded-lg text-sm font-body text-navy/65 italic">
+                <div className="px-4 py-3 mb-1 bg-navy/[0.02] border border-navy/10 rounded-lg shadow-sm text-sm font-body text-navy/65 italic">
                   Detailed team records from Season {firstOldSeasonNumeral ?? 'XXVI'} and earlier are coming soon. Individual bowler stats are shown below.
                 </div>
               )}
-              <div className="border border-navy/10 rounded-lg overflow-hidden">
+              <div className="border border-navy/10 rounded-lg shadow-sm overflow-hidden">
                 <button
                   onClick={() => toggleSeason(season.seasonID)}
                   className="w-full flex justify-between items-start px-4 py-3 bg-navy/[0.02] hover:bg-navy/[0.05] transition-colors"

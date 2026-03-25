@@ -3,7 +3,8 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { BackToHome } from '@/components/ui/BackToHome';
-import { getDataCompleteness } from '@/lib/queries/seasons/core';
+import { getDataCompleteness, getLeagueStats } from '@/lib/queries/seasons/core';
+
 
 export const metadata: Metadata = {
   title: 'About | Splitzkrieg',
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const data = await getDataCompleteness();
+  const [data, stats] = await Promise.all([
+    getDataCompleteness(),
+    getLeagueStats(),
+  ]);
 
   const weeksPct = data.totalNights > 0 ? ((data.nightsWithData / data.totalNights) * 100).toFixed(1) : '0';
 
@@ -114,10 +118,105 @@ export default async function AboutPage() {
           </p>
         </div>
 
+        {/* League By The Numbers */}
+        <div className="mt-12 pt-8 border-t border-navy/10">
+          <h2 className="font-heading text-2xl text-navy mb-6">By The Numbers</h2>
+
+          {/* Hero banner — the big numbers */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[
+              { value: stats.totalBowlers, label: 'Bowlers' },
+              { value: stats.totalGames, label: 'Games Bowled' },
+              { value: stats.totalPins, label: 'Pins Knocked Down' },
+            ].map(({ value, label }) => (
+              <div key={label} className="text-center py-4 px-2 bg-navy rounded-lg">
+                <div className="font-heading text-2xl sm:text-3xl md:text-4xl text-white tabular-nums">
+                  {Number(value).toLocaleString()}
+                </div>
+                <div className="text-xs sm:text-sm text-white/60 font-body mt-1">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Context row — seasons, teams, champions */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm text-center">
+              <div className="font-heading text-2xl sm:text-3xl text-navy tabular-nums">
+                {Number(stats.totalSeasons).toLocaleString()}
+              </div>
+              <div className="text-xs sm:text-sm text-navy/60 font-body mt-0.5">Seasons</div>
+            </div>
+            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm text-center">
+              <div className="font-heading text-2xl sm:text-3xl text-navy tabular-nums">
+                {Number(stats.totalTeams).toLocaleString()}
+              </div>
+              <div className="text-xs sm:text-sm text-navy/60 font-body mt-0.5">Teams</div>
+            </div>
+            <div className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm text-center">
+              <div className="font-heading text-2xl sm:text-3xl text-navy tabular-nums">
+                {Number(stats.distinctChampionTeams).toLocaleString()}
+              </div>
+              <div className="text-xs sm:text-sm text-navy/60 font-body mt-0.5">
+                Teams With Championship
+              </div>
+            </div>
+          </div>
+
+          {/* Achievement stats with donut rings */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[
+              { value: stats.totalTurkeys, label: 'Turkeys', bowlers: Number(stats.bowlersWithTurkey) },
+              { value: stats.games200Plus, label: '200+ Games', bowlers: Number(stats.bowlersWith200) },
+              { value: stats.series600Plus, label: '600+ Series', bowlers: Number(stats.bowlersWith600) },
+              { value: stats.games300 + 1, label: '300 Games', bowlers: Number(stats.bowlersWith300) + 1 },
+              { value: stats.series700Plus, label: '700+ Series', bowlers: Number(stats.bowlersWith700) },
+            ].map(({ value, label, bowlers }) => {
+              const total = Number(stats.totalBowlers);
+              const pct = total > 0 ? bowlers / total : 0;
+              // SVG donut parameters
+              const r = 20;
+              const circ = 2 * Math.PI * r;
+              const filled = circ * pct;
+              return (
+                <div key={label} className="bg-white border border-navy/10 rounded-lg p-3 shadow-sm flex items-center gap-3">
+                  {/* Donut ring */}
+                  <div className="shrink-0">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                      <circle cx="24" cy="24" r={r} fill="none" stroke="currentColor" strokeWidth="4" className="text-navy/10" />
+                      <circle
+                        cx="24" cy="24" r={r} fill="none"
+                        stroke="currentColor" strokeWidth="4"
+                        className="text-red-600"
+                        strokeDasharray={`${filled} ${circ - filled}`}
+                        strokeDashoffset={circ / 4}
+                        strokeLinecap="round"
+                      />
+                      <text x="24" y="24" textAnchor="middle" dominantBaseline="central" className="fill-navy font-heading text-[10px]">
+                        {pct * 100 < 1 && pct > 0
+                          ? `${(pct * 100).toFixed(1)}%`
+                          : `${Math.round(pct * 100)}%`}
+                      </text>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-heading text-xl sm:text-2xl text-navy tabular-nums">
+                      {Number(value).toLocaleString()}
+                    </div>
+                    <div className="text-xs sm:text-sm text-navy/60 font-body">{label}</div>
+                    <div className="text-[11px] text-navy/60 font-body tabular-nums">
+                      by {bowlers} bowlers
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Data Completeness */}
         <div className="mt-12 pt-8 border-t border-navy/10">
           <h2 className="font-heading text-2xl text-navy mb-4">Data Completeness</h2>
-          <div className="bg-navy/5 rounded-lg p-4 max-w-sm mb-6">
+          <div className="bg-white border border-navy/10 rounded-lg shadow-sm p-4 max-w-sm mb-6">
             <div className="text-3xl font-heading text-navy">{data.nightsWithData}<span className="text-lg text-navy/60">/{data.totalNights}</span></div>
             <div className="text-sm text-navy/65 mt-1">League nights with score data</div>
             <div className="mt-2 w-full bg-navy/10 rounded-full h-2">

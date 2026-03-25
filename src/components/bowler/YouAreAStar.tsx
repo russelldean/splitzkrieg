@@ -225,7 +225,7 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
       </span>
       <span className="block w-10 h-0.5 bg-red-600/40 mt-1.5" />
 
-      <div className="mt-4 bg-white rounded-lg border border-navy/10 divide-y divide-navy/5">
+      <div className="mt-4 bg-white rounded-lg border border-navy/10 shadow-sm divide-y divide-navy/5">
         {lines.map((line) => (
           <div key={line.label} className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">

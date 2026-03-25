@@ -123,7 +123,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
 
   if (phase === 'no-schedule') {
     return (
-      <div className="bg-white rounded-xl border border-navy/10 p-3 flex flex-col items-center justify-center text-center">
+      <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-3 flex flex-col items-center justify-center text-center">
         <p className="font-body text-navy/60 text-xs max-w-[220px] leading-relaxed">
           Next bowling night? Check back once someone figures out the schedule.
         </p>
@@ -226,7 +226,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
 
         {/* ── Results pending: post-bowling Monday 11 PM+ ── */}
         {phase === 'results' && (
-          <div className="bg-white rounded-xl border border-navy/10 px-4 py-3 flex items-center justify-center text-center">
+          <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-4 py-3 flex items-center justify-center text-center">
             <p className="font-body text-sm text-navy/60">
               Week {weekNumber || '?'} results pending - check back soon
             </p>
@@ -287,7 +287,7 @@ export function CountdownClock({ targetDate, weekNumber }: CountdownClockProps) 
 function CountdownShell() {
   return (
     <div
-      className="bg-white rounded-xl border border-navy/10 px-4 py-3 flex items-center justify-center"
+      className="bg-white rounded-xl border border-navy/10 shadow-sm px-4 py-3 flex items-center justify-center"
       suppressHydrationWarning
     />
   );
