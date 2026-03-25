@@ -37,6 +37,7 @@ import { GameLog } from '@/components/bowler/GameLog';
 import { YouAreAStar } from '@/components/bowler/YouAreAStar';
 import { GameProfile } from '@/components/bowler/GameProfile';
 import { MilestoneWatch } from '@/components/bowler/MilestoneWatch';
+import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { StickyContextBar } from '@/components/ui/StickyContextBar';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
@@ -198,29 +199,41 @@ export default async function BowlerPage({
           <LastWeekHighlight week={lastWeek} delta={weekDelta} />
         )}
 
-        <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} slug={slug} />
+        <TrackVisibility section="personal-records" page="bowler-profile">
+          <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} slug={slug} />
+        </TrackVisibility>
 
         {careerSummary && (
-          <MilestoneWatch milestones={computePersonalMilestones(careerSummary)} />
+          <TrackVisibility section="milestone-watch" page="bowler-profile">
+            <MilestoneWatch milestones={computePersonalMilestones(careerSummary)} />
+          </TrackVisibility>
+        )}
+
+        <TrackVisibility section="you-are-a-star" page="bowler-profile">
+          <YouAreAStar
+            stats={starStats}
+            slug={slug}
+            inTicker={[...tickerItems, ...milestoneTickerItems(leagueMilestones)].some(t => t.href === `/bowler/${slug}`)}
+            // EASTER EGG: Mike DePasquale 300 photo, Harper Gordek photo
+            easterEgg={slug === 'mike-depasquale' ? { src: '/village-lanes-mp300.jpg', alt: 'Mike\'s 300 - Perfect Game at Village Lanes', width: 4032, height: 3024 } : slug === 'harper-gordek' ? { src: '/IMG_7806.jpeg', alt: 'Harper Gordek', width: 2016, height: 1512 } : undefined}
+          />
+        </TrackVisibility>
+
+        {gameProfile && (
+          <TrackVisibility section="game-profile" page="bowler-profile">
+            <GameProfile profile={gameProfile} leagueAvgs={leagueGameAvgs} />
+          </TrackVisibility>
         )}
 
         {rollingAvgHistory.length >= 6 && (
-          <AverageProgressionChart history={rollingAvgHistory} bowlerName={bowler.bowlerName} />
+          <TrackVisibility section="average-progression" page="bowler-profile">
+            <AverageProgressionChart history={rollingAvgHistory} bowlerName={bowler.bowlerName} />
+          </TrackVisibility>
         )}
 
         <SeasonStatsTable seasons={seasonStats} />
 
         <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} patches={patches} />
-
-        <YouAreAStar
-          stats={starStats}
-          slug={slug}
-          inTicker={[...tickerItems, ...milestoneTickerItems(leagueMilestones)].some(t => t.href === `/bowler/${slug}`)}
-          // EASTER EGG: Mike DePasquale 300 photo, Harper Gordek photo
-          easterEgg={slug === 'mike-depasquale' ? { src: '/village-lanes-mp300.jpg', alt: 'Mike\'s 300 - Perfect Game at Village Lanes', width: 4032, height: 3024 } : slug === 'harper-gordek' ? { src: '/IMG_7806.jpeg', alt: 'Harper Gordek', width: 2016, height: 1512 } : undefined}
-        />
-
-        {gameProfile && <GameProfile profile={gameProfile} leagueAvgs={leagueGameAvgs} />}
       </div>
 
       <TrailNav current="/bowlers" seasonSlug={currentSlug} />
