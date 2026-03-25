@@ -1,14 +1,5 @@
 import Link from 'next/link';
-
-interface StandingsRow {
-  teamName: string;
-  teamSlug: string | null;
-  wins: number;
-  losses: number;
-  ties: number;
-  totalPoints: number;
-  divisionName: string | null;
-}
+import type { StandingsRow } from '@/lib/queries';
 
 interface Props {
   standings: StandingsRow[];
@@ -46,8 +37,8 @@ export function CompactStandingsPreview({ standings, weekNumber }: Props) {
               )}
             </div>
             <div className="flex items-center gap-3 text-navy/70 tabular-nums">
-              <span>{row.wins}-{row.losses}{row.ties > 0 ? `-${row.ties}` : ''}</span>
-              <span className="font-semibold text-navy">{row.totalPoints} pts</span>
+              <span>{row.wins}W / {row.xp}XP</span>
+              <span className="font-semibold text-navy">{row.totalPts} pts</span>
             </div>
           </div>
         ))}

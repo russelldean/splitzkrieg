@@ -1,14 +1,15 @@
 /**
  * All-in-one blog recap component.
- * Condensed version of the weekly page:
- *   1. Awards (Bowler/Team of Week)
- *   2. Match scoreboard
- *   3. Compact side-by-side division standings
- *   4. Season leaderboards (men's/women's scratch avg, hcp avg -- through week N)
- *   5. Milestones & Personal Bests
- *   6. Keep Exploring section
+ * Condensed-headline format with inline exit ramps:
+ *   1. RecapCallout (new feature announcement, optional)
+ *   2. Awards (Bowler/Team of Week, unchanged)
+ *   3. Weekly Results (condensed summary + ExitRamp)
+ *   4. Standings (CompactStandingsPreview + ExitRamp)
+ *   5. Leaderboards (CompactLeaderboardPreview + ExitRamp)
+ *   6. Milestones & Personal Bests (WeekStats records + ExitRamp)
+ *   7. DiscoverySection (replaces Keep Exploring)
+ *   8. Next League Night
  */
-import Link from 'next/link';
 import {
   getSeasonBySlug,
   getSeasonWeeklyScores,
@@ -17,51 +18,22 @@ import {
   getSeasonStandings,
   getWeekCareerMilestones,
 } from '@/lib/queries';
-import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekStats } from '@/components/season/WeekStats';
-import { Standings } from '@/components/season/Standings';
-import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
-
-function SectionHeader({ title, href, linkText }: { title: string; href: string; linkText: string }) {
-  return (
-    <div className="mb-3">
-      <h3 className="font-heading text-lg text-navy/80 mb-1">{title}</h3>
-      <Link
-        href={href}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy/[0.06] font-body text-sm font-medium text-navy/80 hover:bg-red-600 hover:text-white transition-colors"
-      >
-        {linkText}
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-      </Link>
-    </div>
-  );
-}
-
-function ExploreLink({ href, title, description }: { href: string; title: string; description: string }) {
-  return (
-    <Link
-      href={href}
-      className="group block bg-white border border-navy/10 rounded-lg p-3 shadow-sm hover:shadow-md hover:border-red-600/30 transition-all"
-    >
-      <span className="font-heading text-base text-navy group-hover:text-red-600 transition-colors">
-        {title}
-      </span>
-      <span className="block font-body text-sm text-navy/65 mt-0.5 leading-snug">
-        {description}
-      </span>
-    </Link>
-  );
-}
+import { ExitRamp } from '@/components/tracking/ExitRamp';
+import { TrackVisibility } from '@/components/tracking/TrackVisibility';
+import { RecapCallout } from '@/components/blog/RecapCallout';
+import { DiscoverySection } from '@/components/blog/DiscoverySection';
+import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
+import { CompactLeaderboardPreview } from '@/components/blog/CompactLeaderboardPreview';
 
 interface WeekRecapProps {
   season: string;
   seasonSlug: string;
   week: number | string;
+  callout?: { headline: string; description: string; href?: string; linkText?: string };
 }
 
-export async function WeekRecap({ season, seasonSlug, week }: WeekRecapProps) {
+export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecapProps) {
   const weekNum = typeof week === 'string' ? parseInt(week, 10) : week;
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData || isNaN(weekNum)) return null;
@@ -75,12 +47,21 @@ export async function WeekRecap({ season, seasonSlug, week }: WeekRecapProps) {
   ]);
 
   const weekScores = allScores.filter(s => s.week === weekNum);
-  const weekSchedule = allSchedule.filter(s => s.week === weekNum);
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
-  const hasDivisions = standings.some(row => row.divisionName !== null);
+
+  // Compute condensed results summary
+  const matchCount = weekMatchResults.length;
+  const sweepCount = weekMatchResults.filter(r => {
+    const t1Total = (r.team1GamePts ?? 0) + (r.team1BonusPts ?? 0);
+    const t2Total = (r.team2GamePts ?? 0) + (r.team2BonusPts ?? 0);
+    return t1Total === 4 || t2Total === 4;
+  }).length;
 
   return (
     <div className="week-recap space-y-6">
+      {/* New Feature Callout */}
+      <RecapCallout callout={callout} />
+
       {/* Bowler & Team of the Week */}
       <WeekStats
         weekScores={weekScores}
@@ -91,83 +72,66 @@ export async function WeekRecap({ season, seasonSlug, week }: WeekRecapProps) {
         compact
       />
 
-      {/* Weekly Results */}
-      <div>
-        <SectionHeader title="Weekly Results" href={`/week/${seasonSlug}/${weekNum}`} linkText="See full box scores and head-to-head results" />
-        <WeekMatchSummary
-          weekScores={weekScores}
-          schedule={weekSchedule}
-          matchResults={weekMatchResults}
-          week={weekNum}
-          compact
-        />
-      </div>
-
-      {/* Standings */}
-      <div>
-        <SectionHeader title="Standings" href={`/season/${seasonSlug}`} linkText="Full season page with team averages and XP breakdown" />
-        <Standings
-          standings={standings}
-          hasDivisions={hasDivisions}
-          weekNumber={weekNum}
-          seasonID={seasonData.seasonID}
-          compact
-        />
-      </div>
-
-      {/* Leaderboards */}
-      <div>
-        <SectionHeader title="Leaderboards" href={`/stats/${seasonSlug}`} linkText="Sortable stats for every bowler this season" />
-        <LeaderboardSnapshot seasonSlug={seasonSlug} week={weekNum} />
-      </div>
-
-      {/* Milestones & Personal Bests */}
-      <div>
-        <SectionHeader title="Milestones & Personal Bests" href="/milestones" linkText="See who's approaching their next career milestone" />
-        <WeekStats
-          weekScores={weekScores}
-          matchResults={weekMatchResults}
-          careerMilestones={careerMilestones}
-          only={['records']}
-          bare
-          compact
-        />
-      </div>
-
-      {/* Keep Exploring */}
-      <div>
-        <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mb-6" />
-        <h3 className="font-heading text-lg text-navy/80 mb-1">Keep Exploring</h3>
-        <p className="font-body text-sm text-navy/65 mb-3">
-          There's a lot hiding in here. A few places to start:
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <ExploreLink
-            href="/stats/all-time/game-profiles"
-            title="Your Game Profile"
-            description="Are you a Fast Starter, Late Bloomer, or Flatliner? Find your archetype."
-          />
-          <ExploreLink
-            href="/stats/all-time"
-            title="All-Time Leaderboards"
-            description="Career stats across all 35 seasons. Sort by any column and find your rank."
-          />
-          <ExploreLink
-            href={`/season/${seasonSlug}`}
-            title="Your Team's Page"
-            description="Full roster history, head-to-head records, and every teammate you've ever had."
-          />
-          <ExploreLink
-            href="/milestones"
-            title="Milestone Tracker"
-            description="Who just hit a career landmark? Who's one big night away from theirs?"
-          />
+      {/* Weekly Results (condensed) */}
+      <TrackVisibility section="recap-results" page="blog-recap">
+        <div>
+          <h3 className="font-heading text-lg text-navy/80 mb-1">Weekly Results</h3>
+          <p className="font-body text-sm text-navy/65 mb-2">
+            {matchCount} match{matchCount !== 1 ? 'es' : ''} bowled.{sweepCount > 0 ? ` ${sweepCount} sweep${sweepCount !== 1 ? 's' : ''}.` : ''}
+          </p>
+          <ExitRamp href={`/week/${seasonSlug}/${weekNum}`} section="results" linkText="Full match results" />
         </div>
-      </div>
+      </TrackVisibility>
+
+      {/* Standings (condensed) */}
+      <TrackVisibility section="recap-standings" page="blog-recap">
+        <div>
+          <h3 className="font-heading text-lg text-navy/80 mb-1">Standings</h3>
+          <CompactStandingsPreview standings={standings} weekNumber={weekNum} />
+          <div className="mt-2">
+            <ExitRamp href={`/season/${seasonSlug}`} section="standings" linkText="Full standings and XP breakdown" />
+          </div>
+        </div>
+      </TrackVisibility>
+
+      {/* Leaderboards (condensed) */}
+      <TrackVisibility section="recap-leaderboards" page="blog-recap">
+        <div>
+          <h3 className="font-heading text-lg text-navy/80 mb-1">Leaderboards</h3>
+          <CompactLeaderboardPreview seasonSlug={seasonSlug} week={weekNum} />
+          <div className="mt-2">
+            <ExitRamp href={`/stats/${seasonSlug}`} section="leaderboards" linkText="All season leaderboards" />
+          </div>
+        </div>
+      </TrackVisibility>
+
+      {/* Milestones & Personal Bests (condensed) */}
+      <TrackVisibility section="recap-milestones" page="blog-recap">
+        <div>
+          <h3 className="font-heading text-lg text-navy/80 mb-1">Milestones & Personal Bests</h3>
+          <WeekStats
+            weekScores={weekScores}
+            matchResults={weekMatchResults}
+            careerMilestones={careerMilestones}
+            only={['records']}
+            bare
+            compact
+          />
+          <div className="mt-2">
+            <ExitRamp href="/milestones" section="milestones" linkText="All milestones and personal bests" />
+          </div>
+        </div>
+      </TrackVisibility>
+
+      {/* Discover more of the site */}
+      <TrackVisibility section="recap-discovery" page="blog-recap">
+        <DiscoverySection seasonSlug={seasonSlug} />
+      </TrackVisibility>
 
       {/* Next League Night */}
       {(() => {
-        const nextWeekSchedule = allSchedule.find(s => s.week === weekNum + 1);
+        const allScheduleData = allSchedule;
+        const nextWeekSchedule = allScheduleData.find(s => s.week === weekNum + 1);
         if (!nextWeekSchedule?.matchDate) return null;
         const date = new Date(nextWeekSchedule.matchDate);
         const formatted = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
