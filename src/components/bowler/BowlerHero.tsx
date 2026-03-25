@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import type { BowlerCareerSummary } from '@/lib/queries';
+import type { BowlerCareerSummary, GameLogWeek } from '@/lib/queries';
+import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { ShareButton } from '@/components/bowler/ShareButton';
 import { TeamBreakdown, type TeamStat } from '@/components/bowler/TeamBreakdown';
 import { BowlerOfTheWeekRibbon } from '@/components/bowler/BowlerOfTheWeekRibbon';
@@ -15,9 +16,10 @@ interface Props {
   isBowlerOfTheWeek?: boolean;
   currentTeam?: { name: string; slug: string | null } | null;
   slug?: string;
+  lastWeek?: GameLogWeek | null;
 }
 
-export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUrl, teams, isBowlerOfTheWeek, currentTeam, slug }: Props) {
+export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUrl, teams, isBowlerOfTheWeek, currentTeam, slug, lastWeek }: Props) {
   const name = careerSummary?.bowlerName ?? 'Unknown Bowler';
 
   return (
@@ -66,8 +68,26 @@ export function BowlerHero({ careerSummary, currentAvg, currentAvgDelta, shareUr
           value={careerSummary?.seasonsPlayed ?? null}
         />
         <TeamBreakdown teams={teams} />
+        {lastWeek && (
+          <LastWeekPill week={lastWeek} />
+        )}
       </div>
     </section>
+  );
+}
+
+function LastWeekPill({ week }: { week: GameLogWeek }) {
+  const games = [week.game1, week.game2, week.game3].filter(
+    (g): g is number => g !== null && g > 0
+  );
+  const scores = games.join(' · ');
+  const series = week.scratchSeries;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-navy/5 rounded-full text-sm font-body text-navy">
+      <span className="text-navy/65">Last Week</span>
+      <span className="font-bold font-heading tabular-nums">{scores}{series != null ? ` = ${series}` : ''}</span>
+    </span>
   );
 }
 
@@ -79,7 +99,7 @@ function StatPill({ label, value, delta }: { label: string; value: string | numb
       <span className="text-navy/65">{label}</span>
       <span className="font-bold font-heading">{display}</span>
       {delta && (
-        <span className={`text-xs ${delta.startsWith('-') ? 'text-red-500' : 'text-green-600'}`}>
+        <span className={`text-xs font-semibold ${delta.startsWith('-') ? 'text-red-500' : 'text-green-600'}`}>
           {delta}
         </span>
       )}

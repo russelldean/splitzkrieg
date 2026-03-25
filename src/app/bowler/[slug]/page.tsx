@@ -29,7 +29,6 @@ import {
 import { getBowlerGameProfile, getLeagueGameAvgs } from '@/lib/queries/alltime';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
-import { LastWeekHighlight } from '@/components/bowler/LastWeekHighlight';
 import type { WeekDelta } from '@/components/bowler/LastWeekHighlight';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChart } from '@/components/bowler/AverageProgressionChart';
@@ -192,12 +191,10 @@ export default async function BowlerPage({
         isBowlerOfTheWeek={isBowlerOfTheWeek}
         currentTeam={latestSeason ? { name: latestSeason.teamName ?? 'Unknown', slug: latestSeason.teamSlug } : null}
         slug={slug}
+        lastWeek={lastWeek}
       />
 
       <div className="mt-8 space-y-8">
-        {lastWeek && weekDelta && (
-          <LastWeekHighlight week={lastWeek} delta={weekDelta} />
-        )}
 
         <TrackVisibility section="personal-records" page="bowler-profile">
           <PersonalRecordsPanel careerSummary={careerSummary} delta={weekDelta} slug={slug} />
