@@ -45,6 +45,9 @@ yarn-error.log*
 next-env.d.ts
 debug-screenshots/
 
+# posthog scripts (contain API key)
+scripts/posthog-*.mjs
+
 # audio source files (production uses .mp3/.webm)
 public/sounds/*.wav
 public/sounds/parts/
