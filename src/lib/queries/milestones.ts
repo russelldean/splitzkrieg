@@ -251,7 +251,7 @@ export async function getWeekCareerMilestones(seasonID: number, week: number): P
       }));
     },
     [],
-    { sql: WEEK_MILESTONES_SQL + params },
+    { sql: WEEK_MILESTONES_SQL + params, dependsOn: ['scores'] },
   );
 }
 

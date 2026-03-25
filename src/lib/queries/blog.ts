@@ -303,14 +303,8 @@ export async function getMatchResultsSummary(seasonID: number, week: number): Pr
 }
 
 // ── Standings Snapshot ──────────────────────────────────────
-
-export interface StandingsRow {
-  teamName: string;
-  teamSlug: string;
-  totalPts: number;
-  rank: number;
-  prevRank: number | null;
-}
+// Returns standings frozen at a given week, with division/wins/xp
+// so CompactStandingsPreview can render playoff shading.
 
 const STANDINGS_SNAPSHOT_SQL = `
   WITH teamPtsUnpivot AS (
@@ -330,52 +324,41 @@ const STANDINGS_SNAPSHOT_SQL = `
     JOIN schedule sch ON mr.scheduleID = sch.scheduleID
     WHERE sch.seasonID = @seasonID
   ),
-  currentPts AS (
-    SELECT teamID, SUM(gamePts) + SUM(bonusPts) AS totalPts
+  teamWinsXP AS (
+    SELECT
+      teamID,
+      SUM(gamePts)  AS wins,
+      SUM(bonusPts) AS xp
     FROM teamPtsUnpivot
     WHERE week <= @week
     GROUP BY teamID
-  ),
-  prevPts AS (
-    SELECT teamID, SUM(gamePts) + SUM(bonusPts) AS totalPts
-    FROM teamPtsUnpivot
-    WHERE week <= @week - 1
-    GROUP BY teamID
-  ),
-  currentRanked AS (
-    SELECT teamID, totalPts,
-      CAST(RANK() OVER (ORDER BY totalPts DESC) AS INT) AS rank
-    FROM currentPts
-  ),
-  prevRanked AS (
-    SELECT teamID,
-      CAST(RANK() OVER (ORDER BY totalPts DESC) AS INT) AS rank
-    FROM prevPts
   )
   SELECT
-    COALESCE(tnh.alternateName, t.teamName) AS teamName,
+    t.teamID,
+    COALESCE(tnh.teamName, t.teamName) AS teamName,
     t.slug AS teamSlug,
-    cr.totalPts,
-    cr.rank,
-    pr.rank AS prevRank
-  FROM currentRanked cr
-  JOIN teams t ON cr.teamID = t.teamID
-  LEFT JOIN prevRanked pr ON pr.teamID = cr.teamID
-  LEFT JOIN (
-    SELECT teamID, teamName AS alternateName
-    FROM teamNameHistory
-    WHERE id IN (SELECT MAX(id) FROM teamNameHistory GROUP BY teamID)
-  ) tnh ON tnh.teamID = cr.teamID
-  ORDER BY cr.rank
+    sd.divisionName,
+    ISNULL(wx.wins, 0)                 AS wins,
+    ISNULL(wx.xp, 0)                   AS xp,
+    ISNULL(wx.wins, 0) + ISNULL(wx.xp, 0) AS totalPts
+  FROM teamWinsXP wx
+  JOIN teams t ON wx.teamID = t.teamID
+  LEFT JOIN seasonDivisions sd
+    ON  sd.seasonID = @seasonID
+    AND sd.teamID   = wx.teamID
+  LEFT JOIN teamNameHistory tnh
+    ON  tnh.seasonID = @seasonID
+    AND tnh.teamID   = wx.teamID
+  ORDER BY sd.divisionName, totalPts DESC, wins DESC
 `;
 
-export async function getStandingsSnapshot(seasonID: number, week: number): Promise<StandingsRow[]> {
+export async function getStandingsSnapshot(seasonID: number, week: number): Promise<import('./seasons').StandingsRow[]> {
   const params = JSON.stringify({ seasonID, week });
   return cachedQuery('getStandingsSnapshot', async () => {
     const db = await getDb();
     const result = await db.request()
       .input('seasonID', seasonID).input('week', week)
-      .query<StandingsRow>(STANDINGS_SNAPSHOT_SQL);
+      .query<import('./seasons').StandingsRow>(STANDINGS_SNAPSHOT_SQL);
     return result.recordset;
   }, [], { sql: STANDINGS_SNAPSHOT_SQL + params });
 }

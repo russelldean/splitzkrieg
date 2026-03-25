@@ -81,17 +81,17 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
         <div className="mb-6">
           {!bare && <h3 className={compact ? "font-heading text-lg text-navy/80 mb-2" : "font-heading text-lg text-navy mb-3"}>Milestones &amp; Personal Bests</h3>}
           {careerMilestones.length > 0 && (
-            <div className={`bg-white border border-navy/10 border-l-4 border-l-amber-500/60 rounded-lg shadow-sm mb-4 ${compact ? 'overflow-hidden' : 'p-3'}`}>
-              <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>Career Milestones</h3>
+            <div className={`bg-amber-50/50 border border-amber-300/60 border-l-4 border-l-amber-500 rounded-lg shadow-sm mb-4 ${compact ? 'overflow-hidden' : 'p-3'}`}>
+              <h3 className={compact ? "px-3 py-1 bg-amber-100/40 border-b border-amber-200/60 font-heading text-sm text-amber-800 leading-tight" : "font-heading text-sm text-amber-800 uppercase tracking-wider mb-1.5"}>&#11088; Career Milestones</h3>
               <div className={compact ? "px-3 py-1" : ""}>
               {careerMilestones.map((m, i) => (
                 <div key={`${m.slug}-${m.category}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                   <span className="truncate mr-2">
-                    <Link href={`/bowler/${m.slug}`} className="text-navy hover:text-red-600 transition-colors font-bold">
+                    <Link href={`/bowler/${m.slug}`} className="text-navy hover:text-red-600 transition-colors">
                       {m.bowlerName}
                     </Link>
                   </span>
-                  <span className="tabular-nums text-navy/80 shrink-0 font-semibold">
+                  <span className="tabular-nums text-navy/60 shrink-0">
                     {m.threshold.toLocaleString()} {m.categoryLabel}
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
               </div>
             </div>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {debuts.length > 0 && (
               <div className={`bg-white border border-navy/10 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
                 <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>Splitzkrieg Debuts</h3>
@@ -115,8 +115,8 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
               </div>
             )}
             {allTimeHighGames.length > 0 && (
-              <div className={`bg-white border border-navy/10 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
-                <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>All-Time High Game</h3>
+              <div className={`bg-amber-50/50 border border-amber-300/60 border-l-4 border-l-amber-500 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
+                <h3 className={compact ? "px-3 py-1 bg-amber-100/40 border-b border-amber-200/60 font-heading text-sm text-amber-800 leading-tight" : "font-heading text-sm text-amber-800 uppercase tracking-wider mb-1.5"}>&#11088; All-Time High Game</h3>
                 <div className={compact ? "px-3 py-1" : ""}>
                 {allTimeHighGames.map((b, i) => (
                   <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
@@ -133,8 +133,8 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
               </div>
             )}
             {allTimeHighSeries.length > 0 && (
-              <div className={`bg-white border border-navy/10 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
-                <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>All-Time High Series</h3>
+              <div className={`bg-amber-50/50 border border-amber-300/60 border-l-4 border-l-amber-500 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
+                <h3 className={compact ? "px-3 py-1 bg-amber-100/40 border-b border-amber-200/60 font-heading text-sm text-amber-800 leading-tight" : "font-heading text-sm text-amber-800 uppercase tracking-wider mb-1.5"}>&#11088; All-Time High Series</h3>
                 <div className={compact ? "px-3 py-1" : ""}>
                 {allTimeHighSeries.map((b, i) => (
                   <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">

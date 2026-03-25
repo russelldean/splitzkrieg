@@ -15,10 +15,9 @@ import {
   getSeasonWeeklyScores,
   getSeasonSchedule,
   getSeasonMatchResults,
-  getSeasonStandings,
   getWeekCareerMilestones,
 } from '@/lib/queries';
-import { getMatchResultsSummary } from '@/lib/queries/blog';
+import { getMatchResultsSummary, getStandingsSnapshot } from '@/lib/queries/blog';
 import { WeekStats } from '@/components/season/WeekStats';
 import { ExitRamp } from '@/components/tracking/ExitRamp';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
@@ -45,7 +44,7 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
     getSeasonWeeklyScores(seasonData.seasonID),
     getSeasonSchedule(seasonData.seasonID),
     getSeasonMatchResults(seasonData.seasonID),
-    getSeasonStandings(seasonData.seasonID),
+    getStandingsSnapshot(seasonData.seasonID, weekNum),
     getWeekCareerMilestones(seasonData.seasonID, weekNum),
     getSiteUpdates(),
     getMatchResultsSummary(seasonData.seasonID, weekNum),

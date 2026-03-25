@@ -1,5 +1,57 @@
 import Link from 'next/link';
-import { getSeasonIDByRoman, getStandingsSnapshot } from '@/lib/queries/blog';
+import { getSeasonIDByRoman } from '@/lib/queries/blog';
+import { getDb, cachedQuery } from '@/lib/db';
+
+interface SnapshotRow {
+  teamName: string;
+  teamSlug: string;
+  totalPts: number;
+  rank: number;
+  prevRank: number | null;
+}
+
+const RANKED_SNAPSHOT_SQL = `
+  WITH teamPtsUnpivot AS (
+    SELECT sch.team1ID AS teamID, mr.team1GamePts AS gamePts, mr.team1BonusPts AS bonusPts, sch.week
+    FROM matchResults mr JOIN schedule sch ON mr.scheduleID = sch.scheduleID WHERE sch.seasonID = @seasonID
+    UNION ALL
+    SELECT sch.team2ID, mr.team2GamePts, mr.team2BonusPts, sch.week
+    FROM matchResults mr JOIN schedule sch ON mr.scheduleID = sch.scheduleID WHERE sch.seasonID = @seasonID
+  ),
+  currentPts AS (
+    SELECT teamID, SUM(gamePts) + SUM(bonusPts) AS totalPts FROM teamPtsUnpivot WHERE week <= @week GROUP BY teamID
+  ),
+  prevPts AS (
+    SELECT teamID, SUM(gamePts) + SUM(bonusPts) AS totalPts FROM teamPtsUnpivot WHERE week <= @week - 1 GROUP BY teamID
+  ),
+  currentRanked AS (
+    SELECT teamID, totalPts, CAST(RANK() OVER (ORDER BY totalPts DESC) AS INT) AS rank FROM currentPts
+  ),
+  prevRanked AS (
+    SELECT teamID, CAST(RANK() OVER (ORDER BY totalPts DESC) AS INT) AS rank FROM prevPts
+  )
+  SELECT
+    COALESCE(tnh.teamName, t.teamName) AS teamName,
+    t.slug AS teamSlug,
+    cr.totalPts, cr.rank, pr.rank AS prevRank
+  FROM currentRanked cr
+  JOIN teams t ON cr.teamID = t.teamID
+  LEFT JOIN prevRanked pr ON pr.teamID = cr.teamID
+  LEFT JOIN teamNameHistory tnh ON tnh.teamID = cr.teamID
+    AND tnh.id = (SELECT MAX(id) FROM teamNameHistory WHERE teamID = cr.teamID)
+  ORDER BY cr.rank
+`;
+
+async function getRankedSnapshot(seasonID: number, week: number): Promise<SnapshotRow[]> {
+  const params = JSON.stringify({ seasonID, week });
+  return cachedQuery('getRankedStandingsSnapshot', async () => {
+    const db = await getDb();
+    const result = await db.request()
+      .input('seasonID', seasonID).input('week', week)
+      .query<SnapshotRow>(RANKED_SNAPSHOT_SQL);
+    return result.recordset;
+  }, [], { sql: RANKED_SNAPSHOT_SQL + params });
+}
 
 interface StandingsSnapshotProps {
   season: string;
@@ -8,10 +60,9 @@ interface StandingsSnapshotProps {
 
 function MovementArrow({ current, previous }: { current: number; previous: number | null }) {
   if (previous === null) {
-    // First week — no prior data
     return <span className="text-navy/30">--</span>;
   }
-  const diff = previous - current; // positive = moved up
+  const diff = previous - current;
   if (diff > 0) {
     return (
       <span className="text-green-600 font-medium flex items-center gap-0.5">
@@ -40,7 +91,7 @@ export async function StandingsSnapshot({ season, week }: StandingsSnapshotProps
   const seasonID = await getSeasonIDByRoman(season);
   if (!seasonID || isNaN(weekNum)) return null;
 
-  const standings = await getStandingsSnapshot(seasonID, weekNum);
+  const standings = await getRankedSnapshot(seasonID, weekNum);
 
   if (standings.length === 0) return null;
 
