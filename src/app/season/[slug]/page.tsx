@@ -26,6 +26,7 @@ import {
   getCurrentSeasonID,
 } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
 import { SeasonHighlights } from '@/components/season/SeasonHighlights';
@@ -162,6 +163,7 @@ export default async function SeasonPage({
         </p>
       </div>
 
+      <NextStopNudge currentPage="season" seasonSlug={slug} />
       <TrailNav current="/seasons" seasonSlug={slug} seasonRoman={season.romanNumeral} />
     </main>
   );

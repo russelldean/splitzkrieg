@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { getLeagueMilestones, type LeagueMilestone } from '@/lib/queries';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
 export const metadata: Metadata = {
@@ -162,6 +163,7 @@ export default async function MilestonesPage() {
         </p>
       )}
 
+      <NextStopNudge currentPage="milestones" />
       <TrailNav current="/stats" />
     </main>
   );

@@ -19,6 +19,7 @@ import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
 import { SeasonNav } from '@/components/season/SeasonNav';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { FullStatsTable } from '@/components/season/FullStatsTable';
 import { strikeX } from '@/components/ui/StrikeX';
 
@@ -186,6 +187,7 @@ export default async function SeasonStatsPage({
         </div>
       </div>
 
+      <NextStopNudge currentPage="stats" />
       <TrailNav current="/stats" seasonSlug={slug} seasonRoman={season.romanNumeral} />
     </main>
   );

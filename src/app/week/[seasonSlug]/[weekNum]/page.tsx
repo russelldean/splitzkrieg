@@ -24,6 +24,7 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
+import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { getPostForWeek } from '@/lib/blog';
 
@@ -269,6 +270,7 @@ export default async function WeekPage({
         </>
       )}
 
+      <NextStopNudge currentPage="week" seasonSlug={seasonSlug} />
       <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} />
     </main>
   );
