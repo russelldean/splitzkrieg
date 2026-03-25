@@ -55,8 +55,8 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
   const hasDivisions = standings.some(r => r.divisionName !== null);
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm h-full flex flex-col overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-amber-50 border-b border-amber-200">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-6 h-full flex flex-col">
+      <div className="flex items-baseline justify-between mb-3">
         <h3 className="font-heading text-lg text-navy">Standings</h3>
         <Link
           href={`/season/${seasonSlug}`}
@@ -65,7 +65,6 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
           Full standings &rarr;
         </Link>
       </div>
-      <div className="p-6 flex-1 flex flex-col">
 
       <div className="overflow-x-auto -mx-2 flex-1">
         {hasDivisions ? (
@@ -87,7 +86,6 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
         ) : (
           <StandingsGroup rows={standings} />
         )}
-      </div>
       </div>
     </div>
   );
