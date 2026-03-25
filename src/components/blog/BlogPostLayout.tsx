@@ -121,10 +121,10 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
         </article>
 
         {/* Divider */}
-        <div className="mt-14 mb-8 border-t-2 border-navy/20" />
+        <div className="mt-14 border-t-2 border-navy/20" />
 
         {/* Prev/next navigation */}
-        <nav className="flex justify-between gap-4">
+        <nav className="flex justify-between gap-4 my-8">
           {next ? (
             <Link
               href={`/blog/${next.slug}`}
@@ -186,7 +186,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
 
         {updates && updates.length > 0 && (
           <>
-            <div className="mt-14 mb-8 border-t-2 border-navy/20" />
+            <div className="border-t-2 border-navy/20 mb-8" />
             <section>
               <SiteUpdates updates={updates} lastUpdated={updates[0].date} />
             </section>
