@@ -5,12 +5,12 @@ milestone_name: milestone
 current_phase: 12
 current_plan: 1
 status: executing
-last_updated: "2026-03-25T00:47:25.904Z"
+last_updated: "2026-03-25T00:50:06.347Z"
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 21
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Session State
@@ -56,6 +56,7 @@ See: .planning/PROJECT.md
 - [Phase 11]: CSS @keyframes confetti with no external library dependency
 - [Phase 12]: ExitRamp uses default className with override via prop for flexibility
 - [Phase 12]: TrackVisibility wraps server-rendered content as client boundary with no visual treatment
+- [Phase 12]: NextStopNudge uses fallback paths when seasonSlug absent
 
 ### Roadmap Evolution
 
