@@ -43,14 +43,14 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 shadow-sm min-h-[180px] overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-navy">
-        <h3 className="font-heading text-lg text-white">
-          Season {snapshot.romanNumeral}
-          <span className="ml-2 text-sm font-body text-white/50">Week {snapshot.weekNumber}</span>
+      <div className="flex items-baseline justify-between px-6 py-3 bg-navy/[0.06] border-b border-navy/10">
+        <h3 className="font-heading text-lg text-navy">
+          Season {strikeX(snapshot.romanNumeral)}
+          <span className="ml-2 text-sm font-body text-navy/50">Week {snapshot.weekNumber}</span>
         </h3>
         <Link
           href={`/stats/${snapshot.slug}`}
-          className="text-xs font-body text-white/60 hover:text-white transition-colors"
+          className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           Full leaderboards &rarr;
         </Link>
