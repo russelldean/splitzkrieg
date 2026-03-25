@@ -211,48 +211,36 @@ function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, le
 }
 
 export function GameProfile({ profile, leagueAvgs }: Props) {
-  const [revealed, setRevealed] = useState(false);
-  const [animateKey, setAnimateKey] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const style = ARCHETYPE_STYLE[profile.archetype] ?? ARCHETYPE_STYLE['Flatliner'];
   const isFlatliner = profile.archetype === 'Flatliner';
 
-  function handleReveal() {
-    if (!revealed) {
-      setRevealed(true);
-      setAnimateKey(k => k + 1);
-    } else {
-      setRevealed(false);
-    }
-  }
-
   return (
-    <section>
-      <button
-        onClick={handleReveal}
-        className="flex items-center gap-3 group cursor-pointer"
-      >
-        <h2 className="font-heading text-2xl text-navy">Your Bowler Profile</h2>
-        <svg
-          className={`w-5 h-5 text-navy/55 transition-transform duration-200 ${revealed ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+    <section ref={sectionRef}>
+      <h2 className="font-heading text-2xl text-navy">Your Bowler Profile</h2>
       <span className="block w-10 h-0.5 bg-red-600/40 mt-1.5" />
 
-      {revealed && (
-        <div className="mt-4 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5" key={animateKey}>
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
           {/* Archetype hero - shown above chart on mobile, after chart on desktop */}
           <div
             className="sm:hidden"
-            style={{
+            style={inView ? {
               opacity: 0,
               animation: 'fadeIn 0.6s ease-out 0.3s forwards',
-            }}
+            } : { opacity: 0 }}
           >
             <div className={`font-heading text-3xl ${style.heroColor}`}>
               {profile.archetype}
@@ -270,7 +258,7 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
               avg3={profile.avg3}
               bestGame={profile.bestGame}
               isFlatliner={isFlatliner}
-              animate={true}
+              animate={inView}
               leagueAvgs={leagueAvgs}
               dotColor={style.dotColor}
             />
@@ -279,10 +267,10 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
           {/* Archetype info - desktop shows full block, mobile shows remaining details */}
           <div
             className="min-w-0 pt-1"
-            style={{
+            style={inView ? {
               opacity: 0,
               animation: 'fadeIn 0.6s ease-out 2.4s forwards',
-            }}
+            } : { opacity: 0 }}
           >
             <div className="hidden sm:block">
               <div className="text-sm text-navy/60 font-body">Your Profile:</div>
@@ -311,7 +299,6 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
             )}
           </div>
         </div>
-      )}
     </section>
   );
 }

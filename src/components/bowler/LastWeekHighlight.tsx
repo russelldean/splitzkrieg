@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { formatMatchDate } from '@/lib/bowling-time';
@@ -22,110 +21,97 @@ interface Props {
 }
 
 export function LastWeekHighlight({ week, delta }: Props) {
-  const [expanded, setExpanded] = useState(false);
-
-  const dateStr = formatMatchDate(week.matchDate, { month: 'short', day: 'numeric', year: 'numeric' });
-
-  const games = [week.game1, week.game2, week.game3].filter(
-    (g): g is number => g !== null
-  );
-  const maxGame = games.length > 0 ? Math.max(...games) : null;
+  const dateStr = formatMatchDate(week.matchDate, { month: 'short', day: 'numeric' });
 
   return (
-    <section>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between bg-white rounded-lg border border-navy/10 px-6 py-4 hover:bg-navy/[0.05] transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <span className="font-heading text-xl text-navy">Last Week</span>
-          <span className="text-sm text-navy/65 font-body">
-            {week.displayName} Wk {week.week}
+    <section className="bg-white rounded-lg border border-navy/10 px-5 py-4">
+      {/* Header + scores in one row */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-heading text-lg text-navy whitespace-nowrap">Last Week</span>
+          <span className="text-sm text-navy/65 font-body truncate">
+            Wk {week.week}
             {dateStr ? ` \u00b7 ${dateStr}` : ''}
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className={`font-heading text-xl tabular-nums ${seriesColorClass(week.scratchSeries)}`}>
-            {week.scratchSeries ?? '\u2014'}
-          </span>
-          <span className="text-navy/65 text-sm">
-            {expanded ? '\u25B2' : '\u25BC'}
-          </span>
-        </div>
-      </button>
-
-      {expanded && (
-        <div className="bg-white rounded-b-lg border border-t-0 border-navy/10 px-6 pb-5 pt-3 -mt-2">
-          {/* Game scores row */}
-          <div className="flex items-center gap-6 mb-4">
             {week.opponentSlug ? (
-              <span className="text-sm text-navy/60 font-body">
-                vs{' '}
+              <>
+                {' \u00b7 vs '}
                 <Link
                   href={`/team/${week.opponentSlug}`}
                   className="text-navy hover:text-red-600 underline-offset-2 hover:underline"
                 >
                   {week.opponentName ?? ''}
                 </Link>
-              </span>
-            ) : week.opponentName ? (
-              <span className="text-sm text-navy/60 font-body">
-                vs {week.opponentName}
-              </span>
-            ) : null}
-          </div>
+              </>
+            ) : week.opponentName ? ` \u00b7 vs ${week.opponentName}` : null}
+          </span>
+        </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            {[
-              { label: 'G1', value: week.game1, color: scoreColorClass(week.game1) },
-              { label: 'G2', value: week.game2, color: scoreColorClass(week.game2) },
-              { label: 'G3', value: week.game3, color: scoreColorClass(week.game3) },
-              { label: 'Series', value: week.scratchSeries, color: seriesColorClass(week.scratchSeries) },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="text-center">
-                <div className="text-xs uppercase tracking-wide text-navy/60 font-body mb-1">
-                  {label}
-                </div>
-                <div className={`text-2xl font-heading tabular-nums ${color}`}>
-                  {value ?? '\u2014'}
-                </div>
+        {/* Game scores inline */}
+        <div className="flex items-center gap-3 shrink-0">
+          {[
+            { label: 'G1', value: week.game1, color: scoreColorClass(week.game1) },
+            { label: 'G2', value: week.game2, color: scoreColorClass(week.game2) },
+            { label: 'G3', value: week.game3, color: scoreColorClass(week.game3) },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="text-center">
+              <div className="text-[10px] uppercase tracking-wide text-navy/60 font-body leading-none mb-0.5">
+                {label}
               </div>
-            ))}
+              <div className={`text-lg font-heading tabular-nums leading-tight ${color}`}>
+                {value ?? '\u2014'}
+              </div>
+            </div>
+          ))}
+          <div className="text-center pl-2 border-l border-navy/10">
+            <div className="text-[10px] uppercase tracking-wide text-navy/60 font-body leading-none mb-0.5">
+              Series
+            </div>
+            <div className={`text-lg font-heading tabular-nums leading-tight ${seriesColorClass(week.scratchSeries)}`}>
+              {week.scratchSeries ?? '\u2014'}
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Delta badges */}
-          <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-navy/5">
-            {delta.newHighGame && (
-              <DeltaBadge label="High Game" value="NEW" variant="new" />
-            )}
-            {delta.newHighSeries && (
-              <DeltaBadge label="High Series" value="NEW" variant="new" />
-            )}
+      {/* Delta badges - compact row */}
+      {hasDeltaContent(delta) && (
+        <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-navy/5">
+          {delta.newHighGame && (
+            <DeltaBadge label="High Game" value="NEW" variant="new" />
+          )}
+          {delta.newHighSeries && (
+            <DeltaBadge label="High Series" value="NEW" variant="new" />
+          )}
+          <DeltaBadge
+            label="Pins"
+            value={`+${delta.totalPins.toLocaleString()}`}
+          />
+          {delta.avgChange !== null && (
             <DeltaBadge
-              label="Pins"
-              value={`+${delta.totalPins.toLocaleString()}`}
+              label="Avg"
+              value={`${delta.avgChange >= 0 ? '+' : ''}${delta.avgChange.toFixed(1)}`}
+              variant={delta.avgChange >= 0 ? 'positive' : 'negative'}
             />
-            {delta.avgChange !== null && (
-              <DeltaBadge
-                label="Avg"
-                value={`${delta.avgChange >= 0 ? '+' : ''}${delta.avgChange.toFixed(1)}`}
-                variant={delta.avgChange >= 0 ? 'positive' : 'negative'}
-              />
-            )}
-            {delta.games200Plus > 0 && (
-              <DeltaBadge label="200+" value={`+${delta.games200Plus}`} />
-            )}
-            {delta.series600Plus > 0 && (
-              <DeltaBadge label="600+" value={`+${delta.series600Plus}`} />
-            )}
-            {delta.turkeys !== null && delta.turkeys > 0 && (
-              <DeltaBadge label="Turkeys" value={`+${delta.turkeys}`} />
-            )}
-          </div>
+          )}
+          {delta.games200Plus > 0 && (
+            <DeltaBadge label="200+" value={`+${delta.games200Plus}`} />
+          )}
+          {delta.series600Plus > 0 && (
+            <DeltaBadge label="600+" value={`+${delta.series600Plus}`} />
+          )}
+          {delta.turkeys !== null && delta.turkeys > 0 && (
+            <DeltaBadge label="Turkeys" value={`+${delta.turkeys}`} />
+          )}
         </div>
       )}
     </section>
   );
+}
+
+function hasDeltaContent(delta: WeekDelta): boolean {
+  return delta.totalPins > 0 || delta.avgChange !== null || delta.games200Plus > 0 ||
+    delta.series600Plus > 0 || (delta.turkeys !== null && delta.turkeys > 0) ||
+    delta.newHighGame || delta.newHighSeries;
 }
 
 function DeltaBadge({
@@ -145,7 +131,7 @@ function DeltaBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-body px-2.5 py-1 rounded-full border ${colors[variant]}`}
+      className={`inline-flex items-center gap-1 text-xs font-body px-2 py-0.5 rounded-full border ${colors[variant]}`}
     >
       <span className="text-navy/65">{label}</span>
       <span>{value}</span>
