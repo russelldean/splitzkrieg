@@ -170,6 +170,19 @@ Plans:
 - [x] 11-06-PLAN.md — Score card, win celebration, Hall of Fame API + UI, admin mode
 - [ ] 11-07-PLAN.md — Nav integration, 404 easter egg, pixel art + hand-drawn skins, final checkpoint
 
+### Phase 12: Navigation and Discoverability Overhaul
+
+**Goal:** Help users naturally find and explore the full depth of the site. Rethink the blog recap format (hub-and-spoke to guided paths), improve cross-page discovery, leverage PostHog analytics data to understand current usage patterns, and design navigation that leads people deeper without overwhelming them.
+**Requirements**: [D-01 through D-25]
+**Depends on:** Phase 6
+**Plans:** 4 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Tracking components (ExitRamp, TrackVisibility) + bowler profile reorder
+- [ ] 12-02-PLAN.md — WeekRecap condensed redesign with exit ramps + DiscoverySection
+- [ ] 12-03-PLAN.md — NextStopNudge component + destination page integration
+- [ ] 12-04-PLAN.md — Email template update, updates feed surfacing, visual checkpoint
+
 ## Later Bucket
 
 Items to build when the time is right, not tied to a specific phase:
@@ -202,3 +215,4 @@ Items to build when the time is right, not tied to a specific phase:
 | 9. Data Backfill and Tooling | Complete | 2026-03-14 |
 | 10. Profile Depth | Not started | - |
 | 11. Hit the 10 Pin Mini-Game | Not started | - |
+| 12. Navigation and Discoverability Overhaul | Not started | - |
