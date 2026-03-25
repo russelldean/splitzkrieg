@@ -67,14 +67,12 @@ export async function PUT(
     const body = await request.json();
     await updateBlogPost(postId, body);
 
-    // Revalidate the post page on every save (for preview)
+    // Revalidate on every save
     if (body.slug) {
       revalidatePath(`/blog/${body.slug}`, 'page');
     }
-    // Revalidate blog index when publish state changes
-    if ('publishedAt' in body) {
-      revalidatePath('/blog', 'page');
-    }
+    revalidatePath('/blog', 'page');
+    revalidatePath('/', 'page');
 
     return NextResponse.json({ updated: true });
   } catch (err) {
