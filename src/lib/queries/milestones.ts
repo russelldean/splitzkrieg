@@ -20,6 +20,7 @@ export interface LeagueMilestone {
   current: number;
   threshold: number;
   needed: number;
+  ordinal?: number;
 }
 
 export interface LeagueMilestones {
@@ -55,6 +56,20 @@ const ACTIVE_BOWLER_STATS_SQL = `
 `;
 
 /* ───────────────────────────────────────────────────────────
+ * SQL: All-time career stats (for ordinal counts)
+ * ─────────────────────────────────────────────────────────── */
+
+const ALL_TIME_STATS_SQL = `
+  SELECT
+    v.totalGamesBowled,
+    v.totalPins,
+    v.games200Plus,
+    v.series600Plus,
+    v.totalTurkeys
+  FROM vw_BowlerCareerSummary v
+`;
+
+/* ───────────────────────────────────────────────────────────
  * SQL: Latest week contributions per bowler
  * ─────────────────────────────────────────────────────────── */
 
@@ -82,7 +97,7 @@ const LATEST_WEEK_CONTRIB_SQL = `
 
 // Include config in hash so threshold/proximity changes auto-invalidate cache
 const CONFIG_FINGERPRINT = JSON.stringify(MILESTONE_THRESHOLDS);
-const COMBINED_SQL = ACTIVE_BOWLER_STATS_SQL + LATEST_WEEK_CONTRIB_SQL + CONFIG_FINGERPRINT;
+const COMBINED_SQL = ACTIVE_BOWLER_STATS_SQL + LATEST_WEEK_CONTRIB_SQL + ALL_TIME_STATS_SQL + CONFIG_FINGERPRINT;
 
 /* ───────────────────────────────────────────────────────────
  * Compute milestones from raw data
@@ -124,9 +139,27 @@ const CONTRIB_KEY_MAP: Record<MilestoneCategory, keyof WeekContrib> = {
   totalTurkeys: 'turkeysAdded',
 };
 
+interface AllTimeStats {
+  totalGamesBowled: number;
+  totalPins: number;
+  games200Plus: number;
+  series600Plus: number;
+  totalTurkeys: number;
+}
+
+function countBowlersAtThreshold(
+  allTimeStats: AllTimeStats[],
+  category: MilestoneCategory,
+  threshold: number,
+): number {
+  const key = STAT_KEY_MAP[category];
+  return allTimeStats.filter((s) => (s[key] as number) >= threshold).length;
+}
+
 function computeLeagueMilestones(
   allStats: BowlerStats[],
   weekContribs: WeekContrib[],
+  allTimeStats: AllTimeStats[],
 ): LeagueMilestones {
   const contribMap = new Map(weekContribs.map((w) => [w.bowlerID, w]));
   const approaching: LeagueMilestone[] = [];
@@ -155,6 +188,7 @@ function computeLeagueMilestones(
             current,
             threshold,
             needed: 0,
+            ordinal: countBowlersAtThreshold(allTimeStats, category, threshold),
           });
         }
         // Approaching: below threshold, within proximity
@@ -201,9 +235,12 @@ export const getLeagueMilestones = cache(async (): Promise<LeagueMilestones> => 
     'getLeagueMilestones',
     async () => {
       const db = await getDb();
-      const statsResult = await db.request().query<BowlerStats>(ACTIVE_BOWLER_STATS_SQL);
-      const contribResult = await db.request().query<WeekContrib>(LATEST_WEEK_CONTRIB_SQL);
-      return computeLeagueMilestones(statsResult.recordset, contribResult.recordset);
+      const [statsResult, contribResult, allTimeResult] = await Promise.all([
+        db.request().query<BowlerStats>(ACTIVE_BOWLER_STATS_SQL),
+        db.request().query<WeekContrib>(LATEST_WEEK_CONTRIB_SQL),
+        db.request().query<AllTimeStats>(ALL_TIME_STATS_SQL),
+      ]);
+      return computeLeagueMilestones(statsResult.recordset, contribResult.recordset, allTimeResult.recordset);
     },
     { approaching: [], achieved: [] },
     { sql: COMBINED_SQL, dependsOn: ['scores'] },
@@ -260,7 +297,9 @@ export async function getWeekCareerMilestones(seasonID: number, week: number): P
  */
 export function milestoneTickerItems(milestones: LeagueMilestones): TickerItem[] {
   return milestones.achieved.map((m) => ({
-    text: `${m.bowlerName}: ${m.threshold.toLocaleString()} ${m.categoryLabel}!`,
+    text: m.ordinal
+      ? `${m.bowlerName}: ${m.threshold.toLocaleString()} ${m.categoryLabel} (#${m.ordinal} all-time)!`
+      : `${m.bowlerName}: ${m.threshold.toLocaleString()} ${m.categoryLabel}!`,
     href: `/bowler/${m.slug}`,
     icon: 'milestone' as const,
   }));

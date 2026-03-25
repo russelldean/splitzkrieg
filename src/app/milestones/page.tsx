@@ -123,6 +123,11 @@ export default async function MilestonesPage() {
                     <div className="font-body text-sm text-navy/60">
                       Reached {formatThreshold(m.category, m.threshold)}
                     </div>
+                    {m.ordinal && (
+                      <div className={`font-body text-xs font-semibold ${colors.text} mt-0.5`}>
+                        #{m.ordinal} in league history
+                      </div>
+                    )}
                   </div>
                 </div>
               );
