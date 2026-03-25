@@ -70,6 +70,7 @@ export default async function BlogPage() {
                     src={featured.cardImage || featured.heroImage!}
                     alt=""
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    style={{ objectPosition: `center ${((featured.cardFocalY ?? featured.heroFocalY ?? 0.5) * 100)}%` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5">

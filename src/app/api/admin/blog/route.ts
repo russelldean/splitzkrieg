@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       heroImage,
       heroFocalY,
       cardImage,
+      cardFocalY,
       publishedAt,
     } = body;
 
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       heroImage: heroImage ?? null,
       heroFocalY: heroFocalY ?? null,
       cardImage: cardImage ?? null,
+      cardFocalY: cardFocalY ?? null,
       publishedAt: publishedAt ?? null,
     });
 

@@ -28,6 +28,7 @@ async function getPreviewPost(slug: string): Promise<{ meta: PostMeta; content: 
       ...(post.heroImage ? { heroImage: post.heroImage } : {}),
       ...(post.heroFocalY != null ? { heroFocalY: post.heroFocalY } : {}),
       ...(post.cardImage ? { cardImage: post.cardImage } : {}),
+      ...(post.cardFocalY != null ? { cardFocalY: post.cardFocalY } : {}),
     },
     content: post.content,
   };

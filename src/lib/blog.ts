@@ -15,6 +15,7 @@ export interface PostMeta {
   heroImage?: string;
   heroFocalY?: number;
   cardImage?: string;
+  cardFocalY?: number;
 }
 
 /**
@@ -40,6 +41,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
     ...(post.heroImage ? { heroImage: post.heroImage } : {}),
     ...(post.heroFocalY != null ? { heroFocalY: post.heroFocalY } : {}),
     ...(post.cardImage ? { cardImage: post.cardImage } : {}),
+    ...(post.cardFocalY != null ? { cardFocalY: post.cardFocalY } : {}),
   }));
 }
 

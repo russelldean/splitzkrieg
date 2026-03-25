@@ -67,6 +67,7 @@ export interface BlogPost {
   heroImage: string | null;
   heroFocalY: number | null;
   cardImage: string | null;
+  cardFocalY: number | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;

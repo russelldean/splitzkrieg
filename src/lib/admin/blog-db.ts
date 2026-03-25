@@ -23,6 +23,7 @@ function rowToPost(row: Record<string, unknown>): BlogPost {
     heroImage: (row.heroImage as string) ?? null,
     heroFocalY: row.heroFocalY != null ? Number(row.heroFocalY) : null,
     cardImage: (row.cardImage as string) ?? null,
+    cardFocalY: row.cardFocalY != null ? Number(row.cardFocalY) : null,
     publishedAt: row.publishedDate
       ? (row.publishedDate as Date).toISOString()
       : null,
@@ -38,7 +39,7 @@ function rowToPost(row: Record<string, unknown>): BlogPost {
 const SELECT_COLS = `
   postID, slug, title, content, excerpt, type,
   seasonRomanNumeral, seasonSlug, week,
-  heroImage, heroFocalY, cardImage,
+  heroImage, heroFocalY, cardImage, cardFocalY,
   publishedDate, isPublished, createdDate, modifiedDate
 `;
 
@@ -138,6 +139,7 @@ export async function createBlogPost(
         .input('heroImage', sql.VarChar(255), data.heroImage)
         .input('heroFocalY', sql.Decimal(3, 2), data.heroFocalY)
         .input('cardImage', sql.VarChar(500), data.cardImage)
+        .input('cardFocalY', sql.Decimal(3, 2), data.cardFocalY ?? null)
         .input(
           'publishedDate',
           sql.DateTime2,
@@ -147,10 +149,10 @@ export async function createBlogPost(
         .query(`
           INSERT INTO blogPosts
             (slug, title, content, excerpt, type, seasonRomanNumeral, seasonSlug, week,
-             heroImage, heroFocalY, cardImage, publishedDate, isPublished, createdDate, modifiedDate)
+             heroImage, heroFocalY, cardImage, cardFocalY, publishedDate, isPublished, createdDate, modifiedDate)
           VALUES
             (@slug, @title, @content, @excerpt, @type, @seasonRomanNumeral, @seasonSlug, @week,
-             @heroImage, @heroFocalY, @cardImage, @publishedDate, @isPublished, GETDATE(), GETDATE());
+             @heroImage, @heroFocalY, @cardImage, @cardFocalY, @publishedDate, @isPublished, GETDATE(), GETDATE());
           SELECT SCOPE_IDENTITY() AS id;
         `),
     'createBlogPost',
@@ -217,6 +219,10 @@ export async function updateBlogPost(
   if (data.cardImage !== undefined) {
     req.input('cardImage', sql.VarChar(500), data.cardImage);
     setClauses.push('cardImage = @cardImage');
+  }
+  if (data.cardFocalY !== undefined) {
+    req.input('cardFocalY', sql.Decimal(3, 2), data.cardFocalY);
+    setClauses.push('cardFocalY = @cardFocalY');
   }
   if (data.publishedAt !== undefined) {
     const pubDate = data.publishedAt ? new Date(data.publishedAt) : null;

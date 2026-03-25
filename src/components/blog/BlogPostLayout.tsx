@@ -3,6 +3,7 @@ import type { PostMeta } from '@/lib/blog';
 import type { SiteUpdateEntry } from '@/lib/queries/updates';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
@@ -25,6 +26,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
 
   return (
     <main>
+      <ScrollToTop />
       {/* Parallax Hero (when post has heroImage) */}
       {hasHero && (
         <div className="relative overflow-hidden h-52 sm:h-64 md:h-80">
