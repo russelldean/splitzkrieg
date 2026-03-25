@@ -303,6 +303,9 @@ export function HighGameProgression({ records, latestNight }: Props) {
                     {r.isPlayoff && (
                       <InfoTooltip text="Playoff game" className="ml-1 inline-flex align-middle" />
                     )}
+                    {r.isTied && r.score === 278 && r.slug === 'geoffrey-berry' && (
+                      <InfoTooltip text="Yes, he tied his own record five years later" className="ml-1 inline-flex align-middle" />
+                    )}
                   </td>
                   <td className="py-3 pr-4 font-body">
                     <Link
