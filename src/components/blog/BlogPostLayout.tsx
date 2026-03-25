@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { PostMeta } from '@/lib/blog';
+import type { SiteUpdateEntry } from '@/lib/queries/updates';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
+import { SiteUpdates } from '@/components/resources/SiteUpdates';
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
@@ -15,9 +17,10 @@ interface BlogPostLayoutProps {
   prev: PostMeta | null;
   next: PostMeta | null;
   children: React.ReactNode;
+  updates?: SiteUpdateEntry[];
 }
 
-export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutProps) {
+export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPostLayoutProps) {
   const hasHero = !!meta.heroImage;
 
   return (
@@ -118,7 +121,7 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
         </article>
 
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-navy/15 to-transparent mt-12 mb-8" />
+        <div className="mt-14 mb-8 border-t-2 border-navy/20" />
 
         {/* Prev/next navigation */}
         <nav className="flex justify-between gap-4">
@@ -180,6 +183,15 @@ export function BlogPostLayout({ meta, prev, next, children }: BlogPostLayoutPro
             <div className="flex-1" />
           )}
         </nav>
+
+        {updates && updates.length > 0 && (
+          <>
+            <div className="mt-14 mb-8 border-t-2 border-navy/20" />
+            <section>
+              <SiteUpdates updates={updates} lastUpdated={updates[0].date} />
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

@@ -1,8 +1,15 @@
 import Link from 'next/link';
-import updates from '../../../content/updates';
+
+interface Update {
+  date: string;
+  text: string;
+  tag: 'fix' | 'feat';
+  href?: string;
+}
 
 interface Props {
   seasonSlug: string;
+  updates?: Update[];
 }
 
 const stableLinks = [
@@ -18,7 +25,7 @@ const stableLinks = [
   },
 ];
 
-export function DiscoverySection({ seasonSlug }: Props) {
+export function DiscoverySection({ seasonSlug, updates = [] }: Props) {
   // Get the 2 most recent feat entries with hrefs for rotating highlights
   const rotatingHighlights = updates
     .filter(u => u.tag === 'feat' && u.href)

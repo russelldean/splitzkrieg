@@ -1,15 +1,11 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
+
 interface Update {
   date: string;
   text: string;
   tag: 'fix' | 'feat';
   href?: string;
 }
-
-const COLLAPSED_COUNT = 5;
 
 function UpdateRow({ update }: { update: Update }) {
   return (
@@ -33,10 +29,6 @@ function UpdateRow({ update }: { update: Update }) {
 }
 
 export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastUpdated?: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const hasMore = updates.length > COLLAPSED_COUNT;
-  const visible = expanded ? updates : updates.slice(0, COLLAPSED_COUNT);
-
   return (
     <section id="recent-updates" className="mb-10 scroll-mt-20">
       <div className="flex items-baseline justify-between mb-4">
@@ -50,26 +42,15 @@ export function SiteUpdates({ updates, lastUpdated }: { updates: Update[]; lastU
         )}
       </div>
       <div className="bg-white rounded-lg border border-navy/10">
-        <div className={`divide-y divide-navy/5 ${expanded ? 'max-h-96 overflow-y-auto' : ''}`}>
-          {visible.map((update, i) => (
+        <div className="divide-y divide-navy/5 max-h-80 overflow-y-auto">
+          {updates.map((update, i) => (
             <UpdateRow key={i} update={update} />
           ))}
         </div>
-        {hasMore && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="w-full px-5 py-3 text-sm font-body text-navy/65 hover:text-navy transition-colors text-left flex items-center gap-1.5 border-t border-navy/5"
-          >
-            <svg
-              className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            {expanded ? 'Show less' : 'Show all updates'}
-          </button>
+        {updates.length > 5 && (
+          <div className="border-t border-navy/10 bg-navy/[0.03] px-5 py-2 text-center rounded-b-lg">
+            <span className="text-xs font-body text-navy/60">Scroll for more updates</span>
+          </div>
         )}
       </div>
     </section>

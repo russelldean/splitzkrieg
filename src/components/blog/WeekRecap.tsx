@@ -23,6 +23,7 @@ import { ExitRamp } from '@/components/tracking/ExitRamp';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { RecapCallout } from '@/components/blog/RecapCallout';
 import { DiscoverySection } from '@/components/blog/DiscoverySection';
+import { getSiteUpdates } from '@/lib/queries/updates';
 import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
 import { CompactLeaderboardPreview } from '@/components/blog/CompactLeaderboardPreview';
 
@@ -38,12 +39,13 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData || isNaN(weekNum)) return null;
 
-  const [allScores, allSchedule, allMatchResults, standings, careerMilestones] = await Promise.all([
+  const [allScores, allSchedule, allMatchResults, standings, careerMilestones, siteUpdates] = await Promise.all([
     getSeasonWeeklyScores(seasonData.seasonID),
     getSeasonSchedule(seasonData.seasonID),
     getSeasonMatchResults(seasonData.seasonID),
     getSeasonStandings(seasonData.seasonID),
     getWeekCareerMilestones(seasonData.seasonID, weekNum),
+    getSiteUpdates(),
   ]);
 
   const weekScores = allScores.filter(s => s.week === weekNum);
@@ -125,7 +127,7 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
 
       {/* Discover more of the site */}
       <TrackVisibility section="recap-discovery" page="blog-recap">
-        <DiscoverySection seasonSlug={seasonSlug} />
+        <DiscoverySection seasonSlug={seasonSlug} updates={siteUpdates} />
       </TrackVisibility>
 
       {/* Next League Night */}

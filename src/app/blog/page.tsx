@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getAllPosts } from '@/lib/blog';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
-import updates, { lastUpdated } from '../../../content/updates';
+import { getSiteUpdates } from '@/lib/queries/updates';
 
 export const revalidate = 3600;
 
@@ -21,7 +21,11 @@ function formatDate(dateStr: string): string {
 }
 
 export default async function BlogPage() {
-  const posts = await getAllPosts();
+  const [posts, updates] = await Promise.all([
+    getAllPosts(),
+    getSiteUpdates(),
+  ]);
+  const lastUpdated = updates.length > 0 ? updates[0].date : undefined;
   const [featured, ...rest] = posts;
 
   return (
@@ -134,7 +138,8 @@ export default async function BlogPage() {
           </div>
         )}
 
-        <section className="mt-12">
+        <div className="mt-14 mb-8 border-t-2 border-navy/20" />
+        <section>
           <SiteUpdates updates={updates} lastUpdated={lastUpdated} />
         </section>
       </div>

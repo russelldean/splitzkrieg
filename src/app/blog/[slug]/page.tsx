@@ -7,6 +7,7 @@ import { getBlogPostBySlug } from '@/lib/admin/blog-db';
 import { verifyToken } from '@/lib/admin/auth';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
 import { mdxComponents } from '@/lib/mdx-components';
+import { getSiteUpdates } from '@/lib/queries/updates';
 import type { PostMeta } from '@/lib/blog';
 
 export const dynamicParams = true;
@@ -87,10 +88,13 @@ export default async function BlogPostPage({
     }
   }
 
-  const { prev, next } = await getAdjacentPosts(slug);
+  const [{ prev, next }, siteUpdates] = await Promise.all([
+    getAdjacentPosts(slug),
+    getSiteUpdates(),
+  ]);
 
   return (
-    <BlogPostLayout meta={meta} prev={prev} next={next}>
+    <BlogPostLayout meta={meta} prev={prev} next={next} updates={siteUpdates}>
       {!meta.title ? null : (
         <MDXRemote source={content} components={mdxComponents} />
       )}
