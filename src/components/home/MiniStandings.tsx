@@ -56,11 +56,11 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 shadow-sm h-full flex flex-col overflow-hidden">
-      <div className="flex items-baseline justify-between px-6 py-3 bg-navy">
-        <h3 className="font-heading text-lg text-white">Standings</h3>
+      <div className="flex items-baseline justify-between px-6 py-3 bg-amber-50 border-b border-amber-200">
+        <h3 className="font-heading text-lg text-navy">Standings</h3>
         <Link
           href={`/season/${seasonSlug}`}
-          className="text-xs font-body text-white/60 hover:text-white transition-colors"
+          className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
         >
           Full standings &rarr;
         </Link>
