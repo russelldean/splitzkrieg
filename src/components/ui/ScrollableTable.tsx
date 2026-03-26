@@ -40,7 +40,7 @@ export function ScrollableTable({ children, className = '' }: Props) {
 
   return (
     <div className={`relative ${className}`}>
-      <div ref={scrollRef} className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
+      <div ref={scrollRef} className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto overflow-y-auto max-h-[70vh] -mx-4 sm:mx-0">
         {children}
       </div>
       {canScrollRight && (

@@ -39,7 +39,7 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
       </div>
 
       {expanded && (
-        <div className="space-y-0.5">
+        <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden divide-y divide-navy/5">
           {weeks.map(week => {
             const summary = summaryMap.get(week);
             const hasScores = !!summary;
@@ -53,7 +53,7 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
               <Link
                 key={week}
                 href={`/week/${seasonSlug}/${week}`}
-                className="flex items-center justify-between px-4 py-2.5 -mx-1 rounded-lg hover:bg-navy/[0.04] transition-colors group"
+                className="flex items-center justify-between px-4 py-2.5 hover:bg-navy/[0.04] transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   <span className={`font-heading text-base group-hover:text-red-600 transition-colors ${isMissingData ? 'text-navy/60' : 'text-navy'}`}>
@@ -108,14 +108,6 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
         </div>
       )}
 
-      <div className="mt-3">
-        <Link
-          href="/week"
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
-        >
-          View all weeks across all seasons &rarr;
-        </Link>
-      </div>
     </section>
   );
 }

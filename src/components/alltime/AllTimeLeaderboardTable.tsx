@@ -113,15 +113,15 @@ export function AllTimeLeaderboardTable({ data }: Props) {
       ) : (
         <ScrollableTable>
           <table className="w-full text-sm sm:text-base font-body">
-            <thead>
-              <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/65 text-sm uppercase tracking-wider">
-                <th className="px-3 py-2 text-left w-10 sticky left-0 bg-white z-10">#</th>
+            <thead className="sticky top-0 z-20">
+              <tr className="border-b border-navy/10 bg-white text-navy/65 text-sm uppercase tracking-wider shadow-[0_1px_0_0_rgba(0,0,0,0.06)]">
+                <th className="px-3 py-2 text-left w-10 sticky left-0 bg-white z-30">#</th>
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
                     className={`px-3 py-2 cursor-pointer hover:text-navy transition-colors select-none whitespace-nowrap ${
                       col.align === 'right' ? 'text-right' : 'text-left'
-                    } ${col.key === 'bowlerName' ? 'sticky left-10 bg-white z-10' : ''}`}
+                    } ${col.key === 'bowlerName' ? 'sticky left-10 bg-white z-30' : ''}`}
                     onClick={() => handleSort(col.key)}
                   >
                     {col.label}

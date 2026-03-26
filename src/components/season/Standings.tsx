@@ -67,16 +67,17 @@ function StandingsTable({
 }) {
   return (
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
-      <table className="w-full text-sm sm:text-base font-body">
-        <thead>
-          <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/65 text-sm uppercase tracking-wider">
-            <th className="px-4 py-2 text-left w-12">#</th>
-            <th className="px-4 py-2 text-left">Team</th>
-            <th className="px-4 py-2 text-right">Total Pts</th>
-            <th className="px-4 py-2 text-right">Wins</th>
-            <th className="px-4 py-2 text-right">XP</th>
-            <th className="px-4 py-2 text-left pl-6">Scratch Avg</th>
-            <th className="px-4 py-2 text-left pl-6">HCP Avg</th>
+      <table className="w-full text-xs sm:text-base font-body">
+        <thead className="sticky top-0 z-20">
+          <tr className="border-b border-navy/10 bg-white text-navy/65 text-xs sm:text-sm uppercase tracking-wider shadow-[0_1px_0_0_rgba(0,0,0,0.06)]">
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right w-8 sm:w-12">#</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left">Team</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right">Pts</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">Wins</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">XP</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right sm:hidden">W/XP</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">Scratch Avg</th>
+            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">HCP Avg</th>
           </tr>
         </thead>
         <tbody>
@@ -89,10 +90,10 @@ function StandingsTable({
                   inPlayoffs ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
                 }`}
               >
-                <td className="px-4 py-2.5 text-navy/65 tabular-nums">
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right text-navy/65 tabular-nums">
                   {startRank + i}
                 </td>
-                <td className="px-4 py-2.5 font-medium">
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium">
                   <Link
                     href={`/team/${row.teamSlug}`}
                     className="text-navy hover:text-red-600 transition-colors"
@@ -100,7 +101,7 @@ function StandingsTable({
                     {row.teamName}
                   </Link>
                 </td>
-                <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-navy">
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums font-semibold text-navy">
                   {row.totalPts}
                   {showDelta && row.lastWeekPts != null && (
                     <span className="text-xs font-normal text-navy/65 ml-1">
@@ -108,13 +109,14 @@ function StandingsTable({
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-right tabular-nums text-navy/70">{row.wins}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums text-navy/70">{row.xp}</td>
-                <td className="px-4 py-2.5 text-left pl-6 tabular-nums text-navy/70">
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">{row.wins}</td>
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">{row.xp}</td>
+                <td className="px-2 py-1.5 text-right tabular-nums text-navy/70 sm:hidden">{row.wins}/{row.xp}</td>
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
                   {row.teamScratchAvg?.toFixed(1) ?? '\u2014'}
                   <span className="text-navy/65 text-xs ml-1">({row.scratchAvgRank})</span>
                 </td>
-                <td className="px-4 py-2.5 text-left pl-6 tabular-nums text-navy/70">
+                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
                   {row.teamHcpAvg?.toFixed(1) ?? '\u2014'}
                   <span className="text-navy/65 text-xs ml-1">({row.hcpAvgRank})</span>
                 </td>
