@@ -126,11 +126,11 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
         <div className="mt-14 border-t-2 border-navy/20" />
 
         {/* Prev/next navigation */}
-        <nav className="flex justify-between gap-4 my-8">
+        <nav className="flex flex-col gap-4 sm:flex-row sm:justify-between my-8">
           {next ? (
             <Link
               href={`/blog/${next.slug}`}
-              className="group flex-1 min-w-0"
+              className="group sm:flex-1 sm:min-w-0"
             >
               <div className="flex items-center gap-3">
                 {(next.cardImage || next.heroImage) && (
@@ -146,27 +146,27 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
                   <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
                     Previous
                   </span>
-                  <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
+                  <span className="block font-heading text-base text-navy group-hover:text-red transition-colors line-clamp-2 sm:truncate">
                     {next.title}
                   </span>
                 </div>
               </div>
             </Link>
           ) : (
-            <div className="flex-1" />
+            <div className="hidden sm:block sm:flex-1" />
           )}
 
           {prev ? (
             <Link
               href={`/blog/${prev.slug}`}
-              className="group flex-1 min-w-0"
+              className="group self-end sm:self-auto sm:flex-1 sm:min-w-0"
             >
               <div className="flex items-center gap-3 justify-end">
                 <div className="min-w-0 text-right">
                   <span className="font-body text-xs text-navy/60 uppercase tracking-wide">
                     Next
                   </span>
-                  <span className="block font-heading text-base text-navy group-hover:text-red transition-colors truncate">
+                  <span className="block font-heading text-base text-navy group-hover:text-red transition-colors line-clamp-2 sm:truncate">
                     {prev.title}
                   </span>
                 </div>
@@ -182,7 +182,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
               </div>
             </Link>
           ) : (
-            <div className="flex-1" />
+            <div className="hidden sm:block sm:flex-1" />
           )}
         </nav>
 
