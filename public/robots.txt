@@ -58,6 +58,12 @@ Disallow: /
 User-agent: DotBot
 Disallow: /
 
+User-agent: seranking
+Disallow: /
+
+User-agent: oai-searchbot
+Disallow: /
+
 # Admin pages - blocked for everyone
 User-agent: *
 Disallow: /admin
