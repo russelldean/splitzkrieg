@@ -6,6 +6,7 @@ import {
   Line,
   XAxis,
   YAxis,
+  Tooltip,
 } from 'recharts';
 import type { StandingsRow } from '@/lib/queries';
 
@@ -19,6 +20,8 @@ interface RaceChartData {
 interface Props {
   raceData: RaceChartData[];
   standings: StandingsRow[];
+  playoffTeamIDs?: Set<number> | null;
+  hasDivisions?: boolean;
 }
 
 /** Palette for up to 20 teams -- distinct colors that work on light background. */
@@ -47,12 +50,34 @@ const TEAM_COLORS = [
 
 const MUTED_COLOR = '#9CA3AF'; // gray-400 -- more visible than gray-300
 
-export function StandingsRaceChart({ raceData, standings }: Props) {
-  const [activeTeam, setActiveTeam] = useState<string | null>(null);
+export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDivisions }: Props) {
+  const [activeTeams, setActiveTeams] = useState<Set<string>>(new Set());
+  const [initialized, setInitialized] = useState(false);
 
-  const { chartData, teamNames, teamCount, teamColorMap } = useMemo(() => {
+  // Determine which teams are in playoffs (or projected)
+  const highlightTeamIDs = useMemo(() => {
+    if (playoffTeamIDs && playoffTeamIDs.size > 0) return playoffTeamIDs;
+    // No playoff results yet — project top 2 per division
+    if (hasDivisions) {
+      const ids = new Set<number>();
+      const divCounts = new Map<string, number>();
+      for (const s of standings) {
+        const div = s.divisionName ?? '';
+        const count = divCounts.get(div) ?? 0;
+        if (count < 2) {
+          ids.add(s.teamID);
+          divCounts.set(div, count + 1);
+        }
+      }
+      return ids;
+    }
+    // No divisions — top 4 overall
+    return new Set(standings.slice(0, 4).map(s => s.teamID));
+  }, [playoffTeamIDs, standings, hasDivisions]);
+
+  const { chartData, teamNames, teamCount, teamColorMap, nameToID } = useMemo(() => {
     if (raceData.length === 0 || standings.length === 0) {
-      return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>() };
+      return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>(), nameToID: new Map<string, number>() };
     }
 
     const teamNameMap = new Map(standings.map(s => [s.teamID, s.teamName]));
@@ -61,7 +86,7 @@ export function StandingsRaceChart({ raceData, standings }: Props) {
     // Group by week
     const weeks = Array.from(new Set(raceData.map(r => r.week))).sort((a, b) => a - b);
     if (weeks.length < 2) {
-      return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>() };
+      return { chartData: [], teamNames: [] as string[], teamCount: 0, teamColorMap: new Map<string, string>(), nameToID: new Map<string, number>() };
     }
 
     const data: Record<string, number | string>[] = [];
@@ -83,19 +108,40 @@ export function StandingsRaceChart({ raceData, standings }: Props) {
     const colorMap = new Map<string, string>();
     names.forEach((name, i) => colorMap.set(name, TEAM_COLORS[i % TEAM_COLORS.length]));
 
-    return { chartData: data, teamNames: names, teamCount: names.length, teamColorMap: colorMap };
+    // Map team names back to IDs for highlight lookup
+    const nameToID = new Map<string, number>();
+    teamIDs.forEach(id => nameToID.set(teamNameMap.get(id) ?? `Team ${id}`, id));
+
+    return { chartData: data, teamNames: names, teamCount: names.length, teamColorMap: colorMap, nameToID };
   }, [raceData, standings]);
 
+  // Initialize active teams to playoff teams on first render
+  if (!initialized && nameToID.size > 0) {
+    const initial = new Set<string>();
+    for (const [name, id] of nameToID) {
+      if (highlightTeamIDs.has(id)) initial.add(name);
+    }
+    setActiveTeams(initial);
+    setInitialized(true);
+  }
+
   const handleTeamClick = useCallback((teamName: string) => {
-    setActiveTeam(prev => prev === teamName ? null : teamName);
+    setActiveTeams(prev => {
+      const next = new Set(prev);
+      if (next.has(teamName)) next.delete(teamName);
+      else next.add(teamName);
+      return next;
+    });
   }, []);
 
   if (chartData.length < 2) return null;
 
+  const hasSelection = activeTeams.size > 0;
+
   return (
     <section id="race">
       <p className="font-body text-sm text-navy/60 mb-4">
-        Team rank positions by total points over the season. Click a team to highlight.
+        Team rank positions by total points over the season. Current playoff positions highlighted by default. Toggle teams on/off to compare.
       </p>
       <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-4">
         <ResponsiveContainer width="100%" height={Math.max(300, teamCount * 20 + 100)}>
@@ -121,21 +167,42 @@ export function StandingsRaceChart({ raceData, standings }: Props) {
                 style: { fontSize: 11, fill: '#1B2A4A', opacity: 0.4 },
               }}
             />
+            <Tooltip
+              content={({ active, payload, label }) => {
+                if (!active || !payload || payload.length === 0) return null;
+                // Sort by rank (value) ascending
+                const sorted = [...payload]
+                  .filter(p => p.value != null && activeTeams.has(p.dataKey as string))
+                  .sort((a, b) => (a.value as number) - (b.value as number));
+                if (sorted.length === 0) return null;
+                return (
+                  <div className="bg-white border border-navy/10 rounded-lg px-3 py-2 shadow-lg text-xs font-body">
+                    <div className="font-semibold text-navy/60 mb-1">{label}</div>
+                    {sorted.map((entry) => (
+                      <div key={entry.dataKey as string} className="flex items-center gap-1.5 py-0.5">
+                        <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: entry.color }} />
+                        <span className="text-navy/50">#{entry.value}</span>
+                        <span className="text-navy" style={{ color: entry.color }}>{entry.dataKey}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
+            />
             {teamNames.map((name) => {
-              const isSelected = activeTeam === name;
-              const color = isSelected ? (teamColorMap.get(name) ?? MUTED_COLOR) : MUTED_COLOR;
-              const width = isSelected ? 3 : 1.5;
-              const opacity = isSelected ? 1 : (activeTeam === null ? 0.45 : 0.15);
+              const isOn = activeTeams.has(name);
+              const ownColor = teamColorMap.get(name) ?? MUTED_COLOR;
+
               return (
                 <Line
                   key={name}
                   type="monotone"
                   dataKey={name}
-                  stroke={color}
-                  strokeWidth={width}
-                  strokeOpacity={opacity}
+                  stroke={isOn ? ownColor : MUTED_COLOR}
+                  strokeWidth={isOn ? 2.5 : 1.5}
+                  strokeOpacity={isOn ? 0.9 : (hasSelection ? 0.15 : 0.35)}
                   dot={false}
-                  activeDot={false}
+                  activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
                   connectNulls
                 />
               );
@@ -146,39 +213,35 @@ export function StandingsRaceChart({ raceData, standings }: Props) {
         {/* Team legend -- clickable buttons */}
         <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-navy/5">
           {teamNames.map((name) => {
-            const isActive = activeTeam === name;
+            const isOn = activeTeams.has(name);
             const color = teamColorMap.get(name) ?? MUTED_COLOR;
             return (
               <button
                 key={name}
                 onClick={() => handleTeamClick(name)}
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-body transition-all ${
-                  isActive
-                    ? 'ring-1 ring-offset-1 font-semibold'
-                    : activeTeam === null
-                      ? 'opacity-70 hover:opacity-100'
-                      : 'opacity-30 hover:opacity-60'
+                  isOn
+                    ? 'font-semibold'
+                    : hasSelection ? 'opacity-40 hover:opacity-70' : 'opacity-60 hover:opacity-80'
                 }`}
                 style={{
-                  color: isActive ? color : '#6B7280',
-                  borderColor: isActive ? color : 'transparent',
-                  ...(isActive ? { ringColor: color } : {}),
+                  color: isOn ? color : '#6B7280',
                 }}
               >
                 <span
                   className="inline-block w-2 h-2 rounded-full shrink-0"
-                  style={{ background: isActive ? color : '#D1D5DB' }}
+                  style={{ background: isOn ? color : '#D1D5DB' }}
                 />
                 {name}
               </button>
             );
           })}
-          {activeTeam && (
+          {activeTeams.size > 0 && (
             <button
-              onClick={() => setActiveTeam(null)}
+              onClick={() => setActiveTeams(new Set())}
               className="px-2 py-0.5 rounded text-xs font-body text-navy/60 hover:text-navy/80 transition-colors"
             >
-              Show all
+              Clear all
             </button>
           )}
         </div>

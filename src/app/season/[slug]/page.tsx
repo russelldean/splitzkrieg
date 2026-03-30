@@ -128,8 +128,8 @@ export default async function SeasonPage({
         <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} />
 
         {hasScheduleData && raceData.length > 0 && (
-          <CollapsibleSection title="Standings Race">
-            <StandingsRaceChart raceData={raceData} standings={standings} />
+          <CollapsibleSection title="Standings Race" defaultOpen>
+            <StandingsRaceChart raceData={raceData} standings={standings} playoffTeamIDs={playoffTeams} hasDivisions={hasDivisions} />
           </CollapsibleSection>
         )}
 
