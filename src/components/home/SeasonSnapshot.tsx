@@ -77,19 +77,19 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
             {snapshot.bowlerOfTheWeek && (
               <div>
                 <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
-                <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm sm:text-lg font-medium text-navy hover:text-red transition-colors">
+                <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm sm:text-lg font-heading text-navy hover:text-red transition-colors">
                   {snapshot.bowlerOfTheWeek.bowlerName}
                 </Link>
-                <span className="text-sm sm:text-lg text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlerOfTheWeek.score}</span>
+                <span className="text-sm sm:text-lg font-heading text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlerOfTheWeek.score}</span>
               </div>
             )}
             {snapshot.teamOfTheWeek && (
               <div>
                 <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Team of the Week</div>
-                <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm sm:text-lg font-medium text-navy hover:text-red transition-colors">
+                <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm sm:text-lg font-heading text-navy hover:text-red transition-colors">
                   {snapshot.teamOfTheWeek.teamName}
                 </Link>
-                <span className="text-sm sm:text-lg text-navy/60 ml-1.5 sm:ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
+                <span className="text-sm sm:text-lg font-heading text-navy/60 ml-1.5 sm:ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
               </div>
             )}
           </div>
