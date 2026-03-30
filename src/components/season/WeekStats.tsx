@@ -3,7 +3,8 @@ import Link from 'next/link';
 import type { WeeklyMatchScore, WeeklyMatchupResult, LeagueMilestone } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { topWithTies, LeaderList, PINList } from './WeekStatsCards';
-import { computeXPRankings, computeIndividualLeaders, computeWeeklyAwards, computePIN } from './weekStatsUtils';
+import { computeXPRankings, computeIndividualLeaders, computeWeeklyAwards, computePIN, computeLeagueHeat } from './weekStatsUtils';
+import { LeagueHeatCheck } from './LeagueHeatCheck';
 
 export type WeekStatsSection = 'awards' | 'records' | 'xp' | 'teamStats' | 'leaders' | 'misc';
 
@@ -28,6 +29,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
   const { bowlers, topHcpSeries, topScratchGame, topMenScratch, topWomenScratch } = computeIndividualLeaders(weekScores, !!compact);
   const { turkeyList, aboveAvgEveryGame, debuts, allTimeHighGames, allTimeHighSeries, bowlerOfWeek, teamOfWeek } = computeWeeklyAwards(weekScores, bowlers);
   const topPIN = computePIN(bowlers, matchResults, !!compact);
+  const leagueHeat = computeLeagueHeat(weekScores);
 
   const show = (section: WeekStatsSection) => {
     if (only) return only.includes(section);
@@ -44,37 +46,48 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
         </>
       )}
 
-      {/* Bowler & Team of the Week */}
-      {show('awards') && (bowlerOfWeek || teamOfWeek) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {bowlerOfWeek && (
-            <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
-              <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Bowler of the Week</div>
-              <Link href={`/bowler/${bowlerOfWeek.slug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
-                {bowlerOfWeek.name}
-              </Link>
-              <div className="text-sm font-body text-navy/65">
-                {bowlerOfWeek.pinsOver > 0 ? '+' : ''}{bowlerOfWeek.pinsOver} Pins
-                <span className="text-navy/30 mx-1">&middot;</span>
-                {bowlerOfWeek.series} Series
+      {/* Bowler & Team of the Week + League Heat Check */}
+      {show('awards') && (<>
+        {(bowlerOfWeek || teamOfWeek) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            {bowlerOfWeek && (
+              <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
+                <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Bowler of the Week</div>
+                <Link href={`/bowler/${bowlerOfWeek.slug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
+                  {bowlerOfWeek.name}
+                </Link>
+                <div className="text-sm font-body text-navy/65">
+                  {bowlerOfWeek.pinsOver > 0 ? '+' : ''}{bowlerOfWeek.pinsOver} Pins
+                  <span className="text-navy/30 mx-1">&middot;</span>
+                  {bowlerOfWeek.series} Series
+                </div>
               </div>
-            </div>
-          )}
-          {teamOfWeek && (
-            <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
-              <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Team of the Week</div>
-              <Link href={`/team/${teamOfWeek.teamSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
-                {teamOfWeek.teamName}
-              </Link>
-              <div className="text-sm font-body text-navy/65">
-                {teamOfWeek.pinsOver > 0 ? '+' : ''}{teamOfWeek.pinsOver} Pins
-                <span className="text-navy/30 mx-1">&middot;</span>
-                {teamOfWeek.hcpSeries} Hcp Series
+            )}
+            {teamOfWeek && (
+              <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
+                <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Team of the Week</div>
+                <Link href={`/team/${teamOfWeek.teamSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
+                  {teamOfWeek.teamName}
+                </Link>
+                <div className="text-sm font-body text-navy/65">
+                  {teamOfWeek.pinsOver > 0 ? '+' : ''}{teamOfWeek.pinsOver} Pins
+                  <span className="text-navy/30 mx-1">&middot;</span>
+                  {teamOfWeek.hcpSeries} Hcp Series
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+        {leagueHeat && (
+          <div className="mb-6">
+            <LeagueHeatCheck
+              pinsOverPerGame={leagueHeat.pinsOverPerGame}
+              leagueAvg={leagueHeat.leagueAvg}
+              expectedAvg={leagueHeat.expectedAvg}
+            />
+          </div>
+        )}
+      </>)}
 
       {/* Milestones & Personal Bests */}
       {show('records') && (careerMilestones.length > 0 || debuts.length > 0 || allTimeHighGames.length > 0 || allTimeHighSeries.length > 0) && (

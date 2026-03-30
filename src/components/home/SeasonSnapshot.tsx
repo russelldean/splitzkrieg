@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { strikeX } from '@/components/ui/StrikeX';
+import { MiniHeatCheck } from '@/components/season/MiniHeatCheck';
 import type { SeasonSnapshot as SeasonSnapshotType } from '@/lib/queries';
 
 interface SeasonSnapshotProps {
@@ -58,49 +59,48 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
         Week {snapshot.weekNumber}
       </p>
 
-      {/* Aggregate stats */}
-      <div className="flex justify-around items-start mb-4 pb-4 border-b border-navy/5">
-        <StatValue label="Bowlers" value={snapshot.totalBowlers} />
-        {snapshot.expectedLeagueAverage > 0
-          ? <StatValue label="League Avg / Expected" value={`${snapshot.leagueAverage.toFixed(1)} / ${snapshot.expectedLeagueAverage.toFixed(1)}`} />
-          : <StatValue label="League Avg" value={snapshot.leagueAverage.toFixed(1)} />
-        }
-        {snapshot.expectedLeagueAverage > 0 && (() => {
-          const delta = snapshot.leagueAverage - snapshot.expectedLeagueAverage;
-          const sign = delta >= 0 ? '+' : '';
-          const label = delta >= 0 ? 'Above Expected' : 'Below Expected';
-          const colorClass = delta >= 0 ? 'text-green-600' : 'text-red-600';
-          return (
-            <div className="text-center">
-              <div className={`font-heading text-2xl ${colorClass}`}>{sign}{delta.toFixed(1)}</div>
-              <div className="text-xs font-body text-navy/65 mt-0.5">{label}</div>
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Weekly highlights */}
-      <div className="space-y-0.5">
-        {snapshot.bowlerOfTheWeek && (
-          <LeaderRow
-            label="Bowler of the Week"
-            name={snapshot.bowlerOfTheWeek.bowlerName}
-            slug={snapshot.bowlerOfTheWeek.slug}
-            value={String(snapshot.bowlerOfTheWeek.score)}
-          />
-        )}
-        {snapshot.teamOfTheWeek && (
-          <div className="flex items-center justify-between py-1.5">
-            <span className="text-xs font-body text-navy/65 uppercase tracking-wider">Team of the Week</span>
-            <div className="text-right">
-              <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm font-medium text-navy hover:text-red transition-colors">
-                {snapshot.teamOfTheWeek.teamName}
-              </Link>
-              <span className="text-sm text-navy/60 ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
-            </div>
+      {/* Heat Check + Weekly Highlights side by side */}
+      {snapshot.expectedLeagueAverage > 0 ? (
+        <div className="flex items-start gap-5">
+          {/* Left: Heat Check */}
+          <div className="shrink-0">
+            <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-2">Weekly Heat Check</div>
+            <MiniHeatCheck
+              pinsOverPerGame={Math.round((snapshot.leagueAverage - snapshot.expectedLeagueAverage) * 10) / 10}
+              leagueAvg={snapshot.leagueAverage}
+              expectedAvg={snapshot.expectedLeagueAverage}
+              bowlerCount={snapshot.totalBowlers}
+            />
           </div>
-        )}
-      </div>
+
+          {/* Right: BOTW / TOTW */}
+          <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 space-y-3 sm:space-y-4">
+            {snapshot.bowlerOfTheWeek && (
+              <div>
+                <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
+                <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm sm:text-lg font-medium text-navy hover:text-red transition-colors">
+                  {snapshot.bowlerOfTheWeek.bowlerName}
+                </Link>
+                <span className="text-sm sm:text-lg text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlerOfTheWeek.score}</span>
+              </div>
+            )}
+            {snapshot.teamOfTheWeek && (
+              <div>
+                <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Team of the Week</div>
+                <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm sm:text-lg font-medium text-navy hover:text-red transition-colors">
+                  {snapshot.teamOfTheWeek.teamName}
+                </Link>
+                <span className="text-sm sm:text-lg text-navy/60 ml-1.5 sm:ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-around items-start mb-4 pb-4 border-b border-navy/5">
+          <StatValue label="Bowlers" value={snapshot.totalBowlers} />
+          <StatValue label="League Avg" value={snapshot.leagueAverage.toFixed(1)} />
+        </div>
+      )}
 
     </div>
   );

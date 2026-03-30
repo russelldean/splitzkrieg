@@ -142,6 +142,28 @@ export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: Wee
   return { turkeyList, aboveAvgEveryGame, debuts, allTimeHighGames, allTimeHighSeries, bowlerOfWeek, teamOfWeek };
 }
 
+// ── League Heat Check ──────────────────────────────────────────
+
+export function computeLeagueHeat(weekScores: WeeklyMatchScore[]): {
+  pinsOverPerGame: number;
+  leagueAvg: number;
+  expectedAvg: number;
+} | null {
+  const real = weekScores.filter(s => s.scratchSeries != null && !s.isPenalty);
+  if (real.length === 0) return null;
+
+  const totalPins = real.reduce((sum, s) => sum + (s.scratchSeries ?? 0), 0);
+  const leagueAvg = totalPins / (real.length * 3);
+
+  const withAvg = real.filter(s => s.incomingAvg != null && s.incomingAvg > 0);
+  if (withAvg.length === 0) return null;
+
+  const expectedAvg = withAvg.reduce((sum, s) => sum + s.incomingAvg!, 0) / withAvg.length;
+  const pinsOverPerGame = Math.round((leagueAvg - expectedAvg) * 10) / 10;
+
+  return { pinsOverPerGame, leagueAvg: Math.round(leagueAvg * 10) / 10, expectedAvg: Math.round(expectedAvg * 10) / 10 };
+}
+
 // ── PIN Calculation ──────────────────────────────────────────
 
 const PENALTY_HCP_GAME = 199;
