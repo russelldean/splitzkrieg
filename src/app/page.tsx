@@ -120,21 +120,16 @@ export default async function Home() {
                       Week {seasonSnapshot.weekNumber} Results
                     </div>
                     {latestWeekDate && <div className="font-body text-sm text-white/70 mt-0.5">{latestWeekDate}</div>}
-                    <div className="hidden sm:block font-body text-sm text-white/50 mt-0.5">
-                      Season {seasonSnapshot.romanNumeral} · {seasonSnapshot.displayName}
-                    </div>
                   </div>
                   <svg className="w-5 h-5 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </Link>
-                {/* Countdown disabled temporarily — animation broken
                 <div className="hidden sm:block w-px bg-white/15 my-3" />
                 <div className="sm:hidden mx-6 h-px bg-white/15" />
                 <div className="px-6 py-4 flex items-center justify-center overflow-hidden">
                   <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
-                */}
               </div>
             </div>
           )}

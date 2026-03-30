@@ -217,12 +217,13 @@ export function InlineCountdown({ targetDate, followingDate, weekNumber }: Inlin
         }
       }
     };
-    update();
-    // Also detect if page loads mid-bowling
+    // Detect if page loads mid-bowling BEFORE first update,
+    // so the takeover doesn't fire on every Monday night page load
     if (isLeagueNightNow()) {
       takeoverFiredRef.current = true;
       setBowlingInProgress(true);
     }
+    update();
     const interval = setInterval(update, 200);
     return () => clearInterval(interval);
   }, [activeDate, getEffectiveTarget, fireTakeover, followingDate, weekNumber]);

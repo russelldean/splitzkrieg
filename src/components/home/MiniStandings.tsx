@@ -23,7 +23,7 @@ function StandingsGroup({ rows, divisionName }: { rows: StandingsRow[]; division
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.teamID} className="border-b border-navy/5">
+            <tr key={row.teamID} className={i === 1 ? 'border-b-2 border-dashed border-navy/20' : 'border-b border-navy/5'}>
               <td className="py-1 px-2 text-navy/65 tabular-nums text-xs">{i + 1}</td>
               <td className="py-1 px-2">
                 <Link

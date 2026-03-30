@@ -305,7 +305,7 @@ export async function getWeekCareerMilestones(seasonID: number, week: number): P
  */
 export function milestoneTickerItems(milestones: LeagueMilestones): TickerItem[] {
   return milestones.achieved.map((m) => ({
-    text: m.ordinal
+    text: m.ordinal && m.ordinal <= 50
       ? `${m.bowlerName}: ${m.threshold.toLocaleString()} ${m.categoryLabel} (#${m.ordinal} all-time)!`
       : `${m.bowlerName}: ${m.threshold.toLocaleString()} ${m.categoryLabel}!`,
     href: `/bowler/${m.slug}`,
