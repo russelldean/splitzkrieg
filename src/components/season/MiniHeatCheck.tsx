@@ -58,10 +58,10 @@ export function MiniHeatCheck({ pinsOverPerGame, leagueAvg, expectedAvg, bowlerC
         >
           {tier.label}
         </div>
-        <div className="text-[10px] sm:text-xs font-body text-navy/50 mt-1 sm:mt-1.5 leading-tight">
+        <div className="text-[11px] sm:text-sm font-body text-navy/50 mt-1 sm:mt-1.5 leading-tight">
           {leagueAvg.toFixed(1)} avg / {expectedAvg.toFixed(1)} exp
         </div>
-        <div className="text-[10px] sm:text-xs font-body text-navy/50 leading-tight">
+        <div className="text-[11px] sm:text-sm font-body text-navy/50 leading-tight">
           {bowlerCount} bowlers
         </div>
       </div>

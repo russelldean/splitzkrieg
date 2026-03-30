@@ -163,6 +163,7 @@ export default async function Home() {
 
           {/* Right column: This Week's Matchups + Season Snapshot */}
           <div className="space-y-6">
+            <SeasonSnapshot snapshot={seasonSnapshot} />
             {seasonSnapshot && weekSchedule.length > 0 && nextWeekNumber > 0 && (
               <ThisWeekMatchups
                 matchups={weekSchedule}
@@ -172,7 +173,6 @@ export default async function Home() {
                 romanNumeral={seasonSnapshot.romanNumeral}
               />
             )}
-            <SeasonSnapshot snapshot={seasonSnapshot} />
           </div>
         </div>
 

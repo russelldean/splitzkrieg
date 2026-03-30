@@ -43,10 +43,12 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-6 min-h-[180px]">
-      <div className="flex items-baseline justify-between mb-1">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-6 sm:pb-10 min-h-[180px]">
+      <div className="flex items-baseline justify-between mb-5 sm:mb-6">
         <h3 className="font-heading text-lg text-navy">
           Season {strikeX(snapshot.romanNumeral)}
+          <span className="text-navy/40 mx-1.5">&middot;</span>
+          <span className="text-navy">Week {snapshot.weekNumber}</span>
         </h3>
         <Link
           href={`/stats/${snapshot.slug}`}
@@ -55,16 +57,13 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           Full leaderboards &rarr;
         </Link>
       </div>
-      <p className="inline-block text-xs font-body font-semibold text-navy/70 bg-navy/[0.06] px-2 py-0.5 rounded mb-4 tabular-nums">
-        Week {snapshot.weekNumber}
-      </p>
 
       {/* Heat Check + Weekly Highlights side by side */}
       {snapshot.expectedLeagueAverage > 0 ? (
         <div className="flex items-start gap-5">
           {/* Left: Heat Check */}
           <div className="shrink-0">
-            <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-2">Weekly Heat Check</div>
+            <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-2">League Heat Check</div>
             <MiniHeatCheck
               pinsOverPerGame={Math.round((snapshot.leagueAverage - snapshot.expectedLeagueAverage) * 10) / 10}
               leagueAvg={snapshot.leagueAverage}
@@ -74,7 +73,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           </div>
 
           {/* Right: BOTW / TOTW */}
-          <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 space-y-3 sm:space-y-4">
+          <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 space-y-3 sm:space-y-5">
             {snapshot.bowlerOfTheWeek && (
               <div>
                 <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
