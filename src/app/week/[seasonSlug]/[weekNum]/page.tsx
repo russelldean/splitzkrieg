@@ -99,7 +99,7 @@ export default async function WeekPage({
 
   // Get date for this week
   const matchDate = weekScores[0]?.matchDate ?? weekSchedule[0]?.matchDate ?? null;
-  const dateStr = formatMatchDate(matchDate, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const dateStr = formatMatchDate(matchDate, { weekday: 'long', month: 'long', day: 'numeric' });
 
   // Detect future week (has schedule but no scores, and season is current)
   const isFutureWeek = weekSchedule.length > 0 && weekScores.length === 0;

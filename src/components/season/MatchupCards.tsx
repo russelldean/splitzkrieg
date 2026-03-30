@@ -15,9 +15,9 @@ function isForfeitTeam(bowlers: WeeklyMatchScore[]): boolean {
 /** Color class for game-by-game win/loss in matchup summary. */
 function gameWinClass(myScore: number | null, oppScore: number | null): string {
   if (myScore == null || oppScore == null) return '';
-  if (myScore > oppScore) return 'text-green-600 font-semibold';
+  if (myScore > oppScore) return 'text-amber-600 font-semibold';
   if (myScore < oppScore) return 'text-navy/65';
-  return 'text-amber-600'; // tie
+  return 'text-navy/80'; // tie
 }
 
 /** Matchup summary bar showing team hcp totals, wins, XP, total pts. */
