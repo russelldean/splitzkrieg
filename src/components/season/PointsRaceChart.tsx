@@ -50,7 +50,7 @@ const TEAM_COLORS = [
 
 const MUTED_COLOR = '#9CA3AF'; // gray-400 -- more visible than gray-300
 
-export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDivisions }: Props) {
+export function PointsRaceChart({ raceData, standings, playoffTeamIDs, hasDivisions }: Props) {
   const [activeTeams, setActiveTeams] = useState<Set<string>>(new Set());
   const [initialized, setInitialized] = useState(false);
 
@@ -93,14 +93,12 @@ export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDiv
 
     for (const week of weeks) {
       const weekRows = raceData.filter(r => r.week === week);
-      // Sort by totalPts DESC to compute ranks
-      const sorted = [...weekRows].sort((a, b) => b.totalPts - a.totalPts);
 
       const point: Record<string, number | string> = { week: `Wk ${week}` };
-      sorted.forEach((row, i) => {
+      for (const row of weekRows) {
         const name = teamNameMap.get(row.teamID) ?? `Team ${row.teamID}`;
-        point[name] = i + 1; // rank
-      });
+        point[name] = row.totalPts;
+      }
       data.push(point);
     }
 
@@ -141,7 +139,7 @@ export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDiv
   return (
     <section id="race">
       <p className="font-body text-sm text-navy/60 mb-4">
-        Team rank positions each week. Toggle teams on/off to compare.
+        Team rank positions by total points over the season. Current playoff positions highlighted by default. Toggle teams on/off to compare.
       </p>
       <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-4">
         <ResponsiveContainer width="100%" height={Math.max(300, teamCount * 20 + 100)}>
@@ -153,15 +151,13 @@ export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDiv
               axisLine={{ stroke: '#1B2A4A', opacity: 0.1 }}
             />
             <YAxis
-              reversed
-              domain={[1, teamCount]}
-              ticks={Array.from({ length: teamCount }, (_, i) => i + 1)}
+              domain={[0, 'auto']}
               tick={{ fontSize: 11, fill: '#1B2A4A', opacity: 0.6 }}
               tickLine={false}
               axisLine={false}
-              width={30}
+              width={35}
               label={{
-                value: 'Rank',
+                value: 'Points',
                 angle: -90,
                 position: 'insideLeft',
                 style: { fontSize: 11, fill: '#1B2A4A', opacity: 0.4 },
@@ -170,10 +166,10 @@ export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDiv
             <Tooltip
               content={({ active, payload, label }) => {
                 if (!active || !payload || payload.length === 0) return null;
-                // Sort by rank (value) ascending
+                // Sort by points descending
                 const sorted = [...payload]
                   .filter(p => p.value != null && activeTeams.has(p.dataKey as string))
-                  .sort((a, b) => (a.value as number) - (b.value as number));
+                  .sort((a, b) => (b.value as number) - (a.value as number));
                 if (sorted.length === 0) return null;
                 return (
                   <div className="bg-white border border-navy/10 rounded-lg px-3 py-2 shadow-lg text-xs font-body">
@@ -181,7 +177,7 @@ export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDiv
                     {sorted.map((entry) => (
                       <div key={entry.dataKey as string} className="flex items-center gap-1.5 py-0.5">
                         <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: entry.color }} />
-                        <span className="text-navy/50">#{entry.value}</span>
+                        <span className="text-navy/50">{entry.value} pts</span>
                         <span className="text-navy" style={{ color: entry.color }}>{entry.dataKey}</span>
                       </div>
                     ))}

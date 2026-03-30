@@ -1,6 +1,18 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import type { StandingsRow } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { StandingsRaceChart } from './StandingsRaceChart';
+import { WeeklyHeatmap } from './WeeklyHeatmap';
+
+interface RaceChartData {
+  week: number;
+  teamID: number;
+  teamName: string;
+  totalPts: number;
+}
 
 interface Props {
   standings: StandingsRow[];
@@ -14,6 +26,22 @@ interface Props {
   compact?: boolean;
   /** Show (+x) last-week delta on points. Defaults to true. */
   showDelta?: boolean;
+  /** Race data for inline heatmap columns */
+  raceData?: RaceChartData[];
+}
+
+/** Map 0-9 weekly points to a heat color. */
+function heatColor(pts: number): string {
+  const colors = [
+    '#1E3A8A', '#2563EB', '#3B82F6', '#93C5FD', '#E5E7EB',
+    '#FDE68A', '#FBBF24', '#F59E0B', '#EA580C', '#DC2626',
+  ];
+  return colors[Math.min(9, Math.max(0, pts))] ?? '#E5E7EB';
+}
+
+function heatTextColor(pts: number): string {
+  if (pts <= 2 || pts >= 8) return '#FFFFFF';
+  return '#1B2A4A';
 }
 
 /**
@@ -59,30 +87,40 @@ function StandingsTable({
   startRank,
   playoffTeamIDs,
   showDelta = true,
+  weeklyPts,
+  weeks,
 }: {
   rows: StandingsRow[];
   startRank: number;
   playoffTeamIDs: Set<number>;
   showDelta?: boolean;
+  weeklyPts?: Map<number, number[]>;
+  weeks?: number[];
 }) {
+  const hasHeat = weeklyPts && weeks && weeks.length > 0;
   return (
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto -mx-4 sm:mx-0">
       <table className="w-full text-xs sm:text-base font-body">
         <thead className="sticky top-0 z-20">
           <tr className="border-b border-navy/10 bg-white text-navy/65 text-xs sm:text-sm uppercase tracking-wider shadow-[0_1px_0_0_rgba(0,0,0,0.06)]">
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right w-8 sm:w-12">#</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left">Team</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right">Pts</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">Wins</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">XP</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right sm:hidden">W/XP</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">Scratch Avg</th>
-            <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-right hidden sm:table-cell">HCP Avg</th>
+            <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-right w-8 sm:w-10">#</th>
+            <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Team</th>
+            <th className="px-2 py-1.5 sm:py-2 text-right">Pts</th>
+            <th className="px-2 py-1.5 sm:py-2 text-right hidden sm:table-cell">Wins</th>
+            <th className="px-2 py-1.5 sm:py-2 text-right hidden sm:table-cell">XP</th>
+            <th className="px-2 py-1.5 sm:py-2 text-right sm:hidden">W/XP</th>
+            <th className="px-2 py-1.5 sm:py-2 text-right hidden sm:table-cell">Scr Avg</th>
+            <th className="px-2 py-1.5 sm:py-2 text-right hidden sm:table-cell">Hcp Avg</th>
+            {hasHeat && <th className="px-3 hidden md:table-cell"><div className="w-px h-4 bg-navy/30 mx-auto" /></th>}
+            {hasHeat && weeks.map(w => (
+              <th key={w} className={`px-0 py-1.5 sm:py-2 text-center w-7 hidden md:table-cell text-[10px] ${w === weeks[weeks.length - 1] ? 'pr-3' : ''}`}>{w}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => {
             const inPlayoffs = playoffTeamIDs.has(row.teamID);
+            const teamWeekPts = weeklyPts?.get(row.teamID);
             return (
               <tr
                 key={row.teamID}
@@ -90,10 +128,10 @@ function StandingsTable({
                   inPlayoffs ? 'bg-amber-100/70 border-l-2 border-l-amber-400' : ''
                 }`}
               >
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right text-navy/65 tabular-nums">
+                <td className="px-2 py-1.5 sm:py-2.5 text-right text-navy/65 tabular-nums">
                   {startRank + i}
                 </td>
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium">
+                <td className="px-2 py-1.5 sm:py-2.5 font-medium">
                   <Link
                     href={`/team/${row.teamSlug}`}
                     className="text-navy hover:text-red-600 transition-colors"
@@ -101,30 +139,78 @@ function StandingsTable({
                     {row.teamName}
                   </Link>
                 </td>
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums font-semibold text-navy">
+                <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums font-semibold text-navy">
                   {row.totalPts}
-                  {showDelta && row.lastWeekPts != null && (
-                    <span className="text-xs font-normal text-navy/65 ml-1">
-                      (+{row.lastWeekPts})
-                    </span>
-                  )}
                 </td>
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">{row.wins}</td>
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">{row.xp}</td>
+                <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">{row.wins}</td>
+                <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">{row.xp}</td>
                 <td className="px-2 py-1.5 text-right tabular-nums text-navy/70 sm:hidden">{row.wins}/{row.xp}</td>
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
+                <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
                   {row.teamScratchAvg?.toFixed(1) ?? '\u2014'}
                   <span className="text-navy/65 text-xs ml-1">({row.scratchAvgRank})</span>
                 </td>
-                <td className="px-2 sm:px-4 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
+                <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
                   {row.teamHcpAvg?.toFixed(1) ?? '\u2014'}
                   <span className="text-navy/65 text-xs ml-1">({row.hcpAvgRank})</span>
                 </td>
+                {hasHeat && <td className="px-3 hidden md:table-cell"><div className="w-px h-4 bg-navy/30 mx-auto" /></td>}
+                {hasHeat && teamWeekPts?.map((pts, wi) => (
+                  <td key={wi} className={`px-0 py-1 text-center hidden md:table-cell ${wi === teamWeekPts.length - 1 ? 'pr-3' : ''}`}>
+                    <div
+                      className="mx-auto w-6 h-6 rounded-sm flex items-center justify-center text-[10px] font-semibold tabular-nums"
+                      style={{ backgroundColor: heatColor(pts), color: heatTextColor(pts) }}
+                    >
+                      {pts}
+                    </div>
+                  </td>
+                ))}
               </tr>
             );
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function DivisionRaceSection({ divName, raceData, standings, playoffTeamIDs }: {
+  divName: string;
+  raceData: RaceChartData[];
+  standings: StandingsRow[];
+  playoffTeamIDs: Set<number>;
+}) {
+  const [open, setOpen] = useState(false);
+  if (raceData.length === 0) return null;
+
+  return (
+    <div className="mt-4">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10 hover:bg-navy/[0.06] transition-colors group"
+      >
+        <span className="font-heading text-sm text-navy/70 group-hover:text-navy transition-colors">
+          {divName} Season Race
+        </span>
+        <span className="flex items-center gap-2 text-xs font-body text-navy/70 group-hover:text-navy transition-colors">
+          {open ? 'Hide' : 'View chart'}
+          <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </span>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-4">
+          <StandingsRaceChart
+            raceData={raceData}
+            standings={standings}
+            playoffTeamIDs={playoffTeamIDs}
+            hasDivisions={false}
+          />
+          <div className="md:hidden">
+            <WeeklyHeatmap raceData={raceData} standings={standings} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -191,7 +277,7 @@ function CompactStandingsCard({
   );
 }
 
-export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber, compact, showDelta = true }: Props) {
+export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber, compact, showDelta = true, raceData }: Props) {
   if (standings.length === 0) {
     return (
       <section id="standings">
@@ -199,6 +285,22 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
         <p className="font-body text-navy/65">No standings data available for this season.</p>
       </section>
     );
+  }
+
+  // Compute per-team weekly points from race data
+  const weeks = raceData ? Array.from(new Set(raceData.map(r => r.week))).sort((a, b) => a - b) : [];
+  const weeklyPts = new Map<number, number[]>();
+  if (raceData && weeks.length > 0) {
+    for (const s of standings) {
+      const pts = weeks.map((w, i) => {
+        const thisWeek = raceData.find(r => r.teamID === s.teamID && r.week === w)?.totalPts ?? 0;
+        const prevWeek = i > 0
+          ? (raceData.find(r => r.teamID === s.teamID && r.week === weeks[i - 1])?.totalPts ?? 0)
+          : 0;
+        return thisWeek - prevWeek;
+      });
+      weeklyPts.set(s.teamID, pts);
+    }
   }
 
   // Use actual playoff teams when available, fall back to computed positions
@@ -234,12 +336,27 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
               if (!divisions.has(div)) divisions.set(div, []);
               divisions.get(div)!.push(row);
             }
-            return Array.from(divisions.entries()).map(([divName, rows]) => (
-              <div key={divName}>
-                <h3 className="font-heading text-lg text-navy/70 mb-3">{divName}</h3>
-                <StandingsTable rows={rows} startRank={1} playoffTeamIDs={playoffTeamIDs} showDelta={showDelta} />
-              </div>
-            ));
+            const teamDiv = new Map<number, string>();
+            for (const s of standings) teamDiv.set(s.teamID, s.divisionName ?? 'Other');
+
+            return Array.from(divisions.entries()).map(([divName, rows]) => {
+              const divRaceData = raceData?.filter(r => teamDiv.get(r.teamID) === divName) ?? [];
+              const divPlayoffIDs = new Set(rows.slice(0, 2).map(r => r.teamID));
+              return (
+                <div key={divName}>
+                  <h3 className="font-heading text-lg text-navy/70 mb-3">{divName}</h3>
+                  <StandingsTable rows={rows} startRank={1} playoffTeamIDs={playoffTeamIDs} showDelta={showDelta} weeklyPts={weeklyPts} weeks={weeks} />
+                  {divRaceData.length > 0 && (
+                    <DivisionRaceSection
+                      divName={divName}
+                      raceData={divRaceData}
+                      standings={rows}
+                      playoffTeamIDs={playoffTeamIDs?.size ? new Set(rows.filter(r => playoffTeamIDs.has(r.teamID)).map(r => r.teamID)) : divPlayoffIDs}
+                    />
+                  )}
+                </div>
+              );
+            });
           })()}
         </div>
         )

@@ -30,7 +30,6 @@ import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { SeasonHero } from '@/components/season/SeasonHero';
 import { Standings } from '@/components/season/Standings';
 import { SeasonHighlights } from '@/components/season/SeasonHighlights';
-import { StandingsRaceChart } from '@/components/season/StandingsRaceChart';
 import { CompactWeekList } from '@/components/season/CompactWeekList';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SeasonNav } from '@/components/season/SeasonNav';
@@ -125,13 +124,7 @@ export default async function SeasonPage({
       )}
 
       <div className="mt-8 space-y-12">
-        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} />
-
-        {hasScheduleData && raceData.length > 0 && (
-          <CollapsibleSection title="Standings Race" defaultOpen>
-            <StandingsRaceChart raceData={raceData} standings={standings} playoffTeamIDs={playoffTeams} hasDivisions={hasDivisions} />
-          </CollapsibleSection>
-        )}
+        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} raceData={raceData} />
 
         {/* Compact week list — replaces full weekly results */}
         {totalWeeks > 0 ? (
