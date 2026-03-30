@@ -66,8 +66,7 @@ export function WeeklyHeatmap({ raceData, standings }: Props) {
       <table className="w-full text-sm font-body">
         <thead>
           <tr className="border-b border-navy/10 bg-navy/[0.02] text-navy/65 text-xs uppercase tracking-wider">
-            <th className="px-3 py-2 text-left w-8">#</th>
-            <th className="px-3 py-2 text-left">Team</th>
+            <th className="px-3 py-2 text-left sticky left-0 bg-[#F7F5F0] z-10">Team</th>
             {weeks.map(w => (
               <th key={w} className="px-1 py-2 text-center w-10">Wk{w}</th>
             ))}
@@ -77,8 +76,8 @@ export function WeeklyHeatmap({ raceData, standings }: Props) {
         <tbody>
           {teamWeekPts.map((t, i) => (
             <tr key={t.teamID} className="border-b border-navy/5">
-              <td className="px-3 py-1 text-navy/50 tabular-nums">{i + 1}</td>
-              <td className="px-3 py-1 whitespace-nowrap">
+              <td className="px-3 py-1 whitespace-nowrap sticky left-0 bg-white z-10">
+                <span className="text-navy/50 tabular-nums mr-2">{i + 1}</span>
                 <Link href={`/team/${t.teamSlug}`} className="text-navy hover:text-red-600 transition-colors text-xs sm:text-sm">
                   {t.teamName}
                 </Link>

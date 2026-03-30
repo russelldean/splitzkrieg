@@ -28,12 +28,7 @@ export function SeasonNav({ current, allSeasons, basePath = '/season' }: Props) 
           </Link>
         ) : <span />}
       </div>
-      <Link
-        href="/seasons"
-        className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
-      >
-        All Seasons
-      </Link>
+      <span />
       <div>
         {next ? (
           <Link

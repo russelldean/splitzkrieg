@@ -192,7 +192,7 @@ function DivisionRaceSection({ divName, raceData, standings, playoffTeamIDs }: {
           {divName} Season Race
         </span>
         <span className="flex items-center gap-2 text-xs font-body text-navy/70 group-hover:text-navy transition-colors">
-          {open ? 'Hide' : 'View chart'}
+          {open ? 'Hide' : <><span className="hidden md:inline">View chart</span><span className="md:hidden">View charts</span></>}
           <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
           </svg>
@@ -200,15 +200,15 @@ function DivisionRaceSection({ divName, raceData, standings, playoffTeamIDs }: {
       </button>
       {open && (
         <div className="mt-3 space-y-4">
+          <div className="md:hidden">
+            <WeeklyHeatmap raceData={raceData} standings={standings} />
+          </div>
           <StandingsRaceChart
             raceData={raceData}
             standings={standings}
             playoffTeamIDs={playoffTeamIDs}
             hasDivisions={false}
           />
-          <div className="md:hidden">
-            <WeeklyHeatmap raceData={raceData} standings={standings} />
-          </div>
         </div>
       )}
     </div>
