@@ -195,7 +195,7 @@ export default async function AllTimeStatsPage() {
                 {(Object.entries(archetypeCounts) as [string, number][]).map(([archetype, count]) => (
                   <span key={archetype} className="text-navy">
                     <span className="font-semibold tabular-nums">{count}</span>
-                    <span className="text-navy/60 ml-1">{archetype}{count !== 1 ? 's' : ''}</span>
+                    <span className="text-navy/60 ml-1">{count !== 1 && archetype === 'Middle Child' ? 'Middle Children' : `${archetype}${count !== 1 ? 's' : ''}`}</span>
                   </span>
                 ))}
               </div>

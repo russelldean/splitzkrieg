@@ -671,8 +671,8 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
       head: [columns],
       body: [
         ...homeRows,
-        [{ content: '', colSpan: 4, styles: { fillColor: white } }, { content: 'total w/ hdcp', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: white } }, '', '', ''],
-        [{ content: '', colSpan: 5, styles: { fillColor: [255, 255, 255] as [number, number, number] } }, { content: 'win/loss', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'italic' as const } }, '', ''],
+        [{ content: 'total w/ hdcp', colSpan: 4, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: white } }, '', '', '', ''],
+        [{ content: 'win/loss', colSpan: 4, styles: { halign: 'right' as const, fontStyle: 'italic' as const, fillColor: [255, 255, 255] as [number, number, number] } }, '', '', '', ''],
       ],
       theme: 'grid',
       styles: {
@@ -740,8 +740,8 @@ export async function generateScoresheet(matches: ScoresheetMatch[]): Promise<js
       head: [columns],
       body: [
         ...awayRows,
-        [{ content: '', colSpan: 4, styles: { fillColor: white } }, { content: 'total w/ hdcp', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: white } }, '', '', ''],
-        [{ content: '', colSpan: 5, styles: { fillColor: [255, 255, 255] as [number, number, number] } }, { content: 'win/loss', colSpan: 1, styles: { halign: 'right' as const, fontStyle: 'italic' as const } }, '', ''],
+        [{ content: 'total w/ hdcp', colSpan: 4, styles: { halign: 'right' as const, fontStyle: 'bolditalic' as const, fillColor: white } }, '', '', '', ''],
+        [{ content: 'win/loss', colSpan: 4, styles: { halign: 'right' as const, fontStyle: 'italic' as const, fillColor: [255, 255, 255] as [number, number, number] } }, '', '', '', ''],
       ],
       theme: 'grid',
       styles: {
