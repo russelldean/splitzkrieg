@@ -199,9 +199,16 @@ export function InlineCountdown({ targetDate, followingDate, weekNumber }: Inlin
     const update = () => {
       const cd = computeCountdown(targetMs);
       setCountdown(cd);
-      // Fire takeover when countdown reaches zero
+      // Fire takeover when countdown reaches zero (only if target is today)
       if (cd.isPast && !takeoverFiredRef.current) {
-        fireTakeover();
+        const now = new Date();
+        const target = new Date(targetMs);
+        const sameDay = now.getFullYear() === target.getFullYear()
+          && now.getMonth() === target.getMonth()
+          && now.getDate() === target.getDate();
+        if (sameDay) {
+          fireTakeover();
+        }
       }
       // Check if bowling is still in progress (clears after 10:45 PM ET)
       if (cd.isPast && takeoverFiredRef.current && !switchedToFollowingRef.current) {
@@ -218,10 +225,18 @@ export function InlineCountdown({ targetDate, followingDate, weekNumber }: Inlin
       }
     };
     // Detect if page loads mid-bowling BEFORE first update,
-    // so the takeover doesn't fire on every Monday night page load
-    if (isLeagueNightNow()) {
-      takeoverFiredRef.current = true;
-      setBowlingInProgress(true);
+    // so the takeover doesn't fire on every Monday night page load.
+    // Only trigger if today is actually the target bowling night.
+    if (isLeagueNightNow() && targetMs !== null) {
+      const now = new Date();
+      const target = new Date(targetMs);
+      const sameDay = now.getFullYear() === target.getFullYear()
+        && now.getMonth() === target.getMonth()
+        && now.getDate() === target.getDate();
+      if (sameDay) {
+        takeoverFiredRef.current = true;
+        setBowlingInProgress(true);
+      }
     }
     update();
     const interval = setInterval(update, 200);

@@ -1,6 +1,3 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import type { WeekSummary, SeasonScheduleWeek } from '@/lib/queries';
 import { formatMatchDate } from '@/lib/bowling-time';
@@ -14,8 +11,6 @@ interface Props {
 }
 
 export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeeks }: Props) {
-  const [expanded, setExpanded] = useState(true);
-
   const summaryMap = new Map(weekSummaries.map(w => [w.week, w]));
   // Build a map of week -> matchDate from schedule for weeks without scores
   const scheduleDateMap = new Map<number, string>();
@@ -28,18 +23,9 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
 
   return (
     <section id="weekly">
-      <div className="flex items-center justify-between mb-2">
-        <SectionHeading className="mb-0">Weekly Results</SectionHeading>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
-        >
-          {expanded ? 'Collapse' : 'Expand'}
-        </button>
-      </div>
+      <SectionHeading>Weekly Results</SectionHeading>
 
-      {expanded && (
-        <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden divide-y divide-navy/5">
+      <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden divide-y divide-navy/5">
           {weeks.map(week => {
             const summary = summaryMap.get(week);
             const hasScores = !!summary;
@@ -106,7 +92,6 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
             );
           })}
         </div>
-      )}
 
     </section>
   );

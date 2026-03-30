@@ -205,22 +205,29 @@ export default async function WeekPage({
       </div>
 
       {/* Blog cross-link */}
-      {blogPost && (
+      {blogPost && (<>
+        <style>{`@keyframes nudge-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(197, 48, 48, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(197, 48, 48, 0); } }`}</style>
         <Link
           href={`/blog/${blogPost.slug}`}
-          className="flex items-center gap-2 px-4 py-3 mb-6 rounded-lg bg-cream border border-navy/10 hover:border-red-600/30 transition-colors group"
+          className="group block mb-6 bg-white border-2 border-red-600/60 rounded-xl p-4 sm:p-5 hover:border-red-600 hover:shadow-md transition-all animate-[nudge-glow_2.5s_ease-in-out_infinite]"
         >
-          <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-          </svg>
-          <span className="font-body text-sm text-navy/70 group-hover:text-red-600 transition-colors">
-            Read the Week {weekNum} recap on the blog
-          </span>
-          <svg className="w-3 h-3 text-navy/40 group-hover:text-red-600 ml-auto transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-wide font-semibold text-red-600 font-body">
+                The Weekly Email
+              </p>
+              <p className="text-lg font-heading text-navy">
+                Read the full Week {weekNum} recap...
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center shrink-0 group-hover:bg-red-700 transition-colors">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
+          </div>
         </Link>
-      )}
+      </>)}
 
       {isMissingData ? (
         <div className="px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10">
