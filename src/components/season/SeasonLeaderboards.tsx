@@ -243,7 +243,7 @@ export function SeasonLeaderboards({
                 />
                 {isLastAvgBeforeNonAvg && (
                   <p className="font-body text-xs text-navy/60 mt-4">
-                    Top 8 qualify for individual playoffs. Bowlers must bowl 18 games in the season.
+                    To qualify for the individual playoffs, bowlers must bowl 18 games in the season.
                     To qualify for team playoffs, bowlers must bowl 9 games with the team.
                   </p>
                 )}
