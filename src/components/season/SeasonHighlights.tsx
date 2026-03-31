@@ -194,7 +194,7 @@ function TeamRecordCard({ title, records, currentWeek }: { title: string; record
         const isTop = r.value === topVal;
         const isNew = r.week === currentWeek;
         return (
-          <div key={`${r.teamSlug}-${r.week}-${i}`} className={`flex justify-between text-sm font-body py-0.5 px-1.5 -mx-1.5 rounded ${isNew ? 'bg-amber-50' : ''}`}>
+          <div key={`${r.teamSlug}-${r.week}-${i}`} className={`flex justify-between text-sm font-body py-0.5 px-1.5 -mx-1.5 rounded ${isNew ? 'bg-amber-100 border-l-2 border-l-amber-400' : ''}`}>
             <span className="truncate mr-2">
               <Link href={`/team/${r.teamSlug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                 {r.teamName}
@@ -219,7 +219,7 @@ function IndividualRecordCard({ title, records, currentWeek }: { title: string; 
         const isTop = r.value === topVal;
         const isNew = r.week === currentWeek;
         return (
-          <div key={`${r.slug}-${r.week}-${i}`} className={`flex justify-between text-sm font-body py-0.5 px-1.5 -mx-1.5 rounded ${isNew ? 'bg-amber-50' : ''}`}>
+          <div key={`${r.slug}-${r.week}-${i}`} className={`flex justify-between text-sm font-body py-0.5 px-1.5 -mx-1.5 rounded ${isNew ? 'bg-amber-100 border-l-2 border-l-amber-400' : ''}`}>
             <span className="truncate mr-2">
               <Link href={`/bowler/${r.slug}`} className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}>
                 {r.name}

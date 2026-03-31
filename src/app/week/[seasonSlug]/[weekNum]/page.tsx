@@ -172,12 +172,7 @@ export default async function WeekPage({
               </Link>
             ) : <span />}
           </div>
-          <Link
-            href="/week"
-            className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
-          >
-            All Weeks
-          </Link>
+          <span />
           <div>
             {nextWeek ? (
               <Link
