@@ -95,6 +95,9 @@ export async function POST(request: NextRequest) {
 
       const name = team.bowlerName || 'Captain';
 
+      // Resend free tier: max 2 emails/second — pace sends
+      if (sent > 0) await new Promise(r => setTimeout(r, 600));
+
       try {
         await resend.emails.send({
           from: fromAddress,
