@@ -105,7 +105,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                 {seasons.slice(1).map((season) => (
                   <div
                     key={season.seasonID}
-                    className="flex items-center justify-between gap-2 px-4 py-3.5 bg-white rounded-xl border border-navy/8 shadow-sm hover:border-navy/15 hover:shadow-md transition-all group"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3.5 bg-white rounded-xl border border-navy/8 shadow-sm hover:border-navy/15 hover:shadow-md transition-all group"
                   >
                     <div className="min-w-0">
                       <div className="flex items-baseline gap-2">
@@ -119,7 +119,7 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                           {season.romanNumeral}
                         </span>
                       </div>
-                      <div className="flex gap-3 text-xs font-body text-navy/55 mt-0.5">
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-body text-navy/55 mt-0.5">
                         <span className="tabular-nums">{season.teamCount} teams</span>
                         <span className="tabular-nums">{season.bowlerCount} bowlers</span>
                         {season.champion && (

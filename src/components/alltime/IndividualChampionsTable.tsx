@@ -125,9 +125,12 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
 
   return (
     <div className="relative overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.06] text-[16rem] leading-none select-none flex flex-col items-center justify-start pt-24 gap-16">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.08] sm:opacity-[0.06] text-[6rem] sm:text-[12rem] leading-none select-none flex flex-col items-start justify-start pt-16 sm:pt-24 gap-10 sm:gap-16">
         {Array.from({ length: 10 }, (_, i) => (
-          <span key={i}>🏆</span>
+          <div key={i} className="flex w-full justify-evenly shrink-0">
+            <span>🏆</span>
+            <span>🏆</span>
+          </div>
         ))}
       </div>
       <table className="relative w-full text-sm">
