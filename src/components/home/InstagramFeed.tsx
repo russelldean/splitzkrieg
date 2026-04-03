@@ -24,23 +24,31 @@ export function InstagramFeed({ posts }: Props) {
           </svg>
         </a>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="space-y-3">
         {posts.map((post) => (
           <a
             key={post.id}
             href={post.permalink}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative aspect-square rounded-lg overflow-hidden group"
+            className="block rounded-lg overflow-hidden border border-navy/10 shadow-sm group hover:shadow-md transition-shadow"
           >
-            <Image
-              src={post.mediaType === 'VIDEO' ? (post.thumbnailUrl || post.mediaUrl) : post.mediaUrl}
-              alt={post.caption?.slice(0, 100) || 'Instagram post'}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 640px) 33vw, 16vw"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+            <div className="relative aspect-square">
+              <Image
+                src={post.mediaType === 'VIDEO' ? (post.thumbnailUrl || post.mediaUrl) : post.mediaUrl}
+                alt={post.caption?.slice(0, 100) || 'Instagram post'}
+                fill
+                className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+            {post.caption && (
+              <div className="px-3 py-2 bg-white">
+                <p className="font-body text-xs text-navy/70 line-clamp-2">
+                  {post.caption}
+                </p>
+              </div>
+            )}
           </a>
         ))}
       </div>

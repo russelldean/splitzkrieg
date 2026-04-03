@@ -151,21 +151,33 @@ export default async function Home() {
       {/* Content Grid */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Mini Standings */}
-          <TrackVisibility section="standings" page="home">
-            <div>
-              {seasonSnapshot && (
-                <MiniStandings
-                  standings={standings}
-                  seasonSlug={seasonSnapshot.slug}
-                  romanNumeral={seasonSnapshot.romanNumeral}
-                />
-              )}
-            </div>
-          </TrackVisibility>
-
-          {/* Right column: This Week's Matchups + Season Snapshot */}
+          {/* Left column: Fresh content — Blog + Instagram */}
           <div className="space-y-6">
+            {promotedPost && (
+              <TrackVisibility section="promoted-blog" page="home">
+                <PromotedBlogCard post={promotedPost} />
+              </TrackVisibility>
+            )}
+            {instagramPosts.length > 0 && (
+              <TrackVisibility section="instagram-feed" page="home">
+                <InstagramFeed posts={instagramPosts} />
+              </TrackVisibility>
+            )}
+          </div>
+
+          {/* Right column: League data — Standings + Snapshot + Matchups */}
+          <div className="space-y-6">
+            <TrackVisibility section="standings" page="home">
+              <div>
+                {seasonSnapshot && (
+                  <MiniStandings
+                    standings={standings}
+                    seasonSlug={seasonSnapshot.slug}
+                    romanNumeral={seasonSnapshot.romanNumeral}
+                  />
+                )}
+              </div>
+            </TrackVisibility>
             <TrackVisibility section="season-snapshot" page="home">
               <SeasonSnapshot snapshot={seasonSnapshot} />
             </TrackVisibility>
@@ -182,23 +194,6 @@ export default async function Home() {
             )}
           </div>
         </div>
-
-        {/* Promoted Blog Post */}
-        {promotedPost && (
-          <TrackVisibility section="promoted-blog" page="home">
-            <div className="mt-6">
-              <PromotedBlogCard post={promotedPost} />
-            </div>
-          </TrackVisibility>
-        )}
-
-        {instagramPosts.length > 0 && (
-          <TrackVisibility section="instagram-feed" page="home">
-            <div className="mt-6">
-              <InstagramFeed posts={instagramPosts} />
-            </div>
-          </TrackVisibility>
-        )}
       </section>
     </div>
   );
