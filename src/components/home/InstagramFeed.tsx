@@ -11,7 +11,7 @@ export function InstagramFeed({ posts }: Props) {
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-heading text-lg text-navy">From Instagram</h3>
+        <h3 className="font-heading text-lg text-navy">...over on Instagram</h3>
         <a
           href="https://www.instagram.com/splitzkriegbowlingleague/"
           target="_blank"
