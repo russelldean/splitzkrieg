@@ -98,13 +98,15 @@ export default async function GameProfilesPage() {
         <DistCard archetype="Flatliner" count={activeDist['Flatliner']} total={totalActive} desc="Consistent all night" color="bg-slate-50 border-slate-200" />
       </div>
 
-      {/* Distribution summary — All Bowlers */}
-      <p className="mt-5 font-heading text-sm text-navy mb-2">All Bowlers ({totalAll})</p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <DistCard archetype="Fast Starter" count={dist['Fast Starter']} total={totalAll} desc="Best in Game 1" color="bg-orange-50 border-orange-200" />
-        <DistCard archetype="Middle Child" count={dist['Middle Child']} total={totalAll} desc="Best in Game 2" color="bg-purple-50 border-purple-200" />
-        <DistCard archetype="Late Bloomer" count={dist['Late Bloomer']} total={totalAll} desc="Best in Game 3" color="bg-emerald-50 border-emerald-200" />
-        <DistCard archetype="Flatliner" count={dist['Flatliner']} total={totalAll} desc="Consistent all night" color="bg-slate-50 border-slate-200" />
+      {/* Distribution summary — All Bowlers: desktop only */}
+      <div className="hidden sm:block">
+        <p className="mt-5 font-heading text-sm text-navy mb-2">All Bowlers ({totalAll})</p>
+        <div className="grid grid-cols-4 gap-3">
+          <DistCard archetype="Fast Starter" count={dist['Fast Starter']} total={totalAll} desc="Best in Game 1" color="bg-orange-50 border-orange-200" />
+          <DistCard archetype="Middle Child" count={dist['Middle Child']} total={totalAll} desc="Best in Game 2" color="bg-purple-50 border-purple-200" />
+          <DistCard archetype="Late Bloomer" count={dist['Late Bloomer']} total={totalAll} desc="Best in Game 3" color="bg-emerald-50 border-emerald-200" />
+          <DistCard archetype="Flatliner" count={dist['Flatliner']} total={totalAll} desc="Consistent all night" color="bg-slate-50 border-slate-200" />
+        </div>
       </div>
 
       <p className="font-body text-xs text-navy/65 mt-3">

@@ -60,7 +60,7 @@ export function WeeklyHeatmap({ raceData, standings }: Props) {
   return (
     <div>
       <p className="font-body text-sm text-navy/60 mb-4">
-        Points earned each week (0-9). Blue is cold, red is hot.
+        Points earned each week (0-9). Red = team is hot.
       </p>
     <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-x-auto">
       <table className="w-full text-sm font-body">
