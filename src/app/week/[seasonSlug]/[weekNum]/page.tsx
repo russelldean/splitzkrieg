@@ -26,6 +26,7 @@ import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { getPostForWeek } from '@/lib/blog';
+import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
 export const dynamicParams = false;
 
@@ -236,28 +237,36 @@ export default async function WeekPage({
       ) : (
         <>
           {/* Bowler & Team of the Week — top-level awards */}
-          <div className="mb-6">
-            <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['awards']} bare />
-          </div>
+          <TrackVisibility section="awards" page="week">
+            <div className="mb-6">
+              <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['awards']} bare />
+            </div>
+          </TrackVisibility>
 
           {/* Match Results */}
-          <SectionHeading>Match Results</SectionHeading>
+          <TrackVisibility section="match-results" page="week">
+            <SectionHeading>Match Results</SectionHeading>
 
-          {/* Match cards — click to expand individual match details */}
-          <WeekMatchSummary
-            weekScores={weekScores}
-            schedule={weekSchedule}
-            matchResults={weekMatchResults}
-            week={weekNum}
-          />
+            {/* Match cards — click to expand individual match details */}
+            <WeekMatchSummary
+              weekScores={weekScores}
+              schedule={weekSchedule}
+              matchResults={weekMatchResults}
+              week={weekNum}
+            />
+          </TrackVisibility>
 
           {/* XP Rankings — below match details */}
-          <div className="mt-6">
-            <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['xp']} bare />
-          </div>
+          <TrackVisibility section="xp-rankings" page="week">
+            <div className="mt-6">
+              <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['xp']} bare />
+            </div>
+          </TrackVisibility>
 
           {/* Weekly Highlights — starts with Milestones & Personal Bests */}
-          <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} exclude={['awards', 'xp']} />
+          <TrackVisibility section="highlights" page="week">
+            <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} exclude={['awards', 'xp']} />
+          </TrackVisibility>
         </>
       )}
 

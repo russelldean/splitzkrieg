@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePostHog } from 'posthog-js/react';
 import type { SeasonLeaderEntry, SeasonIndividualChampions } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
@@ -160,6 +161,7 @@ export function SeasonLeaderboards({
   minGames,
   champions,
 }: Props) {
+  const posthog = usePostHog();
   const [activeTab, setActiveTab] = useState<TabKey>('mens');
 
   const tabContent: Record<TabKey, LeaderboardCategory[]> = {
@@ -201,7 +203,10 @@ export function SeasonLeaderboards({
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => {
+              setActiveTab(tab.key);
+              posthog.capture('leaderboard_tab_switched', { tab: tab.label, tab_key: tab.key });
+            }}
             className={`px-4 py-2 text-sm font-body rounded-t transition-colors ${
               activeTab === tab.key
                 ? 'bg-navy text-cream font-semibold'

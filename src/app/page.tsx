@@ -21,6 +21,7 @@ import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 import { InlineCountdown } from '@/components/home/InlineCountdown';
 import { PromotedBlogCard } from '@/components/home/PromotedBlogCard';
+import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -82,7 +83,9 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-cream">
       {/* Milestone Ticker */}
-      <MilestoneTicker items={allTickerItems} variant="dark" />
+      <TrackVisibility section="ticker" page="home">
+        <MilestoneTicker items={allTickerItems} variant="dark" />
+      </TrackVisibility>
 
       {/* Hero Section */}
       <section className="relative">
@@ -146,36 +149,44 @@ export default async function Home() {
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Mini Standings */}
-          <div>
-            {seasonSnapshot && (
-              <MiniStandings
-                standings={standings}
-                seasonSlug={seasonSnapshot.slug}
-                romanNumeral={seasonSnapshot.romanNumeral}
-              />
-            )}
-          </div>
+          <TrackVisibility section="standings" page="home">
+            <div>
+              {seasonSnapshot && (
+                <MiniStandings
+                  standings={standings}
+                  seasonSlug={seasonSnapshot.slug}
+                  romanNumeral={seasonSnapshot.romanNumeral}
+                />
+              )}
+            </div>
+          </TrackVisibility>
 
           {/* Right column: This Week's Matchups + Season Snapshot */}
           <div className="space-y-6">
-            <SeasonSnapshot snapshot={seasonSnapshot} />
+            <TrackVisibility section="season-snapshot" page="home">
+              <SeasonSnapshot snapshot={seasonSnapshot} />
+            </TrackVisibility>
             {seasonSnapshot && weekSchedule.length > 0 && nextWeekNumber > 0 && (
-              <ThisWeekMatchups
-                matchups={weekSchedule}
-                matchResults={[]}
-                seasonSlug={seasonSnapshot.slug}
-                weekNumber={nextWeekNumber}
-                romanNumeral={seasonSnapshot.romanNumeral}
-              />
+              <TrackVisibility section="matchups" page="home">
+                <ThisWeekMatchups
+                  matchups={weekSchedule}
+                  matchResults={[]}
+                  seasonSlug={seasonSnapshot.slug}
+                  weekNumber={nextWeekNumber}
+                  romanNumeral={seasonSnapshot.romanNumeral}
+                />
+              </TrackVisibility>
             )}
           </div>
         </div>
 
         {/* Promoted Blog Post */}
         {promotedPost && (
-          <div className="mt-6">
-            <PromotedBlogCard post={promotedPost} />
-          </div>
+          <TrackVisibility section="promoted-blog" page="home">
+            <div className="mt-6">
+              <PromotedBlogCard post={promotedPost} />
+            </div>
+          </TrackVisibility>
         )}
       </section>
     </div>

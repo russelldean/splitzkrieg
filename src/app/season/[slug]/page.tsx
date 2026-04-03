@@ -33,6 +33,7 @@ import { SeasonHighlights } from '@/components/season/SeasonHighlights';
 import { CompactWeekList } from '@/components/season/CompactWeekList';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SeasonNav } from '@/components/season/SeasonNav';
+import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
 // Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
 export const dynamicParams = false;
@@ -124,27 +125,33 @@ export default async function SeasonPage({
       )}
 
       <div className="mt-8 space-y-12">
-        <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} raceData={raceData} />
+        <TrackVisibility section="standings" page="season">
+          <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} raceData={raceData} />
+        </TrackVisibility>
 
         {/* Compact week list — replaces full weekly results */}
-        {totalWeeks > 0 ? (
-          <CompactWeekList
-            weekSummaries={weekSummaries}
-            schedule={schedule}
-            seasonSlug={slug}
-            totalWeeks={totalWeeks}
-          />
-        ) : (
-          <div className="bg-navy/[0.02] rounded-lg px-6 py-4">
-            <p className="font-body text-sm text-navy/65 italic">
-              This is an archival season page. Weekly results are available from Season XXVI onwards.
-            </p>
-          </div>
-        )}
+        <TrackVisibility section="week-list" page="season">
+          {totalWeeks > 0 ? (
+            <CompactWeekList
+              weekSummaries={weekSummaries}
+              schedule={schedule}
+              seasonSlug={slug}
+              totalWeeks={totalWeeks}
+            />
+          ) : (
+            <div className="bg-navy/[0.02] rounded-lg px-6 py-4">
+              <p className="font-body text-sm text-navy/65 italic">
+                This is an archival season page. Weekly results are available from Season XXVI onwards.
+              </p>
+            </div>
+          )}
+        </TrackVisibility>
 
-        <div id="records">
-          <SeasonHighlights weeklyScores={weeklyScores} />
-        </div>
+        <TrackVisibility section="records" page="season">
+          <div id="records">
+            <SeasonHighlights weeklyScores={weeklyScores} />
+          </div>
+        </TrackVisibility>
       </div>
 
       <NextStopNudge currentPage="season" seasonSlug={slug} />

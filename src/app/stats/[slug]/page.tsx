@@ -22,6 +22,7 @@ import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { FullStatsTable } from '@/components/season/FullStatsTable';
 import { strikeX } from '@/components/ui/StrikeX';
+import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
 export const dynamicParams = false;
 
@@ -162,6 +163,7 @@ export default async function SeasonStatsPage({
       )}
 
       <div className="mt-6 space-y-12">
+        <TrackVisibility section="leaderboards" page="stats">
         <SeasonLeaderboards
           mensScratch={[
             { title: 'Top 10 Average', entries: mensAvg },
@@ -181,12 +183,15 @@ export default async function SeasonStatsPage({
           minGames={minGames}
           champions={champions}
         />
+        </TrackVisibility>
 
         <NextStopNudge currentPage="stats" />
 
-        <div id="stats">
-          <FullStatsTable stats={fullStats} minGames={minGames} champions={champions} />
-        </div>
+        <TrackVisibility section="full-stats-table" page="stats">
+          <div id="stats">
+            <FullStatsTable stats={fullStats} minGames={minGames} champions={champions} />
+          </div>
+        </TrackVisibility>
       </div>
     </main>
   );

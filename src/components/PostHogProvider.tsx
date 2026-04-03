@@ -4,14 +4,20 @@ import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
+import { ScrollDepth } from '@/components/tracking/ScrollDepth';
 
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  const isReturning = localStorage.getItem('sz_visited') === '1';
+  localStorage.setItem('sz_visited', '1');
+
   posthog.init('phc_n2pYyr0QOAv3F4B9Y6UGJIRpm7UEB2X68IiN23ISGUB', {
     api_host: 'https://us.i.posthog.com',
     capture_pageview: false, // we capture manually on route change
     capture_pageleave: true,
     persistence: 'localStorage',
   });
+
+  posthog.register({ is_returning: isReturning });
 }
 
 function PostHogPageView() {
@@ -36,6 +42,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     <PHProvider client={posthog}>
       <Suspense fallback={null}>
         <PostHogPageView />
+        <ScrollDepth />
       </Suspense>
       {children}
     </PHProvider>
