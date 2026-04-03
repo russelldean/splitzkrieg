@@ -12,24 +12,53 @@ export function PromotedBlogCard({ post }: Props) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group block bg-white rounded-xl border border-navy/10 shadow-sm overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
+      className="group block rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
     >
-      <div className="flex flex-col sm:flex-row">
-        {/* Image */}
+      {/* Mobile: image with overlay text */}
+      <div className="relative sm:hidden">
         {image && (
-          <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden">
+          <div className="relative w-full h-32 overflow-hidden">
             <Image
               src={image}
               alt={post.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 640px) 100vw, 192px"
+              sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
+                  New Post
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 className="font-heading text-base text-white group-hover:text-red-300 transition-colors line-clamp-1">
+                  {post.title.replace(/^Season\s+/, '')}
+                </h3>
+                <span className="font-body text-xs text-white/70 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">
+                  Read &rarr;
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: side-by-side layout */}
+      <div className="hidden sm:flex flex-row bg-white">
+        {image && (
+          <div className="relative w-48 h-auto flex-shrink-0 overflow-hidden">
+            <Image
+              src={image}
+              alt={post.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="192px"
             />
           </div>
         )}
-
-        {/* Content */}
-        <div className="p-3 sm:p-5 flex flex-col justify-center min-w-0">
+        <div className="p-5 flex flex-col justify-center min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
               New Post
@@ -42,20 +71,17 @@ export function PromotedBlogCard({ post }: Props) {
               })}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="font-heading text-base sm:text-lg text-navy group-hover:text-red-700 transition-colors line-clamp-1">
-              <span className="sm:hidden">{post.title.replace(/^Season\s+/, '')}</span>
-              <span className="hidden sm:inline">{post.title}</span>
-            </h3>
-            <span className="font-body text-xs text-red-600/80 group-hover:text-red-700 transition-colors whitespace-nowrap flex-shrink-0">
-              Read more &rarr;
-            </span>
-          </div>
+          <h3 className="font-heading text-lg text-navy group-hover:text-red-700 transition-colors line-clamp-1">
+            {post.title}
+          </h3>
           {post.excerpt && (
-            <p className="font-body text-sm text-navy/70 mt-1 line-clamp-2 hidden sm:block">
+            <p className="font-body text-sm text-navy/70 mt-1 line-clamp-2">
               {post.excerpt}
             </p>
           )}
+          <span className="font-body text-xs text-red-600/80 mt-2 group-hover:text-red-700 transition-colors">
+            Read more &rarr;
+          </span>
         </div>
       </div>
     </Link>

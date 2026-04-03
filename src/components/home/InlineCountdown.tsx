@@ -390,7 +390,7 @@ export function InlineCountdown({ targetDate, followingDate, weekNumber }: Inlin
                 </div>
               ))}
             </div>
-            <span className="sm:hidden font-body text-[9px] text-white/50 uppercase tracking-wider mt-1">til bowling</span>
+            <span className="sm:hidden font-body text-[10px] text-white/80 uppercase tracking-wider mt-2">til bowling</span>
           </div>
         </div>
       )}

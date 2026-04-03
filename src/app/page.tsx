@@ -120,7 +120,7 @@ export default async function Home() {
                 href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
                 className="relative flex flex-row md:hidden group hover:bg-white/5 transition-colors"
               >
-                <div className="flex-1 flex items-center px-4 py-3">
+                <div className="flex-1 flex items-center px-4 h-32">
                   <div>
                     <div className="font-heading text-lg text-white group-hover:text-red-300 transition-colors">
                       Week {seasonSnapshot.weekNumber} Results
@@ -129,7 +129,7 @@ export default async function Home() {
                   </div>
                 </div>
                 <div className="w-px bg-white/15 my-3" />
-                <div className="px-3 py-2 flex items-center justify-center overflow-hidden">
+                <div className="px-4 py-2 flex items-center justify-center overflow-hidden">
                   <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
               </Link>
