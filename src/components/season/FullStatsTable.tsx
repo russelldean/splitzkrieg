@@ -185,7 +185,7 @@ export function FullStatsTable({ stats, minGames, champions }: Props) {
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
-                    className={`px-3 py-2 cursor-pointer hover:text-navy transition-colors select-none whitespace-nowrap ${
+                    className={`px-3 py-3 sm:py-2 cursor-pointer hover:text-navy transition-colors select-none whitespace-nowrap touch-manipulation ${
                       col.align === 'right' ? 'text-right' : 'text-left'
                     } ${col.key === 'bowlerName' ? 'sticky left-10 bg-white z-30' : ''}`}
                     onClick={() => handleSort(col.key)}

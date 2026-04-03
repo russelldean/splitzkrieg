@@ -36,6 +36,7 @@ function LeaderboardTable({
   highlightLabel,
   showHighlight = true,
   isAverage = false,
+  valueLabel = 'Value',
   ineligibleIDs,
   ineligibleLabel,
   championID,
@@ -46,6 +47,7 @@ function LeaderboardTable({
   highlightLabel?: string;
   showHighlight?: boolean;
   isAverage?: boolean;
+  valueLabel?: string;
   ineligibleIDs?: Set<number>;
   ineligibleLabel?: string;
   championID?: number | null;
@@ -67,7 +69,7 @@ function LeaderboardTable({
             <th className="px-4 py-2 text-left w-12">#</th>
             <th className="px-4 py-2 text-left">Bowler</th>
             <th className="px-4 py-2 text-left">Team</th>
-            <th className="px-4 py-2 text-right">Value</th>
+            <th className="px-4 py-2 text-right">{valueLabel}</th>
           </tr>
         </thead>
         <tbody>
@@ -218,6 +220,7 @@ export function SeasonLeaderboards({
         <div className="space-y-6">
           {categories.map((cat, i) => {
             const isAvgCategory = /average/i.test(cat.title) || /avg/i.test(cat.title);
+            const valueLabel = isAvgCategory ? 'Avg' : /series/i.test(cat.title) ? 'Series' : 'Game';
             const nextCat = categories[i + 1];
             const isLastAvgBeforeNonAvg = isAvgCategory && (!nextCat || !(/average/i.test(nextCat.title) || /avg/i.test(nextCat.title)));
             return (
@@ -236,6 +239,7 @@ export function SeasonLeaderboards({
                   highlightLabel={highlight.label}
                   showHighlight={isAvgCategory || activeTab === 'handicap'}
                   isAverage={isAvgCategory}
+                  valueLabel={valueLabel}
                   ineligibleIDs={ineligible?.ids}
                   ineligibleLabel={ineligible?.label}
                   championID={champion.id}
