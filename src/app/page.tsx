@@ -37,7 +37,7 @@ export default async function Home() {
     getNextBowlingNights(),
     getLeagueMilestones(),
     getNewBlogBadgeId(),
-    getInstagramFeed(6),
+    getInstagramFeed(4),
   ]);
 
   // Fetch promoted blog post if badge is active
@@ -151,8 +151,8 @@ export default async function Home() {
       {/* Content Grid */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left column: Fresh content — Blog + Instagram */}
-          <div className="space-y-6">
+          {/* Left column on desktop: Blog (+ Instagram on desktop only) */}
+          <div className="space-y-6 order-1">
             {promotedPost && (
               <TrackVisibility section="promoted-blog" page="home">
                 <PromotedBlogCard post={promotedPost} />
@@ -160,13 +160,15 @@ export default async function Home() {
             )}
             {instagramPosts.length > 0 && (
               <TrackVisibility section="instagram-feed" page="home">
-                <InstagramFeed posts={instagramPosts} />
+                <div className="hidden md:block">
+                  <InstagramFeed posts={instagramPosts} />
+                </div>
               </TrackVisibility>
             )}
           </div>
 
           {/* Right column: League data — Standings + Snapshot + Matchups */}
-          <div className="space-y-6">
+          <div className="space-y-6 order-2">
             <TrackVisibility section="standings" page="home">
               <div>
                 {seasonSnapshot && (
@@ -193,6 +195,13 @@ export default async function Home() {
               </TrackVisibility>
             )}
           </div>
+
+          {/* Instagram — after all data on mobile, hidden on desktop (shown in left column above) */}
+          {instagramPosts.length > 0 && (
+            <div className="order-3 md:hidden">
+              <InstagramFeed posts={instagramPosts} />
+            </div>
+          )}
         </div>
       </section>
     </div>
