@@ -22,6 +22,8 @@ import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 import { InlineCountdown } from '@/components/home/InlineCountdown';
 import { PromotedBlogCard } from '@/components/home/PromotedBlogCard';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
+import { InstagramFeed } from '@/components/home/InstagramFeed';
+import { getInstagramFeed } from '@/lib/queries/instagram';
 
 export const metadata = {
   title: 'Splitzkrieg Bowling League',
@@ -29,12 +31,13 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId, instagramPosts] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
     getNextBowlingNights(),
     getLeagueMilestones(),
     getNewBlogBadgeId(),
+    getInstagramFeed(6),
   ]);
 
   // Fetch promoted blog post if badge is active
@@ -185,6 +188,14 @@ export default async function Home() {
           <TrackVisibility section="promoted-blog" page="home">
             <div className="mt-6">
               <PromotedBlogCard post={promotedPost} />
+            </div>
+          </TrackVisibility>
+        )}
+
+        {instagramPosts.length > 0 && (
+          <TrackVisibility section="instagram-feed" page="home">
+            <div className="mt-6">
+              <InstagramFeed posts={instagramPosts} />
             </div>
           </TrackVisibility>
         )}
