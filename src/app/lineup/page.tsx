@@ -127,12 +127,17 @@ export default function LineupPage() {
     loadTeamContext(teamID);
   }
 
-  function handleBackToTeams() {
+  async function handleBackToTeams() {
     setSelectedTeamID(null);
     setContext(null);
     setSlots([]);
     setSubmitted(false);
     setError(null);
+    // Re-fetch team list so submitted status is current
+    try {
+      const res = await fetch('/api/lineup/submit');
+      if (res.ok) setSeasonInfo(await res.json());
+    } catch { /* keep stale data if fetch fails */ }
   }
 
   // Sort bowlers: recent roster first (Penalty last within team), then alphabetical
