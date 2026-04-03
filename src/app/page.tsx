@@ -115,12 +115,12 @@ export default async function Home() {
             <div className="relative mt-4 sm:mt-8 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
               <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
               <div className="absolute inset-0 bg-black/60" />
-              {/* Mobile: entire bar is clickable */}
+              {/* Mobile: entire bar is clickable, side by side */}
               <Link
                 href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
                 className="relative flex flex-row md:hidden group hover:bg-white/5 transition-colors"
               >
-                <div className="flex-1 flex items-center px-4 h-32">
+                <div className="flex-1 flex items-center px-4 py-3">
                   <div>
                     <div className="font-heading text-lg text-white group-hover:text-red-300 transition-colors">
                       Week {seasonSnapshot.weekNumber} Results
@@ -133,7 +133,7 @@ export default async function Home() {
                   <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
                 </div>
               </Link>
-              {/* Desktop: split layout */}
+              {/* Desktop: side-by-side layout */}
               <div className="relative hidden md:flex flex-row">
                 <Link
                   href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
@@ -170,21 +170,29 @@ export default async function Home() {
         {/* Mobile: single column stack. Desktop: two columns. */}
         <div className="md:grid md:grid-cols-2 md:gap-6">
           {/* Left column (desktop) / first items (mobile) */}
-          <div className="space-y-6">
-            {promotedPost && (
+          <div className="space-y-6 hidden md:block">
+            {promotedPost && promotedPost.type !== 'recap' && (
               <TrackVisibility section="promoted-blog" page="home">
                 <PromotedBlogCard post={promotedPost} />
               </TrackVisibility>
             )}
             {instagramPosts.length > 0 && (
-              <TrackVisibility section="instagram-feed" page="home" className="hidden md:block">
+              <TrackVisibility section="instagram-feed" page="home">
                 <InstagramFeed posts={instagramPosts} />
               </TrackVisibility>
             )}
           </div>
+          {/* Blog card on mobile — only for non-recap posts */}
+          {promotedPost && promotedPost.type !== 'recap' && (
+            <div className="md:hidden">
+              <TrackVisibility section="promoted-blog" page="home">
+                <PromotedBlogCard post={promotedPost} />
+              </TrackVisibility>
+            </div>
+          )}
 
           {/* Right column (desktop) / continues stack (mobile) */}
-          <div className="space-y-6 mt-6 md:mt-0">
+          <div className="space-y-6 md:mt-0">
             <TrackVisibility section="standings" page="home">
               <div>
                 {seasonSnapshot && (

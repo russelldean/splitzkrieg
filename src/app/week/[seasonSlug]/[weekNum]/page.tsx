@@ -5,6 +5,7 @@
  */
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import {
   getAllSeasonSlugs,
@@ -201,29 +202,41 @@ export default async function WeekPage({
       </div>
 
       {/* Blog cross-link */}
-      {blogPost && (<>
-        <style>{`@keyframes nudge-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(197, 48, 48, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(197, 48, 48, 0); } }`}</style>
+      {blogPost && (
         <Link
           href={`/blog/${blogPost.slug}`}
-          className="group block mb-6 bg-white border-2 border-red-600/60 rounded-xl p-4 sm:p-5 hover:border-red-600 hover:shadow-md transition-all animate-[nudge-glow_2.5s_ease-in-out_infinite]"
+          className="group block mb-4 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
         >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm uppercase tracking-wide font-semibold text-red-600 font-body">
+          <div className="relative h-36 sm:h-44">
+            {(blogPost.cardImage || blogPost.heroImage) ? (
+              <Image
+                src={(blogPost.cardImage || blogPost.heroImage)!}
+                alt={blogPost.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                style={{ objectPosition: `center ${(Math.min(1, (blogPost.cardFocalY ?? blogPost.heroFocalY ?? 0.5) + 0.1) * 100)}%` }}
+                sizes="(max-width: 1024px) 100vw, 960px"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-navy" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+              <p className="text-xs uppercase tracking-wide font-semibold text-red-400 font-body mb-1">
                 The Weekly Email
               </p>
-              <p className="text-lg font-heading text-navy">
-                Read the full Week {weekNum} recap...
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center shrink-0 group-hover:bg-red-700 transition-colors">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-lg sm:text-xl font-heading text-white group-hover:text-red-300 transition-colors">
+                  Read the full Week {weekNum} recap
+                </p>
+                <span className="font-body text-sm text-white/70 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">
+                  &rarr;
+                </span>
+              </div>
             </div>
           </div>
         </Link>
-      </>)}
+      )}
 
       {isMissingData ? (
         <div className="px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10">
