@@ -101,7 +101,7 @@ export default function InstagramAdmin() {
         const data = await res.json();
         throw new Error(data.error || 'Failed to save');
       }
-      setSuccess(`Saved ${activePins.length} pinned photo${activePins.length !== 1 ? 's' : ''}. Redeploy to update the homepage.`);
+      setSuccess(`Saved ${activePins.length} pinned photo${activePins.length !== 1 ? 's' : ''}. Homepage will update shortly.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {

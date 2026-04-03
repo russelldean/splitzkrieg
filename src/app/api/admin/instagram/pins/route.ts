@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
 
@@ -54,6 +55,9 @@ export async function POST(request: NextRequest) {
       ELSE
         INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('instagramPins', '${value.replace(/'/g, "''")}')
     `);
+
+    // Revalidate homepage so pinned photos appear immediately
+    revalidatePath('/', 'page');
 
     return NextResponse.json({ ok: true, pins });
   } catch (err) {
