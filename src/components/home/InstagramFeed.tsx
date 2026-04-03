@@ -1,8 +1,44 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import type { InstagramPost } from '@/lib/queries/instagram';
 
 interface Props {
   posts: InstagramPost[];
+}
+
+function InstagramCard({ post }: { post: InstagramPost }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+
+  return (
+    <a
+      href={post.permalink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-lg overflow-hidden border border-navy/10 shadow-sm group hover:shadow-md transition-shadow"
+    >
+      <div className="relative aspect-square">
+        <Image
+          src={post.mediaType === 'VIDEO' ? (post.thumbnailUrl || post.mediaUrl) : post.mediaUrl}
+          alt={post.caption?.slice(0, 100) || 'Instagram post'}
+          fill
+          className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          onError={() => setFailed(true)}
+          unoptimized
+        />
+      </div>
+      {post.caption && (
+        <div className="px-3 py-2 bg-white">
+          <p className="font-body text-xs text-navy/70 line-clamp-2">
+            {post.caption}
+          </p>
+        </div>
+      )}
+    </a>
+  );
 }
 
 export function InstagramFeed({ posts }: Props) {
@@ -26,30 +62,7 @@ export function InstagramFeed({ posts }: Props) {
       </div>
       <div className="space-y-3">
         {posts.map((post) => (
-          <a
-            key={post.id}
-            href={post.permalink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block rounded-lg overflow-hidden border border-navy/10 shadow-sm group hover:shadow-md transition-shadow"
-          >
-            <div className="relative aspect-square">
-              <Image
-                src={post.mediaType === 'VIDEO' ? (post.thumbnailUrl || post.mediaUrl) : post.mediaUrl}
-                alt={post.caption?.slice(0, 100) || 'Instagram post'}
-                fill
-                className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
-            {post.caption && (
-              <div className="px-3 py-2 bg-white">
-                <p className="font-body text-xs text-navy/70 line-clamp-2">
-                  {post.caption}
-                </p>
-              </div>
-            )}
-          </a>
+          <InstagramCard key={post.id} post={post} />
         ))}
       </div>
     </section>
