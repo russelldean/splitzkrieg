@@ -63,7 +63,7 @@ export function MilestoneTicker({ items = [], variant = 'light' }: MilestoneTick
   return (
     <div className={`w-full overflow-hidden shadow-sm ${isDark ? 'bg-navy border-y border-white/10' : 'bg-cream border-y border-navy/10'}`}>
       <div
-        className="flex items-center gap-8 py-3 whitespace-nowrap motion-safe:animate-ticker"
+        className="flex items-center gap-8 py-2 sm:py-3 whitespace-nowrap motion-safe:animate-ticker"
         style={{ width: 'max-content', animationDuration: `${duration}s` }}
       >
         {strip.map((item, i) => (

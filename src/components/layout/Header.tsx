@@ -62,7 +62,7 @@ export async function Header() {
   return (
     <header className="bg-cream border-b border-navy/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative flex items-center h-16 gap-4">
+          <div className="relative flex items-center h-14 sm:h-16 gap-4">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link

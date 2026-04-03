@@ -17,7 +17,7 @@ export function PromotedBlogCard({ post }: Props) {
       <div className="flex flex-col sm:flex-row">
         {/* Image */}
         {image && (
-          <div className="relative w-full sm:w-48 h-40 sm:h-auto flex-shrink-0 overflow-hidden">
+          <div className="relative w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 overflow-hidden">
             <Image
               src={image}
               alt={post.title}
@@ -29,7 +29,7 @@ export function PromotedBlogCard({ post }: Props) {
         )}
 
         {/* Content */}
-        <div className="p-5 flex flex-col justify-center min-w-0">
+        <div className="p-3 sm:p-5 flex flex-col justify-center min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
               New Post
@@ -42,17 +42,20 @@ export function PromotedBlogCard({ post }: Props) {
               })}
             </span>
           </div>
-          <h3 className="font-heading text-lg text-navy group-hover:text-red-700 transition-colors line-clamp-1">
-            {post.title}
-          </h3>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="font-heading text-base sm:text-lg text-navy group-hover:text-red-700 transition-colors line-clamp-1">
+              <span className="sm:hidden">{post.title.replace(/^Season\s+/, '')}</span>
+              <span className="hidden sm:inline">{post.title}</span>
+            </h3>
+            <span className="font-body text-xs text-red-600/80 group-hover:text-red-700 transition-colors whitespace-nowrap flex-shrink-0">
+              Read more &rarr;
+            </span>
+          </div>
           {post.excerpt && (
-            <p className="font-body text-sm text-navy/70 mt-1 line-clamp-2">
+            <p className="font-body text-sm text-navy/70 mt-1 line-clamp-2 hidden sm:block">
               {post.excerpt}
             </p>
           )}
-          <span className="font-body text-xs text-red-600/80 mt-2 group-hover:text-red-700 transition-colors">
-            Read more &rarr;
-          </span>
         </div>
       </div>
     </Link>

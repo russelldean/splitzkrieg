@@ -22,7 +22,7 @@ export function HeaderSearchWrapper({ children }: { children: ReactNode }) {
 /** Mobile: full-width search bar below header row */
 export function MobileSearchRow({ children }: { children: ReactNode }) {
   return (
-    <div className="md:hidden pb-3">
+    <div className="md:hidden pb-2">
       {children}
     </div>
   );

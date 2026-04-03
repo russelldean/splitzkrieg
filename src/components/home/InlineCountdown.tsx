@@ -366,28 +366,31 @@ export function InlineCountdown({ targetDate, followingDate, weekNumber }: Inlin
       {/* Flip clock countdown */}
       {showClock && (
         <div suppressHydrationWarning>
-          <div className="flex items-start gap-1 sm:gap-3">
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="flex gap-[2px]">
-                {'WK'.split('').map((ch, i) => (
-                  <FlipCard key={`wk-${i}`} value={ch} />
-                ))}
-                <div style={{ width: 3 }} />
-                {String(activeWeek).split('').map((ch, i) => (
-                  <FlipCard key={`wn-${i}`} value={ch} />
-                ))}
+          <div className="flex flex-col items-center">
+            <div className="flex items-start gap-1 sm:gap-3">
+              <div className="hidden sm:flex flex-col items-center gap-0.5">
+                <div className="flex gap-[2px]">
+                  {'WK'.split('').map((ch, i) => (
+                    <FlipCard key={`wk-${i}`} value={ch} />
+                  ))}
+                  <div style={{ width: 3 }} />
+                  {String(activeWeek).split('').map((ch, i) => (
+                    <FlipCard key={`wn-${i}`} value={ch} />
+                  ))}
+                </div>
+                <span className="flip-label">NEXT</span>
               </div>
-              <span className="flip-label">NEXT</span>
+              <div className="hidden sm:block w-px h-[28px] sm:h-[46px] bg-white/50 self-start" />
+              {units.map((u, i) => (
+                <div key={u.label} className="flex items-start gap-1 sm:gap-2">
+                  <FlipUnit value={u.value} label={u.label} />
+                  {i < units.length - 1 && (
+                    <span className="flip-colon">:</span>
+                  )}
+                </div>
+              ))}
             </div>
-            <div className="w-px h-[34px] sm:h-[46px] bg-white/50 self-start" />
-            {units.map((u, i) => (
-              <div key={u.label} className="flex items-start gap-1 sm:gap-2">
-                <FlipUnit value={u.value} label={u.label} />
-                {i < units.length - 1 && (
-                  <span className="flip-colon">:</span>
-                )}
-              </div>
-            ))}
+            <span className="sm:hidden font-body text-[9px] text-white/50 uppercase tracking-wider mt-1">til bowling</span>
           </div>
         </div>
       )}
