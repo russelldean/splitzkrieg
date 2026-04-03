@@ -61,6 +61,7 @@ export function FeedbackButton() {
           email: email || undefined,
           message,
           pageUrl: pathname,
+          device: window.innerWidth < 768 ? 'mobile' : 'desktop',
         }),
       });
 

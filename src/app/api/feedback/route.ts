@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
-    const { name, email, message, pageUrl } = body;
+    const { name, email, message, pageUrl, device } = body;
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       email: email?.trim().slice(0, 255) || null,
       message: message.trim(),
       pageUrl: pageUrl?.slice(0, 500) || null,
+      device: device === 'mobile' || device === 'desktop' ? device : null,
     };
 
     // Insert into database
@@ -31,9 +32,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .input('email', trimmed.email)
       .input('message', trimmed.message)
       .input('pageUrl', trimmed.pageUrl)
+      .input('device', trimmed.device)
       .query(`
-        INSERT INTO feedback (name, email, message, pageUrl)
-        VALUES (@name, @email, @message, @pageUrl)
+        INSERT INTO feedback (name, email, message, pageUrl, device)
+        VALUES (@name, @email, @message, @pageUrl, @device)
       `);
 
     // Send email notification
@@ -47,6 +49,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             trimmed.name && `From: ${trimmed.name}`,
             trimmed.email && `Email: ${trimmed.email}`,
             trimmed.pageUrl && `Page: ${trimmed.pageUrl}`,
+            trimmed.device && `Device: ${trimmed.device}`,
             '',
             trimmed.message,
           ].filter(Boolean).join('\n'),

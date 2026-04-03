@@ -124,8 +124,13 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
   if (!covidInserted) rows.push(<CovidRow key="covid" colSpan={3} />);
 
   return (
-    <div className="overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
-      <table className="w-full text-sm">
+    <div className="relative overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.06] text-[16rem] leading-none select-none flex flex-col items-center justify-start pt-24 gap-16">
+        {Array.from({ length: 10 }, (_, i) => (
+          <span key={i}>🏆</span>
+        ))}
+      </div>
+      <table className="relative w-full text-sm">
         <thead>
           <tr className="border-b-2 border-navy/10 text-left">
             <th className="py-2 pr-4 font-heading text-navy/60 text-sm uppercase tracking-wider">
