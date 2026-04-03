@@ -321,6 +321,22 @@ export default function AdminDashboardPage() {
 
           {/* Lineup team grid */}
           {data?.lineupStatus && data.lineupStatus.teams.length > 0 && (
+            <div className="flex gap-2 mb-2">
+              <button
+                onClick={() => setSelectedTeamIDs(new Set(data.lineupStatus!.teams.filter((t: { submitted: boolean }) => !t.submitted).map((t: { teamID: number }) => t.teamID)))}
+                className="font-body text-xs text-navy/60 hover:text-navy underline underline-offset-2"
+              >
+                Select all
+              </button>
+              <button
+                onClick={() => setSelectedTeamIDs(new Set())}
+                className="font-body text-xs text-navy/60 hover:text-navy underline underline-offset-2"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+          {data?.lineupStatus && data.lineupStatus.teams.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 mb-4">
               {data.lineupStatus.teams.map((t) => (
                 <div key={t.teamID} className="flex items-center gap-2 py-0.5">
