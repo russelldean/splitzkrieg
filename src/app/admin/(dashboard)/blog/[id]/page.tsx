@@ -473,70 +473,118 @@ export default function BlogEditorPage({
           <summary className="font-body text-sm text-navy/50 cursor-pointer hover:text-navy transition-colors">
             Around the Site links ({discoveryLinks.length}/2 custom)
           </summary>
-          <div className="mt-3 space-y-3">
+          <div className="mt-3 space-y-4">
             <p className="font-body text-xs text-navy/50">
               Override the auto-selected feature highlights. Leave empty to use the 2 most recent features.
             </p>
             {[0, 1].map((slot) => (
-              <div key={slot} className="flex items-center gap-2">
-                <span className="font-body text-xs text-navy/40 w-4">#{slot + 1}</span>
-                {discoveryLinks[slot] ? (
-                  <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-navy/5 rounded-md">
-                    <span className="font-body text-sm text-navy flex-1 truncate">{discoveryLinks[slot].text}</span>
+              <div key={slot} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-body text-xs text-navy/50 uppercase tracking-wide">Slot #{slot + 1}</span>
+                  {discoveryLinks[slot] ? (
                     <button
                       onClick={() => setDiscoveryLinks(prev => prev.filter((_, i) => i !== slot))}
-                      className="font-body text-xs text-red/60 hover:text-red shrink-0"
+                      className="font-body text-xs text-red/60 hover:text-red"
                     >
-                      Remove
+                      Clear
                     </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        if (availableUpdates.length === 0) {
+                          try {
+                            const res = await fetch('/api/admin/updates');
+                            if (res.ok) {
+                              const data = await res.json();
+                              setAvailableUpdates(
+                                (data.updates ?? []).filter((u: { tag: string; href?: string }) => u.tag === 'feat' && u.href)
+                              );
+                            }
+                          } catch { /* ignore */ }
+                        }
+                        setShowUpdatePicker(showUpdatePicker === slot ? null : slot);
+                      }}
+                      className="font-body text-xs text-navy/50 hover:text-navy underline"
+                    >
+                      Pick from updates
+                    </button>
+                  )}
+                </div>
+                {discoveryLinks[slot] ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={discoveryLinks[slot].text}
+                      onChange={(e) => setDiscoveryLinks(prev => {
+                        const next = [...prev];
+                        next[slot] = { ...next[slot], text: e.target.value };
+                        return next;
+                      })}
+                      className="px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+                      placeholder="Title"
+                    />
+                    <input
+                      type="text"
+                      value={discoveryLinks[slot].href}
+                      onChange={(e) => setDiscoveryLinks(prev => {
+                        const next = [...prev];
+                        next[slot] = { ...next[slot], href: e.target.value };
+                        return next;
+                      })}
+                      className="px-3 py-2 rounded-md border border-navy/20 font-body text-sm font-mono focus:outline-none focus:border-navy/40"
+                      placeholder="/path"
+                    />
+                    <input
+                      type="text"
+                      value={discoveryLinks[slot].description || ''}
+                      onChange={(e) => setDiscoveryLinks(prev => {
+                        const next = [...prev];
+                        next[slot] = { ...next[slot], description: e.target.value || undefined };
+                        return next;
+                      })}
+                      className="col-span-2 px-3 py-2 rounded-md border border-navy/20 font-body text-sm focus:outline-none focus:border-navy/40"
+                      placeholder="Description (optional)"
+                    />
                   </div>
                 ) : (
                   <button
-                    onClick={async () => {
-                      if (availableUpdates.length === 0) {
-                        try {
-                          const res = await fetch('/api/admin/updates');
-                          if (res.ok) {
-                            const data = await res.json();
-                            setAvailableUpdates(
-                              (data.updates ?? []).filter((u: { tag: string; href?: string }) => u.tag === 'feat' && u.href)
-                            );
-                          }
-                        } catch { /* ignore */ }
-                      }
-                      setShowUpdatePicker(slot);
+                    onClick={() => {
+                      setDiscoveryLinks(prev => {
+                        const next = [...prev];
+                        next[slot] = { text: '', href: '', description: '' };
+                        return next;
+                      });
                     }}
-                    className="flex-1 px-3 py-2 rounded-md border border-dashed border-navy/20 font-body text-sm text-navy/40 hover:border-navy/40 hover:text-navy/60 text-left"
+                    className="w-full px-3 py-2 rounded-md border border-dashed border-navy/20 font-body text-sm text-navy/40 hover:border-navy/40 hover:text-navy/60 text-left"
                   >
-                    Pick from updates...
+                    Type custom link...
                   </button>
+                )}
+
+                {/* Update picker dropdown */}
+                {showUpdatePicker === slot && availableUpdates.length > 0 && (
+                  <div className="border border-navy/10 rounded-lg bg-white shadow-sm max-h-48 overflow-y-auto">
+                    {availableUpdates.map((u, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setDiscoveryLinks(prev => {
+                            const next = [...prev];
+                            next[slot] = { text: u.text, href: u.href!, description: u.description };
+                            return next;
+                          });
+                          setShowUpdatePicker(null);
+                        }}
+                        className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0 flex items-center justify-between"
+                      >
+                        <span className="truncate">{u.text}</span>
+                        <span className="font-body text-xs text-navy/40 shrink-0 ml-2">{u.date}</span>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}
-
-            {/* Update picker modal */}
-            {showUpdatePicker !== null && availableUpdates.length > 0 && (
-              <div className="border border-navy/10 rounded-lg bg-white shadow-sm max-h-60 overflow-y-auto">
-                {availableUpdates.map((u, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      const link = { text: u.text, href: u.href!, description: u.description };
-                      setDiscoveryLinks(prev => {
-                        const next = [...prev];
-                        next[showUpdatePicker!] = link;
-                        return next;
-                      });
-                      setShowUpdatePicker(null);
-                    }}
-                    className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0 flex items-center justify-between"
-                  >
-                    <span className="truncate">{u.text}</span>
-                    <span className="font-body text-xs text-navy/40 shrink-0 ml-2">{u.date}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </details>
       )}
