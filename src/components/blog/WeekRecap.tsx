@@ -24,7 +24,7 @@ import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { RecapCallout } from '@/components/blog/RecapCallout';
 import { DiscoverySection } from '@/components/blog/DiscoverySection';
 import { getSiteUpdates } from '@/lib/queries/updates';
-import { getDb, cachedQuery } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
 import { CompactLeaderboardPreview } from '@/components/blog/CompactLeaderboardPreview';
 import Link from 'next/link';
@@ -55,20 +55,18 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 
   // Fetch custom discovery link overrides for this post (cached to avoid extra DB connections at build time)
-  const discoveryOverrides = await cachedQuery(
-    'getDiscoveryLinks',
-    async () => {
-      const db = await getDb();
-      const dlResult = await db.request()
-        .input('seasonID', seasonData.seasonID)
-        .input('week', weekNum)
-        .query<{ discoveryLinks: string | null }>(`SELECT discoveryLinks FROM blogPosts WHERE seasonID = @seasonID AND week = @week AND isPublished = 1`);
-      const raw = dlResult.recordset[0]?.discoveryLinks;
-      return raw ? JSON.parse(raw) as Array<{ text: string; href: string; description?: string }> : null;
-    },
-    null,
-    { sql: `getDiscoveryLinks-${seasonData.seasonID}-${weekNum}` },
-  );
+  // Fetch discovery link overrides — not cached so edits show immediately on revalidation
+  // Only runs for WeekRecap pages (blog posts), not the 1000+ week detail pages
+  let discoveryOverrides: Array<{ text: string; href: string; description?: string }> | null = null;
+  try {
+    const db = await getDb();
+    const dlResult = await db.request()
+      .input('seasonID', seasonData.seasonID)
+      .input('week', weekNum)
+      .query<{ discoveryLinks: string | null }>(`SELECT discoveryLinks FROM blogPosts WHERE seasonID = @seasonID AND week = @week AND isPublished = 1`);
+    const raw = dlResult.recordset[0]?.discoveryLinks;
+    if (raw) discoveryOverrides = JSON.parse(raw);
+  } catch { /* ignore */ }
 
   // Find Cloud 9 matches (one team won all 9 available points)
   const cloud9Matches = weekMatchDetails.filter(r => r.team1TotalPts === 9 || r.team2TotalPts === 9);
