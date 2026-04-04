@@ -40,7 +40,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
         </Link>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {matchups.map((m, i) => {
           const mr = mrIndex.get(`${weekNumber}-${m.homeTeamID}-${m.awayTeamID}`);
           const t1Pts = mr ? (mr.team1GamePts ?? 0) + (mr.team1BonusPts ?? 0) : null;
@@ -49,7 +49,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
           const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
 
           return (
-            <div key={i} className="flex items-center justify-between py-1.5 border-b border-navy/5 last:border-0">
+            <div key={i} className="flex items-center justify-between py-1 border-b border-navy/5 last:border-0">
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/team/${m.homeTeamSlug}`}

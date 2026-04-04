@@ -16,16 +16,16 @@ function StandingsGroup({ rows, divisionName }: { rows: StandingsRow[]; division
       <table className="w-full text-sm font-body">
         <thead>
           <tr className="border-b border-navy/10 text-navy/65 text-xs">
-            <th className="text-left font-normal py-1 px-2 w-8">#</th>
-            <th className="text-left font-normal py-1 px-2">Team</th>
-            <th className="text-right font-normal py-1 px-2">Pts</th>
+            <th className="text-left font-normal py-1.5 px-2 w-8">#</th>
+            <th className="text-left font-normal py-1.5 px-2">Team</th>
+            <th className="text-right font-normal py-1.5 px-2">Pts</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={row.teamID} className={i === 1 ? 'border-b-2 border-dashed border-navy/20' : 'border-b border-navy/5'}>
-              <td className="py-1 px-2 text-navy/65 tabular-nums text-xs">{i + 1}</td>
-              <td className="py-1 px-2">
+              <td className="py-1.5 px-2 text-navy/65 tabular-nums text-xs">{i + 1}</td>
+              <td className="py-1.5 px-2">
                 <Link
                   href={`/team/${row.teamSlug}`}
                   className="text-navy hover:text-red-600 transition-colors text-sm"
@@ -33,7 +33,7 @@ function StandingsGroup({ rows, divisionName }: { rows: StandingsRow[]; division
                   {row.teamName}
                 </Link>
               </td>
-              <td className="py-1 px-2 text-right tabular-nums text-sm">
+              <td className="py-1.5 px-2 text-right tabular-nums text-sm">
                 <span className="font-semibold">{row.totalPts}</span>
                 {row.lastWeekPts != null && (
                   <span className="text-navy/65 ml-1 text-xs">
@@ -55,7 +55,7 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
   const hasDivisions = standings.some(r => r.divisionName !== null);
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-6 pt-4 pb-6 h-full flex flex-col">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-6 pt-4 pb-4 h-full flex flex-col">
       <div className="flex items-baseline justify-between mb-3">
         <h3 className="font-heading text-lg text-navy">Standings</h3>
         <Link
@@ -76,9 +76,11 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
               divisions.get(div)!.push(row);
             }
             return (
-              <div className="space-y-6">
-                {Array.from(divisions.entries()).map(([name, rows]) => (
-                  <StandingsGroup key={name} rows={rows} divisionName={name} />
+              <div className="grid grid-cols-1 md:grid-cols-2 md:gap-0 space-y-6 md:space-y-0 md:divide-x md:divide-navy/20">
+                {Array.from(divisions.entries()).map(([name, rows], i) => (
+                  <div key={name} className={i > 0 ? 'md:pl-6' : 'md:pr-6'}>
+                    <StandingsGroup rows={rows} divisionName={name} />
+                  </div>
                 ))}
               </div>
             );

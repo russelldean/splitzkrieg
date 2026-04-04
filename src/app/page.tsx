@@ -97,7 +97,7 @@ export default async function Home() {
       <section className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-navy/5 to-transparent" />
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 sm:-mt-4 pb-1 sm:pb-2">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-3 sm:-mt-6 pb-1 sm:pb-2">
           <div className="flex flex-col items-center text-center">
             <Image
               src="/splitzkrieg logo.png"
@@ -116,7 +116,7 @@ export default async function Home() {
       </section>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 space-y-5 sm:space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 space-y-5 sm:space-y-6">
 
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
         {seasonSnapshot && (
@@ -172,11 +172,10 @@ export default async function Home() {
           </TrackVisibility>
         )}
 
-        {/* === TWO COLUMNS: Standings | Matchups + Snapshot === */}
-        <div className="md:grid md:grid-cols-2 md:gap-6 space-y-5 md:space-y-0">
-          {/* Left: Standings */}
+        {/* === TWO COLUMNS: Standings | Matchups === */}
+        <div className="md:grid md:grid-cols-5 md:gap-6 space-y-5 md:space-y-0">
           {seasonSnapshot && (
-            <TrackVisibility section="standings" page="home">
+            <TrackVisibility section="standings" page="home" className="md:col-span-3">
               <MiniStandings
                 standings={standings}
                 seasonSlug={seasonSnapshot.slug}
@@ -184,24 +183,23 @@ export default async function Home() {
               />
             </TrackVisibility>
           )}
-          {/* Right: Matchups + Snapshot stacked */}
-          <div className="space-y-5 sm:space-y-6">
-            {seasonSnapshot && weekSchedule.length > 0 && nextWeekNumber > 0 && (
-              <TrackVisibility section="matchups" page="home">
-                <ThisWeekMatchups
-                  matchups={weekSchedule}
-                  matchResults={[]}
-                  seasonSlug={seasonSnapshot.slug}
-                  weekNumber={nextWeekNumber}
-                  romanNumeral={seasonSnapshot.romanNumeral}
-                />
-              </TrackVisibility>
-            )}
-            <TrackVisibility section="season-snapshot" page="home">
-              <SeasonSnapshot snapshot={seasonSnapshot} />
+          {seasonSnapshot && weekSchedule.length > 0 && nextWeekNumber > 0 && (
+            <TrackVisibility section="matchups" page="home" className="md:col-span-2">
+              <ThisWeekMatchups
+                matchups={weekSchedule}
+                matchResults={[]}
+                seasonSlug={seasonSnapshot.slug}
+                weekNumber={nextWeekNumber}
+                romanNumeral={seasonSnapshot.romanNumeral}
+              />
             </TrackVisibility>
-          </div>
+          )}
         </div>
+
+        {/* === FULL WIDTH: Season Snapshot === */}
+        <TrackVisibility section="season-snapshot" page="home">
+          <SeasonSnapshot snapshot={seasonSnapshot} />
+        </TrackVisibility>
 
         {/* === FULL WIDTH: Instagram strip (visual break) === */}
         {instagramPosts.length > 0 && (
