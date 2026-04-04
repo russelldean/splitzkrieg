@@ -104,7 +104,7 @@ export default async function Home() {
               alt="Splitzkrieg Bowling League"
               width={400}
               height={144}
-              className="h-24 sm:h-44 w-auto mix-blend-multiply"
+              className="h-32 sm:h-44 w-auto mix-blend-multiply"
               unoptimized
               priority
             />

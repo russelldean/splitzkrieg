@@ -50,7 +50,7 @@ export function InstagramStrip({ posts }: Props) {
           @splitzkriegbowlingleague
         </a>
       </div>
-      <div className="flex gap-2 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-3">
         {posts.map((post) => (
           <StripPhoto key={post.id} post={post} />
         ))}
