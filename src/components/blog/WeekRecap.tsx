@@ -61,9 +61,9 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   try {
     const db = await getDb();
     const dlResult = await db.request()
-      .input('seasonID', seasonData.seasonID)
+      .input('seasonSlug', seasonSlug)
       .input('week', weekNum)
-      .query<{ discoveryLinks: string | null }>(`SELECT discoveryLinks FROM blogPosts WHERE seasonID = @seasonID AND week = @week AND isPublished = 1`);
+      .query<{ discoveryLinks: string | null }>(`SELECT discoveryLinks FROM blogPosts WHERE seasonSlug = @seasonSlug AND week = @week AND isPublished = 1`);
     const raw = dlResult.recordset[0]?.discoveryLinks;
     if (raw) discoveryOverrides = JSON.parse(raw);
   } catch { /* ignore */ }
