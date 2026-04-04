@@ -24,6 +24,7 @@ function rowToPost(row: Record<string, unknown>): BlogPost {
     heroFocalY: row.heroFocalY != null ? Number(row.heroFocalY) : null,
     cardImage: (row.cardImage as string) ?? null,
     cardFocalY: row.cardFocalY != null ? Number(row.cardFocalY) : null,
+    discoveryLinks: (row.discoveryLinks as string) ?? null,
     publishedAt: row.publishedDate
       ? (row.publishedDate as Date).toISOString()
       : null,
@@ -39,7 +40,7 @@ function rowToPost(row: Record<string, unknown>): BlogPost {
 const SELECT_COLS = `
   postID, slug, title, content, excerpt, type,
   seasonRomanNumeral, seasonSlug, week,
-  heroImage, heroFocalY, cardImage, cardFocalY,
+  heroImage, heroFocalY, cardImage, cardFocalY, discoveryLinks,
   publishedDate, isPublished, createdDate, modifiedDate
 `;
 
@@ -223,6 +224,10 @@ export async function updateBlogPost(
   if (data.cardFocalY !== undefined) {
     req.input('cardFocalY', sql.Decimal(3, 2), data.cardFocalY);
     setClauses.push('cardFocalY = @cardFocalY');
+  }
+  if (data.discoveryLinks !== undefined) {
+    req.input('discoveryLinks', sql.NVarChar(sql.MAX), data.discoveryLinks);
+    setClauses.push('discoveryLinks = @discoveryLinks');
   }
   if (data.publishedAt !== undefined) {
     const pubDate = data.publishedAt ? new Date(data.publishedAt) : null;

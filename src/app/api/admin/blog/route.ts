@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       heroFocalY: heroFocalY ?? null,
       cardImage: cardImage ?? null,
       cardFocalY: cardFocalY ?? null,
+      discoveryLinks: null,
       publishedAt: publishedAt ?? null,
     });
 

@@ -68,6 +68,7 @@ export interface BlogPost {
   heroFocalY: number | null;
   cardImage: string | null;
   cardFocalY: number | null;
+  discoveryLinks: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;

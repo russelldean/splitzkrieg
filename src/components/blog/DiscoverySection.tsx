@@ -8,10 +8,17 @@ interface Update {
   description?: string;
 }
 
+interface OverrideLink {
+  text: string;
+  href: string;
+  description?: string;
+}
+
 interface Props {
   seasonSlug: string;
   updates?: Update[];
   asOfDate?: string | Date;
+  overrides?: OverrideLink[] | null;
 }
 
 const stableLinks = [
@@ -27,12 +34,18 @@ const stableLinks = [
   },
 ];
 
-export function DiscoverySection({ seasonSlug, updates = [], asOfDate }: Props) {
-  // Get the 2 most recent feat entries with hrefs, filtered to post publish date
-  const cutoff = asOfDate ? new Date(asOfDate).toISOString().slice(0, 10) : null;
-  const rotatingHighlights = updates
-    .filter(u => u.tag === 'feat' && u.href && (!cutoff || u.date <= cutoff))
-    .slice(0, 2);
+export function DiscoverySection({ seasonSlug, updates = [], asOfDate, overrides }: Props) {
+  // Use overrides if provided, otherwise auto-pick from updates
+  let rotatingHighlights: Array<{ text: string; href: string; description?: string; date?: string }>;
+
+  if (overrides && overrides.length > 0) {
+    rotatingHighlights = overrides;
+  } else {
+    const cutoff = asOfDate ? new Date(asOfDate).toISOString().slice(0, 10) : null;
+    rotatingHighlights = updates
+      .filter((u): u is Update & { href: string } => u.tag === 'feat' && !!u.href && (!cutoff || u.date <= cutoff))
+      .slice(0, 2);
+  }
 
   return (
     <div>
@@ -53,34 +66,32 @@ export function DiscoverySection({ seasonSlug, updates = [], asOfDate }: Props) 
             </span>
           </Link>
         ))}
-        {rotatingHighlights.map(update => {
-          const updateDate = new Date(update.date + 'T12:00:00');
-          const now = new Date();
-          const daysAgo = Math.floor((now.getTime() - updateDate.getTime()) / 86400000);
-          const recency = daysAgo <= 7 ? 'New this week' : daysAgo <= 30 ? 'Recently added' : 'New feature';
+        {rotatingHighlights.map((item, idx) => {
+          const raw = item.description ?? item.text;
+          const [title, subtitle] = raw.includes('|') ? raw.split('|', 2).map(s => s.trim()) : [raw, null];
+          const date = 'date' in item ? (item as Update).date : null;
+          let recencyLabel: string | null = null;
+          if (date) {
+            const daysAgo = Math.floor((Date.now() - new Date(date + 'T12:00:00').getTime()) / 86400000);
+            recencyLabel = daysAgo <= 7 ? 'New this week' : daysAgo <= 30 ? 'Recently added' : 'New feature';
+          }
           return (
             <Link
-              key={update.href}
-              href={update.href!}
+              key={item.href + idx}
+              href={item.href}
               className="group block bg-white border border-navy/10 rounded-lg p-3 shadow-sm hover:shadow-md hover:border-red-600/30 transition-all"
             >
-              {(() => {
-                const raw = update.description ?? update.text;
-                const [title, subtitle] = raw.includes('|') ? raw.split('|', 2).map(s => s.trim()) : [raw, null];
-                return (
-                  <>
-                    <span className="font-heading text-base text-navy group-hover:text-red-600 transition-colors">
-                      {title}
-                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-body font-medium uppercase tracking-wide bg-green-100 text-green-700 align-middle">{recency}</span>
-                    </span>
-                    {subtitle && (
-                      <span className="block font-body text-sm text-navy/65 mt-0.5 leading-snug">
-                        {subtitle}
-                      </span>
-                    )}
-                  </>
-                );
-              })()}
+              <span className="font-heading text-base text-navy group-hover:text-red-600 transition-colors">
+                {title}
+                {recencyLabel && (
+                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-body font-medium uppercase tracking-wide bg-green-100 text-green-700 align-middle">{recencyLabel}</span>
+                )}
+              </span>
+              {subtitle && (
+                <span className="block font-body text-sm text-navy/65 mt-0.5 leading-snug">
+                  {subtitle}
+                </span>
+              )}
             </Link>
           );
         })}

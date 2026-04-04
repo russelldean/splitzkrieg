@@ -50,6 +50,9 @@ export default function BlogEditorPage({
   const [heroFocalY, setHeroFocalY] = useState('');
   const [cardImage, setCardImage] = useState('');
   const [cardFocalY, setCardFocalY] = useState('');
+  const [discoveryLinks, setDiscoveryLinks] = useState<Array<{ text: string; href: string; description?: string }>>([]);
+  const [availableUpdates, setAvailableUpdates] = useState<Array<{ text: string; href: string; description?: string; date: string; tag: string }>>([]);
+  const [showUpdatePicker, setShowUpdatePicker] = useState<number | null>(null);
 
   // Resolve params
   useEffect(() => {
@@ -76,6 +79,9 @@ export default function BlogEditorPage({
       setHeroFocalY(p.heroFocalY != null ? String(p.heroFocalY) : '');
       setCardImage(p.cardImage ?? '');
       setCardFocalY(p.cardFocalY != null ? String(p.cardFocalY) : '');
+      if (p.discoveryLinks) {
+        try { setDiscoveryLinks(JSON.parse(p.discoveryLinks)); } catch { /* ignore */ }
+      }
     } catch {
       setSaveStatus('error');
     } finally {
@@ -145,6 +151,7 @@ export default function BlogEditorPage({
       heroFocalY: heroFocalY ? parseFloat(heroFocalY) : null,
       cardImage: cardImage || null,
       cardFocalY: cardFocalY ? parseFloat(cardFocalY) : null,
+      discoveryLinks: discoveryLinks.length > 0 ? JSON.stringify(discoveryLinks) : null,
     };
 
     // Handle publish state
@@ -459,6 +466,80 @@ export default function BlogEditorPage({
           </div>
         </div>
       </details>
+
+      {/* Discovery Links (Around the Site) — only for recaps */}
+      {type === 'recap' && (
+        <details className="mb-6">
+          <summary className="font-body text-sm text-navy/50 cursor-pointer hover:text-navy transition-colors">
+            Around the Site links ({discoveryLinks.length}/2 custom)
+          </summary>
+          <div className="mt-3 space-y-3">
+            <p className="font-body text-xs text-navy/50">
+              Override the auto-selected feature highlights. Leave empty to use the 2 most recent features.
+            </p>
+            {[0, 1].map((slot) => (
+              <div key={slot} className="flex items-center gap-2">
+                <span className="font-body text-xs text-navy/40 w-4">#{slot + 1}</span>
+                {discoveryLinks[slot] ? (
+                  <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-navy/5 rounded-md">
+                    <span className="font-body text-sm text-navy flex-1 truncate">{discoveryLinks[slot].text}</span>
+                    <button
+                      onClick={() => setDiscoveryLinks(prev => prev.filter((_, i) => i !== slot))}
+                      className="font-body text-xs text-red/60 hover:text-red shrink-0"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      if (availableUpdates.length === 0) {
+                        try {
+                          const res = await fetch('/api/admin/updates');
+                          if (res.ok) {
+                            const data = await res.json();
+                            setAvailableUpdates(
+                              (data.updates ?? []).filter((u: { tag: string; href?: string }) => u.tag === 'feat' && u.href)
+                            );
+                          }
+                        } catch { /* ignore */ }
+                      }
+                      setShowUpdatePicker(slot);
+                    }}
+                    className="flex-1 px-3 py-2 rounded-md border border-dashed border-navy/20 font-body text-sm text-navy/40 hover:border-navy/40 hover:text-navy/60 text-left"
+                  >
+                    Pick from updates...
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {/* Update picker modal */}
+            {showUpdatePicker !== null && availableUpdates.length > 0 && (
+              <div className="border border-navy/10 rounded-lg bg-white shadow-sm max-h-60 overflow-y-auto">
+                {availableUpdates.map((u, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const link = { text: u.text, href: u.href!, description: u.description };
+                      setDiscoveryLinks(prev => {
+                        const next = [...prev];
+                        next[showUpdatePicker!] = link;
+                        return next;
+                      });
+                      setShowUpdatePicker(null);
+                    }}
+                    className="w-full text-left px-3 py-2 font-body text-sm hover:bg-navy/5 border-b border-navy/5 last:border-0 flex items-center justify-between"
+                  >
+                    <span className="truncate">{u.text}</span>
+                    <span className="font-body text-xs text-navy/40 shrink-0 ml-2">{u.date}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
+      )}
 
       {/* Markdown Editor */}
       <div data-color-mode="light" className="mb-8">
