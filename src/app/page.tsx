@@ -105,7 +105,7 @@ export default async function Home() {
               unoptimized
               priority
             />
-            <p className="font-body text-xs sm:text-base text-navy/80 -mt-3 sm:-mt-6">
+            <p className="font-body text-sm sm:text-base text-navy/80 -mt-3 sm:-mt-6">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>

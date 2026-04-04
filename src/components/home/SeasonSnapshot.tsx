@@ -76,7 +76,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 space-y-3 sm:space-y-5">
             {snapshot.bowlerOfTheWeek && (
               <div>
-                <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
+                <div className="text-xs sm:text-sm font-body text-navy/70 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
                 <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm sm:text-lg font-heading text-navy hover:text-red transition-colors">
                   {snapshot.bowlerOfTheWeek.bowlerName}
                 </Link>
@@ -85,7 +85,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
             )}
             {snapshot.teamOfTheWeek && (
               <div>
-                <div className="text-[10px] sm:text-sm font-body text-navy/50 uppercase tracking-wider mb-0.5">Team of the Week</div>
+                <div className="text-xs sm:text-sm font-body text-navy/70 uppercase tracking-wider mb-0.5">Team of the Week</div>
                 <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm sm:text-lg font-heading text-navy hover:text-red transition-colors">
                   {snapshot.teamOfTheWeek.teamName}
                 </Link>

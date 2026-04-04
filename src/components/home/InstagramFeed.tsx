@@ -32,7 +32,7 @@ function InstagramCard({ post }: { post: InstagramPost }) {
       </div>
       {post.caption && (
         <div className="px-3 py-2 bg-white">
-          <p className="font-body text-xs text-navy/70 line-clamp-2">
+          <p className="font-body text-sm text-navy/70 line-clamp-2">
             {post.caption}
           </p>
         </div>
