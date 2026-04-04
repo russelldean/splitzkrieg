@@ -26,7 +26,8 @@ export function RecapSnapshotCard({ post, snapshot }: Props) {
               alt={post.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 768px) 100vw, 256px"
+              style={post.cardFocalY != null ? { objectPosition: `center ${Math.min(1, post.cardFocalY + 0.1) * 100}%` } : undefined}
+              sizes="(max-width: 768px) 100vw, 45vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-black/10" />
             <div className="absolute bottom-0 left-0 right-0 p-4 md:p-3 md:bottom-0">
