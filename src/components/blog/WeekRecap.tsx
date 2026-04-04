@@ -174,7 +174,7 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
 
       {/* Discover more of the site */}
       <TrackVisibility section="recap-discovery" page="blog-recap">
-        <DiscoverySection seasonSlug={seasonSlug} updates={siteUpdates} />
+        <DiscoverySection seasonSlug={seasonSlug} updates={siteUpdates} asOfDate={allSchedule.find(s => s.week === weekNum)?.matchDate ?? undefined} />
       </TrackVisibility>
 
       {/* Next League Night */}

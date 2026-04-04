@@ -11,6 +11,7 @@ interface Update {
 interface Props {
   seasonSlug: string;
   updates?: Update[];
+  asOfDate?: string | Date;
 }
 
 const stableLinks = [
@@ -26,10 +27,11 @@ const stableLinks = [
   },
 ];
 
-export function DiscoverySection({ seasonSlug, updates = [] }: Props) {
-  // Get the 2 most recent feat entries with hrefs for rotating highlights
+export function DiscoverySection({ seasonSlug, updates = [], asOfDate }: Props) {
+  // Get the 2 most recent feat entries with hrefs, filtered to post publish date
+  const cutoff = asOfDate ? new Date(asOfDate).toISOString().slice(0, 10) : null;
   const rotatingHighlights = updates
-    .filter(u => u.tag === 'feat' && u.href)
+    .filter(u => u.tag === 'feat' && u.href && (!cutoff || u.date <= cutoff))
     .slice(0, 2);
 
   return (
