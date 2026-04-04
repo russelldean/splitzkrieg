@@ -43,8 +43,8 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-6 pt-4 pb-6 sm:pb-10 min-h-[180px]">
-      <div className="flex items-baseline justify-between mb-5 sm:mb-6">
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-6 pt-4 pb-4">
+      <div className="flex items-baseline justify-between mb-3">
         <h3 className="font-heading text-lg text-navy">
           Season {strikeX(snapshot.romanNumeral)}
           <span className="text-navy/40 mx-1.5">&middot;</span>

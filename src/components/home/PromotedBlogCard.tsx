@@ -12,7 +12,7 @@ export function PromotedBlogCard({ post }: Props) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group block rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
+      className="group block h-full rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
     >
       {/* Mobile: image with overlay text */}
       <div className="relative sm:hidden">
@@ -46,9 +46,9 @@ export function PromotedBlogCard({ post }: Props) {
       </div>
 
       {/* Desktop: side-by-side layout */}
-      <div className="hidden sm:flex flex-row bg-white">
+      <div className="hidden sm:flex flex-row bg-white h-full">
         {image && (
-          <div className="relative w-48 h-auto flex-shrink-0 overflow-hidden">
+          <div className="relative w-48 flex-shrink-0 overflow-hidden">
             <Image
               src={image}
               alt={post.title}
@@ -58,7 +58,7 @@ export function PromotedBlogCard({ post }: Props) {
             />
           </div>
         )}
-        <div className="p-5 flex flex-col justify-center min-w-0">
+        <div className="p-5 flex flex-col justify-end min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
               New Post

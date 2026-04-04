@@ -14,7 +14,7 @@ import {
   milestoneTickerItems,
   getNewBlogBadgeId,
 } from '@/lib/queries';
-import { getPostBySlug } from '@/lib/blog';
+import { getPostBySlug, getAllPosts } from '@/lib/blog';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
@@ -23,6 +23,7 @@ import { InlineCountdown } from '@/components/home/InlineCountdown';
 import { PromotedBlogCard } from '@/components/home/PromotedBlogCard';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { InstagramStrip } from '@/components/home/InstagramStrip';
+import { RecapSnapshotCard } from '@/components/home/RecapSnapshotCard';
 import { getInstagramFeed } from '@/lib/queries/instagram';
 
 
@@ -32,16 +33,18 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId, instagramPosts] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId, instagramPosts, allPosts] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
     getNextBowlingNights(),
     getLeagueMilestones(),
     getNewBlogBadgeId(),
     getInstagramFeed(6),
+    getAllPosts(),
   ]);
 
-  // Fetch promoted blog post if badge is active
+  // Latest blog post for desktop sidebar; promoted post if badge active
+  const latestPost = allPosts[0] ?? null;
   const promotedSlug = blogBadgeId?.split('|')[0] ?? null;
   const promotedPost = promotedSlug ? await getPostBySlug(promotedSlug) : undefined;
   const [nextBowlingNight, followingBowlingNight] = bowlingNights;
@@ -165,13 +168,6 @@ export default async function Home() {
           </div>
         )}
 
-        {/* === FULL WIDTH: Non-recap blog post callout === */}
-        {showPromotedPost && (
-          <TrackVisibility section="promoted-blog" page="home">
-            <PromotedBlogCard post={promotedPost} />
-          </TrackVisibility>
-        )}
-
         {/* === TWO COLUMNS: Standings | Matchups === */}
         <div className="md:grid md:grid-cols-5 md:gap-6 space-y-5 md:space-y-0">
           {seasonSnapshot && (
@@ -196,10 +192,25 @@ export default async function Home() {
           )}
         </div>
 
-        {/* === FULL WIDTH: Season Snapshot === */}
-        <TrackVisibility section="season-snapshot" page="home">
-          <SeasonSnapshot snapshot={seasonSnapshot} />
-        </TrackVisibility>
+        {/* === Blog + Snapshot: combined for recaps, side-by-side for other posts === */}
+        {latestPost?.type === 'recap' && seasonSnapshot ? (
+          <TrackVisibility section="recap-snapshot" page="home">
+            <RecapSnapshotCard post={latestPost} snapshot={seasonSnapshot} />
+          </TrackVisibility>
+        ) : (
+          <div className="md:grid md:grid-cols-2 md:gap-6 space-y-5 md:space-y-0">
+            {latestPost && (
+              <div className="hidden md:block h-full">
+                <TrackVisibility section="promoted-blog" page="home" className="h-full">
+                  <PromotedBlogCard post={latestPost} />
+                </TrackVisibility>
+              </div>
+            )}
+            <TrackVisibility section="season-snapshot" page="home">
+              <SeasonSnapshot snapshot={seasonSnapshot} />
+            </TrackVisibility>
+          </div>
+        )}
 
         {/* === FULL WIDTH: Instagram strip (visual break) === */}
         {instagramPosts.length > 0 && (
