@@ -11,7 +11,7 @@ function StatValue({ label, value }: { label: string; value: string | number }) 
   return (
     <div className="text-center">
       <div className="font-heading text-2xl text-navy tabular-nums">{value}</div>
-      <div className="text-xs font-body text-navy/65 mt-0.5">{label}</div>
+      <div className="text-xs font-body text-navy/60 mt-0.5">{label}</div>
     </div>
   );
 }
@@ -19,9 +19,9 @@ function StatValue({ label, value }: { label: string; value: string | number }) 
 function LeaderRow({ label, name, slug, value }: { label: string; name: string; slug: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="text-xs font-body text-navy/65 uppercase tracking-wider">{label}</span>
+      <span className="text-xs font-body text-navy/60 uppercase tracking-wider">{label}</span>
       <div className="text-right">
-        <Link href={`/bowler/${slug}`} className="text-sm font-medium text-navy hover:text-red transition-colors">
+        <Link href={`/bowler/${slug}`} className="text-sm text-navy hover:text-red transition-colors">
           {name}
         </Link>
         <span className="text-sm text-navy/60 ml-2">{value}</span>
@@ -35,7 +35,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
     return (
       <div className="bg-white rounded-xl border border-navy/10 shadow-sm p-6 flex flex-col items-center justify-center text-center min-h-[180px]">
         <p className="font-heading text-lg text-navy mb-2">Season Data</p>
-        <p className="font-body text-sm text-navy/65">
+        <p className="font-body text-sm text-navy/60">
           No season data available yet. Check back when the games start rolling.
         </p>
       </div>
@@ -52,7 +52,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
         </h3>
         <Link
           href={`/stats/${snapshot.slug}`}
-          className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
+          className="text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
         >
           Full leaderboards &rarr;
         </Link>
@@ -63,7 +63,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
         <div className="flex items-start gap-5">
           {/* Left: Heat Check */}
           <div className="shrink-0">
-            <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-2">League Heat Check</div>
+            <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-2">League Heat Check</div>
             <MiniHeatCheck
               pinsOverPerGame={Math.round((snapshot.leagueAverage - snapshot.expectedLeagueAverage) * 10) / 10}
               leagueAvg={snapshot.leagueAverage}
@@ -76,20 +76,20 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
           <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 space-y-3 sm:space-y-5">
             {snapshot.bowlerOfTheWeek && (
               <div>
-                <div className="text-xs sm:text-sm font-body text-navy/70 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
-                <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm sm:text-lg font-heading text-navy hover:text-red transition-colors">
+                <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
+                <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm font-heading text-navy hover:text-red transition-colors">
                   {snapshot.bowlerOfTheWeek.bowlerName}
                 </Link>
-                <span className="text-sm sm:text-lg font-heading text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlerOfTheWeek.score}</span>
+                <span className="text-sm font-body text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlerOfTheWeek.score}</span>
               </div>
             )}
             {snapshot.teamOfTheWeek && (
               <div>
-                <div className="text-xs sm:text-sm font-body text-navy/70 uppercase tracking-wider mb-0.5">Team of the Week</div>
-                <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm sm:text-lg font-heading text-navy hover:text-red transition-colors">
+                <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">Team of the Week</div>
+                <Link href={`/team/${snapshot.teamOfTheWeek.teamSlug}`} className="text-sm font-heading text-navy hover:text-red transition-colors">
                   {snapshot.teamOfTheWeek.teamName}
                 </Link>
-                <span className="text-sm sm:text-lg font-heading text-navy/60 ml-1.5 sm:ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
+                <span className="text-sm font-body text-navy/60 ml-1.5 sm:ml-2">{snapshot.teamOfTheWeek.score.toLocaleString()}</span>
               </div>
             )}
           </div>

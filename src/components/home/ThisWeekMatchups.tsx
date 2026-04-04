@@ -28,13 +28,13 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <h3 className="font-heading text-lg text-navy">Up Next</h3>
-          <p className="text-xs font-body text-navy/65">
+          <p className="text-xs font-body text-navy/60">
             Week {weekNumber}{dateStr && <> &middot; {dateStr}</>}
           </p>
         </div>
         <Link
           href={`/week/${seasonSlug}/${weekNumber}`}
-          className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
+          className="text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
         >
           Details &rarr;
         </Link>
@@ -53,24 +53,24 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/team/${m.homeTeamSlug}`}
-                  className={`text-sm hover:text-red-600 transition-colors ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}
+                  className={`text-sm hover:text-red-600 transition-colors ${homeWon ? 'font-semibold text-navy' : 'text-navy'}`}
                 >
                   {m.homeTeamName}
                 </Link>
               </div>
               {hasResults ? (
                 <div className="text-center px-2 tabular-nums text-sm shrink-0">
-                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/65'}>{t1Pts ?? '-'}</span>
+                  <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/60'}>{t1Pts ?? '-'}</span>
                   <span className="text-navy/40 mx-1">-</span>
-                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/65'}>{t2Pts ?? '-'}</span>
+                  <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/60'}>{t2Pts ?? '-'}</span>
                 </div>
               ) : (
-                <span className="text-navy/25 text-xs px-2">vs</span>
+                <span className="text-navy/60 text-xs px-2">vs</span>
               )}
               <div className="flex-1 min-w-0 text-right">
                 <Link
                   href={`/team/${m.awayTeamSlug}`}
-                  className={`text-sm hover:text-red-600 transition-colors ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}
+                  className={`text-sm hover:text-red-600 transition-colors ${awayWon ? 'font-semibold text-navy' : 'text-navy'}`}
                 >
                   {m.awayTeamName}
                 </Link>

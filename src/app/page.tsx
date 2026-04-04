@@ -38,7 +38,7 @@ export default async function Home() {
     getNextBowlingNights(),
     getLeagueMilestones(),
     getNewBlogBadgeId(),
-    getInstagramFeed(3),
+    getInstagramFeed(6),
   ]);
 
   // Fetch promoted blog post if badge is active
@@ -108,7 +108,7 @@ export default async function Home() {
               unoptimized
               priority
             />
-            <p className="font-body text-sm sm:text-base text-navy/80 -mt-5 sm:-mt-8">
+            <p className="font-body text-sm text-navy/60 -mt-5 sm:-mt-8">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>

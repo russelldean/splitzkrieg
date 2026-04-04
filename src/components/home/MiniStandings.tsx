@@ -11,20 +11,20 @@ function StandingsGroup({ rows, divisionName }: { rows: StandingsRow[]; division
   return (
     <div>
       {divisionName && (
-        <h4 className="font-heading text-sm text-navy/60 mb-1.5">{divisionName}</h4>
+        <h4 className="font-body text-xs text-navy/60 uppercase tracking-wider mb-1.5">{divisionName}</h4>
       )}
       <table className="w-full text-sm font-body">
         <thead>
-          <tr className="border-b border-navy/10 text-navy/65 text-xs">
-            <th className="text-left font-normal py-1.5 px-2 w-8">#</th>
-            <th className="text-left font-normal py-1.5 px-2">Team</th>
-            <th className="text-right font-normal py-1.5 px-2">Pts</th>
+          <tr className="border-b border-navy/10 text-xs">
+            <th className="text-left font-normal py-1.5 px-2 w-8 text-navy/60">#</th>
+            <th className="text-left font-normal py-1.5 px-2 text-navy/60">Team</th>
+            <th className="text-right font-normal py-1.5 px-2 text-navy/60">Pts</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={row.teamID} className={i === 1 ? 'border-b-2 border-dashed border-navy/20' : 'border-b border-navy/5'}>
-              <td className="py-1.5 px-2 text-navy/65 tabular-nums text-xs">{i + 1}</td>
+              <td className="py-1.5 px-2 text-navy/60 tabular-nums text-xs">{i + 1}</td>
               <td className="py-1.5 px-2">
                 <Link
                   href={`/team/${row.teamSlug}`}
@@ -36,7 +36,7 @@ function StandingsGroup({ rows, divisionName }: { rows: StandingsRow[]; division
               <td className="py-1.5 px-2 text-right tabular-nums text-sm">
                 <span className="font-semibold">{row.totalPts}</span>
                 {row.lastWeekPts != null && (
-                  <span className="text-navy/65 ml-1 text-xs">
+                  <span className="text-navy/60 ml-1 text-xs">
                     (+{row.lastWeekPts})
                   </span>
                 )}
@@ -60,7 +60,7 @@ export function MiniStandings({ standings, seasonSlug, romanNumeral }: Props) {
         <h3 className="font-heading text-lg text-navy">Standings</h3>
         <Link
           href={`/season/${seasonSlug}`}
-          className="text-xs font-body text-navy/65 hover:text-red-600 transition-colors"
+          className="text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
         >
           Full standings &rarr;
         </Link>

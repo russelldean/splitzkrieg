@@ -21,7 +21,7 @@ interface Pin {
 
 export default function InstagramAdmin() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [pins, setPins] = useState<(Pin | null)[]>([null, null, null]);
+  const [pins, setPins] = useState<(Pin | null)[]>([null, null, null, null, null, null]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function InstagramAdmin() {
         if (res.ok) {
           const data = await res.json();
           const loaded = data.pins ?? [];
-          setPins([loaded[0] ?? null, loaded[1] ?? null, loaded[2] ?? null]);
+          setPins([loaded[0] ?? null, loaded[1] ?? null, loaded[2] ?? null, loaded[3] ?? null, loaded[4] ?? null, loaded[5] ?? null]);
         }
       } catch { /* ignore */ }
     }
@@ -115,11 +115,11 @@ export default function InstagramAdmin() {
     <div>
       <h2 className="font-heading text-xl text-navy mb-4">Instagram Photos</h2>
       <p className="font-body text-sm text-navy/60 mb-6">
-        Pick up to 3 photos to feature on the homepage. Click a slot, then pick a photo from your recent Instagram posts.
+        Pick up to 6 photos to feature on the homepage. Click a slot, then pick a photo from your recent Instagram posts.
       </p>
 
       {/* Pinned slots */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 mb-6">
         {pins.map((pin, i) => (
           <div key={i} className="flex flex-col gap-2">
             <span className="font-body text-xs text-navy/50 uppercase tracking-wide">

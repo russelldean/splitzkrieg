@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
   try {
     const { pins } = await request.json();
 
-    if (!Array.isArray(pins) || pins.length > 3) {
-      return NextResponse.json({ error: 'Pins must be an array of up to 3 items' }, { status: 400 });
+    if (!Array.isArray(pins) || pins.length > 6) {
+      return NextResponse.json({ error: 'Pins must be an array of up to 6 items' }, { status: 400 });
     }
 
     const db = await getDb();
