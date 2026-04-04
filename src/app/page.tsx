@@ -192,11 +192,22 @@ export default async function Home() {
           )}
         </div>
 
-        {/* === Blog + Snapshot: combined for recaps, side-by-side for other posts === */}
+        {/* === Blog + Snapshot === */}
         {latestPost?.type === 'recap' && seasonSnapshot ? (
-          <TrackVisibility section="recap-snapshot" page="home">
-            <RecapSnapshotCard post={latestPost} snapshot={seasonSnapshot} />
-          </TrackVisibility>
+          <>
+            {/* Desktop: combined recap + snapshot card */}
+            <div className="hidden md:block">
+              <TrackVisibility section="recap-snapshot" page="home">
+                <RecapSnapshotCard post={latestPost} snapshot={seasonSnapshot} />
+              </TrackVisibility>
+            </div>
+            {/* Mobile: standard season snapshot */}
+            <div className="md:hidden">
+              <TrackVisibility section="season-snapshot" page="home">
+                <SeasonSnapshot snapshot={seasonSnapshot} />
+              </TrackVisibility>
+            </div>
+          </>
         ) : (
           <div className="md:grid md:grid-cols-2 md:gap-6 space-y-5 md:space-y-0">
             {latestPost && (

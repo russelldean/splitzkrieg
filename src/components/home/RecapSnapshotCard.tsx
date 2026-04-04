@@ -70,7 +70,7 @@ export function RecapSnapshotCard({ post, snapshot }: Props) {
             )}
 
             {/* BOTW / TOTW side by side */}
-            <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 flex gap-6">
+            <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 flex flex-col sm:flex-row gap-3 sm:gap-6">
               {snapshot.bowlerOfTheWeek && (
                 <div className="flex-1">
                   <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
