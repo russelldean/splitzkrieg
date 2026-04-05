@@ -39,8 +39,8 @@ function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, le
   const max = Math.max(...allVals);
   const range = max - min || 0.01;
 
-  const w = 312;
-  const h = 190;
+  const w = 480;
+  const h = 220;
   const padTop = 36;
   const padBot = 52;
   const padX = 40;
@@ -78,8 +78,8 @@ function AnimatedShapeBox({ avg1, avg2, avg3, bestGame, isFlatliner, animate, le
   const baselineY = padTop + usableH - ((1.0 - min) / range) * usableH;
 
   return (
-    <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-4 flex-shrink-0">
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+    <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-4 flex-shrink-0" style={{ height: 216 }}>
+      <svg className="w-full" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet">
         {/* "avg" baseline at 1.0 */}
         <line x1={padX - 8} y1={baselineY} x2={w - padX + 8} y2={baselineY}
           stroke={NAVY} strokeOpacity={0.35} strokeWidth={1} strokeDasharray="4 3" />
@@ -229,14 +229,13 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
   const isFlatliner = profile.archetype === 'Flatliner';
 
   return (
-    <section ref={sectionRef}>
+    <section ref={sectionRef} className="h-full flex flex-col">
       <h2 className="font-heading text-2xl text-navy">Your Bowler Profile</h2>
       <span className="block w-10 h-0.5 bg-red-600/40 mt-1.5" />
 
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
-          {/* Archetype hero - shown above chart on mobile, after chart on desktop */}
+      <div className="mt-4 flex flex-col gap-3 flex-1">
+          {/* Archetype label above chart */}
           <div
-            className="sm:hidden"
             style={inView ? {
               opacity: 0,
               animation: 'fadeIn 0.6s ease-out 0.3s forwards',
@@ -250,50 +249,41 @@ export function GameProfile({ profile, leagueAvgs }: Props) {
             </p>
           </div>
 
-          {/* Animated chart box */}
-          <div className="flex-shrink-0">
-            <AnimatedShapeBox
-              avg1={profile.avg1}
-              avg2={profile.avg2}
-              avg3={profile.avg3}
-              bestGame={profile.bestGame}
-              isFlatliner={isFlatliner}
-              animate={inView}
-              leagueAvgs={leagueAvgs}
-              dotColor={style.dotColor}
-            />
-          </div>
+          {/* Chart */}
+          <AnimatedShapeBox
+            avg1={profile.avg1}
+            avg2={profile.avg2}
+            avg3={profile.avg3}
+            bestGame={profile.bestGame}
+            isFlatliner={isFlatliner}
+            animate={inView}
+            leagueAvgs={leagueAvgs}
+            dotColor={style.dotColor}
+          />
 
-          {/* Archetype info - desktop shows full block, mobile shows remaining details */}
+          {/* Details below chart */}
           <div
-            className="min-w-0 pt-1"
+            className="mt-3"
             style={inView ? {
               opacity: 0,
               animation: 'fadeIn 0.6s ease-out 2.4s forwards',
             } : { opacity: 0 }}
           >
-            <div className="hidden sm:block">
-              <div className="text-sm text-navy/60 font-body">Your Profile:</div>
-              <div className={`font-heading text-4xl ${style.heroColor} -mt-0.5`}>
-                {profile.archetype}
+            <div className="flex items-baseline justify-between">
+              <div className="text-sm text-navy/80 font-semibold font-body tabular-nums">
+                {isFlatliner
+                  ? `${profile.pctSpread.toFixed(1)}% variance`
+                  : `${profile.pctSpread.toFixed(1)}% skew`}
               </div>
-              <p className="text-sm text-navy/60 font-body mt-1">
-                {style.desc}
-              </p>
+              <Link
+                href="/stats/all-time/game-profiles"
+                className="text-sm text-red-600 hover:text-red-700 font-body"
+              >
+                League Night Profiles &rarr;
+              </Link>
             </div>
-            <div className="text-sm text-navy/80 font-semibold font-body sm:mt-2 tabular-nums">
-              {isFlatliner
-                ? `${profile.pctSpread.toFixed(1)}% variance`
-                : `${profile.pctSpread.toFixed(1)}% skew`}
-            </div>
-            <Link
-              href="/stats/all-time/game-profiles"
-              className="inline-block mt-2 sm:mt-3 text-sm text-red-600 hover:text-red-700 font-body"
-            >
-              League Night Profiles &rarr;
-            </Link>
             {profile.games < 27 && (
-              <p className="text-[10px] text-navy/60 font-body mt-2">
+              <p className="text-[10px] text-navy/60 font-body">
                 Based on {profile.games} game{profile.games !== 1 ? 's' : ''}. Stabilizes around 27.
               </p>
             )}

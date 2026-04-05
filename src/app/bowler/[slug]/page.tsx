@@ -27,6 +27,8 @@ import {
   milestoneTickerItems,
 } from '@/lib/queries';
 import { getBowlerGameProfile, getLeagueGameAvgs } from '@/lib/queries/alltime';
+import { getBowlerFacts } from '@/lib/queries/facts';
+import { RecordProgression } from '@/components/bowler/RecordProgression';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
 import type { WeekDelta } from '@/components/bowler/LastWeekHighlight';
@@ -91,7 +93,7 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones, gameProfile, leagueGameAvgs] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones, gameProfile, leagueGameAvgs, bowlerFacts] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
@@ -105,6 +107,7 @@ export default async function BowlerPage({
     getLeagueMilestones(),
     getBowlerGameProfile(slug),
     getLeagueGameAvgs(),
+    getBowlerFacts(bowler.bowlerID),
   ]);
 
   const isBowlerOfTheWeek = botwID === bowler.bowlerID;
@@ -216,10 +219,24 @@ export default async function BowlerPage({
           />
         </TrackVisibility>
 
-        {gameProfile && (
-          <TrackVisibility section="game-profile" page="bowler-profile">
-            <GameProfile profile={gameProfile} leagueAvgs={leagueGameAvgs} />
-          </TrackVisibility>
+        {(gameProfile || bowlerFacts.length > 0) && (
+          <div className="flex flex-col lg:flex-row lg:items-stretch gap-0">
+            {gameProfile && (
+              <div className="lg:w-[45%] min-w-0">
+                <TrackVisibility section="game-profile" page="bowler-profile">
+                  <GameProfile profile={gameProfile} leagueAvgs={leagueGameAvgs} />
+                </TrackVisibility>
+              </div>
+            )}
+            {gameProfile && bowlerFacts.length > 0 && (
+              <div className="hidden lg:block w-px bg-navy/10 mx-6 self-stretch" />
+            )}
+            {bowlerFacts.length > 0 && (
+              <div className="flex-1 min-w-0">
+                <RecordProgression facts={bowlerFacts} bowlerName={bowler.bowlerName} />
+              </div>
+            )}
+          </div>
         )}
 
         {rollingAvgHistory.length >= 6 && (
