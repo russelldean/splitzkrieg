@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# MCP server config (local dev tools)
+.mcp.json
+
 # backups
 /backups
 
@@ -44,6 +47,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 debug-screenshots/
+
+# Playwright MCP screenshots
+.playwright-mcp/
+*.png
 
 # posthog scripts (contain API key)
 scripts/posthog-*.mjs
