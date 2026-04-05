@@ -132,7 +132,7 @@ export function Footer() {
 
           {/* Mobile: links row above logo */}
           <div className="flex flex-col items-center gap-3 sm:hidden">
-            <nav className="flex flex-row flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-[-15px] mt-[15px]">
+            <nav className="flex flex-row flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-[-5px] mt-[15px]">
               {allLinks.map((link) => (
                 <Link
                   key={link.href}
