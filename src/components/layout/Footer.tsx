@@ -130,10 +130,10 @@ export function Footer() {
             ))}
           </div>
 
-          {/* Mobile: left stack | logo | right stack */}
-          <div className="flex items-center justify-center gap-4 sm:hidden">
-            <div className="flex flex-col items-start gap-2 -mt-[34px]">
-              {leftLinks.map((link) => (
+          {/* Mobile: links row above logo */}
+          <div className="flex flex-col items-center gap-3 sm:hidden">
+            <nav className="flex flex-row flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-[-15px] mt-[15px]">
+              {allLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -143,22 +143,8 @@ export function Footer() {
                   {link.label}
                 </Link>
               ))}
-            </div>
-
+            </nav>
             <LogoBlock />
-
-            <div className="flex flex-col items-start gap-2 -mt-[34px]">
-              {rightLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-1.5 text-xs font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors"
-                >
-                  <span className="text-red/80">{link.icon}</span>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       </div>
