@@ -109,7 +109,7 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
         <table className="min-w-max text-xs font-body">
           <thead>
             <tr className="bg-navy/[0.03]">
-              <th className="sticky left-0 z-10 bg-cream text-left px-3 py-2 font-heading text-navy text-sm min-w-[120px] max-w-[140px] border-r border-navy/10">
+              <th className="sticky left-0 z-10 bg-cream text-left px-3 py-2 font-heading text-navy text-sm min-w-[120px] max-w-[180px] border-r border-navy/10">
                 Team
               </th>
               {seasons.map(s => (
@@ -136,7 +136,7 @@ export function TeamTimeline({ presenceData, playoffFinishes, currentSeasonID }:
                 key={team.teamID}
                 className={teamIdx % 2 === 0 ? '' : 'bg-navy/[0.02]'}
               >
-                <td className="sticky left-0 z-10 bg-cream px-3 py-1.5 border-r border-navy/10 max-w-[140px]">
+                <td className="sticky left-0 z-10 bg-cream px-3 py-1.5 border-r border-navy/10 max-w-[180px]">
                   <Link
                     href={`/team/${team.slug}`}
                     className="text-navy hover:text-red-600 transition-colors text-sm block truncate"

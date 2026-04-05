@@ -41,7 +41,7 @@ const COLUMNS: { key: SortColumn; label: string; align: 'left' | 'right' }[] = [
   { key: 'teamName', label: 'Team', align: 'left' },
   { key: 'gamesBowled', label: 'Games', align: 'right' },
   { key: 'totalPins', label: 'Pins', align: 'right' },
-  { key: 'scratchAvg', label: 'Scratch Avg', align: 'right' },
+  { key: 'scratchAvg', label: 'Scr Avg', align: 'right' },
   { key: 'hcpAvg', label: 'HCP Avg', align: 'right' },
   { key: 'highGame', label: 'High Game', align: 'right' },
   { key: 'highSeries', label: 'High Series', align: 'right' },

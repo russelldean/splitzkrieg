@@ -111,7 +111,7 @@ export function Footer() {
                 href={link.href}
                 className="flex items-center gap-2 text-sm font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors -mt-[36px]"
               >
-                <span className="text-red/80">{link.icon}</span>
+                <span className="text-red">{link.icon}</span>
                 {link.label}
               </Link>
             ))}
@@ -124,7 +124,7 @@ export function Footer() {
                 href={link.href}
                 className="flex items-center gap-2 text-sm font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors -mt-[36px]"
               >
-                <span className="text-red/80">{link.icon}</span>
+                <span className="text-red">{link.icon}</span>
                 {link.label}
               </Link>
             ))}
@@ -139,7 +139,7 @@ export function Footer() {
                   href={link.href}
                   className="flex items-center gap-1.5 text-xs font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors"
                 >
-                  <span className="text-red/80">{link.icon}</span>
+                  <span className="text-red">{link.icon}</span>
                   {link.label}
                 </Link>
               ))}
