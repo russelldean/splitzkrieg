@@ -500,7 +500,9 @@ async function importScores() {
     console.log('\n=== POST-IMPORT STEPS ===');
     console.log('Run these next:');
     console.log(`  node scripts/populate-match-results.mjs --season=${staged.seasonID}`);
-    console.log(`  node scripts/populate-patches.mjs`);
+    console.log(`  node scripts/populate-patches.mjs --season=${staged.seasonID} --week=${staged.week}`);
+    console.log(`  node scripts/record-milestones.mjs --season=${staged.seasonID} --week=${staged.week}`);
+    console.log(`  node scripts/populate-facts.mjs --season=${staged.seasonID} --week=${staged.week}`);
     console.log(`  Then bust cache for S${staged.seasonID} queries and deploy.`);
   }
 }

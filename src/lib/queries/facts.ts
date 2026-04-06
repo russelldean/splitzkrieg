@@ -22,6 +22,8 @@ export interface RandomFact {
   refDay: number | null;
   /** ISO date string for display */
   referenceDate: string | null;
+  /** M/F/X */
+  gender: string | null;
   /** Only set for milestone facts (factTypeID=3) */
   milestoneCategory: string | null;
   milestoneOrdinal: number | null;
@@ -32,6 +34,7 @@ const RANDOM_FACTS_SQL = `
     f.factTypeID,
     b.bowlerName,
     b.slug AS bowlerSlug,
+    b.gender,
     LOWER(se.period) + '-' + CAST(se.year AS VARCHAR) AS seasonSlug,
     f.week,
     se.year,
@@ -63,6 +66,7 @@ const BOWLER_FACTS_SQL = `
     f.factTypeID,
     b.bowlerName,
     b.slug AS bowlerSlug,
+    b.gender,
     LOWER(se.period) + '-' + CAST(se.year AS VARCHAR) AS seasonSlug,
     f.week,
     se.year,
@@ -98,6 +102,7 @@ export async function getBowlerFacts(bowlerID: number): Promise<RandomFact[]> {
         value: r.value as number,
         previousValue: (r.previousValue as number) ?? null,
         isCareerHigh: !!(r.isCareerHigh),
+        gender: (r.gender as string) ?? null,
         referenceDate: r.referenceDate ? (r.referenceDate as Date).toISOString() : null,
         refMonth: null,
         refDay: null,
@@ -126,6 +131,7 @@ export async function getRandomFacts(): Promise<RandomFact[]> {
         value: r.value as number,
         previousValue: (r.previousValue as number) ?? null,
         isCareerHigh: !!(r.isCareerHigh),
+        gender: (r.gender as string) ?? null,
         referenceDate: null,
         refMonth: (r.refMonth as number) ?? null,
         refDay: (r.refDay as number) ?? null,

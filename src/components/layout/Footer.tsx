@@ -104,30 +104,34 @@ export function Footer() {
       <div className="bg-navy">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-3">
           {/* Desktop: links | logo | links */}
-          <div className="hidden sm:flex items-center justify-center gap-6 sm:gap-8">
-            {leftLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex items-center gap-2 text-sm font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors -mt-[36px]"
-              >
-                <span className="text-red">{link.icon}</span>
-                {link.label}
-              </Link>
-            ))}
+          <div className="hidden sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-6 sm:gap-8">
+            <div className="flex items-center justify-end gap-6 sm:gap-8">
+              {leftLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-2 text-sm font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors -mt-[36px]"
+                >
+                  <span className="text-red">{link.icon}</span>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
             <LogoBlock />
 
-            {rightLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex items-center gap-2 text-sm font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors -mt-[36px]"
-              >
-                <span className="text-red">{link.icon}</span>
-                {link.label}
-              </Link>
-            ))}
+            <div className="flex items-center justify-start gap-6 sm:gap-8">
+              {rightLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-2 text-sm font-body font-semibold tracking-wide uppercase text-cream/90 hover:text-cream transition-colors -mt-[36px]"
+                >
+                  <span className="text-red">{link.icon}</span>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Mobile: links row above logo */}

@@ -428,10 +428,9 @@ export async function pushLineupsToLP(
         continue;
       }
 
-      // Match lineup entries to LP roster bowlers
-      const newBowlerEmails: string[] = [];
-      const newRoster: Array<Record<string, unknown>> = [];
-      let matchFailed = false;
+      // Match lineup entries to LP roster bowlers, auto-adding missing ones
+      let currentRoster = [...roster];
+      let needsReload = false;
 
       for (const entry of submission.entries) {
         const bowlerName = entry.bowlerName || entry.newBowlerName;
@@ -439,36 +438,191 @@ export async function pushLineupsToLP(
           errors.push(
             `Submission ${submission.id}: entry position ${entry.position} has no bowler name`,
           );
-          matchFailed = true;
-          break;
+          continue;
         }
 
         // Find in LP roster by normalized name
         const target = bowlerName.toLowerCase().replace(/[^a-z]/g, '');
-        const lpBowler = roster.find((b) => {
+        const nameParts = bowlerName.trim().split(/\s+/);
+        const lastName = nameParts[nameParts.length - 1].toLowerCase();
+        const firstName = nameParts[0].toLowerCase();
+
+        let lpBowler = currentRoster.find((b) => {
           const name = String(b.name || '');
           return name.toLowerCase().replace(/[^a-z]/g, '') === target;
         });
+        // Fallback: first+last name fields
+        if (!lpBowler) {
+          lpBowler = currentRoster.find((b) => {
+            return (
+              String(b.firstName || '').toLowerCase() === firstName &&
+              String(b.lastName || '').toLowerCase() === lastName
+            );
+          });
+        }
+        // Fallback: last name only if unique
+        if (!lpBowler) {
+          const lastMatches = currentRoster.filter(
+            (b) => String(b.lastName || '').toLowerCase() === lastName,
+          );
+          if (lastMatches.length === 1) lpBowler = lastMatches[0];
+        }
 
         if (!lpBowler) {
-          errors.push(
-            `"${bowlerName}" not found in LP roster for "${teamName}"`,
+          // Search LP for the bowler and add them to the team
+          const searchQueries = [bowlerName];
+          if (nameParts.length > 2) {
+            searchQueries.push(`${nameParts[0]} ${nameParts[nameParts.length - 1]}`);
+          }
+
+          let found: Record<string, unknown> | null = null;
+          for (const q of searchQueries) {
+            const searchRes = await fetch(`${LP_BASE}/searchUsers`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ q, exact: true, origin: 'AllTeamsCenter' }),
+            });
+            if (!searchRes.ok) continue;
+
+            const searchData = await searchRes.json();
+            const users = searchData.data || searchData;
+            if (!Array.isArray(users) || users.length === 0) continue;
+
+            // Try last name + first initial match
+            found = users.find((u: Record<string, unknown>) => {
+              const uLast = String(u.lastName || '').toLowerCase();
+              const uFirst = String(u.firstName || '').toLowerCase();
+              return uLast === lastName && firstName.startsWith(uFirst[0] || '');
+            }) ?? null;
+            // Try full normalized name match
+            if (!found) {
+              found = users.find((u: Record<string, unknown>) => {
+                const uName = (String(u.firstName || '') + String(u.lastName || ''))
+                  .toLowerCase().replace(/[^a-z]/g, '');
+                return uName === target;
+              }) ?? null;
+            }
+            // Single result = use it
+            if (!found && users.length === 1) found = users[0];
+            if (found) break;
+          }
+
+          if (!found) {
+            errors.push(`"${bowlerName}" not found on LeaguePals at all`);
+            continue;
+          }
+
+          const fName = String(found.firstName || nameParts[0]);
+          const lName = String(found.lastName || nameParts.slice(1).join(' '));
+
+          // Add bowler to the LP team
+          const addPayload = {
+            type: 'invites',
+            bowlers: [found.email],
+            id: lpTeamID,
+            fullBowlers: [{
+              email: found.email,
+              canEdit: true,
+              enteredName: true,
+              isFemale: false,
+              isJunior: false,
+              dontIdentify: false,
+              average: 0,
+              totalPointsCarryOn: 0,
+              gamesCarryOn: 0,
+              individualPoints: 0,
+              lastName: lName,
+              firstName: fName,
+              name: `${fName} ${lName}`,
+            }],
+            origin: 'AllTeamsCenter-sendInvites',
+          };
+
+          const addRes = await fetch(`${LP_BASE}/updateTeam`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(addPayload),
+          });
+
+          if (!addRes.ok) {
+            errors.push(`Failed to add "${bowlerName}" to LP team "${teamName}"`);
+            continue;
+          }
+
+          needsReload = true;
+        }
+      }
+
+      // Reload roster if we added anyone
+      if (needsReload) {
+        const reloadRes = await fetch(
+          `${LP_BASE}/api/loadIndividualTeam?id=${lpTeamID}&noPre=false`,
+          { headers },
+        );
+        if (reloadRes.ok) {
+          const reloadData = await reloadRes.json();
+          const reloadRoster = reloadData.data || reloadData;
+          currentRoster = Array.isArray(reloadRoster)
+            ? reloadRoster
+            : (Object.values(reloadRoster).filter(
+                (v) => v && typeof v === 'object' && (v as Record<string, unknown>)._id,
+              ) as Array<Record<string, unknown>>);
+        }
+      }
+
+      // Build final roster: lineup bowlers on top, rest below
+      const topBowlers: Array<Record<string, unknown>> = [];
+      const topIds = new Set<string>();
+      let matchFailed = false;
+
+      for (const entry of submission.entries) {
+        const bowlerName = entry.bowlerName || entry.newBowlerName;
+        if (!bowlerName) continue;
+
+        const target = bowlerName.toLowerCase().replace(/[^a-z]/g, '');
+        const nameParts = bowlerName.trim().split(/\s+/);
+        const lastName = nameParts[nameParts.length - 1].toLowerCase();
+        const firstName = nameParts[0].toLowerCase();
+
+        let lpBowler = currentRoster.find((b) => {
+          const name = String(b.name || '');
+          return name.toLowerCase().replace(/[^a-z]/g, '') === target;
+        });
+        if (!lpBowler) {
+          lpBowler = currentRoster.find((b) => {
+            return (
+              String(b.firstName || '').toLowerCase() === firstName &&
+              String(b.lastName || '').toLowerCase() === lastName
+            );
+          });
+        }
+        if (!lpBowler) {
+          const lastMatches = currentRoster.filter(
+            (b) => String(b.lastName || '').toLowerCase() === lastName,
           );
+          if (lastMatches.length === 1) lpBowler = lastMatches[0];
+        }
+
+        if (!lpBowler) {
+          errors.push(`Still can't find "${bowlerName}" in LP roster for "${teamName}" after adds`);
           matchFailed = true;
           break;
         }
 
-        newBowlerEmails.push(String(lpBowler.email || ''));
-        newRoster.push(lpBowler);
+        topBowlers.push(lpBowler);
+        topIds.add(String(lpBowler._id));
       }
 
       if (matchFailed) continue;
 
+      const restBowlers = currentRoster.filter((b) => !topIds.has(String(b._id)));
+      const fullRoster = [...topBowlers, ...restBowlers];
+
       // Build and send update payload
       const payload = {
         type: 'roster_avg',
-        bowlers: newBowlerEmails,
-        roster: newRoster,
+        bowlers: fullRoster.map((b) => String(b.email || '')),
+        roster: fullRoster,
         league: LP_LEAGUE_ID,
         id: lpTeamID,
         origin: 'AllTeamsCenter-updateRoster',

@@ -25,6 +25,8 @@ import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { InstagramStrip } from '@/components/home/InstagramStrip';
 import { RecapSnapshotCard } from '@/components/home/RecapSnapshotCard';
 import { getInstagramFeed } from '@/lib/queries/instagram';
+import { getRandomFacts } from '@/lib/queries/facts';
+import { RandomFact } from '@/components/home/RandomFact';
 
 
 export const metadata = {
@@ -33,7 +35,7 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId, instagramPosts, allPosts] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId, instagramPosts, allPosts, randomFacts] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
     getNextBowlingNights(),
@@ -41,6 +43,7 @@ export default async function Home() {
     getNewBlogBadgeId(),
     getInstagramFeed(6),
     getAllPosts(),
+    getRandomFacts(),
   ]);
 
   // Latest blog post for desktop sidebar; promoted post if badge active
@@ -115,6 +118,8 @@ export default async function Home() {
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>
+          <div className="w-12 mx-auto border-t border-navy/30 mt-2 mb-2" />
+          <RandomFact facts={randomFacts} />
         </div>
       </section>
 

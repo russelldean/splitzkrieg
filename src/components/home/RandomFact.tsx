@@ -18,14 +18,21 @@ function ordinalSuffix(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
+function pronoun(gender: string | null): string {
+  if (gender === 'F') return 'her';
+  if (gender === 'M') return 'his';
+  return 'their';
+}
+
 function formatFact(fact: RandomFactType): { text: string; href: string } {
   const href = `/week/${fact.seasonSlug}/${fact.week}`;
+  const pron = pronoun(fact.gender);
 
   if (fact.factTypeID === 1) {
     const type = fact.isCareerHigh ? 'career-high game' : 'new personal high game';
     const prev = fact.previousValue ? ` Previous best: ${fact.previousValue}.` : '';
     return {
-      text: `This week in ${fact.year}, ${fact.bowlerName} rolled their ${type} of ${fact.value}.${prev}`,
+      text: `This week in ${fact.year}, ${fact.bowlerName} rolled ${pron} ${type} of ${fact.value}.${prev}`,
       href,
     };
   }
@@ -34,7 +41,7 @@ function formatFact(fact: RandomFactType): { text: string; href: string } {
     const type = fact.isCareerHigh ? 'career-high series' : 'new personal high series';
     const prev = fact.previousValue ? ` Previous best: ${fact.previousValue}.` : '';
     return {
-      text: `This week in ${fact.year}, ${fact.bowlerName} rolled their ${type} of ${fact.value}.${prev}`,
+      text: `This week in ${fact.year}, ${fact.bowlerName} rolled ${pron} ${type} of ${fact.value}.${prev}`,
       href,
     };
   }
