@@ -378,6 +378,31 @@ export async function pushLineupsToLP(
     Referer: LP_BASE + '/all-teams-center',
   };
 
+  // Compute 27-game rolling averages for all bowlers
+  const avgResult = await db.request().query(`
+    SELECT b.bowlerID, b.bowlerName,
+      (SELECT TOP 1 x.avg27 FROM (
+        SELECT AVG(CAST(g.val AS FLOAT)) AS avg27
+        FROM (
+          SELECT TOP 27 x2.val
+          FROM scores s2
+          CROSS APPLY (VALUES (s2.game1),(s2.game2),(s2.game3)) AS x2(val)
+          WHERE s2.bowlerID = b.bowlerID AND s2.isPenalty = 0 AND x2.val IS NOT NULL
+            AND (s2.seasonID < ${seasonID} OR (s2.seasonID = ${seasonID} AND s2.week < ${week}))
+          ORDER BY s2.seasonID DESC, s2.week DESC
+        ) g
+      ) x) AS incomingAvg
+    FROM bowlers b
+    WHERE b.bowlerID IN (SELECT DISTINCT bowlerID FROM scores WHERE isPenalty = 0)
+  `);
+  const avgMap = new Map<string, number>(); // normalized bowlerName -> floored avg
+  for (const row of avgResult.recordset) {
+    if (row.incomingAvg != null) {
+      const norm = String(row.bowlerName).toLowerCase().replace(/[^a-z]/g, '');
+      avgMap.set(norm, Math.floor(row.incomingAvg as number));
+    }
+  }
+
   // Get submissions for this week, optionally filtered to a single team
   let submissions = await getLineups(seasonID, week);
   if (teamID) {
@@ -614,6 +639,26 @@ export async function pushLineupsToLP(
       }
 
       if (matchFailed) continue;
+
+      // Inject rolling averages into lineup bowlers
+      for (let bi = 0; bi < topBowlers.length; bi++) {
+        const b = topBowlers[bi];
+        const entry = submission.entries[bi];
+        const entryName = entry?.bowlerName || entry?.newBowlerName || '';
+        const entryNorm = entryName.toLowerCase().replace(/[^a-z]/g, '');
+        const avg = avgMap.get(entryNorm) ?? null;
+        if (avg != null) {
+          b.average = avg;
+          b.enteringAvg = avg;
+          b.realAvg = avg;
+          if (Array.isArray(b.averages)) {
+            const leagueEntry = (b.averages as Array<Record<string, unknown>>).find(
+              (a) => a.league === LP_LEAGUE_ID,
+            );
+            if (leagueEntry) leagueEntry.average = avg;
+          }
+        }
+      }
 
       const restBowlers = currentRoster.filter((b) => !topIds.has(String(b._id)));
       const fullRoster = [...topBowlers, ...restBowlers];
