@@ -315,16 +315,23 @@ async function main() {
             }
           }
 
+          const nameParts = entry.name.trim().split(/\s+/);
+          const firstName = found
+            ? (found.firstName || nameParts[0])
+            : nameParts[0];
+          const lastName = found
+            ? (found.lastName || nameParts.slice(1).join(' '))
+            : nameParts.slice(1).join(' ');
+          const email = found
+            ? found.email
+            : `${nameParts[0].toLowerCase()}.${(nameParts[nameParts.length - 1] || 'bowler').toLowerCase()}@splitzkrieg.placeholder`;
+
           if (!found) {
-            console.log(`  ❌ "${entry.name}" not found on LeaguePals at all`);
-            continue;
+            console.log(`  ⚠️  NEW BOWLER: "${entry.name}" not found on LP, adding with dummy email (${email})`);
           }
 
-          const firstName = found.firstName || entry.name.split(/\s+/)[0];
-          const lastName = found.lastName || entry.name.split(/\s+/).slice(1).join(' ');
-
           if (dryRun) {
-            console.log(`  🔍 Would add "${firstName} ${lastName}" (${found.email}) to ${teamName}`);
+            console.log(`  🔍 Would add "${firstName} ${lastName}" (${email}) to ${teamName}`);
             needsReload = true;
             continue;
           }
@@ -332,7 +339,7 @@ async function main() {
           // Add bowler to team
           const addPayload = {
             type: 'invites',
-            bowlers: [found.email],
+            bowlers: [email],
             id: lpTeamID,
             fullBowlers: [{
               email: found.email,

@@ -532,21 +532,27 @@ export async function pushLineupsToLP(
             if (found) break;
           }
 
-          if (!found) {
-            errors.push(`"${bowlerName}" not found on LeaguePals at all`);
-            continue;
-          }
+          const fName = found
+            ? String(found.firstName || nameParts[0])
+            : nameParts[0];
+          const lName = found
+            ? String(found.lastName || nameParts.slice(1).join(' '))
+            : nameParts.slice(1).join(' ');
+          const email = found
+            ? String(found.email)
+            : `${nameParts[0].toLowerCase()}.${(nameParts[nameParts.length - 1] || 'bowler').toLowerCase()}@splitzkrieg.placeholder`;
 
-          const fName = String(found.firstName || nameParts[0]);
-          const lName = String(found.lastName || nameParts.slice(1).join(' '));
+          if (!found) {
+            errors.push(`NEW BOWLER: "${bowlerName}" not found on LP, adding with dummy email (${email})`);
+          }
 
           // Add bowler to the LP team
           const addPayload = {
             type: 'invites',
-            bowlers: [found.email],
+            bowlers: [email],
             id: lpTeamID,
             fullBowlers: [{
-              email: found.email,
+              email,
               canEdit: true,
               enteredName: true,
               isFemale: false,
@@ -698,6 +704,93 @@ export async function pushLineupsToLP(
       errors.push(
         `Error pushing "${teamName}": ${err instanceof Error ? err.message : String(err)}`,
       );
+    }
+  }
+
+  // Second pass: teams without submissions — carry over roster with updated averages
+  if (!teamID) {
+    const allTeams = await getSeasonTeams(seasonID);
+    const submittedTeamIDs = new Set(submissions.map((s) => s.teamID));
+
+    for (const team of allTeams) {
+      if (submittedTeamIDs.has(team.teamID)) continue;
+
+      const lpTeamID = LP_TEAM_MAP[team.teamName];
+      if (!lpTeamID) continue;
+
+      try {
+        const loadRes = await fetch(
+          `${LP_BASE}/api/loadIndividualTeam?id=${lpTeamID}&noPre=false`,
+          { headers },
+        );
+        if (!loadRes.ok) {
+          errors.push(`Failed to load LP team "${team.teamName}": ${loadRes.status}`);
+          continue;
+        }
+        const contentType = loadRes.headers.get('content-type') || '';
+        if (!contentType.includes('json')) {
+          errors.push(`LP returned HTML for "${team.teamName}" — cookie likely expired`);
+          break;
+        }
+
+        const teamData = await loadRes.json();
+        const rosterData = teamData.data || teamData;
+        const rosterArr: Array<Record<string, unknown>> = Array.isArray(rosterData)
+          ? rosterData
+          : (Object.values(rosterData).filter(
+              (v) => v && typeof v === 'object' && (v as Record<string, unknown>)._id,
+            ) as Array<Record<string, unknown>>);
+
+        if (!rosterArr.length) {
+          errors.push(`No roster found in LP for "${team.teamName}"`);
+          continue;
+        }
+
+        // Inject updated averages
+        for (const b of rosterArr) {
+          const bName = String(b.name || '');
+          const norm = bName.toLowerCase().replace(/[^a-z]/g, '');
+          const avg = avgMap.get(norm) ?? null;
+          if (avg != null) {
+            b.average = avg;
+            b.enteringAvg = avg;
+            b.realAvg = avg;
+            if (Array.isArray(b.averages)) {
+              const leagueEntry = (b.averages as Array<Record<string, unknown>>).find(
+                (a) => a.league === LP_LEAGUE_ID,
+              );
+              if (leagueEntry) leagueEntry.average = avg;
+            }
+          }
+        }
+
+        const payload = {
+          type: 'roster_avg',
+          bowlers: rosterArr.map((b) => String(b.email || '')),
+          roster: rosterArr,
+          league: LP_LEAGUE_ID,
+          id: lpTeamID,
+          origin: 'AllTeamsCenter-updateRoster',
+        };
+
+        const updateRes = await fetch(`${LP_BASE}/updateTeam`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        if (!updateRes.ok) {
+          const text = await updateRes.text();
+          errors.push(`Failed to update LP team "${team.teamName}": ${text}`);
+          continue;
+        }
+
+        pushed++;
+      } catch (err) {
+        errors.push(
+          `Error pushing "${team.teamName}": ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
   }
 
