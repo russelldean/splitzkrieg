@@ -70,7 +70,7 @@ export async function getTeamCurrentRoster(teamID: number): Promise<TeamRosterMe
       .input('teamID', teamID)
       .query<TeamRosterMember>(GET_TEAM_CURRENT_ROSTER_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_CURRENT_ROSTER_SQL });
+  }, [], { sql: GET_TEAM_CURRENT_ROSTER_SQL, dependsOn: ['scores'] });
 }
 
 const GET_TEAM_SEASON_BOWLERS_SQL = `

@@ -32,12 +32,14 @@ const config: sql.config = {
 let pool: sql.ConnectionPool | null = null;
 
 // Semaphore to limit concurrent DB queries during builds.
-// Azure SQL has a 30-connection limit; Vercel runs 7 parallel build workers,
-// EACH a separate Node process with its own copy of this counter. So the
-// effective ceiling is workers × limit. With 7 workers, the limit must be ≤ 4
-// to stay under 30 (7 × 4 = 28). Set to 3 for headroom.
-// Previously 8, which produced 56 concurrent queries and broke publish-week deploys.
-const MAX_CONCURRENT_QUERIES = 3;
+// Azure SQL has a 30-connection limit. The semaphore is per-process, and
+// Vercel runs N parallel build workers (set in next.config.ts cpus).
+// Effective ceiling: cpus × MAX_CONCURRENT_QUERIES.
+// Current setting: 3 × 7 = 21 — under Azure SQL's 30-conn limit with 9
+// slots of headroom for retries. Pair with cpus=3 in next.config.ts for
+// the architectural-fix transition deploy. After successful deploy where
+// cache files settle into the new key format, both can go back up.
+const MAX_CONCURRENT_QUERIES = 7;
 let activeQueries = 0;
 const queryQueue: (() => void)[] = [];
 
@@ -224,17 +226,24 @@ export async function cachedQuery<T>(
   const stable = options?.stable;
 
   // Determine whether to include the published-week tag in the hash:
-  //   stable: true          → never include tag (data never changes)
-  //   seasonID provided      → only include tag if seasonID matches the published season
-  //                            (completed seasons are frozen — no need to re-query)
-  //   neither                → always include tag (weekly data like bowler stats, H2H, etc.)
+  //   stable: true              → never include tag (data never changes)
+  //   dependsOn provided        → never include tag (channel hashes invalidate properly)
+  //   seasonID without dependsOn → include tag only if seasonID matches published season
+  //   neither                   → include tag always (legacy fallback; should be empty bucket)
+  //
+  // The dependsOn check is critical: cross-season bowler queries declare
+  // dependsOn:['scores','schedule'] but have no seasonID. Without this rule
+  // they'd fall into "non-seasonal, non-stable → always invalidate" and
+  // every publish-week would invalidate ~570 bowler page caches at once.
   let usePublishedTag = false;
-  if (!stable && PUBLISHED_TAG) {
+  if (!stable && PUBLISHED_TAG && !options?.dependsOn) {
     if (options?.seasonID != null) {
       // Season-scoped: only invalidate for the current season
       usePublishedTag = options.seasonID === PUBLISHED_SEASON_ID;
     } else {
-      // Non-seasonal, non-stable: always invalidate
+      // Non-seasonal, non-stable, no dependsOn: legacy "always invalidate"
+      // bucket. After 2026-04-07 audit this should be empty — every query
+      // either has dependsOn, seasonID, or stable: true.
       usePublishedTag = true;
     }
   }

@@ -17,7 +17,7 @@ export async function getNextBowlingNights(): Promise<[string | null, string | n
     const result = await db.request().query<{ matchDate: Date }>(GET_NEXT_BOWLING_NIGHTS_SQL);
     const dates = result.recordset.map(r => r.matchDate.toISOString());
     return [dates[0] ?? null, dates[1] ?? null] as [string | null, string | null];
-  }, null, { sql: GET_NEXT_BOWLING_NIGHTS_SQL })) ?? [null, null];
+  }, null, { sql: GET_NEXT_BOWLING_NIGHTS_SQL, dependsOn: ['schedule'] })) ?? [null, null];
 }
 
 /** @deprecated Use getNextBowlingNights() instead */
@@ -336,7 +336,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       bowlerOfTheWeek: botwResult.recordset[0] ?? null,
       teamOfTheWeek,
     };
-  }, null, { sql: SNAPSHOT_ALL_SQL });
+  }, null, { sql: SNAPSHOT_ALL_SQL, dependsOn: ['scores'] });
 });
 
 /**

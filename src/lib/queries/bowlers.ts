@@ -385,7 +385,7 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
       .input('week', ctx.week)
       .query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
     return result.recordset[0]?.bowlerID ?? null;
-  }, null, { sql: GET_BOWLER_OF_THE_WEEK_SQL });
+  }, null, { sql: GET_BOWLER_OF_THE_WEEK_SQL, dependsOn: ['scores'] });
 });
 
 export interface DirectoryBowler {

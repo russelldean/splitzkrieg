@@ -93,7 +93,7 @@ export async function getTopPerformers(seasonID: number, week: number): Promise<
       scratchGame: [...gameRes.recordset],
       hcpSeries: [...hcpRes.recordset],
     };
-  }, { scratchSeries: [], scratchGame: [], hcpSeries: [] }, { sql: allSQL + params });
+  }, { scratchSeries: [], scratchGame: [], hcpSeries: [] }, { sql: allSQL + params, dependsOn: ['scores'] });
 }
 
 // ── Week Milestones ─────────────────────────────────────────
@@ -233,7 +233,7 @@ export async function getWeekMilestones(seasonID: number, week: number): Promise
     }
 
     return milestones;
-  }, [], { sql: allSQL + params });
+  }, [], { sql: allSQL + params, dependsOn: ['scores'] });
 }
 
 // ── Match Results Summary ───────────────────────────────────
@@ -299,7 +299,7 @@ export async function getMatchResultsSummary(seasonID: number, week: number): Pr
       .input('seasonID', seasonID).input('week', week)
       .query<MatchResultRow>(MATCH_RESULTS_SQL);
     return result.recordset;
-  }, [], { sql: MATCH_RESULTS_SQL + params });
+  }, [], { sql: MATCH_RESULTS_SQL + params, dependsOn: ['schedule'] });
 }
 
 // ── Standings Snapshot ──────────────────────────────────────
@@ -360,7 +360,7 @@ export async function getStandingsSnapshot(seasonID: number, week: number): Prom
       .input('seasonID', seasonID).input('week', week)
       .query<import('./seasons').StandingsRow>(STANDINGS_SNAPSHOT_SQL);
     return result.recordset;
-  }, [], { sql: STANDINGS_SNAPSHOT_SQL + params });
+  }, [], { sql: STANDINGS_SNAPSHOT_SQL + params, dependsOn: ['schedule'] });
 }
 
 // ── Leaderboard Snapshot (through week N) ───────────────────
@@ -443,5 +443,5 @@ export async function getLeaderboardSnapshot(
     if (gender !== null) request.input('gender', gender);
     const result = await request.query<SeasonLeaderEntry>(sql);
     return result.recordset;
-  }, [], { sql: sql + params });
+  }, [], { sql: sql + params, dependsOn: ['scores'] });
 }
