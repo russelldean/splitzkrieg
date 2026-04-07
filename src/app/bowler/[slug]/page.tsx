@@ -232,7 +232,7 @@ export default async function BowlerPage({
               <div className="hidden lg:block w-px bg-navy/10 mx-6 self-stretch" />
             )}
             {bowlerFacts.length > 0 && (
-              <div className="flex-1 min-w-0">
+              <div id="record-progression" className="flex-1 min-w-0 scroll-mt-24">
                 <RecordProgression facts={bowlerFacts} bowlerName={bowler.bowlerName} />
               </div>
             )}

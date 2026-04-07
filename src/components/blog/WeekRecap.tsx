@@ -54,16 +54,15 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   const weekScores = allScores.filter(s => s.week === weekNum);
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 
-  // Fetch custom discovery link overrides for this post (cached to avoid extra DB connections at build time)
-  // Fetch discovery link overrides — not cached so edits show immediately on revalidation
-  // Only runs for WeekRecap pages (blog posts), not the 1000+ week detail pages
+  // Fetch custom discovery link overrides for this post — no isPublished filter
+  // so draft previews reflect in-progress edits. Posts are unique per (seasonSlug, week).
   let discoveryOverrides: Array<{ text: string; href: string; description?: string }> | null = null;
   try {
     const db = await getDb();
     const dlResult = await db.request()
       .input('seasonSlug', seasonSlug)
       .input('week', weekNum)
-      .query<{ discoveryLinks: string | null }>(`SELECT discoveryLinks FROM blogPosts WHERE seasonSlug = @seasonSlug AND week = @week AND isPublished = 1`);
+      .query<{ discoveryLinks: string | null }>(`SELECT TOP 1 discoveryLinks FROM blogPosts WHERE seasonSlug = @seasonSlug AND week = @week ORDER BY isPublished DESC, id DESC`);
     const raw = dlResult.recordset[0]?.discoveryLinks;
     if (raw) discoveryOverrides = JSON.parse(raw);
   } catch { /* ignore */ }

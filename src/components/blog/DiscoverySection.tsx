@@ -67,8 +67,8 @@ export function DiscoverySection({ seasonSlug, updates = [], asOfDate, overrides
           </Link>
         ))}
         {rotatingHighlights.map((item, idx) => {
-          const raw = item.description ?? item.text;
-          const [title, subtitle] = raw.includes('|') ? raw.split('|', 2).map(s => s.trim()) : [raw, null];
+          const title = item.text;
+          const subtitle = item.description ?? null;
           const date = 'date' in item ? (item as Update).date : null;
           let recencyLabel: string | null = null;
           if (date) {
