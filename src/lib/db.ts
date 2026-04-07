@@ -32,9 +32,12 @@ const config: sql.config = {
 let pool: sql.ConnectionPool | null = null;
 
 // Semaphore to limit concurrent DB queries during builds.
-// Azure SQL has a 30-connection limit; Vercel runs 7 parallel workers,
-// each potentially firing multiple queries. This prevents overload.
-const MAX_CONCURRENT_QUERIES = 8;
+// Azure SQL has a 30-connection limit; Vercel runs 7 parallel build workers,
+// EACH a separate Node process with its own copy of this counter. So the
+// effective ceiling is workers × limit. With 7 workers, the limit must be ≤ 4
+// to stay under 30 (7 × 4 = 28). Set to 3 for headroom.
+// Previously 8, which produced 56 concurrent queries and broke publish-week deploys.
+const MAX_CONCURRENT_QUERIES = 3;
 let activeQueries = 0;
 const queryQueue: (() => void)[] = [];
 
