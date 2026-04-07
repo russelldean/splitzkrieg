@@ -62,10 +62,12 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
     const dlResult = await db.request()
       .input('seasonSlug', seasonSlug)
       .input('week', weekNum)
-      .query<{ discoveryLinks: string | null }>(`SELECT TOP 1 discoveryLinks FROM blogPosts WHERE seasonSlug = @seasonSlug AND week = @week ORDER BY isPublished DESC, id DESC`);
+      .query<{ discoveryLinks: string | null }>(`SELECT TOP 1 discoveryLinks FROM blogPosts WHERE seasonSlug = @seasonSlug AND week = @week ORDER BY isPublished DESC, postID DESC`);
     const raw = dlResult.recordset[0]?.discoveryLinks;
     if (raw) discoveryOverrides = JSON.parse(raw);
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.warn('WeekRecap: failed to load discoveryLinks', err);
+  }
 
   // Find Cloud 9 matches (one team won all 9 available points)
   const cloud9Matches = weekMatchDetails.filter(r => r.team1TotalPts === 9 || r.team2TotalPts === 9);
