@@ -114,11 +114,11 @@ export default async function Home() {
               unoptimized
               priority
             />
-            <p className="font-body text-sm text-navy/60 -mt-5 sm:-mt-8">
+            <p className="hidden sm:block font-body text-sm text-navy/60 -mt-5 sm:-mt-8">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
           </div>
-          <div className="w-12 mx-auto border-t border-navy/30 mt-2 mb-2" />
+          <div className="hidden sm:block w-12 mx-auto border-t border-navy/30 mt-2 mb-2" />
           <RandomFact facts={randomFacts} />
         </div>
       </section>

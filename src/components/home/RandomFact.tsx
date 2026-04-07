@@ -106,7 +106,7 @@ export function RandomFact({ facts }: RandomFactProps) {
     <div className="text-center px-4 -mt-1 mb-1">
       <Link
         href={href}
-        className="inline-block font-body text-xs sm:text-sm text-navy/60 italic hover:text-red-700 transition-colors"
+        className="inline-block font-body text-sm sm:text-base text-navy/60 italic hover:text-red-700 transition-colors"
       >
         {text}
       </Link>
