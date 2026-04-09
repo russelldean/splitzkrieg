@@ -65,7 +65,7 @@ function IndividualChampionRow({
         <div className="font-heading text-navy/70">{season.romanNumeral}</div>
         <div className="text-navy/65 text-xs">{season.displayName}</div>
       </td>
-      <td className="py-3 pr-4 align-top font-body text-amber-700 font-bold">
+      <td className="py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60">
         {season.mensScratchName && season.mensScratchSlug ? (
           <BowlerLink
             name={season.mensScratchName}
@@ -76,7 +76,7 @@ function IndividualChampionRow({
           <span className="font-heading text-red-600/60 font-bold">X</span>
         )}
       </td>
-      <td className="py-3 pr-4 align-top font-body text-amber-700 font-bold">
+      <td className="py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60">
         {season.womensScratchName && season.womensScratchSlug ? (
           <BowlerLink
             name={season.womensScratchName}
@@ -87,7 +87,7 @@ function IndividualChampionRow({
           <span className="font-heading text-red-600/60 font-bold">X</span>
         )}
       </td>
-      <td className="py-3 align-top font-body text-amber-700 font-bold">
+      <td className="py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60">
         {season.handicapName && season.handicapSlug ? (
           <BowlerLink
             name={season.handicapName}
@@ -139,13 +139,13 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
             <th className="py-2 pr-4 font-heading text-navy/60 text-sm uppercase tracking-wider">
               Season
             </th>
-            <th className="py-2 pr-4 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
+            <th className="py-2 px-3 font-heading text-amber-800/70 text-sm uppercase tracking-wider">
               Men&apos;s Scratch
             </th>
-            <th className="py-2 pr-4 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
+            <th className="py-2 px-3 font-heading text-amber-800/70 text-sm uppercase tracking-wider">
               Women&apos;s Scratch
             </th>
-            <th className="py-2 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
+            <th className="py-2 px-3 font-heading text-amber-800/70 text-sm uppercase tracking-wider">
               Handicap
             </th>
           </tr>

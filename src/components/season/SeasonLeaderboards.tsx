@@ -37,7 +37,7 @@ function LeaderboardTable({
   highlightLabel,
   showHighlight = true,
   isAverage = false,
-  valueLabel = 'Value',
+  valueLabel,
   ineligibleIDs,
   ineligibleLabel,
   championID,
@@ -48,7 +48,7 @@ function LeaderboardTable({
   highlightLabel?: string;
   showHighlight?: boolean;
   isAverage?: boolean;
-  valueLabel?: string;
+  valueLabel: string;
   ineligibleIDs?: Set<number>;
   ineligibleLabel?: string;
   championID?: number | null;
