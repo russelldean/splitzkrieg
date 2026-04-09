@@ -101,8 +101,8 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {debuts.length > 0 && (
-              <div className={`bg-white border border-navy/10 border-l-4 border-l-navy/30 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
-                <h3 className={compact ? "px-3 py-1 bg-navy/[0.03] border-b border-navy/10 font-heading text-sm text-navy/70 leading-tight" : "font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5"}>Splitzkrieg Debuts</h3>
+              <div className={`bg-emerald-50/50 border border-emerald-300/60 border-l-4 border-l-emerald-500 rounded-lg shadow-sm ${compact ? 'overflow-hidden' : 'p-3'}`}>
+                <h3 className={compact ? "px-3 py-1 bg-emerald-100/40 border-b border-emerald-200/60 font-heading text-sm text-emerald-800 leading-tight" : "font-heading text-sm text-emerald-800 uppercase tracking-wider mb-1.5"}>Splitzkrieg Debuts</h3>
                 <div className={compact ? "px-3 py-1" : ""}>
                 {debuts.map(b => (
                   <div key={b.bowlerID} className="text-sm font-body py-0.5">
