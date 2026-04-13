@@ -373,6 +373,21 @@ export default function LineupPage() {
             </button>
           ))}
         </div>
+
+        {/* Scoresheet PDF link for assistants */}
+        <div className="mt-8 pt-6 border-t border-navy/10 text-center">
+          <a
+            href="/api/lineup/scoresheets"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 font-body text-sm text-navy/60 hover:text-navy transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+            </svg>
+            Download Week {seasonInfo.week} Scoresheets (PDF)
+          </a>
+        </div>
       </div>
     );
   }

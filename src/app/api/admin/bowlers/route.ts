@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import sql from 'mssql';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
+import { getRollingAverages } from '@/lib/admin/rolling-averages';
+import { getCurrentLineupContext } from '@/lib/admin/lineups';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +23,19 @@ export async function GET(request: NextRequest) {
       : 'SELECT bowlerID, bowlerName FROM bowlers WHERE isActive = 1 ORDER BY bowlerName';
 
     const result = await db.request().query(query);
+
+    // For the full list, attach current rolling averages
+    if (showAll) {
+      const context = await getCurrentLineupContext();
+      if (context) {
+        const avgMap = await getRollingAverages(db, context.seasonID, context.nextWeek);
+        for (const bowler of result.recordset) {
+          const avg = avgMap.get(bowler.bowlerID) ?? null;
+          bowler.currentAvg = avg;
+          bowler.handicap = avg != null ? Math.min(Math.floor((225 - avg) * 0.95), 147) : null;
+        }
+      }
+    }
 
     return NextResponse.json({ bowlers: result.recordset });
   } catch (err) {

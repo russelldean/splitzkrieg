@@ -7,6 +7,8 @@ interface Bowler {
   bowlerName: string;
   isActive: boolean;
   establishedAvg: number | null;
+  currentAvg: number | null;
+  handicap: number | null;
 }
 
 export default function BowlersPage() {
@@ -191,7 +193,9 @@ export default function BowlersPage() {
               <tr className="text-navy/40 border-b border-navy/10 bg-navy/5">
                 <th className="text-left py-2 px-4">Name</th>
                 <th className="text-center py-2 px-4 w-20">ID</th>
-                <th className="text-center py-2 px-4 w-24">Avg</th>
+                <th className="text-center py-2 px-4 w-20">Avg</th>
+                <th className="text-center py-2 px-4 w-20">HCP</th>
+                <th className="text-center py-2 px-4 w-24">Est. Avg</th>
                 <th className="text-center py-2 px-4 w-20">Status</th>
               </tr>
             </thead>
@@ -200,6 +204,12 @@ export default function BowlersPage() {
                 <tr key={b.bowlerID} className="border-b border-navy/5">
                   <td className="py-2 px-4 text-navy">{b.bowlerName}</td>
                   <td className="py-2 px-4 text-center text-navy/40">{b.bowlerID}</td>
+                  <td className="py-2 px-4 text-center text-navy font-medium">
+                    {b.currentAvg != null ? b.currentAvg : <span className="text-navy/30">--</span>}
+                  </td>
+                  <td className="py-2 px-4 text-center text-navy font-medium">
+                    {b.handicap != null ? b.handicap : <span className="text-navy/30">--</span>}
+                  </td>
                   <td className="py-2 px-4 text-center">
                     {editingID === b.bowlerID ? (
                       <div className="flex items-center justify-center gap-1">
@@ -251,7 +261,7 @@ export default function BowlersPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-navy/40">
+                  <td colSpan={6} className="py-8 text-center text-navy/40">
                     No bowlers found
                   </td>
                 </tr>
