@@ -26,7 +26,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
     .slice(0, compact ? 1 : 5);
 
   const { bowlers, topHcpSeries, topScratchGame, topMenScratch, topWomenScratch } = computeIndividualLeaders(weekScores, !!compact);
-  const { turkeyList, aboveAvgEveryGame, debuts, allTimeHighGames, allTimeHighSeries, bowlerOfWeek, teamOfWeek } = computeWeeklyAwards(weekScores, bowlers);
+  const { turkeyList, aboveAvgEveryGame, debuts, allTimeHighGames, allTimeHighSeries, bowlersOfWeek, teamOfWeek } = computeWeeklyAwards(weekScores, bowlers);
   const topPIN = computePIN(bowlers, matchResults, !!compact);
 
   const show = (section: WeekStatsSection) => {
@@ -45,18 +45,25 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
       )}
 
       {/* Bowler & Team of the Week + League Heat Check */}
-      {show('awards') && (bowlerOfWeek || teamOfWeek) && (
+      {show('awards') && (bowlersOfWeek.length > 0 || teamOfWeek) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {bowlerOfWeek && (
+          {bowlersOfWeek.length > 0 && (
             <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
-              <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Bowler of the Week</div>
-              <Link href={`/bowler/${bowlerOfWeek.slug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
-                {bowlerOfWeek.name}
-              </Link>
+              <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">
+                {bowlersOfWeek.length > 1 ? 'Bowlers of the Week' : 'Bowler of the Week'}
+              </div>
+              <div className="font-heading text-lg">
+                {bowlersOfWeek.map((b, i) => (
+                  <span key={b.slug}>
+                    <Link href={`/bowler/${b.slug}`} className="text-navy hover:text-red-600 transition-colors">
+                      {b.name}
+                    </Link>
+                    {i < bowlersOfWeek.length - 1 && <span className="text-navy/40"> &amp; </span>}
+                  </span>
+                ))}
+              </div>
               <div className="text-sm font-body text-navy/65">
-                {bowlerOfWeek.pinsOver > 0 ? '+' : ''}{bowlerOfWeek.pinsOver} Pins
-                <span className="text-navy/30 mx-1">&middot;</span>
-                {bowlerOfWeek.series} Series
+                {bowlersOfWeek[0].handSeries} Hcp Series
               </div>
             </div>
           )}

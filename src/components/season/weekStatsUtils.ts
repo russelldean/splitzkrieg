@@ -115,15 +115,28 @@ export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: Wee
   }
   allTimeHighSeries.sort((a, b) => b.score - a.score);
 
-  // Bowler of the Week
+  // Bowlers of the Week — highest handSeries (canonical definition), ties share the award
   const debutBowlerIDs = new Set(debuts.map(s => s.bowlerID));
-  const bowlerOfWeek = bowlers.reduce<{ name: string; slug: string; pinsOver: number; series: number } | null>((best, b) => {
-    if (b.scratchSeries == null || b.incomingAvg == null || b.incomingAvg === 0) return best;
-    if (debutBowlerIDs.has(b.bowlerID)) return best;
-    const pinsOver = b.scratchSeries - 3 * b.incomingAvg;
-    const cur = { name: b.bowlerName, slug: b.bowlerSlug, pinsOver, series: b.scratchSeries };
-    return !best || cur.pinsOver > best.pinsOver ? cur : best;
-  }, null);
+  const eligibleBowlers = bowlers.filter(b =>
+    b.scratchSeries != null &&
+    b.incomingAvg != null &&
+    b.incomingAvg > 0 &&
+    b.handSeries != null &&
+    !debutBowlerIDs.has(b.bowlerID)
+  );
+  const maxHandSeries = eligibleBowlers.reduce((m, b) => Math.max(m, b.handSeries ?? 0), 0);
+  const bowlersOfWeek = maxHandSeries > 0
+    ? eligibleBowlers
+        .filter(b => b.handSeries === maxHandSeries)
+        .map(b => ({
+          name: b.bowlerName,
+          slug: b.bowlerSlug,
+          pinsOver: (b.scratchSeries ?? 0) - 3 * (b.incomingAvg ?? 0),
+          series: b.scratchSeries ?? 0,
+          handSeries: b.handSeries ?? 0,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    : [];
 
   // Team of the Week
   const teamHcpData = new Map<number, { teamName: string; teamSlug: string; hcpSeries: number; expectedHcpSeries: number }>();
@@ -139,7 +152,7 @@ export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: Wee
     .map(([id, t]) => ({ id, ...t, pinsOver: t.hcpSeries - t.expectedHcpSeries }))
     .sort((a, b) => b.hcpSeries - a.hcpSeries)[0] ?? null;
 
-  return { turkeyList, aboveAvgEveryGame, debuts, allTimeHighGames, allTimeHighSeries, bowlerOfWeek, teamOfWeek };
+  return { turkeyList, aboveAvgEveryGame, debuts, allTimeHighGames, allTimeHighSeries, bowlersOfWeek, teamOfWeek };
 }
 
 // ── League Heat Check ──────────────────────────────────────────
