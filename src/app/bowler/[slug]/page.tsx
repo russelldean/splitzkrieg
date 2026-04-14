@@ -93,7 +93,7 @@ export default async function BowlerPage({
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/bowler/${slug}`;
 
   // Parallel build-time data fetching
-  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwID, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones, gameProfile, leagueGameAvgs, bowlerFacts] = await Promise.all([
+  const [careerSummary, seasonStats, gameLog, rollingAvgHistory, botwIDs, currentSeasonID, currentSlug, starStats, patches, tickerItems, leagueMilestones, gameProfile, leagueGameAvgs, bowlerFacts] = await Promise.all([
     getBowlerCareerSummary(bowler.bowlerID),
     getBowlerSeasonStats(bowler.bowlerID),
     getBowlerGameLog(bowler.bowlerID),
@@ -110,7 +110,7 @@ export default async function BowlerPage({
     getBowlerFacts(bowler.bowlerID),
   ]);
 
-  const isBowlerOfTheWeek = botwID === bowler.bowlerID;
+  const isBowlerOfTheWeek = botwIDs.includes(bowler.bowlerID);
 
   // Derive team breakdown from season stats
   const teamMap = new Map<string, { teamName: string; teamSlug: string | null; nights: number }>();

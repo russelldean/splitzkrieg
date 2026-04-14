@@ -74,13 +74,22 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
 
           {/* Right: BOTW / TOTW */}
           <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 space-y-3 sm:space-y-5">
-            {snapshot.bowlerOfTheWeek && (
+            {snapshot.bowlersOfTheWeek.length > 0 && (
               <div>
-                <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">Bowler of the Week</div>
-                <Link href={`/bowler/${snapshot.bowlerOfTheWeek.slug}`} className="text-sm font-heading text-navy hover:text-red transition-colors">
-                  {snapshot.bowlerOfTheWeek.bowlerName}
-                </Link>
-                <span className="text-sm font-body text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlerOfTheWeek.score}</span>
+                <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">
+                  {snapshot.bowlersOfTheWeek.length > 1 ? 'Bowlers of the Week' : 'Bowler of the Week'}
+                </div>
+                <div className="text-sm">
+                  {snapshot.bowlersOfTheWeek.map((b, i) => (
+                    <span key={b.slug}>
+                      <Link href={`/bowler/${b.slug}`} className="font-heading text-navy hover:text-red transition-colors">
+                        {b.bowlerName}
+                      </Link>
+                      {i < snapshot.bowlersOfTheWeek.length - 1 && <span className="font-body text-navy/60"> &amp; </span>}
+                    </span>
+                  ))}
+                  <span className="font-body text-navy/60 ml-1.5 sm:ml-2">{snapshot.bowlersOfTheWeek[0].score}</span>
+                </div>
               </div>
             )}
             {snapshot.teamOfTheWeek && (

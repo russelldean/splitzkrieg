@@ -365,18 +365,21 @@ export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
   }, null, { stable: true, sql: GET_CURRENT_SEASON_ID_SQL });
 });
 
-const GET_BOWLER_OF_THE_WEEK_SQL = `/* v2: week passed as param */
-  SELECT TOP 1 sc.bowlerID
+const GET_BOWLER_OF_THE_WEEK_SQL = `/* v3: co-winners on ties */
+  SELECT sc.bowlerID
   FROM scores sc
   WHERE sc.isPenalty = 0
     AND sc.seasonID = @seasonID
     AND sc.week = @week
-  ORDER BY sc.handSeries DESC
+    AND sc.handSeries = (
+      SELECT MAX(sc2.handSeries) FROM scores sc2
+      WHERE sc2.seasonID = @seasonID AND sc2.week = @week AND sc2.isPenalty = 0
+    )
 `;
 
-export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
+export const getBowlerOfTheWeek = cache(async (): Promise<number[]> => {
   const ctx = await getPublishedContext();
-  if (!ctx || ctx.week === 0) return null;
+  if (!ctx || ctx.week === 0) return [];
 
   return cachedQuery('getBowlerOfTheWeek', async () => {
     const db = await getDb();
@@ -384,8 +387,8 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number | null> => {
       .input('seasonID', ctx.seasonID)
       .input('week', ctx.week)
       .query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
-    return result.recordset[0]?.bowlerID ?? null;
-  }, null, { sql: GET_BOWLER_OF_THE_WEEK_SQL, dependsOn: ['scores'] });
+    return result.recordset.map((r) => r.bowlerID);
+  }, [], { sql: GET_BOWLER_OF_THE_WEEK_SQL, dependsOn: ['scores'] });
 });
 
 export interface DirectoryBowler {

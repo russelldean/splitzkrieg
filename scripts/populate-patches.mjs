@@ -161,18 +161,19 @@ async function main() {
   `, 'Perfect Game');
 
   // ─── Bowler of the Week ───
+  // DENSE_RANK = 1 so tied bowlers all get co-winner patches.
   // Note: when scoped to a single week, we still need the full PARTITION to
   // determine the winner, but we filter the outer result to just that week.
   await insertPatches('botw', `
     SELECT x.bowlerID, x.seasonID, x.week
     FROM (
       SELECT sc.seasonID, sc.week, sc.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.handSeries DESC) AS rn
+        DENSE_RANK() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.handSeries DESC) AS rnk
       FROM scores sc
       WHERE sc.isPenalty = 0
         AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
         ${weeklyAnd}
-    ) x WHERE x.rn = 1
+    ) x WHERE x.rnk = 1
   `, 'Bowler of the Week');
 
   // ─── Weekly High Game ───

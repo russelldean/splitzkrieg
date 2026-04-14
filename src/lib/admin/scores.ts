@@ -495,15 +495,15 @@ export async function runPatches(
     'Perfect Game',
   );
 
-  // Bowler of the Week
+  // Bowler of the Week — DENSE_RANK so ties produce co-winners
   await insertPatchBatch(
     'botw',
     `SELECT x.bowlerID, x.seasonID, x.week FROM (
       SELECT sc.seasonID, sc.week, sc.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.handSeries DESC) AS rn
+        DENSE_RANK() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.handSeries DESC) AS rnk
       FROM scores sc
       WHERE sc.isPenalty = 0 AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0${weeklyFilter}
-    ) x WHERE x.rn = 1`,
+    ) x WHERE x.rnk = 1`,
     'Bowler of the Week',
   );
 

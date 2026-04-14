@@ -180,7 +180,7 @@ export interface SeasonSnapshot {
   topHcpAvg: { bowlerName: string; slug: string; average: number } | null;
   highGame: { bowlerName: string; slug: string; score: number } | null;
   highSeries: { bowlerName: string; slug: string; score: number } | null;
-  bowlerOfTheWeek: { bowlerName: string; slug: string; score: number } | null;
+  bowlersOfTheWeek: Array<{ bowlerName: string; slug: string; score: number }>;
   teamOfTheWeek: { teamName: string; teamSlug: string; score: number } | null;
 }
 
@@ -261,17 +261,18 @@ const SNAPSHOT_HIGH_SERIES_SQL = `
   ORDER BY sc.scratchSeries DESC
 `;
 
-const SNAPSHOT_BOTW_SQL = `/* v3: week passed as param */
-  SELECT TOP 1
-    b.bowlerName,
-    b.slug,
-    sc.handSeries AS score
+const SNAPSHOT_BOTW_SQL = `/* v4: co-winners on ties */
+  SELECT b.bowlerName, b.slug, sc.handSeries AS score
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   WHERE sc.seasonID = @seasonID
     AND sc.isPenalty = 0
     AND sc.week = @week
-  ORDER BY sc.handSeries DESC
+    AND sc.handSeries = (
+      SELECT MAX(sc2.handSeries) FROM scores sc2
+      WHERE sc2.seasonID = @seasonID AND sc2.week = @week AND sc2.isPenalty = 0
+    )
+  ORDER BY b.bowlerName
 `;
 
 const SNAPSHOT_TOTW_SQL = `/* v3: week passed as param */
@@ -333,7 +334,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       topHcpAvg: topHcpAvgResult.recordset[0] ?? null,
       highGame: highGameResult.recordset[0] ?? null,
       highSeries: highSeriesResult.recordset[0] ?? null,
-      bowlerOfTheWeek: botwResult.recordset[0] ?? null,
+      bowlersOfTheWeek: botwResult.recordset,
       teamOfTheWeek,
     };
   }, null, { sql: SNAPSHOT_ALL_SQL, dependsOn: ['scores'] });
