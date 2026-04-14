@@ -1018,28 +1018,7 @@ function BowlerRow({
             </div>
             {showSuggestions && (
               <div className="absolute z-10 mt-1 bg-white border border-navy/20 rounded shadow-lg py-1 min-w-[240px] max-h-64 overflow-y-auto">
-                {bowler.matchedSuggestions && bowler.matchedSuggestions.length > 0 && (
-                  <>
-                    <p className="px-3 py-1 text-[10px] uppercase tracking-wide text-navy/40">
-                      Suggestions
-                    </p>
-                    {bowler.matchedSuggestions.map((s) => (
-                      <button
-                        key={s.bowlerID}
-                        onClick={() => {
-                          onResolve(matchIdx, bowlerIdx, s.bowlerID, s.name);
-                          setShowSuggestions(false);
-                        }}
-                        className="block w-full text-left px-3 py-1.5 text-xs hover:bg-navy/5 transition-colors"
-                      >
-                        {s.name}{' '}
-                        <span className="text-navy/40">(match: {s.score})</span>
-                      </button>
-                    ))}
-                    <div className="border-t border-navy/10 my-1" />
-                  </>
-                )}
-                <div className="px-2 py-1">
+                <div className="px-2 py-1 sticky top-0 bg-white border-b border-navy/10">
                   <input
                     type="text"
                     value={resolveSearch}
@@ -1066,6 +1045,26 @@ function BowlerRow({
                   <p className="px-3 py-1.5 text-xs text-navy/40">
                     No matches
                   </p>
+                )}
+                {!resolveSearch.trim() && bowler.matchedSuggestions && bowler.matchedSuggestions.length > 0 && (
+                  <>
+                    <p className="px-3 py-1 text-[10px] uppercase tracking-wide text-navy/40">
+                      Suggestions
+                    </p>
+                    {bowler.matchedSuggestions.map((s) => (
+                      <button
+                        key={s.bowlerID}
+                        onClick={() => {
+                          onResolve(matchIdx, bowlerIdx, s.bowlerID, s.name);
+                          setShowSuggestions(false);
+                        }}
+                        className="block w-full text-left px-3 py-1.5 text-xs hover:bg-navy/5 transition-colors"
+                      >
+                        {s.name}{' '}
+                        <span className="text-navy/40">(match: {s.score})</span>
+                      </button>
+                    ))}
+                  </>
                 )}
               </div>
             )}
