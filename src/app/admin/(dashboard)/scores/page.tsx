@@ -105,6 +105,15 @@ export default function ScoresPage() {
     Array<{ bowlerID: number; bowlerName: string }>
   >([]);
 
+  const refreshBowlers = useCallback(() => {
+    fetch('/api/admin/bowlers')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.bowlers) setAllBowlers(data.bowlers);
+      })
+      .catch(() => {});
+  }, []);
+
   // Load current season and bowler list on mount
   useEffect(() => {
     fetch('/api/admin/dashboard')
@@ -120,12 +129,7 @@ export default function ScoresPage() {
       })
       .catch(() => {});
 
-    fetch('/api/admin/bowlers')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.bowlers) setAllBowlers(data.bowlers);
-      })
-      .catch(() => {});
+    refreshBowlers();
   }, []);
 
   // Pipeline state
@@ -490,6 +494,7 @@ export default function ScoresPage() {
               onAddBowler={addBowler}
               onResolveBowler={resolveBowler}
               onRemoveBowler={removeBowler}
+              onRefreshBowlers={refreshBowlers}
             />
           ))}
 
@@ -720,6 +725,7 @@ interface MatchCardProps {
     bowlerName: string,
   ) => void;
   onRemoveBowler: (matchIdx: number, bowlerIdx: number) => void;
+  onRefreshBowlers: () => void;
 }
 
 function MatchCard({
@@ -732,6 +738,7 @@ function MatchCard({
   onAddBowler,
   onResolveBowler,
   onRemoveBowler,
+  onRefreshBowlers,
 }: MatchCardProps) {
   const homeBowlers = match.bowlers
     .map((b, i) => ({ bowler: b, idx: i }))
@@ -766,6 +773,7 @@ function MatchCard({
           onTogglePenalty={onTogglePenalty}
           onResolveBowler={onResolveBowler}
           onRemoveBowler={onRemoveBowler}
+          onRefreshBowlers={onRefreshBowlers}
         />
 
         <button
@@ -789,6 +797,7 @@ function MatchCard({
           onTogglePenalty={onTogglePenalty}
           onResolveBowler={onResolveBowler}
           onRemoveBowler={onRemoveBowler}
+          onRefreshBowlers={onRefreshBowlers}
         />
 
         <button
@@ -845,6 +854,7 @@ interface TeamSectionProps {
     bowlerName: string,
   ) => void;
   onRemoveBowler: (matchIdx: number, bowlerIdx: number) => void;
+  onRefreshBowlers: () => void;
 }
 
 function TeamSection({
@@ -857,6 +867,7 @@ function TeamSection({
   onTogglePenalty,
   onResolveBowler,
   onRemoveBowler,
+  onRefreshBowlers,
 }: TeamSectionProps) {
   const hcpTotal =
     hcp.g1 != null && hcp.g2 != null && hcp.g3 != null
@@ -894,6 +905,7 @@ function TeamSection({
                 onTogglePenalty={onTogglePenalty}
                 onResolve={onResolveBowler}
                 onRemove={onRemoveBowler}
+                onRefreshBowlers={onRefreshBowlers}
               />
             ))}
           </tbody>
@@ -938,6 +950,7 @@ interface BowlerRowProps {
     bowlerName: string,
   ) => void;
   onRemove: (matchIdx: number, bowlerIdx: number) => void;
+  onRefreshBowlers: () => void;
 }
 
 function BowlerRow({
@@ -949,10 +962,20 @@ function BowlerRow({
   onTogglePenalty,
   onResolve,
   onRemove,
+  onRefreshBowlers,
 }: BowlerRowProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [bowlerSearch, setBowlerSearch] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const [resolveSearch, setResolveSearch] = useState('');
+
+  const resolveSearchResults = useMemo(() => {
+    const q = resolveSearch.trim().toLowerCase();
+    if (!q) return [];
+    return allBowlers
+      .filter((b) => b.bowlerName.toLowerCase().includes(q))
+      .slice(0, 20);
+  }, [resolveSearch, allBowlers]);
 
   const filteredBowlers = useMemo(() => {
     if (!bowlerSearch.trim()) return allBowlers.slice(0, 20);
@@ -980,27 +1003,70 @@ function BowlerRow({
                 {bowler.bowlerName || 'Unknown'}
               </span>
               <button
-                onClick={() => setShowSuggestions(!showSuggestions)}
+                onClick={() => {
+                  const next = !showSuggestions;
+                  setShowSuggestions(next);
+                  if (next) {
+                    setResolveSearch('');
+                    onRefreshBowlers();
+                  }
+                }}
                 className="px-1.5 py-0.5 bg-amber-200 text-amber-800 rounded text-[10px] hover:bg-amber-300 transition-colors"
               >
                 Resolve
               </button>
             </div>
-            {showSuggestions && bowler.matchedSuggestions && (
-              <div className="absolute z-10 mt-1 bg-white border border-navy/20 rounded shadow-lg py-1 min-w-[200px]">
-                {bowler.matchedSuggestions.map((s) => (
+            {showSuggestions && (
+              <div className="absolute z-10 mt-1 bg-white border border-navy/20 rounded shadow-lg py-1 min-w-[240px] max-h-64 overflow-y-auto">
+                {bowler.matchedSuggestions && bowler.matchedSuggestions.length > 0 && (
+                  <>
+                    <p className="px-3 py-1 text-[10px] uppercase tracking-wide text-navy/40">
+                      Suggestions
+                    </p>
+                    {bowler.matchedSuggestions.map((s) => (
+                      <button
+                        key={s.bowlerID}
+                        onClick={() => {
+                          onResolve(matchIdx, bowlerIdx, s.bowlerID, s.name);
+                          setShowSuggestions(false);
+                        }}
+                        className="block w-full text-left px-3 py-1.5 text-xs hover:bg-navy/5 transition-colors"
+                      >
+                        {s.name}{' '}
+                        <span className="text-navy/40">(match: {s.score})</span>
+                      </button>
+                    ))}
+                    <div className="border-t border-navy/10 my-1" />
+                  </>
+                )}
+                <div className="px-2 py-1">
+                  <input
+                    type="text"
+                    value={resolveSearch}
+                    onChange={(e) => setResolveSearch(e.target.value)}
+                    placeholder="Search all bowlers..."
+                    autoFocus
+                    className="w-full text-xs border border-navy/20 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-navy/30"
+                  />
+                </div>
+                {resolveSearchResults.map((b) => (
                   <button
-                    key={s.bowlerID}
+                    key={b.bowlerID}
                     onClick={() => {
-                      onResolve(matchIdx, bowlerIdx, s.bowlerID, s.name);
+                      onResolve(matchIdx, bowlerIdx, b.bowlerID, b.bowlerName);
                       setShowSuggestions(false);
+                      setResolveSearch('');
                     }}
                     className="block w-full text-left px-3 py-1.5 text-xs hover:bg-navy/5 transition-colors"
                   >
-                    {s.name}{' '}
-                    <span className="text-navy/40">(match: {s.score})</span>
+                    {b.bowlerName}
                   </button>
                 ))}
+                {resolveSearch.trim() && resolveSearchResults.length === 0 && (
+                  <p className="px-3 py-1.5 text-xs text-navy/40">
+                    No matches
+                  </p>
+                )}
               </div>
             )}
           </div>
