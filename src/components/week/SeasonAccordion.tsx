@@ -9,8 +9,8 @@ interface WeekSummary {
   matchDate: string | null;
   leagueAvg: number | null;
   expectedAvg: number | null;
-  botwName: string | null;
-  botwPinsOver: number | null;
+  botwNames: string[];
+  botwHandSeries: number | null;
 }
 
 interface SeasonEntry {
@@ -119,12 +119,12 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
                                 </span>
                               );
                             })()}
-                            {week.botwName && (
+                            {week.botwNames.length > 0 && (
                               <span>
                                 <span className="text-navy/55 text-xs">BOTW </span>
-                                <span className="font-semibold text-navy/70">{week.botwName}</span>
-                                {week.botwPinsOver != null && (
-                                  <span className="hidden sm:inline tabular-nums text-navy/55 ml-1">+{week.botwPinsOver}</span>
+                                <span className="font-semibold text-navy/70">{week.botwNames.join(' & ')}</span>
+                                {week.botwHandSeries != null && (
+                                  <span className="hidden sm:inline tabular-nums text-navy/55 ml-1">{week.botwHandSeries}</span>
                                 )}
                               </span>
                             )}

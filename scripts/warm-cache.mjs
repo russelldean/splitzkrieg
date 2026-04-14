@@ -173,27 +173,28 @@ async function main() {
         WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
       ),
       botwCTE AS (
-        SELECT sc.week, b.bowlerName, b.slug,
-          sc.scratchSeries - 3 * sc.incomingAvg AS pinsOver,
-          ROW_NUMBER() OVER (PARTITION BY sc.week ORDER BY sc.scratchSeries - 3 * sc.incomingAvg DESC) AS rn
+        SELECT sc.week, b.bowlerName, b.slug, sc.handSeries,
+          DENSE_RANK() OVER (PARTITION BY sc.week ORDER BY sc.handSeries DESC) AS rnk
         FROM scores sc JOIN bowlers b ON sc.bowlerID = b.bowlerID
         WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
           AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-          AND EXISTS (
-            SELECT 1 FROM scores sc3
-            WHERE sc3.bowlerID = sc.bowlerID AND sc3.isPenalty = 0
-              AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-          )
+      ),
+      botwAgg AS (
+        SELECT week,
+          STRING_AGG(bowlerName, '|') WITHIN GROUP (ORDER BY bowlerName) AS botwNamesJoined,
+          STRING_AGG(slug, '|') WITHIN GROUP (ORDER BY bowlerName) AS botwSlugsJoined,
+          MAX(handSeries) AS botwHandSeries
+        FROM botwCTE WHERE rnk = 1 GROUP BY week
       )
       SELECT ws.week, ws.matchDate, ws.matchCount, ws.highGame,
         hg.bowlerName AS highGameBowler, hg.slug AS highGameSlug,
         ws.highSeries, hs.bowlerName AS highSeriesBowler, hs.slug AS highSeriesSlug,
         ws.leagueAvg, ws.expectedAvg,
-        bw.bowlerName AS botwName, bw.slug AS botwSlug, bw.pinsOver AS botwPinsOver
+        ba.botwNamesJoined, ba.botwSlugsJoined, ba.botwHandSeries
       FROM weekStats ws
       LEFT JOIN highGameBowler hg ON hg.week = ws.week AND hg.rn = 1
       LEFT JOIN highSeriesBowler hs ON hs.week = ws.week AND hs.rn = 1
-      LEFT JOIN botwCTE bw ON bw.week = ws.week AND bw.rn = 1
+      LEFT JOIN botwAgg ba ON ba.week = ws.week
       ORDER BY ws.week ASC
     `, { seasonID: sid }, false);
 

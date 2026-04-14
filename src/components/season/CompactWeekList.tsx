@@ -73,12 +73,12 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
                           </span>
                         );
                       })()}
-                      {summary.botwName && (
+                      {summary.botwNames.length > 0 && (
                         <span>
                           <span className="text-navy/65 text-xs">BOTW </span>
-                          <span className="font-semibold text-navy/70">{summary.botwName}</span>
-                          {summary.botwPinsOver != null && (
-                            <span className="hidden sm:inline tabular-nums text-navy/65 ml-1">+{summary.botwPinsOver}</span>
+                          <span className="font-semibold text-navy/70">{summary.botwNames.join(' & ')}</span>
+                          {summary.botwHandSeries != null && (
+                            <span className="hidden sm:inline tabular-nums text-navy/65 ml-1">{summary.botwHandSeries}</span>
                           )}
                         </span>
                       )}
