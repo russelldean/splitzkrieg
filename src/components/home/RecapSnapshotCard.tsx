@@ -71,24 +71,28 @@ export function RecapSnapshotCard({ post, snapshot }: Props) {
 
             {/* BOTW / TOTW side by side */}
             <div className="flex-1 min-w-0 border-l border-navy/5 pl-5 flex flex-col sm:flex-row gap-3 sm:gap-6">
-              {snapshot.bowlersOfTheWeek.length > 0 && (
-                <div className="flex-1">
-                  <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">
-                    {snapshot.bowlersOfTheWeek.length > 1 ? 'Bowlers of the Week' : 'Bowler of the Week'}
+              {(() => {
+                const botw = snapshot.bowlersOfTheWeek ?? [];
+                if (botw.length === 0) return null;
+                return (
+                  <div className="flex-1">
+                    <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">
+                      {botw.length > 1 ? 'Bowlers of the Week' : 'Bowler of the Week'}
+                    </div>
+                    <div className="text-lg">
+                      {botw.map((b, i) => (
+                        <span key={b.slug}>
+                          <Link href={`/bowler/${b.slug}`} className="font-heading text-navy hover:text-red transition-colors">
+                            {b.bowlerName}
+                          </Link>
+                          {i < botw.length - 1 && <span className="font-body text-navy/60"> &amp; </span>}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-sm font-body text-navy/60 mt-0.5">{botw[0].score}</div>
                   </div>
-                  <div className="text-lg">
-                    {snapshot.bowlersOfTheWeek.map((b, i) => (
-                      <span key={b.slug}>
-                        <Link href={`/bowler/${b.slug}`} className="font-heading text-navy hover:text-red transition-colors">
-                          {b.bowlerName}
-                        </Link>
-                        {i < snapshot.bowlersOfTheWeek.length - 1 && <span className="font-body text-navy/60"> &amp; </span>}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="text-sm font-body text-navy/60 mt-0.5">{snapshot.bowlersOfTheWeek[0].score}</div>
-                </div>
-              )}
+                );
+              })()}
               {snapshot.teamOfTheWeek && (
                 <div className="flex-1">
                   <div className="text-xs font-body text-navy/60 uppercase tracking-wider mb-0.5">Team of the Week</div>
