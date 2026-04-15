@@ -28,7 +28,7 @@ export async function getAllBowlerSlugs(): Promise<BowlerSlug[]> {
     const db = await getDb();
     const result = await db.request().query<{ slug: string }>(GET_ALL_BOWLER_SLUGS_SQL);
     return result.recordset;
-  }, [], { stable: true, sql: GET_ALL_BOWLER_SLUGS_SQL });
+  }, [], { sql: GET_ALL_BOWLER_SLUGS_SQL, dependsOn: ['scores'] });
 }
 
 const GET_BOWLER_BY_SLUG_SQL = `
