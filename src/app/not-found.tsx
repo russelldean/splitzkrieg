@@ -11,7 +11,7 @@ export default function NotFound() {
         <svg viewBox="0 0 60 130" className="w-16 h-32" fill="none">
           {/* Shadow */}
           <ellipse cx="31" cy="122" rx="16" ry="4" fill="rgba(0,0,0,0.15)" />
-          {/* Pin body - exact USBC regulation profile from game renderer */}
+          {/* Pin body */}
           <path
             d="M30,5 L34.2,8.8 L35.9,16.3 L34.8,29.5 L34.3,36.1 L34.1,42.7 L34.5,47.4 L35.7,53.0 L40.5,73.7 L41.0,84.1 L40.4,92.6 L39.0,101.0 L36.5,112.3 L34.7,118.0 L25.3,118.0 L23.5,112.3 L21.0,101.0 L19.6,92.6 L19.0,84.1 L19.5,73.7 L24.3,53.0 L25.5,47.4 L25.9,42.7 L25.7,36.1 L25.2,29.5 L24.1,16.3 L25.8,8.8 Z"
             fill="#f5f5f0"
