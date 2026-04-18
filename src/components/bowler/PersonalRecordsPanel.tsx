@@ -3,7 +3,16 @@ import { formatMatchDate } from '@/lib/bowling-time';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
-import type { WeekDelta } from './LastWeekHighlight';
+type WeekDelta = {
+  totalPins: number;
+  totalGames: number;
+  games200Plus: number;
+  series600Plus: number;
+  turkeys: number | null;
+  avgChange: number | null;
+  newHighGame: boolean;
+  newHighSeries: boolean;
+};
 
 // EASTER EGG: Geoffrey Berry playoff 300 note
 const HIGH_GAME_NOTES: Record<string, string> = {
