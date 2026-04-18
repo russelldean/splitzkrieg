@@ -26,7 +26,7 @@ export function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => nu
   return { items: sorted.slice(0, aboveTie), tiedCount, tiedValue: cutoffValue };
 }
 
-export function TiedNote({ count, value, prefix }: { count: number; value: number; prefix?: string }) {
+function TiedNote({ count, value, prefix }: { count: number; value: number; prefix?: string }) {
   if (count === 0) return null;
   return (
     <div className="text-sm font-body text-navy/65 italic py-0.5">

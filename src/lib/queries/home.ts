@@ -100,7 +100,7 @@ const GET_RECENT_MILESTONES_SQL = `
   ORDER BY type, threshold DESC
 `;
 
-export const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
+const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
   return cachedQuery('getRecentMilestones', async () => {
     const db = await getDb();
     const result = await db.request().query<Milestone>(GET_RECENT_MILESTONES_SQL);

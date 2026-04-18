@@ -22,7 +22,7 @@ export function indexMatchResults(results: WeeklyMatchupResult[]) {
 }
 
 /** Get matchups from schedule for a given week. */
-export function getMatchups(schedule: SeasonScheduleWeek[], week: number) {
+function getMatchups(schedule: SeasonScheduleWeek[], week: number) {
   return schedule.filter(s => s.week === week);
 }
 

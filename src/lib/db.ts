@@ -76,7 +76,7 @@ export async function getDb(): Promise<sql.ConnectionPool> {
   throw new Error('Failed to connect to database');
 }
 
-export async function closeDb(): Promise<void> {
+async function closeDb(): Promise<void> {
   if (pool) {
     await pool.close();
     pool = null;

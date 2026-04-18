@@ -13,7 +13,7 @@ interface RunningTotals {
   playoffs: Map<number, number>;
 }
 
-export function computeRunningTotals(playoffs: PlayoffSeason[]): Map<number, RunningTotals> {
+function computeRunningTotals(playoffs: PlayoffSeason[]): Map<number, RunningTotals> {
   const sorted = [...playoffs].reverse();
   const champCount = new Map<number, number>();
   const finalsCount = new Map<number, number>();

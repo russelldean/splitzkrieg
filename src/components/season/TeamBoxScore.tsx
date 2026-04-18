@@ -10,24 +10,24 @@ export function TeamName({ name }: { name: string }) {
 }
 
 /** Color class for a game score relative to the bowler's incoming average. */
-export function avgColorClass(score: number | null, avg: number | null): string {
+function avgColorClass(score: number | null, avg: number | null): string {
   if (score === null || avg === null) return '';
   return score >= avg ? 'text-green-600' : 'text-red-600/70';
 }
 
-export function teamGameTotal(bowlers: WeeklyMatchScore[], gameKey: 'game1' | 'game2' | 'game3'): number {
+function teamGameTotal(bowlers: WeeklyMatchScore[], gameKey: 'game1' | 'game2' | 'game3'): number {
   return bowlers.reduce((sum, b) => b.isPenalty ? sum : sum + (b[gameKey] ?? 0), 0);
 }
 
-export function teamSeriesTotal(bowlers: WeeklyMatchScore[]): number {
+function teamSeriesTotal(bowlers: WeeklyMatchScore[]): number {
   return bowlers.reduce((sum, b) => b.isPenalty ? sum : sum + (b.scratchSeries ?? 0), 0);
 }
 
-export function teamHcpSeriesTotal(bowlers: WeeklyMatchScore[]): number {
+function teamHcpSeriesTotal(bowlers: WeeklyMatchScore[]): number {
   return bowlers.reduce((sum, b) => sum + (b.handSeries ?? 0), 0);
 }
 
-export function teamTurkeyTotal(bowlers: WeeklyMatchScore[]): number {
+function teamTurkeyTotal(bowlers: WeeklyMatchScore[]): number {
   return bowlers.reduce((sum, b) => sum + (b.turkeys ?? 0), 0);
 }
 

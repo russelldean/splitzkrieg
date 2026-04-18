@@ -157,7 +157,7 @@ export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: Wee
 
 // ── League Heat Check ──────────────────────────────────────────
 
-export function computeLeagueHeat(weekScores: WeeklyMatchScore[]): {
+function computeLeagueHeat(weekScores: WeeklyMatchScore[]): {
   pinsOverPerGame: number;
   leagueAvg: number;
   expectedAvg: number;

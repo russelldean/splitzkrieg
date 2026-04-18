@@ -24,7 +24,7 @@ export const seasonsIcon = (
 
 export const leagueNightsIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px] -mr-0.5">
-    {/* USBC regulation bowling pin profile (from game VectorRenderer) */}
+    {/* USBC regulation bowling pin profile */}
     <path d="M10,1.5 L11.3,2.1 L11.9,3.2 L11.5,5.2 L11.4,6.2 L11.3,7.2 L11.4,7.9 L11.8,8.7 L13.3,11.8 L13.5,13.4 L13.3,14.7 L12.9,15.9 L12.1,17.6 L11.5,18.5 L8.5,18.5 L7.9,17.6 L7.1,15.9 L6.7,14.7 L6.5,13.4 L6.7,11.8 L8.2,8.7 L8.6,7.9 L8.7,7.2 L8.6,6.2 L8.5,5.2 L8.1,3.2 L8.7,2.1 Z" />
     {/* Neck stripes (red on real pin, white negative space here) */}
     <line x1="8.65" y1="7.0" x2="11.35" y2="7.0" stroke="white" strokeWidth="0.7" />
@@ -38,7 +38,7 @@ export const blogIcon = (
   </svg>
 );
 
-export const gameIcon = (
+const gameIcon = (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
     <path d="M10 2a2 2 0 00-2 2v1c0 .5-.2 1-.5 1.4-.5.5-.8 1.2-.8 2 0 .5.1 1 .3 1.4-.2.5-.3 1-.3 1.6 0 1.8 1 3.6 3.3 3.6s3.3-1.8 3.3-3.6c0-.6-.1-1.1-.3-1.6.2-.4.3-.9.3-1.4 0-.8-.3-1.5-.8-2-.3-.4-.5-.9-.5-1.4V4a2 2 0 00-2-2z" />
   </svg>

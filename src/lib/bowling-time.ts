@@ -57,7 +57,7 @@ export function computeCountdown(targetMs: number) {
 }
 
 /** Check if it's Monday after bowling (11:00 PM – midnight ET). */
-export function isPostBowlingNow(): boolean {
+function isPostBowlingNow(): boolean {
   try {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: 'America/New_York',
