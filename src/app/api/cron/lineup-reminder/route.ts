@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(
+    console.info(
       `Cron lineup-reminder: Week ${nextWeek}, sent ${sent}, skipped ${skipped}, errors ${errors.length}`,
     );
 

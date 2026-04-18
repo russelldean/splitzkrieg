@@ -69,7 +69,7 @@ export async function getDb(): Promise<sql.ConnectionPool> {
     } catch (err) {
       if (attempt === maxRetries) throw err;
       const delay = Math.min(5000 * Math.pow(2, attempt - 1), 60000);
-      console.log(`DB connection attempt ${attempt} failed, retrying in ${delay}ms...`);
+      console.warn(`DB connection attempt ${attempt} failed, retrying in ${delay}ms...`);
       await new Promise((r) => setTimeout(r, delay));
     }
   }
@@ -197,7 +197,7 @@ export async function withRetry<T>(
         (err instanceof Error && err.message.includes('timed out'));
       if (!isTimeout || attempt === maxRetries) throw err;
       const delay = 5000 * attempt;
-      console.log(`${label}: timeout on attempt ${attempt}/${maxRetries}, retrying in ${delay}ms...`);
+      console.warn(`${label}: timeout on attempt ${attempt}/${maxRetries}, retrying in ${delay}ms...`);
       await new Promise(r => setTimeout(r, delay));
       // Reset pool in case connection is stale
       if (pool) {
