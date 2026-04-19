@@ -62,3 +62,6 @@ gutter_thud.wav
 
 # Internal planning files (local-only)
 .planning/
+
+# Local Claude context (not code)
+memory/
