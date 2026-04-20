@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { ALL_TEAMS_VIZ, type BowlerNode, type BowlerPair } from './teams-data';
 
@@ -11,53 +12,6 @@ const SEASON_LABELS: Record<number, string> = {
   30:"F'23",31:"S'24",32:"F'24",33:"S'25",34:"F'25",35:"S'26",
 };
 
-type Lineup = {
-  ids: number[];
-  names: string[];
-  active: boolean[];
-  count: number;
-  seasons: number[];
-};
-
-type TeamData = {
-  name: string;
-  totalNights: number;
-  uniqueLineups: number;
-  lineups: Lineup[];
-};
-
-const TEAMS: TeamData[] = [
-  {
-    name: 'Lucky Strikes',
-    totalNights: 308,
-    uniqueLineups: 107,
-    lineups: [
-      { ids:[326,391,483,548], names:["John Williams","Kyle Hanlin","Mirla del Rosario","Russ Dean"], active:[true,false,false,true], count:86, seasons:[1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] },
-      { ids:[326,435,483,548], names:["John Williams","Martin Hall","Mirla del Rosario","Russ Dean"], active:[true,true,false,true], count:21, seasons:[14,15,16,17,20,21,22,24,25,26,27] },
-      { ids:[121,225,435,548], names:["Christina Manzella","Geoffrey Berry","Martin Hall","Russ Dean"], active:[true,true,true,true], count:13, seasons:[32,33,34] },
-    ],
-  },
-  {
-    name: 'E-Bowla',
-    totalNights: 307,
-    uniqueLineups: 29,
-    lineups: [
-      { ids:[24,271,575,615], names:["Amy Kostrewa","James Hepler","Spott Philpott","Tracy Wills"], active:[true,true,true,true], count:207, seasons:[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35] },
-      { ids:[24,575,604,615], names:["Amy Kostrewa","Spott Philpott","Tim Ross","Tracy Wills"], active:[true,true,false,true], count:31, seasons:[2,3,4,7,8,9,10,12] },
-      { ids:[24,135,575,615], names:["Amy Kostrewa","Cy Rawls","Spott Philpott","Tracy Wills"], active:[true,false,true,true], count:17, seasons:[1,2] },
-    ],
-  },
-  {
-    name: 'Thoughts and Spares',
-    totalNights: 232,
-    uniqueLineups: 66,
-    lineups: [
-      { ids:[282,345,496,508], names:["Jay Lowe","Justin Levens","Nick Cain","Patrick Nerz"], active:[false,false,false,false], count:40, seasons:[9,10,11,12,13] },
-      { ids:[11,202,387,496], names:["Alex Rubenstein","Eric Thomas","Kristin Pearson","Nick Cain"], active:[true,true,true,false], count:31, seasons:[18,19,20,21,22,23,24,25,26,27,28,29] },
-      { ids:[11,202,496,508], names:["Alex Rubenstein","Eric Thomas","Nick Cain","Patrick Nerz"], active:[true,true,false,false], count:14, seasons:[16,18,19,20,21,22,24,25,27] },
-    ],
-  },
-];
 
 
 
@@ -81,7 +35,7 @@ function nodeColor(t: number): string {
 
 const GLOBAL_MAX_NIGHTS = Math.max(1, ...ALL_TEAMS_VIZ.flatMap(t => Object.values(t.nightsMap)));
 
-function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId, onSelect, sort }: {
+function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId, onSelect, sort, showLegend }: {
   bowlers: BowlerNode[];
   pairs: BowlerPair[];
   nightsMap: Record<number, number>;
@@ -90,6 +44,7 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
   selectedId: number | null;
   onSelect: (id: number | null) => void;
   sort: 'firstSeason' | 'totalNights';
+  showLegend?: boolean;
 }) {
   const [hovNodeId, setHovNodeId] = useState<number | null>(null);
   const [tip, setTip] = useState({ x: 0, y: 0 });
@@ -143,6 +98,30 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
         <svg width={AD_W} height={AD_H} style={{ display: 'block', overflow: 'visible' }}>
           <text x={AD_W / 2} y={16} textAnchor="middle" fontSize={13} fontWeight={700} fill="#94a3b8" letterSpacing="0.08em">{title.toUpperCase()}</text>
           <line x1={AD_PAD} y1={AD_BASELINE} x2={AD_W - AD_PAD} y2={AD_BASELINE} stroke="#1e2d3d" strokeWidth={1} />
+
+          {showLegend && (
+            <>
+              <defs>
+                <linearGradient id="arc-legend-grad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stopColor={heatColor(1)}   />
+                  <stop offset="50%"  stopColor={heatColor(0.5)} />
+                  <stop offset="100%" stopColor={heatColor(0)}   />
+                </linearGradient>
+              </defs>
+              {/* arc key — upper right, outside chart */}
+              <g textAnchor="start">
+                <text x={AD_W + 16} y={70} fontSize={10} fill="#94a3b8">nights bowled together</text>
+                <rect x={AD_W + 16} y={78} width={64} height={4} rx={2} fill="url(#arc-legend-grad)" />
+              </g>
+              {/* dot key — near baseline, outside chart */}
+              <g textAnchor="start">
+                <text x={AD_W + 16} y={AD_BASELINE - 14} fontSize={10} fill="#94a3b8">nights bowled</text>
+                <circle cx={AD_W + 24} cy={AD_BASELINE} r={8}   fill={nodeColor(1)}   />
+                <circle cx={AD_W + 42} cy={AD_BASELINE} r={4.5} fill={nodeColor(0.4)} />
+                <circle cx={AD_W + 56} cy={AD_BASELINE} r={2}   fill={nodeColor(0)}   />
+              </g>
+            </>
+          )}
 
           {[...pairs].reverse().map(pair => {
             const x1 = nodeX.get(pair.id1);
@@ -224,49 +203,6 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
   );
 }
 
-const RANK_COLORS = ['#f59e0b', '#38bdf8', '#a78bfa'];
-
-function TopLineups({ teams }: { teams: TeamData[] }) {
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 40, alignItems: 'flex-start' }}>
-      {teams.map(team => {
-        const top3 = team.lineups.slice(0, 3);
-        const maxNights = top3[0].count;
-        return (
-          <div key={team.name} style={{ flex: '1 1 260px', minWidth: 260 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, margin: '0 0 4px', color: '#f8fafc' }}>{team.name}</h2>
-            <div style={{ color: '#475569', fontSize: 12, marginBottom: 20 }}>
-              {team.totalNights} nights &bull; {team.uniqueLineups} unique lineups
-            </div>
-            {top3.map((lineup, i) => {
-              const color = RANK_COLORS[i];
-              const pct = Math.round(lineup.count / team.totalNights * 100);
-              return (
-                <div key={i} style={{ marginBottom: 24 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-                    <span style={{ color, fontWeight: 900, fontSize: 13, minWidth: 24 }}>#{i + 1}</span>
-                    <div style={{ flex: 1 }}>
-                      {lineup.names.map(name => (
-                        <div key={name} style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>{name}</div>
-                      ))}
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ color, fontWeight: 700, fontSize: 18, lineHeight: 1 }}>{lineup.count}</div>
-                      <div style={{ color: '#475569', fontSize: 11 }}>{pct}%</div>
-                    </div>
-                  </div>
-                  <div style={{ height: 4, background: '#132238', borderRadius: 2 }}>
-                    <div style={{ height: '100%', width: `${lineup.count / maxNights * 100}%`, background: color, borderRadius: 2 }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 function SharedPinPanel({ selectedId, onClose }: { selectedId: number; onClose: () => void }) {
   const teamsForBowler = ALL_TEAMS_VIZ.filter(t => t.bowlers.some(b => b.id === selectedId));
@@ -331,11 +267,6 @@ export default function LineupsPage() {
               {label}
             </button>
           ))}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: 11, color: '#475569' }}>
-            <span>arc color: fewer</span>
-            <div style={{ width: 60, height: 4, borderRadius: 3, background: `linear-gradient(to right, ${heatColor(0)}, ${heatColor(0.5)}, ${heatColor(1)})` }} />
-            <span>more</span>
-          </div>
         </div>
 
         {selectedId !== null && <SharedPinPanel selectedId={selectedId} onClose={() => setSelectedId(null)} />}
@@ -352,6 +283,7 @@ export default function LineupsPage() {
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 sort={sort}
+                showLegend={i === 0}
               />
             </div>
           </div>
@@ -359,11 +291,9 @@ export default function LineupsPage() {
       </div>
 
       <div style={{ padding: '0 32px 56px' }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px' }}>Top Lineups by Team</h2>
-        <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 28px' }}>
-          The three most-used four-bowler lineups. Bar length and percentage are relative to that team&apos;s top lineup.
-        </p>
-        <TopLineups teams={TEAMS} />
+        <Link href="/lucky-strikes/lineups/top" style={{ display: 'inline-block', color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
+          Top Lineups by Team &rarr;
+        </Link>
       </div>
     </main>
   );
