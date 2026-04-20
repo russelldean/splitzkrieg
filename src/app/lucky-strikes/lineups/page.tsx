@@ -35,11 +35,12 @@ function nodeColor(t: number): string {
 
 const GLOBAL_MAX_NIGHTS = Math.max(1, ...ALL_TEAMS_VIZ.flatMap(t => Object.values(t.nightsMap)));
 
-function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId, onSelect, sort, showLegend }: {
+function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, captainID, title, selectedId, onSelect, sort, showLegend }: {
   bowlers: BowlerNode[];
   pairs: BowlerPair[];
   nightsMap: Record<number, number>;
   champCounts: Record<number, number>;
+  captainID: number | null;
   title: string;
   selectedId: number | null;
   onSelect: (id: number | null) => void;
@@ -47,6 +48,7 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
   showLegend?: boolean;
 }) {
   const [hovNodeId, setHovNodeId] = useState<number | null>(null);
+  const [hovArc, setHovArc] = useState<{ id1: number; id2: number; coNights: number } | null>(null);
   const [tip, setTip] = useState({ x: 0, y: 0 });
 
   const maxNights = GLOBAL_MAX_NIGHTS;
@@ -110,8 +112,8 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
               </defs>
               {/* arc key — upper right, outside chart */}
               <g textAnchor="start">
-                <text x={AD_W + 16} y={70} fontSize={10} fill="#94a3b8">nights bowled together</text>
-                <rect x={AD_W + 16} y={78} width={64} height={4} rx={2} fill="url(#arc-legend-grad)" />
+                <text x={AD_W + 16} y={133} fontSize={10} fill="#94a3b8">nights bowled together</text>
+                <rect x={AD_W + 16} y={141} width={64} height={4} rx={2} fill="url(#arc-legend-grad)" />
               </g>
               {/* dot key — near baseline, outside chart */}
               <g textAnchor="start">
@@ -119,6 +121,11 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
                 <circle cx={AD_W + 24} cy={AD_BASELINE} r={8}   fill={nodeColor(1)}   />
                 <circle cx={AD_W + 42} cy={AD_BASELINE} r={4.5} fill={nodeColor(0.4)} />
                 <circle cx={AD_W + 56} cy={AD_BASELINE} r={2}   fill={nodeColor(0)}   />
+              </g>
+              {/* crown key — below dot key */}
+              <g textAnchor="start">
+                <text x={AD_W + 16} y={AD_BASELINE + 36} fontSize={10} fill="#94a3b8">team championship</text>
+                <text x={AD_W + 16} y={AD_BASELINE + 52} fontSize={14} fill="#f59e0b">♛</text>
               </g>
             </>
           )}
@@ -134,14 +141,19 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
             const key = `${pair.id1},${pair.id2}`;
             const isConnected = focusId !== null && (pair.id1 === focusId || pair.id2 === focusId);
             const isDimmed = focusId !== null && !isConnected;
+            const isHovArc = hovArc?.id1 === pair.id1 && hovArc?.id2 === pair.id2;
             return (
               <path
                 key={key}
                 d={`M ${x1},${AD_BASELINE} C ${x1},${AD_BASELINE - arcH} ${x2},${AD_BASELINE - arcH} ${x2},${AD_BASELINE}`}
                 fill="none"
                 stroke={heatColor(tSqrt)}
-                strokeWidth={isConnected ? Math.max(1.5, tSqrt * 7) + 1 : Math.max(0.3, tSqrt * 6)}
-                strokeOpacity={isDimmed ? 0.03 : isConnected ? 0.5 + t * 0.45 : 0.07 + t * 0.63}
+                strokeWidth={isHovArc ? Math.max(1.5, tSqrt * 7) + 2 : isConnected ? Math.max(1.5, tSqrt * 7) + 1 : Math.max(0.3, tSqrt * 6)}
+                strokeOpacity={isDimmed ? 0.03 : isConnected || isHovArc ? 0.5 + t * 0.45 : 0.07 + t * 0.63}
+                style={{ cursor: isConnected ? 'pointer' : 'default' }}
+                onMouseEnter={isConnected ? e => { setHovArc(pair); setTip({ x: e.clientX, y: e.clientY }); } : undefined}
+                onMouseMove={isConnected ? e => setTip({ x: e.clientX, y: e.clientY }) : undefined}
+                onMouseLeave={isConnected ? () => setHovArc(null) : undefined}
               />
             );
           })}
@@ -156,7 +168,8 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
             const isDimmed = focusId !== null && !isFocus && !isConnected;
             const showLabel = nights >= AD_LABEL_MIN || isConnected || isSelected;
             const color = nodeColor(Math.sqrt(nights / maxNights));
-            const labelColor = isSelected ? '#fbbf24' : isFocus ? '#f8fafc' : isConnected ? '#cbd5e1' : '#64748b';
+            const isCaptain = b.id === captainID;
+            const labelColor = isSelected ? '#fbbf24' : isFocus ? '#f8fafc' : isConnected ? '#cbd5e1' : '#94a3b8';
             return (
               <g key={b.id} style={{ cursor: 'pointer' }}
                 onClick={() => onSelect(selectedId === b.id ? null : b.id)}
@@ -174,7 +187,7 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
                   strokeWidth={isSelected ? 2 : 1.5}
                 />
                 {showLabel && (
-                  <text x={0} y={0} transform={`translate(${x}, ${AD_BASELINE + r + 8}) rotate(45)`} textAnchor="start" fontSize={isSelected ? 13 : 11} fill={labelColor} fontWeight={isSelected ? 900 : isConnected || isFocus ? 700 : 400}>
+                  <text x={0} y={0} transform={`translate(${x}, ${AD_BASELINE + r + 8}) rotate(45)`} textAnchor="start" fontSize={isSelected ? 13 : 11} fill={labelColor} fontWeight={isSelected ? 900 : isConnected || isFocus ? 700 : 400} textDecoration={isCaptain ? 'underline' : undefined}>
                     {b.name}{(champCounts[b.id] ?? 0) > 0 && <tspan fill="#f59e0b" fontSize={isSelected ? 16 : 14}>{' '}{'♛'.repeat(champCounts[b.id])}</tspan>}
                   </text>
                 )}
@@ -186,7 +199,19 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
           })}
         </svg>
 
-        {hovNodeId !== null && selectedId === null && (() => {
+        {hovArc !== null && (() => {
+          const b1 = bowlers.find(b => b.id === hovArc.id1);
+          const b2 = bowlers.find(b => b.id === hovArc.id2);
+          if (!b1 || !b2) return null;
+          return (
+            <div style={{ position: 'fixed', left: tip.x + 14, top: tip.y - 10, background: '#132238', border: '1px solid #1e3a5f', borderRadius: 8, padding: '8px 12px', pointerEvents: 'none', zIndex: 50, whiteSpace: 'nowrap' }}>
+              <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{b1.name} &amp; {b2.name}</div>
+              <div style={{ color: '#60a5fa', fontSize: 12 }}>{hovArc.coNights} nights bowled together</div>
+            </div>
+          );
+        })()}
+
+        {hovNodeId !== null && (() => {
           const b = bowlers.find(b => b.id === hovNodeId);
           if (!b) return null;
           const nights = nightsMap[hovNodeId] ?? 1;
@@ -254,9 +279,9 @@ export default function LineupsPage() {
   return (
     <main style={{ minHeight: '100vh', background: '#0d1b2a', color: '#f8fafc', fontFamily: 'inherit' }}>
       <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #132238' }}>
-        <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Bowler Networks</h1>
+        <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Team Networks</h1>
         <p style={{ color: '#64748b', fontSize: 14, margin: 0, maxWidth: 520 }}>
-          Each node is a bowler. Size and arc thickness scale with nights bowled together. Hover to highlight connections, click to pin.
+          Each bowler is a node, sized by number of league nights bowled. Color and thickness of arc between bowlers is how many nights bowled together. Hover over bowler to highlight connections, click to see details.
         </p>
       </div>
 
@@ -279,6 +304,7 @@ export default function LineupsPage() {
                 pairs={team.pairs}
                 nightsMap={team.nightsMap}
                 champCounts={team.champCounts}
+                captainID={team.captainID}
                 title={team.title}
                 selectedId={selectedId}
                 onSelect={setSelectedId}

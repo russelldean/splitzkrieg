@@ -3,7 +3,7 @@
 
 export type BowlerNode = { id: number; name: string; active: boolean; firstSeason: number };
 export type BowlerPair = { id1: number; id2: number; coNights: number };
-export type TeamViz = { title: string; bowlers: BowlerNode[]; pairs: BowlerPair[]; nightsMap: Record<number, number>; champCounts: Record<number, number> };
+export type TeamViz = { title: string; bowlers: BowlerNode[]; pairs: BowlerPair[]; nightsMap: Record<number, number>; champCounts: Record<number, number>; captainID: number | null };
 
 const AO_NIGHTS: Record<number, number> = { 22:1, 34:4, 64:71, 80:1, 109:1, 155:36, 173:1, 176:1, 205:1, 209:51, 211:1, 217:3, 246:12, 292:5, 310:2, 316:1, 343:1, 354:27, 372:34, 402:20, 418:11, 431:1, 456:2, 469:4, 493:1, 496:2, 499:2, 501:1, 518:2, 549:1, 596:1, 600:9, 612:18, 620:77, 14:1, 43:39, 70:46, 111:1, 152:129, 160:60, 188:135, 218:1, 268:1, 309:1, 359:9, 394:40, 479:1, 582:245 };
 
@@ -3075,24 +3075,24 @@ const WL_PAIRS: BowlerPair[] = [
 const WL_CHAMPS: Record<number, number> = { 52:1, 157:1, 304:1, 429:1, 529:1, 587:1 };
 
 export const ALL_TEAMS_VIZ: TeamViz[] = [
-  { title: "Alley Oops", bowlers: AO_BOWLERS, pairs: AO_PAIRS, nightsMap: AO_NIGHTS, champCounts: AO_CHAMPS },
-  { title: "Bowl Durham", bowlers: BD_BOWLERS, pairs: BD_PAIRS, nightsMap: BD_NIGHTS, champCounts: BD_CHAMPS },
-  { title: "E-Bowla", bowlers: EB_BOWLERS, pairs: EB_PAIRS, nightsMap: EB_NIGHTS, champCounts: EB_CHAMPS },
-  { title: "Fancy Pants", bowlers: FP_BOWLERS, pairs: FP_PAIRS, nightsMap: FP_NIGHTS, champCounts: FP_CHAMPS },
-  { title: "Grandma's Teeth", bowlers: GTH_BOWLERS, pairs: GTH_PAIRS, nightsMap: GTH_NIGHTS, champCounts: GTH_CHAMPS },
-  { title: "Gutterglory", bowlers: GG_BOWLERS, pairs: GG_PAIRS, nightsMap: GG_NIGHTS, champCounts: GG_CHAMPS },
-  { title: "Guttermouths", bowlers: GOM_BOWLERS, pairs: GOM_PAIRS, nightsMap: GOM_NIGHTS, champCounts: GOM_CHAMPS },
-  { title: "Guttersnipes", bowlers: GSN_BOWLERS, pairs: GSN_PAIRS, nightsMap: GSN_NIGHTS, champCounts: GSN_CHAMPS },
-  { title: "HOT FUN", bowlers: HF_BOWLERS, pairs: HF_PAIRS, nightsMap: HF_NIGHTS, champCounts: HF_CHAMPS },
-  { title: "Hot Shotz", bowlers: HS_BOWLERS, pairs: HS_PAIRS, nightsMap: HS_NIGHTS, champCounts: HS_CHAMPS },
-  { title: "Living on a Spare", bowlers: LOS_BOWLERS, pairs: LOS_PAIRS, nightsMap: LOS_NIGHTS, champCounts: LOS_CHAMPS },
-  { title: "Lucky Strikes", bowlers: LS_BOWLERS, pairs: LS_PAIRS, nightsMap: LS_NIGHTS, champCounts: LS_CHAMPS },
-  { title: "Pin-Ups", bowlers: PU_BOWLERS, pairs: PU_PAIRS, nightsMap: PU_NIGHTS, champCounts: PU_CHAMPS },
-  { title: "Smoke-a-Bowl", bowlers: SAB_BOWLERS, pairs: SAB_PAIRS, nightsMap: SAB_NIGHTS, champCounts: SAB_CHAMPS },
-  { title: "Sparadigm Shift", bowlers: SPS_BOWLERS, pairs: SPS_PAIRS, nightsMap: SPS_NIGHTS, champCounts: SPS_CHAMPS },
-  { title: "Stinky Cheese", bowlers: STC_BOWLERS, pairs: STC_PAIRS, nightsMap: STC_NIGHTS, champCounts: STC_CHAMPS },
-  { title: "The Boom Kings", bowlers: BK_BOWLERS, pairs: BK_PAIRS, nightsMap: BK_NIGHTS, champCounts: BK_CHAMPS },
-  { title: "Thoughts and Spares", bowlers: TAS_BOWLERS, pairs: TAS_PAIRS, nightsMap: TAS_NIGHTS, champCounts: TAS_CHAMPS },
-  { title: "Valley of the Balls", bowlers: VB_BOWLERS, pairs: VB_PAIRS, nightsMap: VB_NIGHTS, champCounts: VB_CHAMPS },
-  { title: "Wild Llamas", bowlers: WL_BOWLERS, pairs: WL_PAIRS, nightsMap: WL_NIGHTS, champCounts: WL_CHAMPS },
+  { title: "Alley Oops", bowlers: AO_BOWLERS, pairs: AO_PAIRS, nightsMap: AO_NIGHTS, champCounts: AO_CHAMPS, captainID: 582 },
+  { title: "Bowl Durham", bowlers: BD_BOWLERS, pairs: BD_PAIRS, nightsMap: BD_NIGHTS, champCounts: BD_CHAMPS, captainID: 419 },
+  { title: "E-Bowla", bowlers: EB_BOWLERS, pairs: EB_PAIRS, nightsMap: EB_NIGHTS, champCounts: EB_CHAMPS, captainID: 271 },
+  { title: "Fancy Pants", bowlers: FP_BOWLERS, pairs: FP_PAIRS, nightsMap: FP_NIGHTS, champCounts: FP_CHAMPS, captainID: 215 },
+  { title: "Grandma's Teeth", bowlers: GTH_BOWLERS, pairs: GTH_PAIRS, nightsMap: GTH_NIGHTS, champCounts: GTH_CHAMPS, captainID: 479 },
+  { title: "Gutterglory", bowlers: GG_BOWLERS, pairs: GG_PAIRS, nightsMap: GG_NIGHTS, champCounts: GG_CHAMPS, captainID: 124 },
+  { title: "Guttermouths", bowlers: GOM_BOWLERS, pairs: GOM_PAIRS, nightsMap: GOM_NIGHTS, champCounts: GOM_CHAMPS, captainID: 84 },
+  { title: "Guttersnipes", bowlers: GSN_BOWLERS, pairs: GSN_PAIRS, nightsMap: GSN_NIGHTS, champCounts: GSN_CHAMPS, captainID: 416 },
+  { title: "HOT FUN", bowlers: HF_BOWLERS, pairs: HF_PAIRS, nightsMap: HF_NIGHTS, champCounts: HF_CHAMPS, captainID: 618 },
+  { title: "Hot Shotz", bowlers: HS_BOWLERS, pairs: HS_PAIRS, nightsMap: HS_NIGHTS, champCounts: HS_CHAMPS, captainID: 512 },
+  { title: "Living on a Spare", bowlers: LOS_BOWLERS, pairs: LOS_PAIRS, nightsMap: LOS_NIGHTS, champCounts: LOS_CHAMPS, captainID: 191 },
+  { title: "Lucky Strikes", bowlers: LS_BOWLERS, pairs: LS_PAIRS, nightsMap: LS_NIGHTS, champCounts: LS_CHAMPS, captainID: 548 },
+  { title: "Pin-Ups", bowlers: PU_BOWLERS, pairs: PU_PAIRS, nightsMap: PU_NIGHTS, champCounts: PU_CHAMPS, captainID: 122 },
+  { title: "Smoke-a-Bowl", bowlers: SAB_BOWLERS, pairs: SAB_PAIRS, nightsMap: SAB_NIGHTS, champCounts: SAB_CHAMPS, captainID: 194 },
+  { title: "Sparadigm Shift", bowlers: SPS_BOWLERS, pairs: SPS_PAIRS, nightsMap: SPS_NIGHTS, champCounts: SPS_CHAMPS, captainID: 299 },
+  { title: "Stinky Cheese", bowlers: STC_BOWLERS, pairs: STC_PAIRS, nightsMap: STC_NIGHTS, champCounts: STC_CHAMPS, captainID: 262 },
+  { title: "The Boom Kings", bowlers: BK_BOWLERS, pairs: BK_PAIRS, nightsMap: BK_NIGHTS, champCounts: BK_CHAMPS, captainID: 563 },
+  { title: "Thoughts and Spares", bowlers: TAS_BOWLERS, pairs: TAS_PAIRS, nightsMap: TAS_NIGHTS, champCounts: TAS_CHAMPS, captainID: 11 },
+  { title: "Valley of the Balls", bowlers: VB_BOWLERS, pairs: VB_PAIRS, nightsMap: VB_NIGHTS, champCounts: VB_CHAMPS, captainID: 297 },
+  { title: "Wild Llamas", bowlers: WL_BOWLERS, pairs: WL_PAIRS, nightsMap: WL_NIGHTS, champCounts: WL_CHAMPS, captainID: 429 },
 ];
