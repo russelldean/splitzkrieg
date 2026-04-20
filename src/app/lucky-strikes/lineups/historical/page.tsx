@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ALL_TEAMS_VIZ, ALL_HIST_TEAMS_VIZ } from './teams-data';
-import { ArcDiagram } from './_arc-diagram';
+import { ALL_HIST_TEAMS_VIZ, ALL_TEAMS_VIZ } from '../teams-data';
+import { ArcDiagram } from '../_arc-diagram';
 
-const GLOBAL_MAX_NIGHTS = Math.max(1, ...ALL_TEAMS_VIZ.flatMap(t => Object.values(t.nightsMap)));
+const HIST_MAX_NIGHTS = Math.max(1, ...ALL_HIST_TEAMS_VIZ.flatMap(t => Object.values(t.nightsMap)));
 const ALL_TEAMS_FOR_PANEL = [...ALL_TEAMS_VIZ, ...ALL_HIST_TEAMS_VIZ];
 
-export default function LineupsPage() {
+export default function HistoricalTeamsPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [sort, setSort] = useState<'firstSeason' | 'totalNights'>('firstSeason');
@@ -17,9 +17,14 @@ export default function LineupsPage() {
   return (
     <main style={{ minHeight: '100vh', background: '#0d1b2a', color: '#f8fafc', fontFamily: 'inherit' }}>
       <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #132238' }}>
-        <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Team Networks</h1>
+        <div style={{ marginBottom: 12 }}>
+          <Link href="/lucky-strikes/lineups" style={{ color: '#475569', fontSize: 12, textDecoration: 'none', letterSpacing: '0.04em' }}>
+            &larr; Team Networks
+          </Link>
+        </div>
+        <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Historical Teams</h1>
         <p style={{ color: '#64748b', fontSize: 14, margin: 0, maxWidth: 520 }}>
-          Each bowler is a node, sized by number of league nights bowled. Color and thickness of arc between bowlers is how many nights bowled together. Hover over bowler to highlight connections, click to see details.
+          Teams that have since disbanded or merged. Click a bowler to see their full history across all teams.
         </p>
       </div>
 
@@ -32,9 +37,9 @@ export default function LineupsPage() {
           ))}
         </div>
 
-        {ALL_TEAMS_VIZ.map((team, i) => (
-          <div key={team.title} style={{ marginBottom: i === ALL_TEAMS_VIZ.length - 1 ? 48 : 0, borderTop: i === 0 ? 'none' : '1px solid #1e2d3d', marginTop: i === 0 ? 0 : 12, paddingTop: i === 0 ? 0 : 8 }}>
-            <div style={{ overflowX: 'auto', paddingBottom: 0 }}>
+        {ALL_HIST_TEAMS_VIZ.map((team, i) => (
+          <div key={team.title} style={{ marginBottom: i === ALL_HIST_TEAMS_VIZ.length - 1 ? 48 : 0, borderTop: i === 0 ? 'none' : '1px solid #1e2d3d', marginTop: i === 0 ? 0 : 12, paddingTop: i === 0 ? 0 : 8 }}>
+            <div style={{ overflowX: 'auto' }}>
               <ArcDiagram
                 bowlers={team.bowlers}
                 pairs={team.pairs}
@@ -47,21 +52,12 @@ export default function LineupsPage() {
                 onSelect={handleSelect}
                 sort={sort}
                 showLegend={i === 0}
-                maxNights={GLOBAL_MAX_NIGHTS}
+                maxNights={HIST_MAX_NIGHTS}
                 allTeamsForPanel={ALL_TEAMS_FOR_PANEL}
               />
             </div>
           </div>
         ))}
-      </div>
-
-      <div style={{ padding: '16px 32px 56px', display: 'flex', gap: 24 }}>
-        <Link href="/lucky-strikes/lineups/historical" style={{ color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
-          Historical Teams &rarr;
-        </Link>
-        <Link href="/lucky-strikes/lineups/top" style={{ color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
-          Top Lineups by Team &rarr;
-        </Link>
       </div>
     </main>
   );

@@ -17,6 +17,29 @@ const dbConfig = {
 
 const data = JSON.parse(readFileSync('/tmp/all-teams-data.json', 'utf8'));
 
+const HIST_PREFIX = {
+  'Beastie Balls': 'BBL',
+  'Bowl Derek': 'BDK',
+  "Bowl'd Peanuts": 'BDP',
+  'Bull City Balsa': 'BCB',
+  'Jive Turkeys': 'JTV',
+  'Over the Shoulder Bowler Holders': 'OSB',
+  'Pin and Tonix': 'PNT',
+  'Pindemics': 'PDM',
+  'Pinfinity': 'PNF',
+  'Roll Your Own': 'RYO',
+  'Solid Bowled': 'SOB',
+  'Spare Club for Men': 'SCM',
+  'Sparely Legal': 'SPL',
+  'Ten Pin Teasers': 'TPT',
+  'The Bowled and the Beautiful': 'TBB',
+  'The Gutter Sluts': 'TGS',
+  'The Guttersnipes': 'TGSN',
+  'The Manute Bowlers': 'TMB',
+  'Vandal-Lane Industries': 'VLI',
+  'Village Idiots': 'VID',
+};
+
 // Prefix map: team name -> variable prefix
 const PREFIX = {
   'Alley Oops': 'AO',
@@ -64,40 +87,58 @@ async function main() {
   out += `export type BowlerPair = { id1: number; id2: number; coNights: number };\n`;
   out += `export type TeamViz = { title: string; bowlers: BowlerNode[]; pairs: BowlerPair[]; nightsMap: Record<number, number>; champCounts: Record<number, number>; captainID: number | null };\n\n`;
 
-  for (const [teamName, prefix] of Object.entries(PREFIX)) {
+  function emitTeam(teamName, prefix) {
     const { bowlers, pairs, nights } = data[teamName];
-
-    // NIGHTS
     const nightsEntries = nights.map(n => `${n.bowlerID}:${n.nights}`).join(', ');
     out += `const ${prefix}_NIGHTS: Record<number, number> = { ${nightsEntries} };\n\n`;
-
-    // BOWLERS
     out += `const ${prefix}_BOWLERS: BowlerNode[] = [\n`;
     for (const b of bowlers) {
       out += `  { id: ${b.bowlerID}, name: ${JSON.stringify(b.bowlerName)}, active: ${b.isActive ? 'true' : 'false'}, firstSeason: ${b.firstSeason} },\n`;
     }
     out += `];\n\n`;
-
-    // PAIRS
     out += `const ${prefix}_PAIRS: BowlerPair[] = [\n`;
     for (const p of pairs) {
       out += `  { id1: ${p.id1}, id2: ${p.id2}, coNights: ${p.coNights} },\n`;
     }
     out += `];\n\n`;
-
-    // CHAMPS (3+ nights in championship season)
     const teamChamps = data[teamName].champCounts ?? {};
     const champEntries = Object.entries(teamChamps).map(([id, n]) => `${id}:${n}`).join(', ');
     out += `const ${prefix}_CHAMPS: Record<number, number> = { ${champEntries} };\n\n`;
   }
 
-  // TEAMS_VIZ export
+  for (const [teamName, prefix] of Object.entries(PREFIX)) emitTeam(teamName, prefix);
+  for (const [teamName, prefix] of Object.entries(HIST_PREFIX)) emitTeam(teamName, prefix);
+
+  // Active teams export (with captainID)
   out += `export const ALL_TEAMS_VIZ: TeamViz[] = [\n`;
   for (const [teamName, prefix] of Object.entries(PREFIX)) {
     const captainID = captainMap[teamName] ?? null;
     out += `  { title: ${JSON.stringify(teamName)}, bowlers: ${prefix}_BOWLERS, pairs: ${prefix}_PAIRS, nightsMap: ${prefix}_NIGHTS, champCounts: ${prefix}_CHAMPS, captainID: ${captainID} },\n`;
   }
-  out += `];\n`;
+  out += `];\n\n`;
+
+  // Historical teams export (captainID always null)
+  out += `export const ALL_HIST_TEAMS_VIZ: TeamViz[] = [\n`;
+  for (const [teamName, prefix] of Object.entries(HIST_PREFIX)) {
+    out += `  { title: ${JSON.stringify(teamName)}, bowlers: ${prefix}_BOWLERS, pairs: ${prefix}_PAIRS, nightsMap: ${prefix}_NIGHTS, champCounts: ${prefix}_CHAMPS, captainID: null },\n`;
+  }
+  out += `];\n\n`;
+
+  // Lightweight inverted index: bowlerID -> [{teamName, nights}] for historical teams only
+  const histBowlerMap = {};
+  for (const [teamName] of Object.entries(HIST_PREFIX)) {
+    for (const n of data[teamName].nights) {
+      if (!histBowlerMap[n.bowlerID]) histBowlerMap[n.bowlerID] = [];
+      histBowlerMap[n.bowlerID].push({ teamName, nights: n.nights });
+    }
+  }
+  for (const arr of Object.values(histBowlerMap)) arr.sort((a, b) => b.nights - a.nights);
+  out += `export const HIST_BOWLER_TEAMS: Record<number, { teamName: string; nights: number }[]> = {\n`;
+  for (const [bowlerID, teams] of Object.entries(histBowlerMap)) {
+    const entries = teams.map(t => `{ teamName: ${JSON.stringify(t.teamName)}, nights: ${t.nights} }`).join(', ');
+    out += `  ${bowlerID}: [${entries}],\n`;
+  }
+  out += `};\n`;
 
   writeFileSync('src/app/lucky-strikes/lineups/teams-data.ts', out);
   console.log(`Written ${out.split('\n').length} lines to src/app/lucky-strikes/lineups/teams-data.ts`);

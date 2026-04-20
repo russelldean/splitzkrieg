@@ -15,7 +15,6 @@ const dbConfig = {
   options: { encrypt: true, trustServerCertificate: false },
 };
 
-// Teams currently active (lastSeason = 35), excluding the ones already hardcoded
 const TEAMS = [
   'Alley Oops', 'Bowl Durham', 'E-Bowla', 'Fancy Pants', "Grandma's Teeth",
   'Gutterglory', 'Guttermouths', 'Guttersnipes', 'HOT FUN', 'Hot Shotz',
@@ -24,12 +23,21 @@ const TEAMS = [
   'Valley of the Balls', 'Wild Llamas',
 ];
 
+const HIST_TEAMS = [
+  'Vandal-Lane Industries', "Bowl'd Peanuts", 'Jive Turkeys', 'Village Idiots',
+  'Sparely Legal', 'The Guttersnipes', 'Solid Bowled', 'Spare Club for Men',
+  'Roll Your Own', 'Bowl Derek', 'Beastie Balls', 'Ten Pin Teasers',
+  'Bull City Balsa', 'The Manute Bowlers', 'The Bowled and the Beautiful',
+  'Pinfinity', 'Pindemics', 'Over the Shoulder Bowler Holders',
+  'Pin and Tonix', 'The Gutter Sluts',
+];
+
 async function main() {
   const pool = await new sql.ConnectionPool(dbConfig).connect();
 
   const results = {};
 
-  for (const teamName of TEAMS) {
+  for (const teamName of [...TEAMS, ...HIST_TEAMS]) {
     const req1 = pool.request();
     req1.input('teamName', sql.NVarChar, teamName);
     const bowlersRes = await req1.query(`
