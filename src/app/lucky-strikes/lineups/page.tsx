@@ -141,7 +141,7 @@ function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, title, selectedId,
     <div>
       <div style={{ position: 'relative' }}>
         <svg width={AD_W} height={AD_H} style={{ display: 'block', overflow: 'visible' }}>
-          <text x={AD_W / 2} y={16} textAnchor="middle" fontSize={13} fontWeight={700} fill="#475569" letterSpacing="0.08em">{title.toUpperCase()}</text>
+          <text x={AD_W / 2} y={16} textAnchor="middle" fontSize={13} fontWeight={700} fill="#94a3b8" letterSpacing="0.08em">{title.toUpperCase()}</text>
           <line x1={AD_PAD} y1={AD_BASELINE} x2={AD_W - AD_PAD} y2={AD_BASELINE} stroke="#1e2d3d" strokeWidth={1} />
 
           {[...pairs].reverse().map(pair => {
@@ -341,8 +341,8 @@ export default function LineupsPage() {
         {selectedId !== null && <SharedPinPanel selectedId={selectedId} onClose={() => setSelectedId(null)} />}
 
         {ALL_TEAMS_VIZ.map((team, i) => (
-          <div key={team.title} style={{ marginBottom: i === ALL_TEAMS_VIZ.length - 1 ? 48 : 0 }}>
-            <div style={{ overflowX: 'auto' }}>
+          <div key={team.title} style={{ marginBottom: i === ALL_TEAMS_VIZ.length - 1 ? 48 : 0, borderTop: i === 0 ? 'none' : '1px solid #1e2d3d', marginTop: i === 0 ? 0 : 48, paddingTop: i === 0 ? 0 : 12 }}>
+            <div style={{ overflowX: 'auto', paddingBottom: 80 }}>
               <ArcDiagram
                 bowlers={team.bowlers}
                 pairs={team.pairs}
