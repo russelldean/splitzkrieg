@@ -341,8 +341,8 @@ export default function LineupsPage() {
         {selectedId !== null && <SharedPinPanel selectedId={selectedId} onClose={() => setSelectedId(null)} />}
 
         {ALL_TEAMS_VIZ.map((team, i) => (
-          <div key={team.title} style={{ marginBottom: i === ALL_TEAMS_VIZ.length - 1 ? 48 : 0, borderTop: i === 0 ? 'none' : '1px solid #1e2d3d', marginTop: i === 0 ? 0 : 48, paddingTop: i === 0 ? 0 : 12 }}>
-            <div style={{ overflowX: 'auto', paddingBottom: 80 }}>
+          <div key={team.title} style={{ marginBottom: i === ALL_TEAMS_VIZ.length - 1 ? 48 : 0, borderTop: i === 0 ? 'none' : '1px solid #1e2d3d', marginTop: i === 0 ? 0 : 12, paddingTop: i === 0 ? 0 : 8 }}>
+            <div style={{ overflowX: 'auto', paddingBottom: 0 }}>
               <ArcDiagram
                 bowlers={team.bowlers}
                 pairs={team.pairs}
