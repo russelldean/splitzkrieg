@@ -73,7 +73,7 @@ export default async function Home() {
       ]);
       standings = allStandings;
 
-      // Find the next unplayed week (first scheduled week with no match results)
+      // Find the next upcoming week: first scheduled week with no match results
       const playedWeeks = new Set(allMatchResults.map(r => r.week));
       const scheduledWeeks = [...new Set(allSchedule.map(s => s.week))].sort((a, b) => a - b);
       nextWeekNumber = scheduledWeeks.find(w => !playedWeeks.has(w)) ?? 0;
