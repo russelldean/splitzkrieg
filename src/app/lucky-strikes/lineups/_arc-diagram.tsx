@@ -107,17 +107,17 @@ export function ArcDiagram({ bowlers, pairs, nightsMap, champCounts, captainID, 
                 </linearGradient>
               </defs>
               <g textAnchor="start">
-                <text x={AD_W + 16} y={133} fontSize={10} fill="#94a3b8">nights bowled together</text>
+                <text x={AD_W + 16} y={133} fontSize={12} fill="#94a3b8">nights bowled together</text>
                 <rect x={AD_W + 16} y={141} width={64} height={4} rx={2} fill="url(#arc-legend-grad)" />
               </g>
               <g textAnchor="start">
-                <text x={AD_W + 16} y={AD_BASELINE - 14} fontSize={10} fill="#94a3b8">nights bowled</text>
+                <text x={AD_W + 16} y={AD_BASELINE - 14} fontSize={12} fill="#94a3b8">nights bowled</text>
                 <circle cx={AD_W + 24} cy={AD_BASELINE} r={8}   fill={nodeColor(1)}   />
                 <circle cx={AD_W + 42} cy={AD_BASELINE} r={4.5} fill={nodeColor(0.4)} />
                 <circle cx={AD_W + 56} cy={AD_BASELINE} r={2}   fill={nodeColor(0)}   />
               </g>
               <g textAnchor="start">
-                <text x={AD_W + 16} y={AD_BASELINE + 36} fontSize={10} fill="#94a3b8">team championship</text>
+                <text x={AD_W + 16} y={AD_BASELINE + 36} fontSize={12} fill="#94a3b8">team championship</text>
                 <text x={AD_W + 16} y={AD_BASELINE + 52} fontSize={14} fill="#f59e0b">♛</text>
               </g>
             </>

@@ -18,12 +18,12 @@ export default function HistoricalTeamsPage() {
     <main style={{ minHeight: '100vh', background: '#0d1b2a', color: '#f8fafc', fontFamily: 'inherit' }}>
       <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #132238' }}>
         <div style={{ marginBottom: 12 }}>
-          <Link href="/lucky-strikes/lineups" style={{ color: '#475569', fontSize: 12, textDecoration: 'none', letterSpacing: '0.04em' }}>
+          <Link href="/lucky-strikes/lineups" style={{ color: '#60a5fa', fontSize: 12, textDecoration: 'none', letterSpacing: '0.04em' }}>
             &larr; Team Networks
           </Link>
         </div>
         <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Historical Teams</h1>
-        <p style={{ color: '#64748b', fontSize: 14, margin: 0, maxWidth: 520 }}>
+        <p style={{ color: '#94a3b8', fontSize: 14, margin: 0, maxWidth: 520 }}>
           Teams that have since disbanded or merged. Click a bowler to see their full history across all teams.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function HistoricalTeamsPage() {
       <div style={{ padding: '16px 32px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           {([['firstSeason', 'First Appearance'], ['totalNights', 'Total Nights']] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setSort(val)} style={{ padding: '3px 12px', borderRadius: 20, border: '1px solid', borderColor: sort === val ? '#60a5fa' : '#1e3a5f', background: sort === val ? '#1e3a5f' : 'transparent', color: sort === val ? '#f8fafc' : '#64748b', fontSize: 11, cursor: 'pointer' }}>
+            <button key={val} onClick={() => setSort(val)} style={{ padding: '3px 12px', borderRadius: 20, border: '1px solid', borderColor: sort === val ? '#60a5fa' : '#1e3a5f', background: sort === val ? '#1e3a5f' : 'transparent', color: sort === val ? '#f8fafc' : '#94a3b8', fontSize: 11, cursor: 'pointer' }}>
               {label}
             </button>
           ))}

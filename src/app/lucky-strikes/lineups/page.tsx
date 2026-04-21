@@ -18,7 +18,7 @@ export default function LineupsPage() {
     <main style={{ minHeight: '100vh', background: '#0d1b2a', color: '#f8fafc', fontFamily: 'inherit' }}>
       <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #132238' }}>
         <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Team Networks</h1>
-        <p style={{ color: '#64748b', fontSize: 14, margin: 0, maxWidth: 520 }}>
+        <p style={{ color: '#94a3b8', fontSize: 14, margin: 0, maxWidth: 520 }}>
           Each bowler is a node, sized by number of league nights bowled. Color and thickness of arc between bowlers is how many nights bowled together. Hover over bowler to highlight connections, click to see details.
         </p>
       </div>
@@ -26,7 +26,7 @@ export default function LineupsPage() {
       <div style={{ padding: '16px 32px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           {([['firstSeason', 'First Appearance'], ['totalNights', 'Total Nights']] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setSort(val)} style={{ padding: '3px 12px', borderRadius: 20, border: '1px solid', borderColor: sort === val ? '#60a5fa' : '#1e3a5f', background: sort === val ? '#1e3a5f' : 'transparent', color: sort === val ? '#f8fafc' : '#64748b', fontSize: 11, cursor: 'pointer' }}>
+            <button key={val} onClick={() => setSort(val)} style={{ padding: '3px 12px', borderRadius: 20, border: '1px solid', borderColor: sort === val ? '#60a5fa' : '#1e3a5f', background: sort === val ? '#1e3a5f' : 'transparent', color: sort === val ? '#f8fafc' : '#94a3b8', fontSize: 11, cursor: 'pointer' }}>
               {label}
             </button>
           ))}

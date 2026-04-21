@@ -12,7 +12,7 @@ function TopLineups({ teams }: { teams: TopTeamData[] }) {
         return (
           <div key={team.name}>
             <h2 style={{ fontSize: 16, fontWeight: 900, margin: '0 0 3px', color: '#f8fafc' }}>{team.name}</h2>
-            <div style={{ color: '#475569', fontSize: 12, marginBottom: 18 }}>
+            <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 18 }}>
               {team.totalNights} nights &bull; {team.uniqueLineups} unique lineups
             </div>
             {top3.map((lineup, i) => {
@@ -29,7 +29,7 @@ function TopLineups({ teams }: { teams: TopTeamData[] }) {
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ color, fontWeight: 700, fontSize: 17, lineHeight: 1 }}>{lineup.count}</div>
-                      <div style={{ color: '#475569', fontSize: 11 }}>{pct}%</div>
+                      <div style={{ color: '#94a3b8', fontSize: 11 }}>{pct}%</div>
                     </div>
                   </div>
                   <div style={{ height: 4, background: '#132238', borderRadius: 2 }}>
@@ -50,12 +50,12 @@ export default function TopLineupsPage() {
     <main style={{ minHeight: '100vh', background: '#0d1b2a', color: '#f8fafc', fontFamily: 'inherit' }}>
       <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #132238' }}>
         <div style={{ marginBottom: 12 }}>
-          <Link href="/lucky-strikes/lineups" style={{ color: '#475569', fontSize: 12, textDecoration: 'none', letterSpacing: '0.04em' }}>
-            &larr; Bowler Networks
+          <Link href="/lucky-strikes/lineups" style={{ color: '#94a3b8', fontSize: 12, textDecoration: 'none', letterSpacing: '0.04em' }}>
+            &larr; Team Networks
           </Link>
         </div>
         <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Top Lineups</h1>
-        <p style={{ color: '#64748b', fontSize: 14, margin: 0, maxWidth: 520 }}>
+        <p style={{ color: '#94a3b8', fontSize: 14, margin: 0, maxWidth: 520 }}>
           The three most-used four-bowler lineups per team. Bar length and percentage are relative to that team&apos;s top lineup.
         </p>
       </div>
