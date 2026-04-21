@@ -5,8 +5,6 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
 import { getSiteUpdates } from '@/lib/queries/updates';
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: 'Blog | Splitzkrieg',
   description: 'Weekly recaps, league news, and stories from Splitzkrieg Bowling League.',

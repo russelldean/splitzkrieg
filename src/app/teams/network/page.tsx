@@ -56,10 +56,10 @@ export default function LineupsPage() {
       </div>
 
       <div style={{ padding: '16px 32px 56px', display: 'flex', gap: 24 }}>
-        <Link href="/lucky-strikes/lineups/historical" style={{ color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
+        <Link href="/teams/network/historical" style={{ color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
           Historical Teams &rarr;
         </Link>
-        <Link href="/lucky-strikes/lineups/top" style={{ color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
+        <Link href="/teams/network/top" style={{ color: '#60a5fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid #1e3a5f', paddingBottom: 1 }}>
           Top Lineups by Team &rarr;
         </Link>
       </div>

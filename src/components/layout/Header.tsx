@@ -47,6 +47,7 @@ export async function Header() {
       links: [
         { href: '/bowlers', label: 'Bowlers' },
         { href: '/teams', label: 'Teams' },
+        { href: '/teams/network', label: 'Team Networks' },
       ],
     },
     {
@@ -124,6 +125,7 @@ export async function Header() {
                 links={[
                   { href: '/teams?filter=current', label: 'Current Teams' },
                   { href: '/teams', label: 'All Teams' },
+                  { href: '/teams/network', label: 'Team Networks' },
                 ]}
               />
               <Link
