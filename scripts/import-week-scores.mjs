@@ -497,6 +497,21 @@ async function importScores() {
   console.log(`\n${dryRun ? 'Would insert' : 'Inserted'}: ${inserted} rows`);
 
   if (!dryRun) {
+    // Bump per-bowler data versions so only these bowlers' caches bust on next deploy
+    const bumpedBowlerIDs = [...new Set(
+      allBowlers.filter(b => !b.isPenalty && b.bowlerID).map(b => b.bowlerID)
+    )];
+    const versionsPath = resolve(PROJECT_ROOT, '.data-versions.json');
+    const versions = JSON.parse(readFileSync(versionsPath, 'utf8'));
+    if (!versions.bowlers) versions.bowlers = {};
+    for (const id of bumpedBowlerIDs) {
+      versions.bowlers[String(id)] = (versions.bowlers[String(id)] ?? 1) + 1;
+    }
+    writeFileSync(versionsPath, JSON.stringify(versions, null, 2));
+    console.log(`Bumped per-bowler versions for ${bumpedBowlerIDs.length} bowlers`);
+  }
+
+  if (!dryRun) {
     console.log('\n=== POST-IMPORT STEPS ===');
     console.log('Run these next:');
     console.log(`  node scripts/populate-match-results.mjs --season=${staged.seasonID}`);

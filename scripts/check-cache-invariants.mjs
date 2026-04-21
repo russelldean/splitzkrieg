@@ -137,6 +137,7 @@ function checkInvariants(query) {
   const hasSeasonID = /seasonID[,}\s]/.test(options);
   const hasDependsOn = /dependsOn:/.test(options);
   const hasAllSeasons = /allSeasons:\s*true/.test(options);
+  const hasBowlerID = /bowlerID[,}\s]/.test(options);
 
   // 1. Must have sql option
   if (!hasSQL) {
@@ -158,7 +159,7 @@ function checkInvariants(query) {
   // Non-stable, non-seasonal queries get the published tag in their hash automatically,
   // so they invalidate every publish. Only flag if the query seems like it should
   // track data changes independently (i.e., reads mutable tables).
-  if (!isStable && !hasSeasonID && !hasDependsOn && !hasAllSeasons) {
+  if (!isStable && !hasSeasonID && !hasDependsOn && !hasAllSeasons && !hasBowlerID) {
     const readsMutable = tablesRead.some(t => MUTABLE_TABLES.includes(t));
     if (readsMutable && !options.includes('+ params') && !options.includes('+ CONFIG')) {
       if (WEEKLY_TIER_ALLOWLIST.includes(name)) {

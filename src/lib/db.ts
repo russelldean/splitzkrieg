@@ -221,34 +221,30 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
-  options?: { stable?: boolean; sql?: string; seasonID?: number; allSeasons?: boolean; dependsOn?: string[] },
+  options?: { stable?: boolean; sql?: string; seasonID?: number; allSeasons?: boolean; dependsOn?: string[]; bowlerID?: number },
 ): Promise<T> {
   const stable = options?.stable;
 
   // Determine whether to include the published-week tag in the hash:
   //   stable: true              → never include tag (data never changes)
   //   dependsOn provided        → never include tag (channel hashes invalidate properly)
+  //   bowlerID provided         → never include tag (per-bowler version handles invalidation)
   //   seasonID without dependsOn → include tag only if seasonID matches published season
   //   neither                   → include tag always (legacy fallback; should be empty bucket)
-  //
-  // The dependsOn check is critical: cross-season bowler queries declare
-  // dependsOn:['scores','schedule'] but have no seasonID. Without this rule
-  // they'd fall into "non-seasonal, non-stable → always invalidate" and
-  // every publish-week would invalidate ~570 bowler page caches at once.
   let usePublishedTag = false;
-  if (!stable && PUBLISHED_TAG && !options?.dependsOn) {
+  if (!stable && PUBLISHED_TAG && !options?.dependsOn && !options?.bowlerID) {
     if (options?.seasonID != null) {
       // Season-scoped: only invalidate for the current season
       usePublishedTag = options.seasonID === PUBLISHED_SEASON_ID;
     } else {
       // Non-seasonal, non-stable, no dependsOn: legacy "always invalidate"
       // bucket. After 2026-04-07 audit this should be empty — every query
-      // either has dependsOn, seasonID, or stable: true.
+      // either has dependsOn, seasonID, stable: true, or bowlerID.
       usePublishedTag = true;
     }
   }
 
-  // Data version tag: include per-season or all-seasons version in the hash
+  // Data version tag: include per-season, per-bowler, or all-seasons version in the hash
   // so data imports automatically invalidate the right queries.
   let dataVersionTag = '';
   if (!stable) {
@@ -258,6 +254,11 @@ export async function cachedQuery<T>(
         .map(ch => CHANNEL_HASHES[ch] ?? '0')
         .join('-');
       dataVersionTag = channelParts;
+    } else if (options?.bowlerID != null) {
+      // Per-bowler: only invalidate this specific bowler's cache when their scores change.
+      // Import scripts bump DATA_VERSIONS.bowlers[bowlerID] for each bowler who bowled.
+      const bowlerVersion = (DATA_VERSIONS.bowlers ?? {})[String(options.bowlerID)] ?? 1;
+      dataVersionTag = `bv${bowlerVersion}`;
     } else if (options?.allSeasons) {
       // Legacy fallback: hash of ALL versions
       dataVersionTag = ALL_VERSIONS_HASH;
