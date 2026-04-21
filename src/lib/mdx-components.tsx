@@ -34,6 +34,9 @@ export const mdxComponents: MDXComponents = {
   ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 font-body text-navy/80">{children}</ol>,
   li: ({ children }) => <li className="mb-1">{children}</li>,
   strong: ({ children }) => <strong className="font-semibold text-navy">{children}</strong>,
+  img: ({ src, alt }) => (
+    <img src={src} alt={alt ?? ''} className="rounded-lg w-full my-6 shadow-sm" />
+  ),
   // Blog stat block components (async server components)
   TopPerformers,
   MilestonesBlock,
