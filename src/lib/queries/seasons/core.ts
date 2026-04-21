@@ -77,7 +77,7 @@ export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null
       .input('slug', slug)
       .query<Season>(GET_SEASON_BY_SLUG_SQL);
     return result.recordset[0] ?? null;
-  }, null, { sql: GET_SEASON_BY_SLUG_SQL, dependsOn: ['scores'] });
+  }, null, { sql: GET_SEASON_BY_SLUG_SQL, stable: true });
 });
 
 const GET_ALL_SEASONS_DIRECTORY_SQL = `

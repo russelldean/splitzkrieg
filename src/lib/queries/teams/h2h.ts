@@ -284,7 +284,7 @@ export async function getTeamPlayoffH2H(teamID: number): Promise<PlayoffH2HMatch
       .input('teamID', teamID)
       .query<PlayoffH2HMatchup>(GET_TEAM_PLAYOFF_H2H_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_PLAYOFF_H2H_SQL, dependsOn: ['schedule'] });
+  }, [], { sql: GET_TEAM_PLAYOFF_H2H_SQL, stable: true });
 }
 
 export async function getPairwiseH2H(

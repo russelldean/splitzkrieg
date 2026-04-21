@@ -130,7 +130,7 @@ export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<S
       semi1: buildSemi(semis[0]),
       semi2: buildSemi(semis[1]),
     };
-  }, null, { sql: PLAYOFF_ALL_SQL, seasonID, dependsOn: ['schedule'] });
+  }, null, { sql: PLAYOFF_ALL_SQL, seasonID });
 });
 
 export interface PlayoffSeason {
@@ -199,7 +199,7 @@ export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => 
     const db = await getDb();
     const result = await db.request().query<PlayoffSeason>(GET_ALL_PLAYOFF_HISTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_PLAYOFF_HISTORY_SQL, dependsOn: ['schedule'] });
+  }, [], { sql: GET_ALL_PLAYOFF_HISTORY_SQL, stable: true });
 });
 
 export interface IndividualChampionSeason {
@@ -262,7 +262,7 @@ export const getSeasonIndividualChampions = cache(async (seasonID: number): Prom
     // If no champions at all, return null
     if (!row.mensScratchBowlerID && !row.womensScratchBowlerID && !row.handicapBowlerID) return null;
     return row;
-  }, null, { sql: GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL, seasonID, dependsOn: ['scores'] });
+  }, null, { sql: GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL, seasonID });
 });
 
 export const getAllIndividualChampions = cache(async (): Promise<IndividualChampionSeason[]> => {
@@ -270,5 +270,5 @@ export const getAllIndividualChampions = cache(async (): Promise<IndividualChamp
     const db = await getDb();
     const result = await db.request().query<IndividualChampionSeason>(GET_ALL_INDIVIDUAL_CHAMPIONS_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL, dependsOn: ['scores'] });
+  }, [], { sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL, stable: true });
 });

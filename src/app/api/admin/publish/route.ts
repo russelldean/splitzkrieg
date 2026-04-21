@@ -84,22 +84,6 @@ export async function POST(request: NextRequest) {
       // Read-only filesystem on Vercel or cache dir missing -- safe to skip
     }
 
-    // Trigger ISR revalidation
-    const revalidationSecret = process.env.REVALIDATION_SECRET;
-    if (revalidationSecret) {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://splitzkrieg.com';
-        await fetch(`${baseUrl}/api/revalidate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ secret: revalidationSecret }),
-        });
-      } catch (revalErr) {
-        // Revalidation failure is non-fatal; site will pick up changes on next build
-        console.warn('Revalidation request failed:', revalErr);
-      }
-    }
-
     return NextResponse.json({
       published: true,
       seasonID,
