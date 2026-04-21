@@ -282,15 +282,45 @@ export async function getSeasonLeaderboard(
       selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
       havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
       break;
-    case 'highGame':
-      selectExpr = `MAX(
-        CASE
-          WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
-          WHEN sc.game2 >= sc.game3 THEN sc.game2
-          ELSE sc.game3
-        END
-      )`;
-      break;
+    case 'highGame': {
+      // Expand each score row into 3 individual games so multiple
+      // games from the same bowler can all appear in the top 10.
+      const highGameSql = `
+        SELECT TOP 10
+          g.bowlerID,
+          b.bowlerName,
+          b.slug,
+          COALESCE(tnh.teamName, t.teamName) AS teamName,
+          t.slug AS teamSlug,
+          g.value,
+          ROW_NUMBER() OVER (ORDER BY g.value DESC) AS rank
+        FROM (
+          SELECT sc.bowlerID, sc.game1 AS value FROM scores sc WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+          UNION ALL
+          SELECT sc.bowlerID, sc.game2 FROM scores sc WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+          UNION ALL
+          SELECT sc.bowlerID, sc.game3 FROM scores sc WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+        ) g
+        JOIN bowlers b ON b.bowlerID = g.bowlerID
+        CROSS APPLY (
+          SELECT TOP 1 sc2.teamID
+          FROM scores sc2
+          WHERE sc2.bowlerID = g.bowlerID AND sc2.seasonID = @seasonID AND sc2.isPenalty = 0
+          GROUP BY sc2.teamID ORDER BY COUNT(*) DESC
+        ) pt
+        LEFT JOIN teams t ON t.teamID = pt.teamID
+        LEFT JOIN teamNameHistory tnh ON tnh.seasonID = @seasonID AND tnh.teamID = pt.teamID
+        WHERE 1=1 ${genderFilter}
+        ORDER BY g.value DESC
+      `;
+      return cachedQuery(`getSeasonLeaderboard-${seasonID}-${gender}-${category}-${minGames}`, async () => {
+        const db = await getDb();
+        const request = db.request().input('seasonID', seasonID);
+        if (gender !== null) request.input('gender', gender);
+        const result = await request.query<SeasonLeaderEntry>(highGameSql);
+        return result.recordset;
+      }, [], { sql: highGameSql, seasonID });
+    }
     case 'highSeries':
       selectExpr = `MAX(sc.scratchSeries)`;
       break;
