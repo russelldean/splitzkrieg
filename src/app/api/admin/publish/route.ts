@@ -1,17 +1,40 @@
 /**
  * POST /api/admin/publish
- * Publish a week: update leagueSettings, bump cache, write .published-week, trigger revalidation.
- * Separate from score confirmation per CONTEXT.md locked decision.
+ * Publish a week: update leagueSettings, then commit .published-week and
+ * .data-versions.json to GitHub via the Git Data API (single commit) which
+ * triggers a Vercel deploy automatically.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import sql from 'mssql';
-import fs from 'fs';
-import path from 'path';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
+
+const GH_OWNER = 'russelldean';
+const GH_REPO = 'splitzkrieg';
+const GH_API = 'https://api.github.com';
+
+async function ghFetch(path: string, opts: RequestInit = {}) {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) throw new Error('GITHUB_TOKEN not configured');
+  const res = await fetch(`${GH_API}${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+      ...(opts.headers ?? {}),
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`GitHub API ${path} → ${res.status}: ${body}`);
+  }
+  return res.json();
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,70 +48,99 @@ export async function POST(request: NextRequest) {
     const { seasonID, week } = body as { seasonID: number; week: number };
 
     if (!seasonID || !week) {
-      return NextResponse.json(
-        { error: 'seasonID and week are required' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'seasonID and week are required' }, { status: 400 });
     }
 
     const db = await getDb();
 
-    // Update publishedWeek in leagueSettings
-    await db
-      .request()
+    // 1. Update publishedWeek + publishedSeasonID in leagueSettings
+    await db.request()
       .input('val', sql.VarChar(255), String(week))
-      .query(
-        `UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedWeek'`,
-      );
-
-    // Update publishedSeasonID in leagueSettings
-    await db
-      .request()
+      .query(`UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedWeek'`);
+    await db.request()
       .input('val', sql.VarChar(255), String(seasonID))
-      .query(
-        `UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedSeasonID'`,
+      .query(`UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedSeasonID'`);
+
+    // 2. Find which bowlers bowled this week (to bump per-bowler cache versions)
+    const bowlerResult = await db.request()
+      .input('seasonID', sql.Int, seasonID)
+      .input('week', sql.Int, week)
+      .query<{ bowlerID: number }>(
+        `SELECT DISTINCT bowlerID FROM scores WHERE seasonID = @seasonID AND week = @week AND isPenalty = 0 AND bowlerID IS NOT NULL`
       );
+    const bowlerIDs = bowlerResult.recordset.map(r => r.bowlerID);
 
-    // Write .published-week file and bump cache versions
-    // These are local-only operations; on Vercel the filesystem is read-only
-    // so we skip silently -- the DB updates and revalidation are what matter
-    const projectRoot = process.cwd();
+    // 3. Fetch current .data-versions.json from GitHub
     const tag = `s${seasonID}-w${week}`;
+    const repo = `repos/${GH_OWNER}/${GH_REPO}`;
 
-    try {
-      const tagPath = path.join(projectRoot, '.published-week');
-      fs.writeFileSync(tagPath, tag + '\n');
+    const dvFile = await ghFetch(`/${repo}/contents/.data-versions.json`);
+    const versions: Record<string, Record<string, number>> = JSON.parse(
+      Buffer.from(dvFile.content as string, 'base64').toString('utf-8')
+    );
 
-      const versionsPath = path.join(projectRoot, '.data-versions.json');
-      let versions: Record<string, Record<string, number>> = {};
-      try {
-        versions = JSON.parse(fs.readFileSync(versionsPath, 'utf-8'));
-      } catch {
-        // File doesn't exist yet
-      }
+    // 4. Bump scores channel version for this season (busts season-scoped pages)
+    if (!versions.scores) versions.scores = {};
+    const sKey = String(seasonID);
+    versions.scores[sKey] = (versions.scores[sKey] ?? 1) + 1;
 
-      if (!versions.scores) versions.scores = {};
-      const key = String(seasonID);
-      versions.scores[key] = (versions.scores[key] || 1) + 1;
-      fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n');
-
-      // Clear local cache files for this season
-      const cacheDir = path.join(projectRoot, '.next', 'cache', 'sql', 'v1');
-      const files = fs.readdirSync(cacheDir);
-      for (const f of files) {
-        if (f.includes(`-${seasonID}_`) || f.includes(`-${seasonID}-`)) {
-          fs.unlinkSync(path.join(cacheDir, f));
-        }
-      }
-    } catch {
-      // Read-only filesystem on Vercel or cache dir missing -- safe to skip
+    // 5. Bump per-bowler versions (only bowlers who bowled this week)
+    if (!versions.bowlers) versions.bowlers = {};
+    for (const id of bowlerIDs) {
+      const k = String(id);
+      versions.bowlers[k] = (versions.bowlers[k] ?? 1) + 1;
     }
+
+    // 6. Commit both files in a single Git commit via the Data API
+    //    so only one Vercel deploy fires.
+    const refData = await ghFetch(`/${repo}/git/refs/heads/main`);
+    const headSha: string = refData.object.sha;
+    const commitData = await ghFetch(`/${repo}/git/commits/${headSha}`);
+    const treeSha: string = commitData.tree.sha;
+
+    const [dvBlob, pwBlob] = await Promise.all([
+      ghFetch(`/${repo}/git/blobs`, {
+        method: 'POST',
+        body: JSON.stringify({ content: JSON.stringify(versions, null, 2) + '\n', encoding: 'utf-8' }),
+      }),
+      ghFetch(`/${repo}/git/blobs`, {
+        method: 'POST',
+        body: JSON.stringify({ content: tag + '\n', encoding: 'utf-8' }),
+      }),
+    ]);
+
+    const newTree = await ghFetch(`/${repo}/git/trees`, {
+      method: 'POST',
+      body: JSON.stringify({
+        base_tree: treeSha,
+        tree: [
+          { path: '.data-versions.json', mode: '100644', type: 'blob', sha: dvBlob.sha },
+          { path: '.published-week', mode: '100644', type: 'blob', sha: pwBlob.sha },
+        ],
+      }),
+    });
+
+    const newCommit = await ghFetch(`/${repo}/git/commits`, {
+      method: 'POST',
+      body: JSON.stringify({
+        message: `publish: ${tag}`,
+        tree: newTree.sha,
+        parents: [headSha],
+      }),
+    });
+
+    await ghFetch(`/${repo}/git/refs/heads/main`, {
+      method: 'PATCH',
+      body: JSON.stringify({ sha: newCommit.sha }),
+    });
 
     return NextResponse.json({
       published: true,
       seasonID,
       week,
       tag,
+      commit: newCommit.sha,
+      bowlersBumped: bowlerIDs.length,
     });
   } catch (err) {
     console.error('Publish error:', err);
