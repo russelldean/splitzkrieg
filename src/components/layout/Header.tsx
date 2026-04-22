@@ -3,14 +3,13 @@ import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { NavDropdown } from './NavDropdown';
 import { DesktopNav, HeaderSearchWrapper, MobileSearchRow } from './DesktopNav';
-import { getCurrentSeasonSnapshot, getNextBowlingNight, getNewBlogBadgeId } from '@/lib/queries';
+import { getCurrentSeasonSnapshot, getNewBlogBadgeId } from '@/lib/queries';
 import { NewBlogBadge } from './NewBlogBadge';
 import { bowlersIcon, teamsIcon, seasonsIcon, leagueNightsIcon, blogIcon, statsIcon } from '@/components/ui/icons';
 
 export async function Header() {
-  const [snapshot, nextBowlingNight, blogBadgeId] = await Promise.all([
+  const [snapshot, blogBadgeId] = await Promise.all([
     getCurrentSeasonSnapshot(),
-    getNextBowlingNight(),
     getNewBlogBadgeId(),
   ]);
   const currentSeasonSlug = snapshot?.slug ?? null;

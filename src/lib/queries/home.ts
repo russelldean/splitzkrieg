@@ -4,28 +4,6 @@
 import { cache } from 'react';
 import { getDb, cachedQuery } from '../db';
 
-const GET_NEXT_BOWLING_NIGHTS_SQL = `/* v3: include today, return next 2 distinct dates */
-  SELECT DISTINCT TOP 2 matchDate
-  FROM schedule
-  WHERE matchDate >= CAST(GETDATE() AS DATE)
-  ORDER BY matchDate ASC
-`;
-
-export async function getNextBowlingNights(): Promise<[string | null, string | null]> {
-  return (await cachedQuery('getNextBowlingNights', async () => {
-    const db = await getDb();
-    const result = await db.request().query<{ matchDate: Date }>(GET_NEXT_BOWLING_NIGHTS_SQL);
-    const dates = result.recordset.map(r => r.matchDate.toISOString());
-    return [dates[0] ?? null, dates[1] ?? null] as [string | null, string | null];
-  }, null, { sql: GET_NEXT_BOWLING_NIGHTS_SQL, dependsOn: ['schedule'] })) ?? [null, null];
-}
-
-/** @deprecated Use getNextBowlingNights() instead */
-export async function getNextBowlingNight(): Promise<string | null> {
-  const [next] = await getNextBowlingNights();
-  return next;
-}
-
 const BADGE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 /** Check if the "new blog post" badge should show. Returns slug or null. */
@@ -337,7 +315,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       bowlersOfTheWeek: botwResult.recordset,
       teamOfTheWeek,
     };
-  }, null, { sql: SNAPSHOT_ALL_SQL, dependsOn: ['scores'] });
+  }, null, { sql: SNAPSHOT_ALL_SQL, dependsOn: ['scores'], includePublishedTag: true });
 });
 
 /**
@@ -439,5 +417,5 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
     }
 
     return items;
-  }, [], { sql: HIGHLIGHTS_SCORES_SQL, dependsOn: ['scores'] });
+  }, [], { sql: HIGHLIGHTS_SCORES_SQL, dependsOn: ['scores'], includePublishedTag: true });
 });

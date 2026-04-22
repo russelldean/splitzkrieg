@@ -3,13 +3,28 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getTargetTime, computeCountdown, getDebugTargetTime, isLeagueNightNow } from '@/lib/bowling-time';
 
+interface ScheduleEntry {
+  week: number;
+  matchDate: string;
+}
+
 interface InlineCountdownProps {
-  targetDate: string | null;
-  followingDate?: string | null;
-  weekNumber: number;
+  /** All scheduled weeks for the current season (sorted by matchDate). */
+  schedule: ScheduleEntry[];
 }
 
 const TAKEOVER_DURATION = 15_000;
+/** Bowling ends at 10:45 PM ET — 3h30m after the 7:15 PM start. */
+const BOWLING_WINDOW_MS = 3.5 * 60 * 60 * 1000;
+
+/** Pick the schedule entry we're currently counting down to / bowling in. */
+function findActiveEntry(schedule: ScheduleEntry[], nowMs: number): ScheduleEntry | null {
+  for (const entry of schedule) {
+    const endOfBowling = getTargetTime(entry.matchDate) + BOWLING_WINDOW_MS;
+    if (endOfBowling > nowMs) return entry;
+  }
+  return null;
+}
 
 /** Stick figure that runs across the screen holding an item */
 function RunningFigure({ item, delay, y, dur, reverse, turnaround, itemScale }: { item: React.ReactNode; delay: string; y: string; dur: string; reverse?: boolean; turnaround?: boolean; itemScale?: number }) {
@@ -100,15 +115,18 @@ function FlipUnit({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function InlineCountdown({ targetDate, followingDate, weekNumber }: InlineCountdownProps) {
+export function InlineCountdown({ schedule }: InlineCountdownProps) {
   const [mounted, setMounted] = useState(false);
-  const [activeDate, setActiveDate] = useState(targetDate);
-  const [activeWeek, setActiveWeek] = useState(weekNumber);
+  // Picked once on mount from the client's clock. If the page is left open
+  // past 10:45 PM Monday the countdown goes blank until reload — fine.
+  const [activeEntry] = useState<ScheduleEntry | null>(() => findActiveEntry(schedule, Date.now()));
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
   const [showTakeover, setShowTakeover] = useState(false);
   const [takeoverOpacity, setTakeoverOpacity] = useState(0);
   const takeoverFiredRef = useRef(false);
-  const switchedToFollowingRef = useRef(false);
+
+  const activeDate = activeEntry?.matchDate ?? null;
+  const activeWeek = activeEntry?.week ?? 0;
 
   // Generate chaotic floating HOT FUN texts (stable across renders)
   const floatingTexts = useMemo(() => {
@@ -194,54 +212,39 @@ export function InlineCountdown({ targetDate, followingDate, weekNumber }: Inlin
   useEffect(() => {
     setMounted(true);
     const targetMs = getEffectiveTarget();
-    if (!targetMs) return;
+    if (targetMs === null) return;
+
+    const target = new Date(targetMs);
+    const isTargetToday = () => {
+      const now = new Date();
+      return now.getFullYear() === target.getFullYear()
+        && now.getMonth() === target.getMonth()
+        && now.getDate() === target.getDate();
+    };
+
+    // If the page loads mid-bowling on the target day, skip the takeover
+    // animation and go straight to "Bowling in Progress".
+    if (isLeagueNightNow() && isTargetToday()) {
+      takeoverFiredRef.current = true;
+      setBowlingInProgress(true);
+    }
 
     const update = () => {
       const cd = computeCountdown(targetMs);
       setCountdown(cd);
-      // Fire takeover when countdown reaches zero (only if target is today)
-      if (cd.isPast && !takeoverFiredRef.current) {
-        const now = new Date();
-        const target = new Date(targetMs);
-        const sameDay = now.getFullYear() === target.getFullYear()
-          && now.getMonth() === target.getMonth()
-          && now.getDate() === target.getDate();
-        if (sameDay) {
-          fireTakeover();
-        }
+
+      if (cd.isPast && !takeoverFiredRef.current && isTargetToday()) {
+        fireTakeover();
       }
-      // Check if bowling is still in progress (clears after 10:45 PM ET)
-      if (cd.isPast && takeoverFiredRef.current && !switchedToFollowingRef.current) {
-        const stillBowling = isLeagueNightNow();
-        setBowlingInProgress(stillBowling);
-        // Bowling ended - switch to counting down to the following date
-        if (!stillBowling && followingDate) {
-          switchedToFollowingRef.current = true;
-          takeoverFiredRef.current = false;
-          setBowlingInProgress(false);
-          setActiveDate(followingDate);
-          setActiveWeek(weekNumber + 1);
-        }
+      if (cd.isPast && isTargetToday()) {
+        setBowlingInProgress(isLeagueNightNow());
       }
     };
-    // Detect if page loads mid-bowling BEFORE first update,
-    // so the takeover doesn't fire on every Monday night page load.
-    // Only trigger if today is actually the target bowling night.
-    if (isLeagueNightNow() && targetMs !== null) {
-      const now = new Date();
-      const target = new Date(targetMs);
-      const sameDay = now.getFullYear() === target.getFullYear()
-        && now.getMonth() === target.getMonth()
-        && now.getDate() === target.getDate();
-      if (sameDay) {
-        takeoverFiredRef.current = true;
-        setBowlingInProgress(true);
-      }
-    }
+
     update();
     const interval = setInterval(update, 200);
     return () => clearInterval(interval);
-  }, [activeDate, getEffectiveTarget, fireTakeover, followingDate, weekNumber]);
+  }, [getEffectiveTarget, fireTakeover]);
 
   if (!mounted) return null;
 

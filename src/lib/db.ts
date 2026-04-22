@@ -221,26 +221,46 @@ export async function cachedQuery<T>(
   key: string,
   fn: () => Promise<T>,
   fallback: T | readonly never[],
-  options?: { stable?: boolean; sql?: string; seasonID?: number; allSeasons?: boolean; dependsOn?: string[]; bowlerID?: number },
+  options?: {
+    stable?: boolean;
+    sql?: string;
+    seasonID?: number;
+    allSeasons?: boolean;
+    dependsOn?: string[];
+    bowlerID?: number;
+    /**
+     * Force-include the published-week tag in the cache key even when dependsOn
+     * is set. Use for queries whose result depends on leagueSettings.publishedWeek
+     * (e.g. the current-week snapshot): the scores-channel hash alone doesn't
+     * capture that dependency, so without this flag a publish that happens
+     * without a scores version bump leaves the cache stale.
+     */
+    includePublishedTag?: boolean;
+  },
 ): Promise<T> {
   const stable = options?.stable;
 
   // Determine whether to include the published-week tag in the hash:
   //   stable: true              → never include tag (data never changes)
+  //   includePublishedTag       → always include tag (explicit publishedWeek dependency)
   //   dependsOn provided        → never include tag (channel hashes invalidate properly)
   //   bowlerID provided         → never include tag (per-bowler version handles invalidation)
   //   seasonID without dependsOn → include tag only if seasonID matches published season
   //   neither                   → include tag always (legacy fallback; should be empty bucket)
   let usePublishedTag = false;
-  if (!stable && PUBLISHED_TAG && !options?.dependsOn && !options?.bowlerID) {
-    if (options?.seasonID != null) {
-      // Season-scoped: only invalidate for the current season
-      usePublishedTag = options.seasonID === PUBLISHED_SEASON_ID;
-    } else {
-      // Non-seasonal, non-stable, no dependsOn: legacy "always invalidate"
-      // bucket. After 2026-04-07 audit this should be empty — every query
-      // either has dependsOn, seasonID, stable: true, or bowlerID.
+  if (!stable && PUBLISHED_TAG) {
+    if (options?.includePublishedTag) {
       usePublishedTag = true;
+    } else if (!options?.dependsOn && !options?.bowlerID) {
+      if (options?.seasonID != null) {
+        // Season-scoped: only invalidate for the current season
+        usePublishedTag = options.seasonID === PUBLISHED_SEASON_ID;
+      } else {
+        // Non-seasonal, non-stable, no dependsOn: legacy "always invalidate"
+        // bucket. After 2026-04-07 audit this should be empty — every query
+        // either has dependsOn, seasonID, stable: true, or bowlerID.
+        usePublishedTag = true;
+      }
     }
   }
 

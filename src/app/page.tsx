@@ -5,7 +5,6 @@ import { formatMatchDate } from '@/lib/bowling-time';
 import {
   getWeeklyHighlights,
   getCurrentSeasonSnapshot,
-  getNextBowlingNights,
   getSeasonBySlug,
   getSeasonStandings,
   getSeasonSchedule,
@@ -35,10 +34,9 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const [seasonSnapshot, weeklyHighlights, bowlingNights, leagueMilestones, blogBadgeId, instagramPosts, allPosts, randomFacts] = await Promise.all([
+  const [seasonSnapshot, weeklyHighlights, leagueMilestones, blogBadgeId, instagramPosts, allPosts, randomFacts] = await Promise.all([
     getCurrentSeasonSnapshot(),
     getWeeklyHighlights(),
-    getNextBowlingNights(),
     getLeagueMilestones(),
     getNewBlogBadgeId(),
     getInstagramFeed(6),
@@ -50,7 +48,6 @@ export default async function Home() {
   const latestPost = allPosts[0] ?? null;
   const promotedSlug = blogBadgeId?.split('|')[0] ?? null;
   const promotedPost = promotedSlug ? await getPostBySlug(promotedSlug) : undefined;
-  const [nextBowlingNight, followingBowlingNight] = bowlingNights;
 
   // Merge milestone achievements into the ticker, sorted alphabetically by name
   const allTickerItems = [...weeklyHighlights, ...milestoneTickerItems(leagueMilestones)]
@@ -59,6 +56,7 @@ export default async function Home() {
   // Fetch standings + schedule for current season
   let standings: Awaited<ReturnType<typeof getSeasonStandings>> = [];
   let weekSchedule: Awaited<ReturnType<typeof getSeasonSchedule>> = [];
+  let countdownSchedule: { week: number; matchDate: string }[] = [];
 
   let nextWeekNumber = 0;
   let latestWeekDate: string | null = null;
@@ -81,6 +79,18 @@ export default async function Home() {
       if (nextWeekNumber > 0) {
         weekSchedule = allSchedule.filter(s => s.week === nextWeekNumber);
       }
+
+      // Deduped per-week schedule for the client-side countdown. Shipping every
+      // week (not just future ones) keeps the data time-independent — the
+      // client picks the active entry from new Date() at render time, so the
+      // cache key doesn't need to invalidate as dates pass.
+      const weekToDate = new Map<number, string>();
+      for (const s of allSchedule) {
+        if (s.matchDate && !weekToDate.has(s.week)) weekToDate.set(s.week, s.matchDate);
+      }
+      countdownSchedule = [...weekToDate.entries()]
+        .map(([week, matchDate]) => ({ week, matchDate }))
+        .sort((a, b) => a.matchDate.localeCompare(b.matchDate));
 
       // Get date for the latest played week
       const latestWeekSchedule = allSchedule.find(s => s.week === seasonSnapshot.weekNumber);
@@ -146,7 +156,7 @@ export default async function Home() {
               </div>
               <div className="w-px bg-white/15 my-3" />
               <div className="px-4 py-2 flex items-center justify-center overflow-hidden">
-                <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
+                <InlineCountdown schedule={countdownSchedule} />
               </div>
             </Link>
             {/* Desktop: side-by-side layout */}
@@ -167,7 +177,7 @@ export default async function Home() {
               </Link>
               <div className="w-px bg-white/15 my-3" />
               <div className="px-6 py-4 flex items-center justify-center overflow-hidden">
-                <InlineCountdown targetDate={nextBowlingNight} followingDate={followingBowlingNight} weekNumber={nextWeekNumber} />
+                <InlineCountdown schedule={countdownSchedule} />
               </div>
             </div>
           </div>
