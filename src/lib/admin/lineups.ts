@@ -707,7 +707,7 @@ export async function pushLineupsToLP(
     }
   }
 
-  // Second pass: teams without submissions — carry over roster with updated averages
+  // Second pass: teams without submissions - carry over roster with updated averages
   if (!teamID) {
     const allTeams = await getSeasonTeams(seasonID);
     const submittedTeamIDs = new Set(submissions.map((s) => s.teamID));
@@ -729,7 +729,7 @@ export async function pushLineupsToLP(
         }
         const contentType = loadRes.headers.get('content-type') || '';
         if (!contentType.includes('json')) {
-          errors.push(`LP returned HTML for "${team.teamName}" — cookie likely expired`);
+          errors.push(`LP returned HTML for "${team.teamName}" - cookie likely expired`);
           break;
         }
 
