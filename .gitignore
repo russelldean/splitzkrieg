@@ -65,3 +65,9 @@ gutter_thud.wav
 
 # Local Claude context (not code)
 memory/
+
+# Local-only playoff scenario explorations
+scripts/playoff-scenarios.mjs
+scripts/playoff-enumerate*.mjs
+docs/playoff-scenarios-*.json
+docs/playoff-scenarios-*.md
