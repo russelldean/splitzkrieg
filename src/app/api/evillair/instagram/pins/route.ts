@@ -56,8 +56,10 @@ export async function POST(request: NextRequest) {
         INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('instagramPins', '${value.replace(/'/g, "''")}')
     `);
 
-    // Revalidate homepage so pinned photos appear immediately
-    revalidatePath('/', 'page');
+    // Revalidate homepage so pinned photos appear immediately.
+    // Use 'layout' (not 'page') to match blog publish — more reliable purge
+    // for the fully-static homepage on Vercel.
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({ ok: true, pins });
   } catch (err) {
