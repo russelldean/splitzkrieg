@@ -93,28 +93,25 @@ export default function LineupPage() {
       // Only pre-fill submittedBy from this team's current week submission
       setSubmittedBy(data.submittedBy || '');
 
-      // Pre-fill from last week's lineup or start with 4 empty slots
-      if (data.lastWeekLineup.length > 0) {
-        setSlots(
-          data.lastWeekLineup.map((entry) => ({
-            position: entry.position,
-            bowlerID: entry.bowlerID,
-            bowlerName: entry.bowlerName || entry.newBowlerName || '',
-            isNew: !entry.bowlerID && !!entry.newBowlerName,
-            newBowlerName: entry.newBowlerName || '',
-          })),
-        );
-      } else {
-        setSlots(
-          Array.from({ length: 4 }, (_, i) => ({
-            position: i + 1,
-            bowlerID: null,
-            bowlerName: '',
-            isNew: false,
-            newBowlerName: '',
-          })),
-        );
+      // Pre-fill from last week's lineup, always padded to at least 4 slots
+      const prefilled = data.lastWeekLineup.map((entry) => ({
+        position: entry.position,
+        bowlerID: entry.bowlerID,
+        bowlerName: entry.bowlerName || entry.newBowlerName || '',
+        isNew: !entry.bowlerID && !!entry.newBowlerName,
+        newBowlerName: entry.newBowlerName || '',
+      }));
+      while (prefilled.length < 4) {
+        prefilled.push({
+          position: prefilled.length + 1,
+          bowlerID: null,
+          bowlerName: '',
+          isNew: false,
+          newBowlerName: '',
+        });
       }
+      // Renumber positions sequentially in case last week's positions had gaps
+      setSlots(prefilled.map((s, i) => ({ ...s, position: i + 1 })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load lineup');
     } finally {
