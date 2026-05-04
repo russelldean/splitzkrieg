@@ -15,6 +15,7 @@ import { getDb } from '@/lib/db';
 import { TURKEY_PNG } from './turkey-emoji';
 import { getActiveAnnouncements } from './announcements-db';
 import { getRollingAverages } from './rolling-averages';
+import { getLastWeekLineup } from './lineups';
 
 export interface ScoresheetBowler {
   name: string;
@@ -200,7 +201,26 @@ export async function getMatchupsForWeek(
         }
       }
 
-      // Fallback: use last week's scores for this team
+      // Fallback: use the most recent prior lineup submission for this team
+      // (mirrors /lineup pre-fill so the scoresheet keeps the same order).
+      if (teamBowlers.length === 0) {
+        const priorLineup = await getLastWeekLineup(teamID, seasonID, week - 1);
+        for (const entry of priorLineup) {
+          const name = entry.bowlerID
+            ? entry.bowlerName || 'TBD'
+            : entry.newBowlerName || 'TBD';
+          const avg = entry.bowlerID ? (rollingAvgMap.get(entry.bowlerID) ?? null) : null;
+          teamBowlers.push({
+            name,
+            side,
+            incomingAvg: avg,
+            handicap: calcHandicap(avg),
+            rosterSource: 'lastweek',
+          });
+        }
+      }
+
+      // Last-resort fallback: prior week's scores (alphabetical) if no prior submission exists
       if (teamBowlers.length === 0) {
         const prevWeek = week - 1;
         if (prevWeek >= 1) {
