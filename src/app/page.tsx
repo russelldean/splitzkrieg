@@ -120,11 +120,7 @@ export default async function Home() {
             secondSeed: { teamName: rows[1].teamName, teamSlug: rows[1].teamSlug },
           }));
 
-        if (latestWeekSchedule?.matchDate) {
-          const lastMatch = new Date(latestWeekSchedule.matchDate);
-          const roundOne = new Date(lastMatch.getTime() + 7 * 24 * 60 * 60 * 1000);
-          playoffsRoundOneDate = roundOne.toISOString();
-        }
+        playoffsRoundOneDate = '2026-05-11T00:00:00.000Z';
       }
     }
   }
