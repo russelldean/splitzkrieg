@@ -36,11 +36,7 @@ export function PlayoffsNextWeek({ matchups, matchDate }: Props) {
         </span>
       </div>
 
-      <p className="text-xs font-body text-navy/70 mb-4">
-        First round of the playoffs is Monday. #1 vs #2 in each division.
-      </p>
-
-      <div className="space-y-3">
+      <div className="space-y-3 mt-4">
         {matchups.map((m) => (
           <div key={m.divisionName} className="border-t border-navy/5 pt-3 first:border-t-0 first:pt-0">
             <div className="text-[11px] font-body uppercase tracking-wider text-navy/50 mb-1">
