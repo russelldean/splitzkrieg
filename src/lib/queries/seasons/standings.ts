@@ -24,6 +24,8 @@ interface HeadToHeadResult {
   team2ID: number;
   team1Pts: number;
   team2Pts: number;
+  team1GamePts: number;
+  team2GamePts: number;
 }
 
 export interface SeasonLeaderEntry {
@@ -145,22 +147,24 @@ const GET_SEASON_STANDINGS_SQL = `
 const GET_HEAD_TO_HEAD_SQL = `
   SELECT sch.team1ID, sch.team2ID,
          mr.team1GamePts + mr.team1BonusPts AS team1Pts,
-         mr.team2GamePts + mr.team2BonusPts AS team2Pts
+         mr.team2GamePts + mr.team2BonusPts AS team2Pts,
+         mr.team1GamePts, mr.team2GamePts
   FROM matchResults mr
   JOIN schedule sch ON mr.scheduleID = sch.scheduleID
   WHERE sch.seasonID = @seasonID
 `;
 
 /**
- * Resolve two-way ties within each division using head-to-head game points.
- * Only applies to exact 2-way ties on totalPts. 3+ way ties or ties with
- * no h2h data keep the existing sort (wins DESC, scratchAvg DESC).
+ * Resolve standings ties per official league rules:
+ *   - 2-way tie on totalPts → head-to-head winner (sum of total pts in their meetings)
+ *   - 3+ way tie on totalPts → game-pts W/L% among tied teams (rule 3a),
+ *     then high scratch avg (rule 3b). If 3a leaves a 2-way subtie, fall back to h2h.
  */
 function resolveH2HTiebreakers(
   standings: StandingsRow[],
   h2hResults: HeadToHeadResult[]
 ): StandingsRow[] {
-  // Build lookup: "loID-hiID" → net game pts for the lower-ID team
+  // h2hMap: "loID-hiID" → net total pts for lower-ID team (used for 2-way h2h)
   const h2hMap = new Map<string, number>();
   for (const r of h2hResults) {
     const [lo, hi] = r.team1ID < r.team2ID
@@ -173,7 +177,60 @@ function resolveH2HTiebreakers(
     h2hMap.set(key, (h2hMap.get(key) ?? 0) + netForLo);
   }
 
-  // Group by division (preserving original order)
+  function resolveTwoWay(a: StandingsRow, b: StandingsRow): [StandingsRow, StandingsRow] {
+    const [lo, hi] = a.teamID < b.teamID ? [a.teamID, b.teamID] : [b.teamID, a.teamID];
+    const netForLo = h2hMap.get(`${lo}-${hi}`) ?? 0;
+    const netForA = a.teamID < b.teamID ? netForLo : -netForLo;
+    if (netForA > 0) return [a, b];
+    if (netForA < 0) return [b, a];
+    // H2H also tied — fall back to scratch avg
+    return (a.teamScratchAvg ?? 0) >= (b.teamScratchAvg ?? 0) ? [a, b] : [b, a];
+  }
+
+  function resolveThreePlus(tier: StandingsRow[]): StandingsRow[] {
+    // Rule 3a: game-pts won / 6 per match, only counting matches between tied teams.
+    // 6 game pts available per match (0/2/4/6 distribution).
+    const tiedIDs = new Set(tier.map(t => t.teamID));
+    const stats = new Map<number, { gamePts: number; matches: number }>();
+    for (const t of tier) stats.set(t.teamID, { gamePts: 0, matches: 0 });
+    for (const r of h2hResults) {
+      if (tiedIDs.has(r.team1ID) && tiedIDs.has(r.team2ID)) {
+        stats.get(r.team1ID)!.gamePts += r.team1GamePts;
+        stats.get(r.team1ID)!.matches += 1;
+        stats.get(r.team2ID)!.gamePts += r.team2GamePts;
+        stats.get(r.team2ID)!.matches += 1;
+      }
+    }
+    const annotated = tier.map(t => {
+      const s = stats.get(t.teamID)!;
+      const pct = s.matches > 0 ? s.gamePts / (s.matches * 6) : 0;
+      return { row: t, pct };
+    });
+    annotated.sort((a, b) => b.pct - a.pct);
+
+    // Walk subgroups by equal pct.
+    const out: StandingsRow[] = [];
+    let i = 0;
+    while (i < annotated.length) {
+      let j = i + 1;
+      while (j < annotated.length && annotated[j].pct === annotated[i].pct) j++;
+      const sub = annotated.slice(i, j).map(x => x.row);
+      if (sub.length === 1) {
+        out.push(sub[0]);
+      } else if (sub.length === 2) {
+        // 3a reduced to 2-way → fall back to head-to-head
+        const [a, b] = resolveTwoWay(sub[0], sub[1]);
+        out.push(a, b);
+      } else {
+        // Still 3+ tied after 3a → rule 3b: high scratch avg
+        sub.sort((x, y) => (y.teamScratchAvg ?? 0) - (x.teamScratchAvg ?? 0));
+        out.push(...sub);
+      }
+      i = j;
+    }
+    return out;
+  }
+
   const divisions = new Map<string, StandingsRow[]>();
   for (const row of standings) {
     const div = row.divisionName ?? '__none__';
@@ -183,34 +240,19 @@ function resolveH2HTiebreakers(
 
   const result: StandingsRow[] = [];
   for (const rows of divisions.values()) {
-    // Split into tiers of equal totalPts
     let i = 0;
     while (i < rows.length) {
       let j = i + 1;
       while (j < rows.length && rows[j].totalPts === rows[i].totalPts) j++;
       const tier = rows.slice(i, j);
 
-      if (tier.length === 2) {
-        // Two-way tie: check h2h
-        const [a, b] = tier;
-        const [lo, hi] = a.teamID < b.teamID
-          ? [a.teamID, b.teamID]
-          : [b.teamID, a.teamID];
-        const key = `${lo}-${hi}`;
-        const netForLo = h2hMap.get(key) ?? 0;
-        const netForA = a.teamID < b.teamID ? netForLo : -netForLo;
-
-        if (netForA > 0) {
-          result.push(a, b);
-        } else if (netForA < 0) {
-          result.push(b, a);
-        } else {
-          // H2H also tied, keep existing order (wins, scratchAvg)
-          result.push(a, b);
-        }
+      if (tier.length === 1) {
+        result.push(tier[0]);
+      } else if (tier.length === 2) {
+        const [a, b] = resolveTwoWay(tier[0], tier[1]);
+        result.push(a, b);
       } else {
-        // Single team or 3+ way tie: keep existing SQL order
-        result.push(...tier);
+        result.push(...resolveThreePlus(tier));
       }
 
       i = j;
