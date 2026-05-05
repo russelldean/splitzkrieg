@@ -86,7 +86,9 @@ export default async function Home() {
       // cache key doesn't need to invalidate as dates pass.
       const weekToDate = new Map<number, string>();
       for (const s of allSchedule) {
-        if (s.matchDate && !weekToDate.has(s.week)) weekToDate.set(s.week, s.matchDate);
+        if (s.matchDate && !weekToDate.has(s.week)) {
+          weekToDate.set(s.week, new Date(s.matchDate).toISOString());
+        }
       }
       countdownSchedule = [...weekToDate.entries()]
         .map(([week, matchDate]) => ({ week, matchDate }))
