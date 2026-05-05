@@ -18,6 +18,7 @@ import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
+import { PlayoffsNextWeek } from '@/components/home/PlayoffsNextWeek';
 import { InlineCountdown } from '@/components/home/InlineCountdown';
 import { PromotedBlogCard } from '@/components/home/PromotedBlogCard';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
@@ -60,6 +61,8 @@ export default async function Home() {
 
   let nextWeekNumber = 0;
   let latestWeekDate: string | null = null;
+  let playoffsNextWeek: { divisionName: string; topSeed: { teamName: string; teamSlug: string }; secondSeed: { teamName: string; teamSlug: string } }[] = [];
+  let playoffsRoundOneDate: string | null = null;
 
   if (seasonSnapshot) {
     const season = await getSeasonBySlug(seasonSnapshot.slug);
@@ -98,6 +101,30 @@ export default async function Home() {
       const latestWeekSchedule = allSchedule.find(s => s.week === seasonSnapshot.weekNumber);
       if (latestWeekSchedule?.matchDate) {
         latestWeekDate = formatMatchDate(latestWeekSchedule.matchDate, { month: 'long', day: 'numeric', year: 'numeric' });
+      }
+
+      // Regular season is over → assemble playoff round 1 matchups (#1 vs #2 per division).
+      if (nextWeekNumber === 0 && allStandings.length > 0) {
+        const seedsByDivision = new Map<string, typeof allStandings>();
+        for (const row of allStandings) {
+          const div = row.divisionName;
+          if (!div) continue;
+          if (!seedsByDivision.has(div)) seedsByDivision.set(div, []);
+          seedsByDivision.get(div)!.push(row);
+        }
+        playoffsNextWeek = [...seedsByDivision.entries()]
+          .filter(([, rows]) => rows.length >= 2)
+          .map(([divisionName, rows]) => ({
+            divisionName,
+            topSeed: { teamName: rows[0].teamName, teamSlug: rows[0].teamSlug },
+            secondSeed: { teamName: rows[1].teamName, teamSlug: rows[1].teamSlug },
+          }));
+
+        if (latestWeekSchedule?.matchDate) {
+          const lastMatch = new Date(latestWeekSchedule.matchDate);
+          const roundOne = new Date(lastMatch.getTime() + 7 * 24 * 60 * 60 * 1000);
+          playoffsRoundOneDate = roundOne.toISOString();
+        }
       }
     }
   }
@@ -205,6 +232,11 @@ export default async function Home() {
                 weekNumber={nextWeekNumber}
                 romanNumeral={seasonSnapshot.romanNumeral}
               />
+            </TrackVisibility>
+          )}
+          {seasonSnapshot && nextWeekNumber === 0 && playoffsNextWeek.length > 0 && (
+            <TrackVisibility section="playoffs-next-week" page="home" className="md:col-span-2">
+              <PlayoffsNextWeek matchups={playoffsNextWeek} matchDate={playoffsRoundOneDate} />
             </TrackVisibility>
           )}
         </div>
