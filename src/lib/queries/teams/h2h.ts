@@ -235,44 +235,20 @@ export interface PlayoffH2HMatchup {
 }
 
 const GET_TEAM_PLAYOFF_H2H_SQL = `
-  WITH finals AS (
-    SELECT seasonID, team1ID AS champID, team2ID AS ruID
-    FROM playoffResults
-    WHERE playoffType = 'Team' AND round = 'final'
-  ),
-  allMatchups AS (
-    -- All rows where team2ID is populated (finals + newer semis)
-    SELECT pr.seasonID, pr.round, pr.team1ID, pr.team2ID, pr.winnerTeamID
-    FROM playoffResults pr
-    WHERE pr.playoffType = 'Team' AND pr.team2ID IS NOT NULL
-    UNION ALL
-    -- Older semis: loser in team1ID, infer winner from final using playoffID ordering
-    SELECT pr.seasonID, pr.round, pr.team1ID,
-      CASE
-        WHEN ROW_NUMBER() OVER (PARTITION BY pr.seasonID ORDER BY pr.playoffID) = 1 THEN f.champID
-        ELSE f.ruID
-      END,
-      CASE
-        WHEN ROW_NUMBER() OVER (PARTITION BY pr.seasonID ORDER BY pr.playoffID) = 1 THEN f.champID
-        ELSE f.ruID
-      END
-    FROM playoffResults pr
-    JOIN finals f ON f.seasonID = pr.seasonID
-    WHERE pr.playoffType = 'Team' AND pr.round = 'semifinal' AND pr.team2ID IS NULL
-  )
   SELECT
-    CASE WHEN am.team1ID = @teamID THEN am.team2ID ELSE am.team1ID END AS opponentID,
+    CASE WHEN pr.team1ID = @teamID THEN pr.team2ID ELSE pr.team1ID END AS opponentID,
     t.teamName AS opponentName,
     t.slug AS opponentSlug,
-    am.seasonID,
+    pr.seasonID,
     sn.displayName AS seasonName,
     LOWER(REPLACE(sn.displayName, ' ', '-')) AS seasonSlug,
-    am.round,
-    CASE WHEN am.winnerTeamID = @teamID THEN 1 ELSE 0 END AS won
-  FROM allMatchups am
-  JOIN seasons sn ON am.seasonID = sn.seasonID
-  JOIN teams t ON t.teamID = CASE WHEN am.team1ID = @teamID THEN am.team2ID ELSE am.team1ID END
-  WHERE am.team1ID = @teamID OR am.team2ID = @teamID
+    pr.round,
+    CASE WHEN pr.winnerTeamID = @teamID THEN 1 ELSE 0 END AS won
+  FROM playoffResults pr
+  JOIN seasons sn ON pr.seasonID = sn.seasonID
+  JOIN teams t ON t.teamID = CASE WHEN pr.team1ID = @teamID THEN pr.team2ID ELSE pr.team1ID END
+  WHERE pr.playoffType = 'Team'
+    AND (pr.team1ID = @teamID OR pr.team2ID = @teamID)
   ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
 `;
 

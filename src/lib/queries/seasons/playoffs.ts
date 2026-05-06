@@ -94,39 +94,19 @@ export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<S
 
     const semis = semiResult.recordset;
 
-    function buildMatchup(
-      wName: string, wSlug: string, wSeed: number | null,
-      lName: string, lSlug: string, lSeed: number | null,
-    ): PlayoffMatchup {
-      return { winnerName: wName, winnerSlug: wSlug, winnerSeed: wSeed, loserName: lName, loserSlug: lSlug, loserSeed: lSeed };
-    }
-
-    // When winnerTeamID is NULL on semis, infer winner from the final:
-    // the two finalists are the two semi winners — assign each to one semi.
-    const remainingFinalists = [
-      { name: f.champName, slug: f.champSlug, seed: f.champSeed },
-      { name: f.ruName, slug: f.ruSlug, seed: f.ruSeed },
-    ];
-
     function buildSemi(semi: typeof semis[0] | undefined): PlayoffMatchup | null {
-      if (!semi) return null;
-      if (semi.winnerName) {
-        return buildMatchup(semi.winnerName, semi.winnerSlug!, semi.winnerSeed,
-          semi.loserName, semi.loserSlug, semi.loserSeed);
-      }
-      // Infer: pick a remaining finalist (prefer one whose slug differs from the loser)
-      let idx = remainingFinalists.findIndex(t => t.slug !== semi.loserSlug);
-      if (idx === -1) idx = 0; // fallback
-      if (idx < remainingFinalists.length) {
-        const inferred = remainingFinalists.splice(idx, 1)[0];
-        return buildMatchup(inferred.name, inferred.slug, inferred.seed,
-          semi.loserName, semi.loserSlug, semi.loserSeed);
-      }
-      return buildMatchup('', '', null, semi.loserName, semi.loserSlug, semi.loserSeed);
+      if (!semi || !semi.winnerName) return null;
+      return {
+        winnerName: semi.winnerName, winnerSlug: semi.winnerSlug!, winnerSeed: semi.winnerSeed,
+        loserName: semi.loserName, loserSlug: semi.loserSlug, loserSeed: semi.loserSeed,
+      };
     }
 
     return {
-      final: buildMatchup(f.champName, f.champSlug, f.champSeed, f.ruName, f.ruSlug, f.ruSeed),
+      final: {
+        winnerName: f.champName, winnerSlug: f.champSlug, winnerSeed: f.champSeed,
+        loserName: f.ruName, loserSlug: f.ruSlug, loserSeed: f.ruSeed,
+      },
       semi1: buildSemi(semis[0]),
       semi2: buildSemi(semis[1]),
     };
