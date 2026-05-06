@@ -863,6 +863,58 @@ export async function getSeasonTeams(
 }
 
 /**
+ * Teams actually bowling on a given week.
+ *
+ * Regular season weeks: every team in the schedule (same as getSeasonTeams).
+ * Playoff weeks: only the teams in playoffResults for that round.
+ *   - week == publishedWeek + 1 immediately after week 9 → semifinals (4 teams)
+ *   - week == publishedWeek + 1 after week 10 → final (2 teams)
+ *
+ * Determined by inspecting the max scheduled week for the season — anything
+ * past that is treated as a playoff week.
+ */
+export async function getTeamsBowlingForWeek(
+  seasonID: number,
+  week: number,
+): Promise<Array<{ teamID: number; teamName: string }>> {
+  const db = await getDb();
+
+  // Find the last regular-season week (max week in schedule)
+  const maxWeekResult = await db
+    .request()
+    .input('seasonID', seasonID)
+    .query<{ maxWeek: number | null }>(
+      `SELECT MAX(week) AS maxWeek FROM schedule WHERE seasonID = @seasonID`,
+    );
+  const maxRegularWeek = maxWeekResult.recordset[0]?.maxWeek ?? 0;
+
+  if (week <= maxRegularWeek) {
+    return getSeasonTeams(seasonID);
+  }
+
+  // Playoff week. Pick semifinal or final based on offset past regular season.
+  const playoffRound = week - maxRegularWeek; // 1 = semis, 2 = final
+  const roundLabel = playoffRound === 1 ? 'semifinal' : 'final';
+
+  const result = await db
+    .request()
+    .input('seasonID', seasonID)
+    .input('round', roundLabel)
+    .query<{ teamID: number; teamName: string }>(
+      `SELECT DISTINCT t.teamID, COALESCE(tnh.teamName, t.teamName) AS teamName
+       FROM playoffResults pr
+       JOIN teams t ON t.teamID = pr.team1ID OR t.teamID = pr.team2ID
+       LEFT JOIN teamNameHistory tnh ON tnh.seasonID = pr.seasonID AND tnh.teamID = t.teamID
+       WHERE pr.seasonID = @seasonID
+         AND pr.playoffType = 'Team'
+         AND pr.round = @round
+         AND (t.teamID = pr.team1ID OR t.teamID = pr.team2ID)
+       ORDER BY teamName`,
+    );
+  return result.recordset;
+}
+
+/**
  * Get the set of teamIDs that have submitted lineups for a given season/week.
  */
 export async function getSubmittedTeamIDs(

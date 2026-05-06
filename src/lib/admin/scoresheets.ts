@@ -338,6 +338,181 @@ export async function getMatchupsForWeek(
 }
 
 /**
+ * Build ScoresheetMatch[] for a playoff round.
+ *
+ * Round 1 = 2 team semis + 3 individual sheets (Men's/Women's Scratch, Handicap)
+ * Round 2 = 1 team final + 3 individual finals
+ *
+ * Team matches use playoffResults for matchups + lineupSubmissions for bowlers.
+ * Individual matches use individualPlayoffParticipants and split into 4v4 (round 1)
+ * or 2v2 (round 2). The "team name" is the championship label.
+ */
+export async function getPlayoffScoresheetMatches(
+  seasonID: number,
+  round: 1 | 2,
+  matchDate: string, // pre-formatted: e.g. "May 11, 2026"
+): Promise<ScoresheetMatch[]> {
+  const db = await getDb();
+
+  // Determine the week number for this round (after the regular season ends)
+  const maxWeekResult = await db
+    .request()
+    .input('seasonID', sql.Int, seasonID)
+    .query<{ maxWeek: number | null }>(
+      `SELECT MAX(week) AS maxWeek FROM schedule WHERE seasonID = @seasonID`,
+    );
+  const maxRegularWeek = maxWeekResult.recordset[0]?.maxWeek ?? 9;
+  const playoffWeek = maxRegularWeek + round;
+
+  const rollingAvgMap = await getRollingAverages(db, seasonID, playoffWeek);
+
+  const matches: ScoresheetMatch[] = [];
+
+  // ── Team matches ────────────────────────────────────────────────
+  const roundLabel = round === 1 ? 'semifinal' : 'final';
+  const teamRows = await db
+    .request()
+    .input('seasonID', sql.Int, seasonID)
+    .input('round', sql.VarChar(20), roundLabel)
+    .query<{
+      playoffID: number;
+      team1ID: number;
+      team2ID: number;
+      t1Name: string;
+      t2Name: string;
+      t1Abbr: string | null;
+      t2Abbr: string | null;
+    }>(`
+      SELECT pr.playoffID, pr.team1ID, pr.team2ID,
+             COALESCE(tnh1.teamName, t1.teamName) AS t1Name,
+             COALESCE(tnh2.teamName, t2.teamName) AS t2Name,
+             t1.abbreviation AS t1Abbr, t2.abbreviation AS t2Abbr
+      FROM playoffResults pr
+      JOIN teams t1 ON pr.team1ID = t1.teamID
+      JOIN teams t2 ON pr.team2ID = t2.teamID
+      LEFT JOIN teamNameHistory tnh1 ON tnh1.seasonID = pr.seasonID AND tnh1.teamID = pr.team1ID
+      LEFT JOIN teamNameHistory tnh2 ON tnh2.seasonID = pr.seasonID AND tnh2.teamID = pr.team2ID
+      WHERE pr.seasonID = @seasonID AND pr.playoffType = 'Team' AND pr.round = @round
+      ORDER BY pr.playoffID
+    `);
+
+  for (let idx = 0; idx < teamRows.recordset.length; idx++) {
+    const row = teamRows.recordset[idx];
+    const bowlers: ScoresheetBowler[] = [];
+
+    for (const teamID of [row.team1ID, row.team2ID]) {
+      const side: 'home' | 'away' = teamID === row.team1ID ? 'home' : 'away';
+      const lineupResult = await db
+        .request()
+        .input('seasonID', sql.Int, seasonID)
+        .input('week', sql.Int, playoffWeek)
+        .input('teamID', sql.Int, teamID)
+        .query<{
+          bowlerID: number | null;
+          newBowlerName: string | null;
+          bowlerName: string | null;
+          position: number;
+        }>(
+          `SELECT le.bowlerID, le.newBowlerName, b.bowlerName, le.position
+           FROM lineupSubmissions ls
+           JOIN lineupEntries le ON ls.id = le.submissionID
+           LEFT JOIN bowlers b ON le.bowlerID = b.bowlerID
+           WHERE ls.seasonID = @seasonID AND ls.week = @week AND ls.teamID = @teamID
+           ORDER BY le.position`,
+        );
+
+      if (lineupResult.recordset.length > 0) {
+        for (const r of lineupResult.recordset) {
+          const name = r.bowlerID ? (r.bowlerName || 'TBD') : (r.newBowlerName || 'TBD');
+          const avg = r.bowlerID ? (rollingAvgMap.get(r.bowlerID) ?? null) : null;
+          bowlers.push({ name, side, incomingAvg: avg, handicap: calcHandicap(avg), rosterSource: 'lineup' });
+        }
+      } else {
+        // Fall back to most recent prior lineup submission for this team
+        const prior = await getLastWeekLineup(teamID, seasonID, playoffWeek - 1);
+        for (const entry of prior) {
+          const name = entry.bowlerID ? (entry.bowlerName || 'TBD') : (entry.newBowlerName || 'TBD');
+          const avg = entry.bowlerID ? (rollingAvgMap.get(entry.bowlerID) ?? null) : null;
+          bowlers.push({ name, side, incomingAvg: avg, handicap: calcHandicap(avg), rosterSource: 'lastweek' });
+        }
+      }
+    }
+
+    matches.push({
+      homeTeamName: row.t1Name,
+      awayTeamName: row.t2Name,
+      homeTeamAbbr: row.t1Abbr || row.t1Name,
+      awayTeamAbbr: row.t2Abbr || row.t2Name,
+      homeTeamID: row.team1ID,
+      awayTeamID: row.team2ID,
+      week: playoffWeek,
+      date: matchDate,
+      matchNumber: idx + 1,
+      bowlers,
+      // No h2h or standings on playoff sheets
+    });
+  }
+
+  // ── Individual matches ──────────────────────────────────────────
+  const fieldSize = round === 1 ? 8 : 4;
+  const halfSize = fieldSize / 2;
+
+  type IndividualCategory = {
+    type: 'MensScratch' | 'WomensScratch' | 'Handicap';
+    label: string;
+    abbr: string;
+  };
+  const categories: IndividualCategory[] = [
+    { type: 'MensScratch',   label: "Men's Scratch",   abbr: 'M-Scratch' },
+    { type: 'WomensScratch', label: "Women's Scratch", abbr: 'W-Scratch' },
+    { type: 'Handicap',      label: 'Handicap',        abbr: 'Hcp' },
+  ];
+
+  for (const cat of categories) {
+    const participants = await db
+      .request()
+      .input('seasonID', sql.Int, seasonID)
+      .input('type', sql.VarChar(30), cat.type)
+      .input('round', sql.Int, round)
+      .query<{ position: number; bowlerID: number; bowlerName: string }>(
+        `SELECT ipp.position, ipp.bowlerID, b.bowlerName
+         FROM individualPlayoffParticipants ipp
+         JOIN bowlers b ON b.bowlerID = ipp.bowlerID
+         WHERE ipp.seasonID = @seasonID AND ipp.championshipType = @type AND ipp.round = @round
+         ORDER BY ipp.position`,
+      );
+
+    if (participants.recordset.length === 0) continue;
+
+    const bowlers: ScoresheetBowler[] = participants.recordset.map((p, i) => {
+      const avg = rollingAvgMap.get(p.bowlerID) ?? null;
+      return {
+        name: p.bowlerName,
+        side: i < halfSize ? 'home' : 'away',
+        incomingAvg: avg,
+        handicap: calcHandicap(avg),
+        rosterSource: 'lineup' as const,
+      };
+    });
+
+    matches.push({
+      homeTeamName: cat.label,
+      awayTeamName: cat.label,
+      homeTeamAbbr: cat.abbr,
+      awayTeamAbbr: cat.abbr,
+      homeTeamID: 0,
+      awayTeamID: 0,
+      week: playoffWeek,
+      date: matchDate,
+      matchNumber: matches.length + 1,
+      bowlers,
+    });
+  }
+
+  return matches;
+}
+
+/**
  * Generate a printable PDF scoresheet from matchup data.
  * Each match = 2 pages: cover page + scoring grid.
  * Portrait letter size.

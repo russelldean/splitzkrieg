@@ -5,7 +5,7 @@ import {
   getAllBowlers,
   getRecentRoster,
   getCurrentLineupContext,
-  getSeasonTeams,
+  getTeamsBowlingForWeek,
   getSubmittedTeamIDs,
   getCurrentSubmittedBy,
 } from '@/lib/admin/lineups';
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // No teamID: return season info + teams with submission status
     if (!teamIDParam) {
-      const teams = await getSeasonTeams(context.seasonID);
+      const teams = await getTeamsBowlingForWeek(context.seasonID, context.nextWeek);
       const submitted = await getSubmittedTeamIDs(context.seasonID, context.nextWeek);
       const teamsWithStatus = teams.map((t) => ({
         ...t,

@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { kind: 'link', label: 'Dashboard', href: '/evillair', icon: DashboardIcon, adminOnly: false },
   { kind: 'link', label: 'Lineups', href: '/evillair/lineups', icon: LineupsIcon, adminOnly: true },
   { kind: 'link', label: 'Scoresheets', href: '/evillair/scoresheets', icon: ScoresheetsIcon, adminOnly: true },
+  { kind: 'link', label: 'Playoffs', href: '/evillair/playoffs', icon: PlayoffsIcon, adminOnly: true },
   { kind: 'divider' },
   { kind: 'link', label: 'Scores', href: '/evillair/scores', icon: ScoresIcon, adminOnly: true },
   { kind: 'link', label: 'Blog', href: '/evillair/blog', icon: BlogIcon, adminOnly: false },
@@ -187,6 +188,14 @@ function ScoresheetsIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function PlayoffsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path d="M3 3h4v3h2.5L11 4h6v3h-3.5l-1 2H17v3h-4.5L11 14h6v3h-6l-1.5-2H7v3H3v-3h2v-2H3V8h2V6H3V3z" />
     </svg>
   );
 }
