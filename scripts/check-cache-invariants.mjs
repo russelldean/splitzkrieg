@@ -29,6 +29,7 @@ const MUTABLE_TABLES = [
   'scores', 'matchResults', 'bowlerPatches', 'bowlerMilestones',
   'schedule', 'seasonDivisions', 'playoffResults', 'seasonChampions',
   'leagueSettings', 'teamRosters', 'teamNameHistory', 'bowlerNameHistory',
+  'playoffScores',
 ];
 
 // Regex to extract cachedQuery options block (the 4th argument)
