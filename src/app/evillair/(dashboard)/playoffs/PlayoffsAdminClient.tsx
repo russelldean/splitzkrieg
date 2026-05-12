@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Team {
   teamID: number;
@@ -379,8 +380,16 @@ export function PlayoffsAdminClient(props: Props) {
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="font-heading text-2xl text-navy mb-1">Playoffs</h1>
+      <div className="mb-4">
+        <Link
+          href="/evillair/playoffs/scoresheets"
+          className="font-body text-sm text-blue-600 underline hover:text-blue-800"
+        >
+          Enter playoff scoresheets
+        </Link>
+      </div>
       <p className="font-body text-sm text-navy/60 mb-8">
-        {props.seasonName} — Round 1 setup
+        {props.seasonName} - Round 1 setup
       </p>
 
       {/* Round 1 generate */}
