@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type {
   ChampionshipType,
   DivisionTopTeam,
@@ -8,15 +8,19 @@ import type {
 import type {
   PlayoffScoreInput,
   PlayoffScoreRow,
+  PlayoffLineupSeed,
+  TeamRosterBowler,
 } from '@/lib/admin/playoff-scores-admin';
 import { rollupTeamTotals } from '@/lib/admin/playoff-scores-utils';
 
-// Shape returned by getIndividualPlayoffParticipants (saved selections, not candidates)
+// Shape returned by getIndividualPlayoffParticipants (saved selections, not candidates),
+// enriched server-side with the bowler's rolling avg as of the playoff week.
 interface SavedParticipant {
   position: number;
   bowlerID: number;
   bowlerName: string;
   slug: string;
+  incomingAvg: number | null;
 }
 
 type ParticipantsByRoundType = {
@@ -30,6 +34,14 @@ interface Props {
   topTeams: DivisionTopTeam[];
   individualParticipants: ParticipantsByRoundType;
   existingScores: { 1: PlayoffScoreRow[]; 2: PlayoffScoreRow[] };
+  teamLineups: {
+    1: Record<number, PlayoffLineupSeed[]>;
+    2: Record<number, PlayoffLineupSeed[]>;
+  };
+  teamRosters: {
+    1: Record<number, TeamRosterBowler[]>;
+    2: Record<number, TeamRosterBowler[]>;
+  };
 }
 
 type SelectionMode =
@@ -45,6 +57,7 @@ interface EditableRow {
   game2: number | null;
   game3: number | null;
   incomingAvg: number | null;
+  turkeys: number | null;
 }
 
 export function PlayoffScoresheetClient({
@@ -52,7 +65,9 @@ export function PlayoffScoresheetClient({
   seasonName,
   topTeams,
   individualParticipants,
-  existingScores,
+  existingScores: initialExistingScores,
+  teamLineups,
+  teamRosters,
 }: Props) {
   const [round, setRound] = useState<1 | 2>(1);
   const [mode, setMode] = useState<SelectionMode | null>(null);
@@ -60,36 +75,60 @@ export function PlayoffScoresheetClient({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  // Local copy so we can refetch after save without depending on router.refresh
+  // making its way through to the server component's props on every dev render.
+  const [existingScores, setExistingScores] = useState(initialExistingScores);
+
+  const refetchRound = useCallback(async (r: 1 | 2) => {
+    const res = await fetch(`/api/evillair/playoffs/scoresheet?seasonID=${seasonID}&round=${r}`);
+    if (!res.ok) return;
+    const body = (await res.json()) as { rows: PlayoffScoreRow[] };
+    setExistingScores(prev => ({ ...prev, [r]: body.rows }));
+  }, [seasonID]);
 
   function loadMode(newMode: SelectionMode, newRound: 1 | 2) {
     setError(null);
     setSavedAt(null);
     const existing = existingScores[newRound];
 
+    // One DB row per (season, bowler, round). A bowler can be on a team AND in
+    // an individual bracket simultaneously, so we always look up prior data by
+    // bowlerID (not filtered by team/championship) and preserve both fields.
+    const priorByBowler = new Map(existing.map(r => [r.bowlerID, r]));
+
     if (newMode.kind === 'team') {
-      const teamRows = existing.filter(r => r.teamID === newMode.teamID);
+      // Bowlers on this team = anyone with teamID matching OR anyone in the
+      // submitted lineup. Union both to catch bowlers whose team association
+      // got nulled by a later individual-bracket save.
+      const lineupSeed = teamLineups[newRound][newMode.teamID] ?? [];
+      const bowlerIDs = new Set<number>([
+        ...existing.filter(r => r.teamID === newMode.teamID).map(r => r.bowlerID),
+        ...lineupSeed.map(s => s.bowlerID),
+      ]);
+      const seedByBowler = new Map(lineupSeed.map(s => [s.bowlerID, s]));
+
       setRows(
-        teamRows.map(r => ({
-          bowlerID: r.bowlerID,
-          bowlerName: `Bowler ${r.bowlerID}`,
-          teamID: r.teamID,
-          championshipType: r.championshipType,
-          game1: r.game1,
-          game2: r.game2,
-          game3: r.game3,
-          incomingAvg: r.incomingAvg,
-        })),
+        Array.from(bowlerIDs).map(bowlerID => {
+          const prior = priorByBowler.get(bowlerID);
+          const seed = seedByBowler.get(bowlerID);
+          return {
+            bowlerID,
+            bowlerName: seed?.bowlerName ?? `Bowler ${bowlerID}`,
+            teamID: newMode.teamID,
+            championshipType: prior?.championshipType ?? null,
+            game1: prior?.game1 ?? null,
+            game2: prior?.game2 ?? null,
+            game3: prior?.game3 ?? null,
+            incomingAvg: prior?.incomingAvg ?? seed?.incomingAvg ?? null,
+            turkeys: prior?.turkeys ?? null,
+          };
+        }),
       );
     } else {
       const participants = individualParticipants[newRound][newMode.championshipType];
-      const existingByBowler = new Map(
-        existing
-          .filter(r => r.championshipType === newMode.championshipType)
-          .map(r => [r.bowlerID, r]),
-      );
       setRows(
         participants.map(p => {
-          const prior = existingByBowler.get(p.bowlerID);
+          const prior = priorByBowler.get(p.bowlerID);
           return {
             bowlerID: p.bowlerID,
             bowlerName: p.bowlerName,
@@ -98,7 +137,8 @@ export function PlayoffScoresheetClient({
             game1: prior?.game1 ?? null,
             game2: prior?.game2 ?? null,
             game3: prior?.game3 ?? null,
-            incomingAvg: prior?.incomingAvg ?? null,
+            incomingAvg: prior?.incomingAvg ?? p.incomingAvg ?? null,
+            turkeys: prior?.turkeys ?? null,
           };
         }),
       );
@@ -115,7 +155,54 @@ export function PlayoffScoresheetClient({
     );
   }
 
+  function addBowlerToTeam(bowler: TeamRosterBowler) {
+    if (mode?.kind !== 'team') return;
+    if (rows.some(r => r.bowlerID === bowler.bowlerID)) return;
+    setRows(rs => [
+      ...rs,
+      {
+        bowlerID: bowler.bowlerID,
+        bowlerName: bowler.bowlerName,
+        teamID: mode.teamID,
+        championshipType: null,
+        game1: null,
+        game2: null,
+        game3: null,
+        incomingAvg: bowler.incomingAvg,
+        turkeys: null,
+      },
+    ]);
+  }
+
+  function removeRow(idx: number) {
+    setRows(rs => rs.filter((_, i) => i !== idx));
+  }
+
+  const availableRoster: TeamRosterBowler[] =
+    mode?.kind === 'team'
+      ? (teamRosters[round][mode.teamID] ?? []).filter(
+          r => !rows.some(row => row.bowlerID === r.bowlerID),
+        )
+      : [];
+
   const totals = useMemo(() => rollupTeamTotals(rows), [rows]);
+
+  // Matches DB computed column: FLOOR((225 - FLOOR(avg)) * 0.95). Null/zero avg -> 0 hcp.
+  const computeHcp = (avg: number | null): number => {
+    if (avg == null) return 0;
+    return Math.floor((225 - Math.floor(avg)) * 0.95);
+  };
+
+  const hcpTotals = useMemo(() => {
+    let g1 = 0, g2 = 0, g3 = 0;
+    for (const r of rows) {
+      const h = computeHcp(r.incomingAvg);
+      g1 += (r.game1 ?? 0) + h;
+      g2 += (r.game2 ?? 0) + h;
+      g3 += (r.game3 ?? 0) + h;
+    }
+    return { game1: g1, game2: g2, game3: g3, series: g1 + g2 + g3 };
+  }, [rows]);
 
   async function save() {
     setSaving(true);
@@ -129,6 +216,7 @@ export function PlayoffScoresheetClient({
         game2: r.game2,
         game3: r.game3,
         incomingAvg: r.incomingAvg,
+        turkeys: r.turkeys,
       }));
       const res = await fetch('/api/evillair/playoffs/save-scoresheet', {
         method: 'POST',
@@ -140,6 +228,7 @@ export function PlayoffScoresheetClient({
         throw new Error((body as { error?: string }).error ?? `Save failed (${res.status})`);
       }
       setSavedAt(new Date().toLocaleTimeString());
+      await refetchRound(round);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed');
     } finally {
@@ -222,26 +311,33 @@ export function PlayoffScoresheetClient({
                 <tr className="text-left text-navy/60 border-b border-navy/10">
                   <th className="pb-2 pr-4">Bowler</th>
                   <th className="pb-2 pr-4">Avg</th>
+                  <th className="pb-2 pr-4">Hcp</th>
                   <th className="pb-2 pr-4">Game 1</th>
                   <th className="pb-2 pr-4">Game 2</th>
                   <th className="pb-2 pr-4">Game 3</th>
-                  <th className="pb-2">Series</th>
+                  <th className="pb-2 pr-4">Scratch</th>
+                  <th className="pb-2">Hcp Series</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-4 text-navy/40 text-center">
-                      No participants saved for this selection yet.
+                    <td colSpan={8} className="py-4 text-navy/40 text-center">
+                      {mode.kind === 'team'
+                        ? 'No lineup submitted for this team’s playoff week yet. Have the captain submit a lineup or enter scores via /evillair/scoresheets.'
+                        : 'No participants saved for this selection yet.'}
                     </td>
                   </tr>
                 )}
                 {rows.map((r, i) => {
                   const series = (r.game1 ?? 0) + (r.game2 ?? 0) + (r.game3 ?? 0);
+                  const hcp = computeHcp(r.incomingAvg);
+                  const handSeries = series === 0 ? 0 : series + 3 * hcp;
                   return (
                     <tr key={r.bowlerID} className="border-t border-navy/10">
                       <td className="py-2 pr-4 text-navy">{r.bowlerName}</td>
                       <td className="py-2 pr-4 text-navy/60">{r.incomingAvg ?? '-'}</td>
+                      <td className="py-2 pr-4 text-navy/60">{r.incomingAvg != null ? hcp : '-'}</td>
                       {(['game1', 'game2', 'game3'] as const).map(g => (
                         <td key={g} className="py-2 pr-4">
                           <input
@@ -254,7 +350,8 @@ export function PlayoffScoresheetClient({
                           />
                         </td>
                       ))}
-                      <td className="py-2 font-semibold text-navy">{series || '-'}</td>
+                      <td className="py-2 pr-4 font-semibold text-navy">{series || '-'}</td>
+                      <td className="py-2 font-semibold text-navy">{handSeries || '-'}</td>
                     </tr>
                   );
                 })}
@@ -262,16 +359,51 @@ export function PlayoffScoresheetClient({
               {mode.kind === 'team' && rows.length > 0 && (
                 <tfoot>
                   <tr className="border-t-2 border-navy/20 font-semibold text-navy">
-                    <td className="pt-2 pr-4">Totals</td>
+                    <td className="pt-2 pr-4">Scratch</td>
+                    <td className="pt-2 pr-4" />
                     <td className="pt-2 pr-4" />
                     <td className="pt-2 pr-4">{totals.scratch.game1 || '-'}</td>
                     <td className="pt-2 pr-4">{totals.scratch.game2 || '-'}</td>
                     <td className="pt-2 pr-4">{totals.scratch.game3 || '-'}</td>
-                    <td className="pt-2">{totals.scratch.series || '-'}</td>
+                    <td className="pt-2 pr-4">{totals.scratch.series || '-'}</td>
+                    <td className="pt-2" />
+                  </tr>
+                  <tr className="font-semibold text-navy">
+                    <td className="pt-1 pr-4">+ Hcp</td>
+                    <td className="pt-1 pr-4" />
+                    <td className="pt-1 pr-4" />
+                    <td className="pt-1 pr-4">{hcpTotals.game1 || '-'}</td>
+                    <td className="pt-1 pr-4">{hcpTotals.game2 || '-'}</td>
+                    <td className="pt-1 pr-4">{hcpTotals.game3 || '-'}</td>
+                    <td className="pt-1 pr-4" />
+                    <td className="pt-1">{hcpTotals.series || '-'}</td>
                   </tr>
                 </tfoot>
               )}
             </table>
+
+            {mode.kind === 'team' && availableRoster.length > 0 && (
+              <div className="mt-4 flex items-center gap-2">
+                <label className="font-body text-xs text-navy/60">Add bowler:</label>
+                <select
+                  className="border border-navy/20 rounded px-2 py-1 font-body text-sm text-navy bg-white"
+                  value=""
+                  onChange={e => {
+                    const id = parseInt(e.target.value, 10);
+                    const b = availableRoster.find(x => x.bowlerID === id);
+                    if (b) addBowlerToTeam(b);
+                    e.target.value = '';
+                  }}
+                >
+                  <option value="">Select a bowler...</option>
+                  {availableRoster.map(b => (
+                    <option key={b.bowlerID} value={b.bowlerID}>
+                      {b.bowlerName} ({b.incomingAvg ?? '-'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="mt-4 flex items-center gap-3">
               <button

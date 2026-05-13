@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import {
   savePlayoffScores,
+  bumpPlayoffScoresVersion,
   type PlayoffScoreInput,
 } from '@/lib/admin/playoff-scores-admin';
 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     await savePlayoffScores(seasonID, round, rows);
+    bumpPlayoffScoresVersion(seasonID);
     return NextResponse.json({ ok: true, count: rows.length });
   } catch (err) {
     console.error('save-scoresheet error:', err);

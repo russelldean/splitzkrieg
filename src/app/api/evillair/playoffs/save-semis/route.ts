@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { saveSemifinalMatchups } from '@/lib/admin/playoff-admin';
+import { bumpPlayoffScoresVersion } from '@/lib/admin/playoff-scores-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     await saveSemifinalMatchups(seasonID, matchups);
+    bumpPlayoffScoresVersion(seasonID);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('save-semis error:', err);

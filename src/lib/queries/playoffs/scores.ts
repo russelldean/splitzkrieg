@@ -12,6 +12,7 @@ export interface PlayoffScoresheetEntry {
   game2: number | null;
   game3: number | null;
   incomingAvg: number | null;
+  turkeys: number | null;
   scratchSeries: number;
   handSeries: number;
   isAlternate: boolean;
@@ -20,7 +21,7 @@ export interface PlayoffScoresheetEntry {
 const TEAM_SCORESHEET_SQL = `
   SELECT ps.bowlerID, b.bowlerName, b.slug,
          ps.teamID, ps.championshipType,
-         ps.game1, ps.game2, ps.game3, ps.incomingAvg,
+         ps.game1, ps.game2, ps.game3, ps.incomingAvg, ps.turkeys,
          ps.scratchSeries, ps.handSeries,
          CAST(0 AS BIT) AS isAlternate
   FROM playoffScores ps
@@ -54,10 +55,15 @@ export async function getTeamPlayoffScoresheet(
   );
 }
 
+// Include rows where the bowler is a qualifier for this bracket (via ipp join)
+// even if their playoffScores row has championshipType = NULL (i.e., they
+// were only entered through a team scoresheet). The same 3 games count for
+// both contexts. Alternates = rows where the bowler isn't in the qualifier
+// list for this bracket but has championshipType matching (rare edge case).
 const INDIVIDUAL_BRACKET_SQL = `
   SELECT ps.bowlerID, b.bowlerName, b.slug,
          ps.teamID, ps.championshipType,
-         ps.game1, ps.game2, ps.game3, ps.incomingAvg,
+         ps.game1, ps.game2, ps.game3, ps.incomingAvg, ps.turkeys,
          ps.scratchSeries, ps.handSeries,
          CASE WHEN ipp.bowlerID IS NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS isAlternate
   FROM playoffScores ps
@@ -65,13 +71,13 @@ const INDIVIDUAL_BRACKET_SQL = `
   LEFT JOIN individualPlayoffParticipants ipp
     ON ipp.seasonID = ps.seasonID
        AND ipp.bowlerID = ps.bowlerID
-       AND ipp.championshipType = ps.championshipType
+       AND ipp.championshipType = @championshipType
        AND ipp.round = ps.round
   WHERE ps.seasonID = @seasonID
     AND ps.round = @round
-    AND ps.championshipType = @championshipType
+    AND (ps.championshipType = @championshipType OR ipp.bowlerID IS NOT NULL)
   ORDER BY
-    CASE WHEN ps.championshipType = 'Handicap' THEN ps.handSeries ELSE ps.scratchSeries END DESC
+    CASE WHEN @championshipType = 'Handicap' THEN ps.handSeries ELSE ps.scratchSeries END DESC
 `;
 
 /**

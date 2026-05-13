@@ -10,6 +10,7 @@ import {
   saveIndividualPlayoffParticipants,
   type ChampionshipType,
 } from '@/lib/admin/playoff-admin';
+import { bumpPlayoffScoresVersion } from '@/lib/admin/playoff-scores-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     await saveIndividualPlayoffParticipants(seasonID, championshipType, round, bowlerIDs);
+    bumpPlayoffScoresVersion(seasonID);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('save-individuals error:', err);

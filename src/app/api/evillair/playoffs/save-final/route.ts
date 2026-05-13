@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { saveTeamFinalMatchup } from '@/lib/admin/playoff-admin';
+import { bumpPlayoffScoresVersion } from '@/lib/admin/playoff-scores-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     await saveTeamFinalMatchup(seasonID, team1ID, team2ID);
+    bumpPlayoffScoresVersion(seasonID);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('save-final error:', err);
