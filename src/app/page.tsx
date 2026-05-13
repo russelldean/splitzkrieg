@@ -26,6 +26,7 @@ import { InstagramStrip } from '@/components/home/InstagramStrip';
 import { RecapSnapshotCard } from '@/components/home/RecapSnapshotCard';
 import { getInstagramFeed } from '@/lib/queries/instagram';
 import { getRandomFacts } from '@/lib/queries/facts';
+import { getPlayoffTeamMatches, getPlayoffBracketParticipants } from '@/lib/queries/playoffs/page';
 import { RandomFact } from '@/components/home/RandomFact';
 
 
@@ -63,6 +64,9 @@ export default async function Home() {
   let latestWeekDate: string | null = null;
   let playoffsNextWeek: { divisionName: string; topSeed: { teamName: string; teamSlug: string }; secondSeed: { teamName: string; teamSlug: string } }[] = [];
   let playoffsRoundOneDate: string | null = null;
+  let playoffFinal: { team1Name: string; team1Slug: string; team2Name: string; team2Slug: string } | null = null;
+  let playoffFinalDate: string | null = null;
+  let playoffBrackets: Array<{ title: string; bowlers: Array<{ bowlerName: string; slug: string }> }> = [];
 
   if (seasonSnapshot) {
     const season = await getSeasonBySlug(seasonSnapshot.slug);
@@ -121,6 +125,37 @@ export default async function Home() {
           }));
 
         playoffsRoundOneDate = '2026-05-11T00:00:00.000Z';
+
+        // If the Final matchup exists in playoffResults, expose it so the
+        // homepage "Up Next" card switches to the championship view.
+        const finalMatches = await getPlayoffTeamMatches(season.seasonID, 2);
+        if (finalMatches.length > 0) {
+          const f = finalMatches[0];
+          playoffFinal = {
+            team1Name: f.team1Name,
+            team1Slug: f.team1Slug,
+            team2Name: f.team2Name,
+            team2Slug: f.team2Slug,
+          };
+          playoffFinalDate = '2026-05-18T00:00:00.000Z';
+
+          // Also surface the round-2 bracket fields so the homepage card lists
+          // who's bowling in each individual championship.
+          const [mens, womens, hcp] = await Promise.all([
+            getPlayoffBracketParticipants(season.seasonID, 'MensScratch', 2),
+            getPlayoffBracketParticipants(season.seasonID, 'WomensScratch', 2),
+            getPlayoffBracketParticipants(season.seasonID, 'Handicap', 2),
+          ]);
+          const toBracket = (
+            title: string,
+            list: Array<{ bowlerID: number; bowlerName: string; slug: string }>,
+          ) => list.length > 0 ? { title, bowlers: list.map(b => ({ bowlerName: b.bowlerName, slug: b.slug })) } : null;
+          playoffBrackets = [
+            toBracket("Men's Scratch", mens),
+            toBracket("Women's Scratch", womens),
+            toBracket('Handicap', hcp),
+          ].filter((b): b is { title: string; bowlers: Array<{ bowlerName: string; slug: string }> } => b !== null);
+        }
       }
     }
   }
@@ -162,21 +197,28 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 space-y-5 sm:space-y-6">
 
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
-        {seasonSnapshot && (
+        {seasonSnapshot && (() => {
+          const playoffsActive = nextWeekNumber === 0 && playoffsNextWeek.length > 0;
+          const heroHref = playoffsActive
+            ? `/playoffs/${seasonSnapshot.slug}/1`
+            : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
+          const heroTitle = playoffsActive ? 'Playoff Results' : `Week ${seasonSnapshot.weekNumber} Results`;
+          const heroSub = playoffsActive ? 'Round 1 · Semifinals' : latestWeekDate;
+          return (
           <div className="relative rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
             <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
             <div className="absolute inset-0 bg-black/60" />
             {/* Mobile: entire bar is clickable, side by side */}
             <Link
-              href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
+              href={heroHref}
               className="relative flex flex-row md:hidden group hover:bg-white/5 transition-colors"
             >
               <div className="flex-1 flex items-center px-4 py-3">
                 <div>
                   <div className="font-heading text-lg text-white group-hover:text-red-300 transition-colors">
-                    Week {seasonSnapshot.weekNumber} Results
+                    {heroTitle}
                   </div>
-                  {latestWeekDate && <div className="font-body text-xs text-white/70 mt-0.5">{latestWeekDate}</div>}
+                  {heroSub && <div className="font-body text-xs text-white/70 mt-0.5">{heroSub}</div>}
                 </div>
               </div>
               <div className="w-px bg-white/15 my-3" />
@@ -187,14 +229,14 @@ export default async function Home() {
             {/* Desktop: side-by-side layout */}
             <div className="relative hidden md:flex flex-row">
               <Link
-                href={`/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`}
+                href={heroHref}
                 className="flex-1 flex items-center justify-between px-6 py-4 group hover:bg-white/5 transition-colors"
               >
                 <div>
                   <div className="font-heading text-2xl text-white group-hover:text-red-300 transition-colors">
-                    Week {seasonSnapshot.weekNumber} Results
+                    {heroTitle}
                   </div>
-                  {latestWeekDate && <div className="font-body text-sm text-white/70 mt-0.5">{latestWeekDate}</div>}
+                  {heroSub && <div className="font-body text-sm text-white/70 mt-0.5">{heroSub}</div>}
                 </div>
                 <svg className="w-5 h-5 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -206,7 +248,8 @@ export default async function Home() {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* === TWO COLUMNS: Standings | Matchups === */}
         <div className="md:grid md:grid-cols-5 md:gap-6 space-y-5 md:space-y-0">
@@ -232,7 +275,7 @@ export default async function Home() {
           )}
           {seasonSnapshot && nextWeekNumber === 0 && playoffsNextWeek.length > 0 && (
             <TrackVisibility section="playoffs-next-week" page="home" className="md:col-span-2">
-              <PlayoffsNextWeek matchups={playoffsNextWeek} matchDate={playoffsRoundOneDate} />
+              <PlayoffsNextWeek matchups={playoffsNextWeek} matchDate={playoffsRoundOneDate} seasonSlug={seasonSnapshot.slug} final={playoffFinal} finalDate={playoffFinalDate} brackets={playoffBrackets} />
             </TrackVisibility>
           )}
         </div>
