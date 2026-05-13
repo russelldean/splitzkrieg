@@ -200,10 +200,25 @@ export async function saveSemifinalMatchups(
 }
 
 /**
- * Update winnerTeamID on a single semifinal row. Used when admin records results.
+ * Update winnerTeamID on a single semifinal row. If this update completes both
+ * semifinals (i.e., both rows now have a winner), auto-spawns the Final row
+ * with the two winners as team1/team2 — they're the finalists by definition.
+ * Preserves an already-recorded Final winner if the matchup is unchanged.
  */
-export async function recordSemifinalWinner(playoffID: number, winnerTeamID: number): Promise<void> {
+export async function recordSemifinalWinner(playoffID: number, winnerTeamID: number): Promise<number | null> {
   const db = await getDb();
+
+  // Get the seasonID for this semi before updating, so we can check both semis.
+  const semiInfo = await db
+    .request()
+    .input('playoffID', sql.Int, playoffID)
+    .query<{ seasonID: number }>(`
+      SELECT seasonID FROM playoffResults
+      WHERE playoffID = @playoffID AND playoffType = 'Team' AND round = 'semifinal'
+    `);
+  if (semiInfo.recordset.length === 0) return null;
+  const seasonID = semiInfo.recordset[0].seasonID;
+
   await db
     .request()
     .input('playoffID', sql.Int, playoffID)
@@ -214,6 +229,22 @@ export async function recordSemifinalWinner(playoffID: number, winnerTeamID: num
       WHERE playoffID = @playoffID
         AND playoffType = 'Team' AND round = 'semifinal'
     `);
+
+  // Auto-spawn (or refresh) the Final row when both semis have winners.
+  const semis = await db
+    .request()
+    .input('seasonID', sql.Int, seasonID)
+    .query<{ winnerTeamID: number | null }>(`
+      SELECT winnerTeamID FROM playoffResults
+      WHERE seasonID = @seasonID AND playoffType = 'Team' AND round = 'semifinal'
+      ORDER BY playoffID
+    `);
+  const winners = semis.recordset.map(r => r.winnerTeamID);
+  if (winners.length === 2 && winners.every((w): w is number => w != null)) {
+    await saveTeamFinalMatchup(seasonID, winners[0], winners[1]);
+  }
+
+  return seasonID;
 }
 
 /**

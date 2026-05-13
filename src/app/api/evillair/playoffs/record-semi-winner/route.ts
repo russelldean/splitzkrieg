@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { recordSemifinalWinner } from '@/lib/admin/playoff-admin';
+import { bumpPlayoffScoresVersion } from '@/lib/admin/playoff-scores-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await recordSemifinalWinner(playoffID, winnerTeamID);
+    const seasonID = await recordSemifinalWinner(playoffID, winnerTeamID);
+    if (seasonID != null) bumpPlayoffScoresVersion(seasonID);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('record-semi-winner error:', err);
