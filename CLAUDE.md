@@ -25,6 +25,15 @@ The #1 source of bugs and wasted time. Full details in `memory/caching.md` and `
 - **NEVER** add `/* vN */` comments to queries used by `generateStaticParams`
 - **NEVER** mark a query `stable: true` if it reads from a mutable table
 - **NEVER** bust >20 query caches in one deploy (Azure SQL 30-connection limit)
+- **NEVER** ship unrelated code changes during publish-week — see Publish-Week Discipline below
+
+## Publish-Week Discipline
+
+When Russ runs publish-week (admin button at /evillair, or `scripts/fix-rebuild.mjs` plus a publish marker), only the publish marker should ride that deploy. **Do NOT bundle unrelated code changes** — bug fixes, query tweaks, feature work — into the same window. They wait until the next day.
+
+A publish-week deploy already busts ~80 bowler page caches + the current season's queries. Adding a SQL hash change in any cross-season query (e.g. `getSeasonStandings`, `getSeasonWeeklyScores`) will cascade to all 35 seasons rebuilding simultaneously, which will overrun Azure SQL's 30-connection cap and crash the build. Reference: 2026-05-05 incident — standings tiebreaker fix shipped mid-publish, two consecutive builds died at the connection limit, took ~90 minutes to recover.
+
+If Russ is mid-publish and wants to land an unrelated fix, push back: "Let's land that tomorrow once the publish has settled."
 
 ## Data Fix Cascade — FOLLOW EVERY TIME
 
