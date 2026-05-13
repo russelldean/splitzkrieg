@@ -27,6 +27,7 @@ import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { getPostForWeek } from '@/lib/blog';
+import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
 export const dynamicParams = false;
@@ -79,12 +80,14 @@ export default async function WeekPage({
   const season = await getSeasonBySlug(seasonSlug);
   if (!season || isNaN(weekNum)) notFound();
 
-  const [allScores, allSchedule, allMatchResults, allSeasons] = await Promise.all([
+  const [allScores, allSchedule, allMatchResults, allSeasons, playoffRounds] = await Promise.all([
     getSeasonWeeklyScores(season.seasonID),
     getSeasonSchedule(season.seasonID),
     getSeasonMatchResults(season.seasonID),
     getAllSeasonNavList(),
+    getSeasonsWithPlayoffData(),
   ]);
+  const hasPlayoffR1 = playoffRounds.some(p => p.seasonID === season.seasonID && p.round === 1);
 
   // Determine all weeks for this season
   const allWeeks = new Set<number>();
@@ -182,6 +185,16 @@ export default async function WeekPage({
                 className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
               >
                 Week {nextWeek}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ) : hasPlayoffR1 ? (
+              <Link
+                href={`/playoffs/${seasonSlug}/1`}
+                className="flex items-center gap-1 text-sm font-body text-navy/65 hover:text-red-600 transition-colors"
+              >
+                Semifinals
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
