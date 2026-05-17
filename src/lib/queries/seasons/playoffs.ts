@@ -267,3 +267,52 @@ export const getAllIndividualChampions = cache(async (): Promise<IndividualChamp
     return result.recordset;
   }, [], { sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL, stable: true });
 });
+
+const GET_TEAM_CHAMPIONSHIP_WINS_SQL = `
+  SELECT winnerTeamID AS teamID, COUNT(*) AS wins
+  FROM playoffResults
+  WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL
+  GROUP BY winnerTeamID
+`;
+
+export const getTeamChampionshipWins = cache(async (): Promise<Map<number, number>> => {
+  const rows = await cachedQuery('getTeamChampionshipWins', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{ teamID: number; wins: number }>(GET_TEAM_CHAMPIONSHIP_WINS_SQL);
+    return result.recordset;
+  }, [], { sql: GET_TEAM_CHAMPIONSHIP_WINS_SQL, dependsOn: ['playoffScores'] });
+  return new Map(rows.map(r => [r.teamID, r.wins]));
+});
+
+const GET_INDIVIDUAL_CHAMPIONSHIP_WINS_SQL = `
+  SELECT winnerBowlerID AS bowlerID, championshipType, COUNT(*) AS wins
+  FROM seasonChampions
+  WHERE winnerBowlerID IS NOT NULL
+  GROUP BY winnerBowlerID, championshipType
+`;
+
+export interface IndividualChampionshipWins {
+  MensScratch: number;
+  WomensScratch: number;
+  Handicap: number;
+}
+
+export const getIndividualChampionshipWins = cache(async (): Promise<Map<number, IndividualChampionshipWins>> => {
+  const rows = await cachedQuery('getIndividualChampionshipWins', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{
+      bowlerID: number;
+      championshipType: 'MensScratch' | 'WomensScratch' | 'Handicap';
+      wins: number;
+    }>(GET_INDIVIDUAL_CHAMPIONSHIP_WINS_SQL);
+    return result.recordset;
+  }, [], { sql: GET_INDIVIDUAL_CHAMPIONSHIP_WINS_SQL, dependsOn: ['playoffScores'] });
+
+  const out = new Map<number, IndividualChampionshipWins>();
+  for (const r of rows) {
+    const entry = out.get(r.bowlerID) ?? { MensScratch: 0, WomensScratch: 0, Handicap: 0 };
+    entry[r.championshipType] = r.wins;
+    out.set(r.bowlerID, entry);
+  }
+  return out;
+});

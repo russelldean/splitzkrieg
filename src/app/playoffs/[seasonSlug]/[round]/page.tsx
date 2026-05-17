@@ -15,6 +15,8 @@ import {
   getSeasonBySlug,
   getSeasonWeeklyScores,
   getSeasonSchedule,
+  getTeamChampionshipWins,
+  getIndividualChampionshipWins,
 } from '@/lib/queries';
 import {
   getPlayoffTeamMatches,
@@ -126,6 +128,20 @@ export default async function PlayoffRoundPage({
   schedule.forEach((s) => allWeeks.add(s.week));
   const maxRegularWeek = Math.max(0, ...Array.from(allWeeks));
 
+  // Finals only: how many championships each finalist / qualifier has won
+  // historically. Used to drop a trophy marker next to their name.
+  const [teamWins, indivWins] = round === 2
+    ? await Promise.all([getTeamChampionshipWins(), getIndividualChampionshipWins()])
+    : [new Map<number, number>(), new Map<number, { MensScratch: number; WomensScratch: number; Handicap: number }>()];
+  const winsByCategory = (cat: 'MensScratch' | 'WomensScratch' | 'Handicap') => {
+    const out = new Map<number, number>();
+    for (const [bowlerID, counts] of indivWins) {
+      const n = counts[cat];
+      if (n > 0) out.set(bowlerID, n);
+    }
+    return out;
+  };
+
   const prevHref =
     round === 1
       ? `/week/${seasonSlug}/${maxRegularWeek}`
@@ -178,7 +194,15 @@ export default async function PlayoffRoundPage({
             <p className="text-[11px] uppercase tracking-[0.2em] text-amber-700 font-heading mb-1">Championship Match</p>
             <h2 className="font-heading text-3xl md:text-4xl text-navy">The Final</h2>
           </div>
-          {teamMatches.map((m) => <TeamMatchCard key={m.playoffID} match={m} featured />)}
+          {teamMatches.map((m) => (
+            <TeamMatchCard
+              key={m.playoffID}
+              match={m}
+              featured
+              team1PriorWins={teamWins.get(m.team1ID) ?? 0}
+              team2PriorWins={teamWins.get(m.team2ID) ?? 0}
+            />
+          ))}
         </div>
       )}
 
@@ -199,6 +223,8 @@ export default async function PlayoffRoundPage({
           field={mScratchField}
           highlightTop={topHighlight}
           metric="scratch"
+          isFinal={round === 2}
+          priorWins={winsByCategory('MensScratch')}
         />
         <BracketSection
           title={BRACKET_LABEL.WomensScratch}
@@ -206,6 +232,8 @@ export default async function PlayoffRoundPage({
           field={wScratchField}
           highlightTop={topHighlight}
           metric="scratch"
+          isFinal={round === 2}
+          priorWins={winsByCategory('WomensScratch')}
         />
         <BracketSection
           title={BRACKET_LABEL.Handicap}
@@ -213,6 +241,8 @@ export default async function PlayoffRoundPage({
           field={handicapField}
           highlightTop={topHighlight}
           metric="handicap"
+          isFinal={round === 2}
+          priorWins={winsByCategory('Handicap')}
         />
       </div>
     </main>
@@ -258,7 +288,17 @@ function gameWinClass(myScore: number, oppScore: number): string {
   return 'text-navy/80';
 }
 
-function TeamMatchCard({ match, featured = false }: { match: PlayoffTeamMatch; featured?: boolean }) {
+function TeamMatchCard({
+  match,
+  featured = false,
+  team1PriorWins = 0,
+  team2PriorWins = 0,
+}: {
+  match: PlayoffTeamMatch;
+  featured?: boolean;
+  team1PriorWins?: number;
+  team2PriorWins?: number;
+}) {
   const hasScores = match.bowlers.length > 0;
 
   const t1Bowlers = match.bowlers.filter((b) => b.teamID === match.team1ID);
@@ -293,6 +333,7 @@ function TeamMatchCard({ match, featured = false }: { match: PlayoffTeamMatch; f
             <Link href={`/team/${match.team1Slug}`} className="hover:text-red-600 transition-colors">
               {match.team1Name}
             </Link>
+            {featured && <TrophyMarker count={team1PriorWins} />}
           </div>
           <div className="tabular-nums text-center shrink-0 px-3 text-sm">
             <span className={vsCls}>vs</span>
@@ -301,6 +342,7 @@ function TeamMatchCard({ match, featured = false }: { match: PlayoffTeamMatch; f
             <Link href={`/team/${match.team2Slug}`} className="hover:text-red-600 transition-colors">
               {match.team2Name}
             </Link>
+            {featured && <TrophyMarker count={team2PriorWins} />}
           </div>
         </div>
       )}
@@ -376,22 +418,47 @@ function TeamMatchCard({ match, featured = false }: { match: PlayoffTeamMatch; f
   );
 }
 
+function TrophyMarker({ count, tone = 'amber' }: { count: number; tone?: 'amber' | 'navy' }) {
+  if (count <= 0) return null;
+  const colorClass = tone === 'amber' ? 'text-amber-700' : 'text-navy/60';
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-[0.8em] ${colorClass} ml-1.5 align-baseline`}
+      title={count === 1 ? 'Prior champion' : `${count}-time champion`}
+      aria-label={count === 1 ? 'prior champion' : `${count}-time champion`}
+    >
+      <span aria-hidden="true">🏆</span>
+      {count > 1 && <span className="tabular-nums">×{count}</span>}
+    </span>
+  );
+}
+
 function BracketSection({
   title,
   results,
   field,
   highlightTop,
   metric,
+  isFinal,
+  priorWins,
 }: {
   title: string;
   results: PlayoffScoresheetEntry[];
   field: PlayoffBracketParticipant[];
   highlightTop: number;
   metric: 'scratch' | 'handicap';
+  isFinal?: boolean;
+  priorWins?: Map<number, number>;
 }) {
+  const cardBorder = isFinal ? 'border-amber-300/50' : 'border-navy/10';
+  const headingBg = isFinal ? 'bg-amber-50/70' : 'bg-navy/[0.02]';
+  const headingBorder = isFinal ? 'border-amber-200/60' : 'border-navy/10';
+  const nameHover = isFinal ? 'hover:text-amber-700' : 'hover:text-red-600';
+  const nameAccent = isFinal ? 'text-amber-900' : 'text-navy';
+
   if (results.length === 0 && field.length === 0) {
     return (
-      <div className="bg-white border border-navy/10 rounded-lg shadow-sm p-4">
+      <div className={`bg-white border ${cardBorder} rounded-lg shadow-sm p-4`}>
         <h3 className="font-heading text-base text-navy mb-2">{title}</h3>
         <p className="font-body text-xs text-navy/50 italic">Field not yet set.</p>
       </div>
@@ -405,15 +472,15 @@ function BracketSection({
   // Upcoming: qualifiers set but no scores yet. Show preview list.
   if (!hasAnyScores) {
     return (
-      <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
-        <h3 className="font-heading text-base text-navy px-4 py-2 border-b border-navy/10 bg-navy/[0.02]">{title}</h3>
-        <p className="px-4 pt-2 text-[11px] uppercase tracking-wide text-navy/40 font-body">Qualifiers · coming up</p>
-        <ol className="px-4 py-2 space-y-1 list-decimal list-inside font-body text-xs text-navy">
+      <div className={`bg-white border ${cardBorder} rounded-lg shadow-sm overflow-hidden`}>
+        <h3 className={`font-heading text-base text-navy px-4 py-2 border-b ${headingBorder} ${headingBg}`}>{title}</h3>
+        <ol className={`px-4 py-3 space-y-1.5 list-decimal list-inside font-body text-sm font-medium ${nameAccent}`}>
           {field.map(p => (
             <li key={p.bowlerID}>
-              <Link href={`/bowler/${p.slug}`} className="hover:text-red-600 transition-colors">
+              <Link href={`/bowler/${p.slug}`} className={`${nameHover} transition-colors`}>
                 {p.bowlerName}
               </Link>
+              {isFinal && <TrophyMarker count={priorWins?.get(p.bowlerID) ?? 0} />}
             </li>
           ))}
         </ol>
