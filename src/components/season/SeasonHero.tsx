@@ -8,13 +8,9 @@ function seededPair(m: PlayoffMatchup) {
   const lSeed = m.loserSeed ?? 99;
   // Higher seed (lower number) goes on top
   const winnerFirst = wSeed <= lSeed;
-  const top = winnerFirst
-    ? { name: m.winnerName, slug: m.winnerSlug, isWinner: true, seed: m.winnerSeed }
-    : { name: m.loserName, slug: m.loserSlug, isWinner: false, seed: m.loserSeed };
-  const bot = winnerFirst
-    ? { name: m.loserName, slug: m.loserSlug, isWinner: false, seed: m.loserSeed }
-    : { name: m.winnerName, slug: m.winnerSlug, isWinner: true, seed: m.winnerSeed };
-  return { top, bot };
+  const winnerSlot = { name: m.winnerName, slug: m.winnerSlug, isWinner: !m.pending, seed: m.winnerSeed };
+  const loserSlot = { name: m.loserName, slug: m.loserSlug, isWinner: false, seed: m.loserSeed };
+  return winnerFirst ? { top: winnerSlot, bot: loserSlot } : { top: loserSlot, bot: winnerSlot };
 }
 
 interface Props {
@@ -40,25 +36,28 @@ function BracketTeamSlot({
   seed,
   isWinner,
   isFinal,
+  pending,
 }: {
   name: string;
   slug: string;
   seed?: number | null;
   isWinner: boolean;
   isFinal?: boolean;
+  pending?: boolean;
 }) {
+  const slotClasses = pending
+    ? 'text-navy'
+    : isWinner
+      ? isFinal
+        ? 'bg-amber-50 font-bold text-navy'
+        : 'bg-green-50/60 font-semibold text-navy'
+      : 'text-navy/60';
   return (
     <div
-      className={`flex items-center gap-1.5 px-2.5 text-xs font-body truncate
-        ${isWinner
-          ? isFinal
-            ? 'bg-amber-50 font-bold text-navy'
-            : 'bg-green-50/60 font-semibold text-navy'
-          : 'text-navy/60'
-        }`}
+      className={`flex items-center gap-1.5 px-2.5 text-xs font-body truncate ${slotClasses}`}
       style={{ height: 28 }}
     >
-      {isFinal && isWinner && <span className="text-sm shrink-0">🏆</span>}
+      {isFinal && isWinner && !pending && <span className="text-sm shrink-0">🏆</span>}
       <TeamLink name={name} slug={slug} className="truncate hover:text-red-600 transition-colors" />
     </div>
   );
@@ -75,20 +74,31 @@ function BracketMatchup({
   team1,
   team2,
   isFinal,
+  pending,
 }: {
   team1: BracketTeam;
   team2: BracketTeam;
   isFinal?: boolean;
+  pending?: boolean;
 }) {
+  const borderClass = pending
+    ? 'border-navy/15'
+    : isFinal
+      ? 'border-amber-300/50'
+      : 'border-navy/15';
+  const dividerClass = pending
+    ? 'border-navy/10'
+    : isFinal
+      ? 'border-amber-200/60'
+      : 'border-navy/10';
   return (
     <div
-      className={`flex flex-col rounded overflow-hidden border
-        ${isFinal ? 'border-amber-300/50' : 'border-navy/15'}`}
+      className={`flex flex-col rounded overflow-hidden border ${borderClass}`}
       style={{ height: 56, minWidth: 150 }}
     >
-      <BracketTeamSlot {...team1} isFinal={isFinal} />
-      <div className={`border-t ${isFinal ? 'border-amber-200/60' : 'border-navy/10'}`} />
-      <BracketTeamSlot {...team2} isFinal={isFinal} />
+      <BracketTeamSlot {...team1} isFinal={isFinal} pending={pending} />
+      <div className={`border-t ${dividerClass}`} />
+      <BracketTeamSlot {...team2} isFinal={isFinal} pending={pending} />
     </div>
   );
 }
@@ -122,7 +132,7 @@ function PlayoffBracket({ bracket }: { bracket: SeasonPlayoffBracket }) {
       </svg>
 
       {/* Championship — center */}
-      <BracketMatchup team1={fin.top} team2={fin.bot} isFinal />
+      <BracketMatchup team1={fin.top} team2={fin.bot} isFinal pending={bracket.final.pending} />
 
       {/* Right connector ┌── (mirrored) */}
       <svg width={CW} height={MATCHUP_H} className="shrink-0" aria-hidden="true">

@@ -11,6 +11,8 @@ export interface PlayoffMatchup {
   loserName: string;
   loserSlug: string;
   loserSeed: number | null;
+  /** True when both teams are set but the winner hasn't been recorded yet (in-progress final). */
+  pending?: boolean;
 }
 
 export interface SeasonPlayoffBracket {
@@ -41,74 +43,87 @@ const PLAYOFF_SEEDS_CTE = `
 const PLAYOFF_FINAL_SQL = `
   ${PLAYOFF_SEEDS_CTE}
   SELECT
-    COALESCE(hc.teamName, tc.teamName) AS champName, tc.slug AS champSlug, sc.seed AS champSeed,
-    COALESCE(hr.teamName, tr.teamName) AS ruName, tr.slug AS ruSlug, sr.seed AS ruSeed
+    pr.winnerTeamID,
+    COALESCE(h1.teamName, t1.teamName) AS team1Name, t1.slug AS team1Slug, s1.seed AS team1Seed, pr.team1ID,
+    COALESCE(h2.teamName, t2.teamName) AS team2Name, t2.slug AS team2Slug, s2.seed AS team2Seed, pr.team2ID
   FROM playoffResults pr
-  JOIN teams tc ON pr.team1ID = tc.teamID
-  JOIN teams tr ON pr.team2ID = tr.teamID
-  LEFT JOIN teamNameHistory hc ON hc.seasonID = pr.seasonID AND hc.teamID = pr.team1ID
-  LEFT JOIN teamNameHistory hr ON hr.seasonID = pr.seasonID AND hr.teamID = pr.team2ID
-  LEFT JOIN seeds sc ON sc.teamID = pr.team1ID
-  LEFT JOIN seeds sr ON sr.teamID = pr.team2ID
+  JOIN teams t1 ON pr.team1ID = t1.teamID
+  JOIN teams t2 ON pr.team2ID = t2.teamID
+  LEFT JOIN teamNameHistory h1 ON h1.seasonID = pr.seasonID AND h1.teamID = pr.team1ID
+  LEFT JOIN teamNameHistory h2 ON h2.seasonID = pr.seasonID AND h2.teamID = pr.team2ID
+  LEFT JOIN seeds s1 ON s1.teamID = pr.team1ID
+  LEFT JOIN seeds s2 ON s2.teamID = pr.team2ID
   WHERE pr.seasonID = @seasonID AND pr.playoffType = 'Team' AND pr.round = 'final'
 `;
 
 const PLAYOFF_SEMI_SQL = `
   ${PLAYOFF_SEEDS_CTE}
   SELECT
-    COALESCE(hl.teamName, tl.teamName) AS loserName, tl.slug AS loserSlug, sl.seed AS loserSeed,
-    COALESCE(hw.teamName, tw.teamName) AS winnerName, tw.slug AS winnerSlug, sw.seed AS winnerSeed
+    pr.winnerTeamID,
+    COALESCE(h1.teamName, t1.teamName) AS team1Name, t1.slug AS team1Slug, s1.seed AS team1Seed, pr.team1ID,
+    COALESCE(h2.teamName, t2.teamName) AS team2Name, t2.slug AS team2Slug, s2.seed AS team2Seed, pr.team2ID
   FROM playoffResults pr
-  JOIN teams tl ON pr.team1ID = tl.teamID
-  LEFT JOIN teams tw ON pr.winnerTeamID = tw.teamID
-  LEFT JOIN teamNameHistory hl ON hl.seasonID = pr.seasonID AND hl.teamID = pr.team1ID
-  LEFT JOIN teamNameHistory hw ON hw.seasonID = pr.seasonID AND hw.teamID = pr.winnerTeamID
-  LEFT JOIN seeds sl ON sl.teamID = pr.team1ID
-  LEFT JOIN seeds sw ON sw.teamID = pr.winnerTeamID
+  JOIN teams t1 ON pr.team1ID = t1.teamID
+  JOIN teams t2 ON pr.team2ID = t2.teamID
+  LEFT JOIN teamNameHistory h1 ON h1.seasonID = pr.seasonID AND h1.teamID = pr.team1ID
+  LEFT JOIN teamNameHistory h2 ON h2.seasonID = pr.seasonID AND h2.teamID = pr.team2ID
+  LEFT JOIN seeds s1 ON s1.teamID = pr.team1ID
+  LEFT JOIN seeds s2 ON s2.teamID = pr.team2ID
   WHERE pr.seasonID = @seasonID AND pr.playoffType = 'Team' AND pr.round = 'semifinal'
   ORDER BY pr.playoffID
 `;
 
-const PLAYOFF_ALL_SQL = PLAYOFF_FINAL_SQL + PLAYOFF_SEMI_SQL + '/* v3: fix cross-division semi matchups */';
+const PLAYOFF_ALL_SQL = PLAYOFF_FINAL_SQL + PLAYOFF_SEMI_SQL + '/* v4: symmetric team1/team2, winner via winnerTeamID, pending final support */';
 
 export const getSeasonPlayoffBracket = cache(async (seasonID: number): Promise<SeasonPlayoffBracket | null> => {
   return cachedQuery(`getSeasonPlayoffBracket-${seasonID}`, async () => {
 
     const db = await getDb();
 
+    interface MatchupRow {
+      winnerTeamID: number | null;
+      team1ID: number; team1Name: string; team1Slug: string; team1Seed: number | null;
+      team2ID: number; team2Name: string; team2Slug: string; team2Seed: number | null;
+    }
+
     const finalResult = await db.request()
       .input('seasonID', seasonID)
-      .query<{
-        champName: string; champSlug: string; champSeed: number | null;
-        ruName: string; ruSlug: string; ruSeed: number | null;
-      }>(PLAYOFF_FINAL_SQL);
+      .query<MatchupRow>(PLAYOFF_FINAL_SQL);
     if (finalResult.recordset.length === 0) return null;
-    const f = finalResult.recordset[0];
 
     const semiResult = await db.request()
       .input('seasonID', seasonID)
-      .query<{
-        loserName: string; loserSlug: string; loserSeed: number | null;
-        winnerName: string | null; winnerSlug: string | null; winnerSeed: number | null;
-      }>(PLAYOFF_SEMI_SQL);
+      .query<MatchupRow>(PLAYOFF_SEMI_SQL);
 
-    const semis = semiResult.recordset;
-
-    function buildSemi(semi: typeof semis[0] | undefined): PlayoffMatchup | null {
-      if (!semi || !semi.winnerName) return null;
+    function buildMatchup(row: MatchupRow, allowPending: boolean): PlayoffMatchup | null {
+      const t1 = { name: row.team1Name, slug: row.team1Slug, seed: row.team1Seed, id: row.team1ID };
+      const t2 = { name: row.team2Name, slug: row.team2Slug, seed: row.team2Seed, id: row.team2ID };
+      const winnerIsT1 = row.winnerTeamID === t1.id;
+      const winnerIsT2 = row.winnerTeamID === t2.id;
+      if (!winnerIsT1 && !winnerIsT2) {
+        if (!allowPending) return null;
+        return {
+          winnerName: t1.name, winnerSlug: t1.slug, winnerSeed: t1.seed,
+          loserName: t2.name, loserSlug: t2.slug, loserSeed: t2.seed,
+          pending: true,
+        };
+      }
+      const winner = winnerIsT1 ? t1 : t2;
+      const loser = winnerIsT1 ? t2 : t1;
       return {
-        winnerName: semi.winnerName, winnerSlug: semi.winnerSlug!, winnerSeed: semi.winnerSeed,
-        loserName: semi.loserName, loserSlug: semi.loserSlug, loserSeed: semi.loserSeed,
+        winnerName: winner.name, winnerSlug: winner.slug, winnerSeed: winner.seed,
+        loserName: loser.name, loserSlug: loser.slug, loserSeed: loser.seed,
       };
     }
 
+    const semis = semiResult.recordset;
+    const finalMatchup = buildMatchup(finalResult.recordset[0], true);
+    if (!finalMatchup) return null;
+
     return {
-      final: {
-        winnerName: f.champName, winnerSlug: f.champSlug, winnerSeed: f.champSeed,
-        loserName: f.ruName, loserSlug: f.ruSlug, loserSeed: f.ruSeed,
-      },
-      semi1: buildSemi(semis[0]),
-      semi2: buildSemi(semis[1]),
+      final: finalMatchup,
+      semi1: semis[0] ? buildMatchup(semis[0], false) : null,
+      semi2: semis[1] ? buildMatchup(semis[1], false) : null,
     };
   }, null, { sql: PLAYOFF_ALL_SQL, seasonID });
 });
