@@ -1,7 +1,7 @@
 /**
  * Public playoff round page. Two rounds per season:
- *   /playoffs/[seasonSlug]/1 — semifinals + individual round 1 brackets
- *   /playoffs/[seasonSlug]/2 — finals + individual round 2 brackets
+ *   /playoffs/[seasonSlug]/1: semifinals + individual round 1 brackets
+ *   /playoffs/[seasonSlug]/2: finals + individual round 2 brackets
  *
  * Renders team match cards (semis/final) plus the three individual
  * leaderboards (Men's Scratch, Women's Scratch, Handicap) with the top
@@ -407,7 +407,7 @@ function BracketSection({
     return (
       <div className="bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden">
         <h3 className="font-heading text-base text-navy px-4 py-2 border-b border-navy/10 bg-navy/[0.02]">{title}</h3>
-        <p className="px-4 pt-2 text-[11px] uppercase tracking-wide text-navy/40 font-body">Qualifiers — coming up</p>
+        <p className="px-4 pt-2 text-[11px] uppercase tracking-wide text-navy/40 font-body">Qualifiers · coming up</p>
         <ol className="px-4 py-2 space-y-1 list-decimal list-inside font-body text-xs text-navy">
           {field.map(p => (
             <li key={p.bowlerID}>
@@ -443,7 +443,7 @@ function BracketSection({
       isAlternate: false,
       qualifierIndex: i,
     }))
-    // Hide qualifiers who didn't bowl — only show people with at least one game.
+    // Hide qualifiers who didn't bowl. Only show people with at least one game.
     .filter(row => row.result !== null
       && (row.result.game1 != null || row.result.game2 != null || row.result.game3 != null));
   for (const r of results) {

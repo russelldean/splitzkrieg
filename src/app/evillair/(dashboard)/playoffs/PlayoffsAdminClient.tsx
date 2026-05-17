@@ -35,7 +35,7 @@ interface FinalRow {
 interface RoundTwoCategory {
   type: 'MensScratch' | 'WomensScratch' | 'Handicap';
   saved: SavedParticipant[];
-  pool: SavedParticipant[]; // 8 round 1 participants — the only swap pool for round 2
+  pool: SavedParticipant[]; // 8 round 1 participants, the only swap pool for round 2
   advancing: Array<{ bowlerID: number; bowlerName: string; series: number }>;
 }
 
@@ -130,7 +130,7 @@ export function PlayoffsAdminClient(props: Props) {
       : [0, 0];
   const [finalMatchup, setFinalMatchup] = useState<[number, number]>(initialFinal);
 
-  // Round 2 individual picks per category — initial:
+  // Round 2 individual picks per category. Initial:
   //   1. Saved round 2 selections if present
   //   2. Else top 4 advancing (if scores in)
   //   3. Else empty 4 slots
@@ -147,7 +147,7 @@ export function PlayoffsAdminClient(props: Props) {
     setStatuses(s => ({ ...s, [key]: status }));
 
   const teamName = useCallback(
-    (id: number) => props.allTeams.find(t => t.teamID === id)?.teamName ?? '—',
+    (id: number) => props.allTeams.find(t => t.teamID === id)?.teamName ?? '-',
     [props.allTeams],
   );
 
@@ -644,7 +644,7 @@ export function PlayoffsAdminClient(props: Props) {
       </section>
 
       <Round2CategorySection
-        title="Men's Scratch — Top 4"
+        title="Men's Scratch · Top 4"
         cat={props.round2.mScratch}
         picks={mR2}
         onChange={setMR2}
@@ -656,7 +656,7 @@ export function PlayoffsAdminClient(props: Props) {
       />
 
       <Round2CategorySection
-        title="Women's Scratch — Top 4"
+        title="Women's Scratch · Top 4"
         cat={props.round2.wScratch}
         picks={wR2}
         onChange={setWR2}
@@ -668,7 +668,7 @@ export function PlayoffsAdminClient(props: Props) {
       />
 
       <Round2CategorySection
-        title="Handicap — Top 4"
+        title="Handicap · Top 4"
         cat={props.round2.handicap}
         picks={hR2}
         onChange={setHR2}
@@ -751,7 +751,7 @@ function TeamSelect({
       onChange={e => onChange(Number(e.target.value))}
       className="flex-1 font-body text-sm border border-navy/20 rounded px-3 py-2 bg-white text-navy"
     >
-      <option value={0}>— Select team —</option>
+      <option value={0}>Select team</option>
       {Array.from(groups.entries()).map(([div, ts]) => (
         <optgroup key={div} label={div}>
           {ts.map(t => (
@@ -885,7 +885,7 @@ function Round2CategorySection({
                         isDup ? 'border-red ring-1 ring-red/40' : 'border-navy/20'
                       }`}
                     >
-                      <option value={0}>— Select bowler —</option>
+                      <option value={0}>Select bowler</option>
                       {cat.pool.map(p => {
                         const adv = advancingMap.get(p.bowlerID);
                         return (
@@ -897,7 +897,7 @@ function Round2CategorySection({
                       })}
                       {/* Allow keeping a saved pick that isn't in the round 1 pool */}
                       {id && !poolMap.has(id) && (
-                        <option value={id}>(saved bowler #{id} — outside round 1 pool)</option>
+                        <option value={id}>(saved bowler #{id} · outside round 1 pool)</option>
                       )}
                     </select>
                     <span className="font-body text-xs text-navy/40 w-20 text-right">
@@ -910,7 +910,7 @@ function Round2CategorySection({
 
             {hasDup && (
               <p className="font-body text-xs text-red mt-3">
-                A bowler appears in more than one slot — fix duplicates before saving.
+                A bowler appears in more than one slot. Fix duplicates before saving.
               </p>
             )}
 
@@ -921,7 +921,7 @@ function Round2CategorySection({
                 disabled={disabled || hasDup || hasEmpty}
                 className="px-4 py-2 bg-navy text-cream font-body text-sm rounded hover:bg-navy/90 disabled:opacity-50 transition-colors"
               >
-                {busy ? 'Saving...' : `Save ${title.split(' —')[0]}`}
+                {busy ? 'Saving...' : `Save ${title.split(' · ')[0]}`}
               </button>
             </div>
           </>
@@ -995,7 +995,7 @@ function CategorySection({
                     isDup ? 'border-red ring-1 ring-red/40' : 'border-navy/20'
                   }`}
                 >
-                  <option value={0}>— Select bowler —</option>
+                  <option value={0}>Select bowler</option>
                   {candidates.map(c => (
                     <option key={c.bowlerID} value={c.bowlerID}>
                       {c.bowlerName} ({valueLabel} {c.value})
@@ -1003,7 +1003,7 @@ function CategorySection({
                   ))}
                   {/* Allow keeping a pick that isn't in current top-N list */}
                   {id && !candidateMap.has(id) && (
-                    <option value={id}>(saved bowler #{id} — not in current top {candidates.length})</option>
+                    <option value={id}>(saved bowler #{id} · not in current top {candidates.length})</option>
                   )}
                 </select>
                 <span className="font-body text-xs text-navy/40 w-20 text-right">
@@ -1016,7 +1016,7 @@ function CategorySection({
 
         {hasDup && (
           <p className="font-body text-xs text-red mt-3">
-            A bowler appears in more than one slot — fix duplicates before saving.
+            A bowler appears in more than one slot. Fix duplicates before saving.
           </p>
         )}
 
