@@ -304,7 +304,7 @@ export default function AdminDashboardPage() {
         <div className="px-5 py-4 border-b border-navy/10 flex items-center justify-between">
           <div>
             <h2 className="font-heading text-sm text-navy">Pre-Bowling Night</h2>
-            <p className="font-body text-xs text-navy/40 mt-0.5">Week {nextWeek} prep</p>
+            <p className="font-body text-xs text-navy/40 mt-0.5">Week {data?.lineupStatus?.week ?? nextWeek} prep</p>
           </div>
           {data?.lineupStatus && (
             <span className="font-body text-xs text-navy/50">

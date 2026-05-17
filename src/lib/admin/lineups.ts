@@ -835,6 +835,45 @@ export async function getCurrentLineupContext(): Promise<{
     // leagueSettings might not exist yet
   }
 
+  // Playoff override: once the regular season is over and playoff rows exist in
+  // playoffResults, drive the lineup form from there instead of publishedWeek.
+  // Otherwise the finalists can't submit lineups until somebody clicks the
+  // weekly publish button, but there's no public weekly content to publish
+  // between semis and final, so that gate doesn't belong here.
+  const maxWeekResult = await db
+    .request()
+    .input('seasonID', season.seasonID)
+    .query<{ maxWeek: number | null }>(
+      `SELECT MAX(week) AS maxWeek FROM schedule WHERE seasonID = @seasonID`,
+    );
+  const maxRegularWeek = maxWeekResult.recordset[0]?.maxWeek ?? 0;
+
+  if (maxRegularWeek > 0) {
+    const playoffRows = await db
+      .request()
+      .input('seasonID', season.seasonID)
+      .query<{ round: string; winnerTeamID: number | null }>(
+        `SELECT round, winnerTeamID FROM playoffResults
+         WHERE seasonID = @seasonID AND playoffType = 'Team'`,
+      );
+    const semis = playoffRows.recordset.filter(r => r.round === 'semifinal');
+    const final = playoffRows.recordset.find(r => r.round === 'final');
+
+    let playoffNextWeek: number | null = null;
+    if (final && final.winnerTeamID == null) {
+      playoffNextWeek = maxRegularWeek + 2;
+    } else if (semis.length > 0 && semis.some(s => s.winnerTeamID == null)) {
+      playoffNextWeek = maxRegularWeek + 1;
+    }
+    if (playoffNextWeek != null) {
+      return {
+        seasonID: season.seasonID,
+        seasonName: season.displayName,
+        nextWeek: playoffNextWeek,
+      };
+    }
+  }
+
   return {
     seasonID: season.seasonID,
     seasonName: season.displayName,

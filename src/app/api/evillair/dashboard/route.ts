@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sql from 'mssql';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
+import { getCurrentLineupContext, getTeamsBowlingForWeek } from '@/lib/admin/lineups';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,21 +51,13 @@ export async function GET(request: NextRequest) {
       // leagueSettings might not exist
     }
 
-    // Lineup status for next week
+    // Lineup status for next week. Uses the shared lineup context so playoff
+    // weeks pick the right round (and team list) automatically.
     let lineupStatus = null;
-    if (season) {
-      const nextWeek = publishedWeek + 1;
-
-      const teamsResult = await db
-        .request()
-        .input('seasonID', sql.Int, season.seasonID)
-        .query<{ teamID: number; teamName: string }>(
-          `SELECT DISTINCT t.teamID, t.teamName
-           FROM schedule sch
-           JOIN teams t ON t.teamID = sch.team1ID OR t.teamID = sch.team2ID
-           WHERE sch.seasonID = @seasonID AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
-           ORDER BY t.teamName`,
-        );
+    const lineupContext = await getCurrentLineupContext();
+    const nextWeek = lineupContext?.nextWeek ?? publishedWeek + 1;
+    if (season && lineupContext) {
+      const teams = await getTeamsBowlingForWeek(season.seasonID, nextWeek);
 
       const lineupsResult = await db
         .request()
@@ -80,8 +73,8 @@ export async function GET(request: NextRequest) {
       lineupStatus = {
         week: nextWeek,
         submitted: submittedTeamIDs.size,
-        total: teamsResult.recordset.length,
-        teams: teamsResult.recordset.map((t) => ({
+        total: teams.length,
+        teams: teams.map((t) => ({
           teamID: t.teamID,
           teamName: t.teamName,
           submitted: submittedTeamIDs.has(t.teamID),
@@ -93,7 +86,6 @@ export async function GET(request: NextRequest) {
     let preNightDone: string[] = [];
     let postNightDone: string[] = [];
     if (season) {
-      const nextWeek = publishedWeek + 1;
       try {
         const result = await db
           .request()
