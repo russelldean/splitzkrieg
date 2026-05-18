@@ -328,23 +328,57 @@ function TeamMatchCard({
   return (
     <div className={outerCls}>
       {!hasScores && (
-        <div className={`flex items-center justify-between font-body ${headerCls}`}>
-          <div className={`flex-1 min-w-0 truncate text-navy/70 ${teamNameCls}`}>
-            <Link href={`/team/${match.team1Slug}`} className="hover:text-red-600 transition-colors">
-              {match.team1Name}
-            </Link>
-            {featured && <TrophyMarker count={team1PriorWins} />}
+        <>
+          <div className={`flex items-center justify-between font-body ${headerCls}`}>
+            <div className={`flex-1 min-w-0 truncate text-navy/70 ${teamNameCls}`}>
+              <Link href={`/team/${match.team1Slug}`} className="hover:text-red-600 transition-colors">
+                {match.team1Name}
+              </Link>
+              {featured && <TrophyMarker count={team1PriorWins} />}
+            </div>
+            <div className="tabular-nums text-center shrink-0 px-3 text-sm">
+              <span className={vsCls}>vs</span>
+            </div>
+            <div className={`flex-1 min-w-0 truncate text-right text-navy/70 ${teamNameCls}`}>
+              <Link href={`/team/${match.team2Slug}`} className="hover:text-red-600 transition-colors">
+                {match.team2Name}
+              </Link>
+              {featured && <TrophyMarker count={team2PriorWins} />}
+            </div>
           </div>
-          <div className="tabular-nums text-center shrink-0 px-3 text-sm">
-            <span className={vsCls}>vs</span>
+          <div className="bg-navy/[0.03] px-3 py-2">
+            <table className="w-full text-xs font-body">
+              <thead>
+                <tr className="text-navy/65">
+                  <th className="text-left font-normal py-0.5 w-[35%]"></th>
+                  <th className="text-right font-normal py-0.5 pl-3 pr-2 border-l border-navy/10">G1</th>
+                  <th className="text-right font-normal py-0.5 pl-3 pr-2 border-l border-navy/10">G2</th>
+                  <th className="text-right font-normal py-0.5 pl-3 pr-2 border-l border-navy/10">G3</th>
+                  <th className="text-right font-normal py-0.5 pl-3 pr-2">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="text-navy/45">
+                  <td className="py-0.5 truncate">{match.team1Name}</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2">-</td>
+                </tr>
+                <tr className="text-navy/45">
+                  <td className="py-0.5 truncate">{match.team2Name}</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
+                  <td className="text-right tabular-nums py-0.5 pl-3 pr-2">-</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div className={`flex-1 min-w-0 truncate text-right text-navy/70 ${teamNameCls}`}>
-            <Link href={`/team/${match.team2Slug}`} className="hover:text-red-600 transition-colors">
-              {match.team2Name}
-            </Link>
-            {featured && <TrophyMarker count={team2PriorWins} />}
+          <div className="px-3 py-2 border-t border-navy/5 text-center text-[11px] font-body text-navy/50 italic">
+            Bowling tonight at 7:15 PM &middot; scores update after each game
           </div>
-        </div>
+        </>
       )}
 
       {hasScores && (
