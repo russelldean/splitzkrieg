@@ -157,6 +157,12 @@ export default async function Home() {
           ].filter((b): b is { title: string; bowlers: Array<{ bowlerName: string; slug: string }> } => b !== null);
         }
       }
+
+      // Surface playoff nights in the homepage countdown after the regular
+      // season ends so the flip clock activates on semis/finals weeks.
+      if (playoffsRoundOneDate) countdownSchedule.push({ week: 10, matchDate: playoffsRoundOneDate });
+      if (playoffFinalDate) countdownSchedule.push({ week: 11, matchDate: playoffFinalDate });
+      countdownSchedule.sort((a, b) => a.matchDate.localeCompare(b.matchDate));
     }
   }
 
