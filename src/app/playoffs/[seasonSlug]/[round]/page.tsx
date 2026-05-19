@@ -585,24 +585,51 @@ function BracketSection({
           {rows.map((row, idx) => {
             const hasResult = row.result !== null;
             const highlight = hasResult && idx < highlightTop && !row.isAlternate;
+            const isChampion = highlight && isFinal && idx === 0;
             const series = seriesOf(row.result);
+            const rowCls = isChampion
+              ? 'bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100'
+              : highlight
+                ? 'bg-amber-50'
+                : '';
             return (
               <tr
                 key={row.bowlerID}
-                className={`border-t border-navy/5 ${highlight ? 'bg-amber-50' : ''}`}
+                className={`border-t border-navy/5 ${rowCls}`}
               >
-                <td className="text-left py-1 px-3 text-navy">
-                  <Link href={`/bowler/${row.slug}`} className="hover:text-red-600 transition-colors">
+                <td className={`text-left py-1 px-3 ${isChampion ? 'py-2' : ''}`}>
+                  {isChampion && (
+                    <span className="mr-1.5 align-[-1px]" aria-hidden="true">👑</span>
+                  )}
+                  <Link
+                    href={`/bowler/${row.slug}`}
+                    className={
+                      isChampion
+                        ? 'font-heading text-base text-amber-900 hover:text-red-600 transition-colors'
+                        : 'text-navy hover:text-red-600 transition-colors'
+                    }
+                  >
                     {row.bowlerName}
                   </Link>
+                  {isChampion && (
+                    <span className="ml-2 text-[10px] uppercase tracking-[0.15em] font-heading text-amber-700/80 align-[2px]">
+                      Champion
+                    </span>
+                  )}
                   {row.isAlternate && (
                     <span className="ml-1 text-[10px] text-navy/40 italic">(alt)</span>
                   )}
                 </td>
-                <td className="text-center py-1 px-1 text-navy/80">{row.result?.game1 ?? '-'}</td>
-                <td className="text-center py-1 px-1 text-navy/80">{row.result?.game2 ?? '-'}</td>
-                <td className="text-center py-1 px-1 text-navy/80">{row.result?.game3 ?? '-'}</td>
-                <td className={`text-center py-1 px-1 ${highlight ? 'font-semibold text-amber-900' : 'font-medium text-navy'}`}>
+                <td className={`text-center py-1 px-1 ${isChampion ? 'text-amber-900 font-semibold' : 'text-navy/80'}`}>{row.result?.game1 ?? '-'}</td>
+                <td className={`text-center py-1 px-1 ${isChampion ? 'text-amber-900 font-semibold' : 'text-navy/80'}`}>{row.result?.game2 ?? '-'}</td>
+                <td className={`text-center py-1 px-1 ${isChampion ? 'text-amber-900 font-semibold' : 'text-navy/80'}`}>{row.result?.game3 ?? '-'}</td>
+                <td className={`text-center py-1 px-1 ${
+                  isChampion
+                    ? 'font-bold text-base text-amber-900'
+                    : highlight
+                      ? 'font-semibold text-amber-900'
+                      : 'font-medium text-navy'
+                }`}>
                   {series > 0 ? series : '-'}
                 </td>
               </tr>
