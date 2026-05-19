@@ -12,13 +12,16 @@ import {
   getLeagueMilestones,
   milestoneTickerItems,
   getNewBlogBadgeId,
+  getSeasonChampionsCard,
 } from '@/lib/queries';
+import type { SeasonChampionsCardData } from '@/lib/queries';
 import { getPostBySlug, getAllPosts } from '@/lib/blog';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
 import { ThisWeekMatchups } from '@/components/home/ThisWeekMatchups';
 import { PlayoffsNextWeek } from '@/components/home/PlayoffsNextWeek';
+import { SeasonChampionsCard } from '@/components/home/SeasonChampionsCard';
 import { InlineCountdown } from '@/components/home/InlineCountdown';
 import { PromotedBlogCard } from '@/components/home/PromotedBlogCard';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
@@ -68,6 +71,7 @@ export default async function Home() {
   let playoffFinalDate: string | null = null;
   let playoffBrackets: Array<{ title: string; bowlers: Array<{ bowlerName: string; slug: string }> }> = [];
   let championship: { romanNumeral: string; teamName: string; teamSlug: string; slug: string } | null = null;
+  let championsCard: SeasonChampionsCardData | null = null;
 
   if (seasonSnapshot) {
     const season = await getSeasonBySlug(seasonSnapshot.slug);
@@ -149,6 +153,7 @@ export default async function Home() {
               teamSlug: champTeamSlug,
               slug: seasonSnapshot.slug,
             };
+            championsCard = await getSeasonChampionsCard(season.seasonID);
           }
 
           // Also surface the round-2 bracket fields so the homepage card lists
@@ -299,7 +304,16 @@ export default async function Home() {
               />
             </TrackVisibility>
           )}
-          {seasonSnapshot && nextWeekNumber === 0 && playoffsNextWeek.length > 0 && (
+          {seasonSnapshot && nextWeekNumber === 0 && championship && championsCard && (
+            <TrackVisibility section="season-champions" page="home" className="md:col-span-2">
+              <SeasonChampionsCard
+                romanNumeral={championship.romanNumeral}
+                seasonSlug={championship.slug}
+                champions={championsCard}
+              />
+            </TrackVisibility>
+          )}
+          {seasonSnapshot && nextWeekNumber === 0 && !championship && playoffsNextWeek.length > 0 && (
             <TrackVisibility section="playoffs-next-week" page="home" className="md:col-span-2">
               <PlayoffsNextWeek matchups={playoffsNextWeek} matchDate={playoffsRoundOneDate} seasonSlug={seasonSnapshot.slug} final={playoffFinal} finalDate={playoffFinalDate} brackets={playoffBrackets} />
             </TrackVisibility>

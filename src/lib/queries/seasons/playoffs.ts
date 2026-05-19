@@ -260,6 +260,54 @@ export const getSeasonIndividualChampions = cache(async (seasonID: number): Prom
   }, null, { sql: GET_SEASON_INDIVIDUAL_CHAMPIONS_SQL, seasonID });
 });
 
+export interface SeasonChampionsCardData {
+  team: { name: string; slug: string } | null;
+  mensScratch: { name: string; slug: string } | null;
+  womensScratch: { name: string; slug: string } | null;
+  handicap: { name: string; slug: string } | null;
+}
+
+const GET_SEASON_CHAMPIONS_CARD_SQL = `
+  SELECT
+    tt.teamName        AS teamName,    tt.slug   AS teamSlug,
+    bm.bowlerName      AS mensName,    bm.slug   AS mensSlug,
+    bw.bowlerName      AS womensName,  bw.slug   AS womensSlug,
+    bh.bowlerName      AS hcpName,     bh.slug   AS hcpSlug
+  FROM seasons s
+  LEFT JOIN seasonChampions ct ON ct.seasonID = s.seasonID AND ct.championshipType = 'Team'
+  LEFT JOIN teams tt           ON tt.teamID = ct.winnerTeamID
+  LEFT JOIN seasonChampions cm ON cm.seasonID = s.seasonID AND cm.championshipType = 'MensScratch'
+  LEFT JOIN bowlers bm         ON bm.bowlerID = cm.winnerBowlerID
+  LEFT JOIN seasonChampions cw ON cw.seasonID = s.seasonID AND cw.championshipType = 'WomensScratch'
+  LEFT JOIN bowlers bw         ON bw.bowlerID = cw.winnerBowlerID
+  LEFT JOIN seasonChampions ch ON ch.seasonID = s.seasonID AND ch.championshipType = 'Handicap'
+  LEFT JOIN bowlers bh         ON bh.bowlerID = ch.winnerBowlerID
+  WHERE s.seasonID = @seasonID
+`;
+
+export const getSeasonChampionsCard = cache(async (seasonID: number): Promise<SeasonChampionsCardData | null> => {
+  return cachedQuery(`getSeasonChampionsCard-${seasonID}`, async () => {
+    const db = await getDb();
+    const result = await db.request()
+      .input('seasonID', seasonID)
+      .query<{
+        teamName: string | null; teamSlug: string | null;
+        mensName: string | null; mensSlug: string | null;
+        womensName: string | null; womensSlug: string | null;
+        hcpName: string | null; hcpSlug: string | null;
+      }>(GET_SEASON_CHAMPIONS_CARD_SQL);
+    if (result.recordset.length === 0) return null;
+    const r = result.recordset[0];
+    if (!r.teamName && !r.mensName && !r.womensName && !r.hcpName) return null;
+    return {
+      team: r.teamName && r.teamSlug ? { name: r.teamName, slug: r.teamSlug } : null,
+      mensScratch: r.mensName && r.mensSlug ? { name: r.mensName, slug: r.mensSlug } : null,
+      womensScratch: r.womensName && r.womensSlug ? { name: r.womensName, slug: r.womensSlug } : null,
+      handicap: r.hcpName && r.hcpSlug ? { name: r.hcpName, slug: r.hcpSlug } : null,
+    };
+  }, null, { sql: GET_SEASON_CHAMPIONS_CARD_SQL, seasonID, dependsOn: ['playoffScores'] });
+});
+
 export const getAllIndividualChampions = cache(async (): Promise<IndividualChampionSeason[]> => {
   return cachedQuery('getAllIndividualChampions', async () => {
     const db = await getDb();
