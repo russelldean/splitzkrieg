@@ -585,7 +585,13 @@ function BracketSection({
           {rows.map((row, idx) => {
             const hasResult = row.result !== null;
             const highlight = hasResult && idx < highlightTop && !row.isAlternate;
-            const isChampion = highlight && isFinal && idx === 0;
+            const allThreeGamesIn = row.result?.game1 != null
+              && row.result?.game2 != null
+              && row.result?.game3 != null;
+            const bracketComplete = rows.every(
+              r => r.result?.game1 != null && r.result?.game2 != null && r.result?.game3 != null,
+            );
+            const isChampion = highlight && isFinal && idx === 0 && allThreeGamesIn && bracketComplete;
             const series = seriesOf(row.result);
             const rowCls = isChampion
               ? 'bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100'
