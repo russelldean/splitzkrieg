@@ -194,7 +194,7 @@ export const getAllPlayoffHistory = cache(async (): Promise<PlayoffSeason[]> => 
     const db = await getDb();
     const result = await db.request().query<PlayoffSeason>(GET_ALL_PLAYOFF_HISTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_PLAYOFF_HISTORY_SQL, stable: true });
+  }, [], { sql: GET_ALL_PLAYOFF_HISTORY_SQL, dependsOn: ['playoffScores'] });
 });
 
 export interface IndividualChampionSeason {
@@ -265,7 +265,7 @@ export const getAllIndividualChampions = cache(async (): Promise<IndividualChamp
     const db = await getDb();
     const result = await db.request().query<IndividualChampionSeason>(GET_ALL_INDIVIDUAL_CHAMPIONS_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL, stable: true });
+  }, [], { sql: GET_ALL_INDIVIDUAL_CHAMPIONS_SQL, dependsOn: ['playoffScores'] });
 });
 
 const GET_TEAM_CHAMPIONSHIP_WINS_SQL = `
