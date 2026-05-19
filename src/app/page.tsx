@@ -67,6 +67,7 @@ export default async function Home() {
   let playoffFinal: { team1Name: string; team1Slug: string; team2Name: string; team2Slug: string } | null = null;
   let playoffFinalDate: string | null = null;
   let playoffBrackets: Array<{ title: string; bowlers: Array<{ bowlerName: string; slug: string }> }> = [];
+  let championship: { romanNumeral: string; teamName: string; teamSlug: string; slug: string } | null = null;
 
   if (seasonSnapshot) {
     const season = await getSeasonBySlug(seasonSnapshot.slug);
@@ -139,6 +140,17 @@ export default async function Home() {
           };
           playoffFinalDate = '2026-05-18T00:00:00.000Z';
 
+          if (f.winnerTeamID != null) {
+            const champTeamName = f.winnerTeamID === f.team1ID ? f.team1Name : f.team2Name;
+            const champTeamSlug = f.winnerTeamID === f.team1ID ? f.team1Slug : f.team2Slug;
+            championship = {
+              romanNumeral: season.romanNumeral,
+              teamName: champTeamName,
+              teamSlug: champTeamSlug,
+              slug: seasonSnapshot.slug,
+            };
+          }
+
           // Also surface the round-2 bracket fields so the homepage card lists
           // who's bowling in each individual championship.
           const [mens, womens, hcp] = await Promise.all([
@@ -205,11 +217,21 @@ export default async function Home() {
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
         {seasonSnapshot && (() => {
           const playoffsActive = nextWeekNumber === 0 && playoffsNextWeek.length > 0;
-          const heroHref = playoffsActive
-            ? `/playoffs/${seasonSnapshot.slug}/1`
-            : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
-          const heroTitle = playoffsActive ? 'Playoff Results' : `Week ${seasonSnapshot.weekNumber} Results`;
-          const heroSub = playoffsActive ? 'Round 1 · Semifinals' : latestWeekDate;
+          const heroHref = championship
+            ? `/playoffs/${championship.slug}/2`
+            : playoffsActive
+              ? `/playoffs/${seasonSnapshot.slug}/1`
+              : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
+          const heroTitle = championship
+            ? `Season ${championship.romanNumeral} Champions`
+            : playoffsActive
+              ? 'Playoff Results'
+              : `Week ${seasonSnapshot.weekNumber} Results`;
+          const heroSub = championship
+            ? championship.teamName
+            : playoffsActive
+              ? 'Round 1 · Semifinals'
+              : latestWeekDate;
           return (
           <div className="relative rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
             <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
@@ -229,7 +251,7 @@ export default async function Home() {
               </div>
               <div className="w-px bg-white/15 my-3" />
               <div className="px-4 py-2 flex items-center justify-center overflow-hidden">
-                <InlineCountdown schedule={countdownSchedule} />
+                <InlineCountdown schedule={countdownSchedule} championship={championship} />
               </div>
             </Link>
             {/* Desktop: side-by-side layout */}
@@ -250,7 +272,7 @@ export default async function Home() {
               </Link>
               <div className="w-px bg-white/15 my-3" />
               <div className="px-6 py-4 flex items-center justify-center overflow-hidden">
-                <InlineCountdown schedule={countdownSchedule} />
+                <InlineCountdown schedule={countdownSchedule} championship={championship} />
               </div>
             </div>
           </div>

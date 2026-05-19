@@ -11,6 +11,9 @@ interface ScheduleEntry {
 interface InlineCountdownProps {
   /** All scheduled weeks for the current season (sorted by matchDate). */
   schedule: ScheduleEntry[];
+  /** When set, the season is decided — render a champion celebration in place
+   * of the countdown / bowling-in-progress banner. */
+  championship?: { romanNumeral: string; teamName: string; teamSlug: string; slug: string } | null;
 }
 
 const TAKEOVER_DURATION = 15_000;
@@ -115,7 +118,7 @@ function FlipUnit({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function InlineCountdown({ schedule }: InlineCountdownProps) {
+export function InlineCountdown({ schedule, championship }: InlineCountdownProps) {
   const [mounted, setMounted] = useState(false);
   // Picked once on mount from the client's clock. If the page is left open
   // past 10:45 PM Monday the countdown goes blank until reload — fine.
@@ -248,7 +251,7 @@ export function InlineCountdown({ schedule }: InlineCountdownProps) {
 
   if (!mounted) return null;
 
-  const showClock = activeDate && !countdown.isPast && activeWeek > 0 && !showTakeover && !bowlingInProgress;
+  const showClock = activeDate && !countdown.isPast && activeWeek > 0 && !showTakeover && !bowlingInProgress && !championship;
 
   const { days, hours, minutes, seconds } = countdown;
 
@@ -357,12 +360,28 @@ export function InlineCountdown({ schedule }: InlineCountdownProps) {
       )}
 
       {/* Bowling in progress */}
-      {bowlingInProgress && !showTakeover && (
+      {bowlingInProgress && !showTakeover && !championship && (
         <div className="flex items-center gap-4 px-4 py-4">
           <span className="text-4xl sm:text-5xl">🎳</span>
           <span className="animate-bowling-colors font-heading text-4xl sm:text-5xl tracking-wider">
             Bowling in Progress
           </span>
+        </div>
+      )}
+
+      {/* Champion celebration — overrides clock and bowling-in-progress once
+          the season's team final has a winner. */}
+      {championship && !showTakeover && (
+        <div className="flex items-center gap-3 sm:gap-4 px-2 py-2 sm:py-3">
+          <span className="text-3xl sm:text-5xl drop-shadow-[0_2px_8px_rgba(251,191,36,0.6)]">🏆</span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-body text-[10px] sm:text-xs uppercase tracking-[0.18em] text-amber-300/90">
+              Season {championship.romanNumeral} Champions
+            </span>
+            <span className="font-heading text-xl sm:text-3xl text-amber-200 tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
+              {championship.teamName}
+            </span>
+          </div>
         </div>
       )}
 
