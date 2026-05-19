@@ -222,13 +222,11 @@ export default async function Home() {
             : playoffsActive
               ? `/playoffs/${seasonSnapshot.slug}/1`
               : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
-          const heroTitle = championship
-            ? `Season ${championship.romanNumeral} Champions`
-            : playoffsActive
-              ? 'Playoff Results'
-              : `Week ${seasonSnapshot.weekNumber} Results`;
+          const heroTitle = playoffsActive || championship
+            ? 'Playoff Results'
+            : `Week ${seasonSnapshot.weekNumber} Results`;
           const heroSub = championship
-            ? championship.teamName
+            ? 'The Final'
             : playoffsActive
               ? 'Round 1 · Semifinals'
               : latestWeekDate;

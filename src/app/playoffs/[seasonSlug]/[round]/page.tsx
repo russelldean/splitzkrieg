@@ -398,9 +398,17 @@ function TeamMatchCard({
               <tbody>
                 <tr className="text-navy">
                   <td className={`py-0.5 ${team1Won ? 'font-semibold' : ''}`}>
+                    {featured && team1Won && (
+                      <span className="mr-1.5 align-[-1px]" aria-hidden="true">👑</span>
+                    )}
                     <Link href={`/team/${match.team1Slug}`} className="hover:text-red-600 transition-colors">
                       {match.team1Name}
                     </Link>
+                    {featured && team1Won && (
+                      <span className="ml-2 text-[10px] uppercase tracking-[0.15em] font-heading text-amber-700/80 align-[2px]">
+                        Champion
+                      </span>
+                    )}
                   </td>
                   <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(t1G1, t2G1)}`}>{t1G1 || '-'}</td>
                   <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(t1G2, t2G2)}`}>{t1G2 || '-'}</td>
@@ -409,9 +417,17 @@ function TeamMatchCard({
                 </tr>
                 <tr className="text-navy">
                   <td className={`py-0.5 ${team2Won ? 'font-semibold' : ''}`}>
+                    {featured && team2Won && (
+                      <span className="mr-1.5 align-[-1px]" aria-hidden="true">👑</span>
+                    )}
                     <Link href={`/team/${match.team2Slug}`} className="hover:text-red-600 transition-colors">
                       {match.team2Name}
                     </Link>
+                    {featured && team2Won && (
+                      <span className="ml-2 text-[10px] uppercase tracking-[0.15em] font-heading text-amber-700/80 align-[2px]">
+                        Champion
+                      </span>
+                    )}
                   </td>
                   <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(t2G1, t1G1)}`}>{t2G1 || '-'}</td>
                   <td className={`text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10 ${gameWinClass(t2G2, t1G2)}`}>{t2G2 || '-'}</td>
