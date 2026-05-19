@@ -203,6 +203,17 @@ export default async function PlayoffRoundPage({
               team2PriorWins={teamWins.get(m.team2ID) ?? 0}
             />
           ))}
+          <div className="mt-3 text-center">
+            <Link
+              href="/stats/all-time/team-championships"
+              className="inline-flex items-center gap-1 text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
+            >
+              All team champions
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -245,6 +256,19 @@ export default async function PlayoffRoundPage({
           priorWins={winsByCategory('Handicap')}
         />
       </div>
+      {round === 2 && (
+        <div className="mt-3 text-center">
+          <Link
+            href="/stats/all-time/individual-champions"
+            className="inline-flex items-center gap-1 text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
+          >
+            All individual champions
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </Link>
+        </div>
+      )}
     </main>
   );
 }
