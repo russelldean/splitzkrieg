@@ -190,8 +190,8 @@ export const ALL_TOP_LINEUPS: TopTeamData[] = [
     totalNights: 242,
     uniqueLineups: 106,
     lineups: [
-      { ids: [90,297,306,330], names: ["Cameron Mitchell","Jenny Peters","Jessie Yonac","Jon Hunt"], active: [false,true,false,true], count: 17, seasons: [13,14,15,16] },
-      { ids: [214,245,297,373], names: ["Farrell","Henry Hebert","Jenny Peters","Kelly Farrell"], active: [true,true,true,true], count: 11, seasons: [18,19,20,21,22,23] },
+      { ids: [90,297,306,330], names: ["Cameron Mitchell","J Peters","Jessie Yonac","Jon Hunt"], active: [false,true,false,true], count: 17, seasons: [13,14,15,16] },
+      { ids: [214,245,297,373], names: ["Farrell","Henry Hebert","J Peters","Kelly Farrell"], active: [true,true,true,true], count: 11, seasons: [18,19,20,21,22,23] },
       { ids: [90,131,522,523], names: ["Cameron Mitchell","Courtney Mitchell","Rachel Canada","Rachel Ingold"], active: [false,false,false,false], count: 9, seasons: [8,9] },
     ],
   },

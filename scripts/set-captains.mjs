@@ -30,7 +30,7 @@ const captains = [
   ["Hot Shotz", "Paul Marsh"],
   ["Alley Oops", "Stephen Conrad"],
   ["Pin-Ups", "Christina Pelech"],
-  ["Valley of the Balls", "Jenny Peters"],
+  ["Valley of the Balls", "J Peters"],
   ["Fancy Pants", "Fikri Yucel"],
   ["Bowl Durham", "Madelyne Rush"],
   ["Grandma's Teeth", "Mike DePasquale"],
