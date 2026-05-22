@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:fresh": "rm -rf .next/cache/sql && next dev",
-    "build": "next build",
+    "build": "node scripts/patch-cache-rename.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
