@@ -146,5 +146,5 @@ export const getTeamBySlug = cache(async (slug: string): Promise<Team | null> =>
       .input('slug', slug)
       .query<Team>(GET_TEAM_BY_SLUG_SQL);
     return result.recordset[0] ?? null;
-  }, null, { stable: true, sql: GET_TEAM_BY_SLUG_SQL });
+  }, null, { sql: GET_TEAM_BY_SLUG_SQL, dependsOn: ['bowlers'] });
 });
