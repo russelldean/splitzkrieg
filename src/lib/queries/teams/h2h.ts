@@ -252,16 +252,10 @@ export const GET_TEAM_PLAYOFF_H2H_SQL = `
   ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
 `;
 
-export async function getTeamPlayoffH2H(teamID: number): Promise<PlayoffH2HMatchup[]> {
-  return cachedQuery(`getTeamPlayoffH2H-${teamID}`, async () => {
-    const db = await getDb();
-    const result = await db
-      .request()
-      .input('teamID', teamID)
-      .query<PlayoffH2HMatchup>(GET_TEAM_PLAYOFF_H2H_SQL);
-    return result.recordset;
-  }, [], { sql: GET_TEAM_PLAYOFF_H2H_SQL, stable: true });
-}
+// NOTE: getTeamPlayoffH2H was removed - its only caller (the team page) now reads
+// this SQL inside the batched getTeamPageView, which invalidates on the
+// scores/schedule/bowlers channels instead of the old stale-forever stable:true.
+// The SQL constant + PlayoffH2HMatchup interface are kept for the batch.
 
 export async function getPairwiseH2H(
   pairs: { team1ID: number; team2ID: number }[]

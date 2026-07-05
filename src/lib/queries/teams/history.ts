@@ -157,16 +157,10 @@ export const GET_TEAM_FRANCHISE_HISTORY_SQL = `
   ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
 `;
 
-export async function getTeamFranchiseHistory(teamID: number): Promise<FranchiseNameEntry[]> {
-  return cachedQuery(`getTeamFranchiseHistory-${teamID}`, async () => {
-    const db = await getDb();
-    const result = await db
-      .request()
-      .input('teamID', teamID)
-      .query<FranchiseNameEntry>(GET_TEAM_FRANCHISE_HISTORY_SQL);
-    return result.recordset;
-  }, [], { stable: true, sql: GET_TEAM_FRANCHISE_HISTORY_SQL });
-}
+// NOTE: getTeamFranchiseHistory was removed - its only caller (the team page) now
+// reads this SQL inside the batched getTeamPageView, which invalidates on the
+// scores/schedule/bowlers channels instead of the old stale-forever stable:true.
+// The SQL constant + FranchiseNameEntry interface are kept for the batch.
 
 const GET_ALL_TEAMS_DIRECTORY_SQL = `
   SELECT
