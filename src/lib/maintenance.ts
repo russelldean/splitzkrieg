@@ -23,6 +23,22 @@ export function shouldServeMaintenance(
   return true;
 }
 
+// Bypass: lets a trusted request (us, or the 404 checker) see real pages while
+// the public still gets the 503 wall. Enabled only when MAINTENANCE_BYPASS is
+// set. Carry the token as ?bypass=<token> (crawler) or the sk_bypass cookie
+// (browser, set automatically on first bypassed query hit).
+export const BYPASS_QUERY_KEY = 'bypass';
+export const BYPASS_COOKIE = 'sk_bypass';
+
+export function hasValidBypass(
+  queryToken: string | null | undefined,
+  cookieToken: string | null | undefined,
+  secret: string | undefined,
+): boolean {
+  if (!secret) return false;
+  return queryToken === secret || cookieToken === secret;
+}
+
 export const MAINTENANCE_HTML = `<!doctype html>
 <html lang="en">
 <head>

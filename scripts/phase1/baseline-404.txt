@@ -1,0 +1,7 @@
+# Production 404 baseline (splitzkrieg.com, Batch A d15f7a6) captured 2026-07-05
+# BEFORE serving-model cutover. Re-run smoke-404.mjs after cutover and diff.
+# These are baked static 404s from transient query timeouts during the Batch A build.
+CURRENT bowlers (14): amy-kostrewa barrett-jorgensen bob-ellinger brooke-insley ellen-duda jacob-steagald james-hepler john-bekas john-williams jon-hunt lillith-fallon matt-wade terrence-chambers tino-mccullough
+CURRENT teams (4): gutterglory hot-shotz lucky-strikes pin-ups
+HISTORICAL: team/ghost-team (likely intentional forfeit placeholder)
+TIMEOUT (not 404): /lineups (599 - recheck, likely slow serverless cold start)

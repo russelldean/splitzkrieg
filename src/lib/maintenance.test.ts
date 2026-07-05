@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldServeMaintenance } from './maintenance';
+import { shouldServeMaintenance, hasValidBypass } from './maintenance';
 
 describe('shouldServeMaintenance', () => {
   it('does nothing when mode is not "on"', () => {
@@ -25,5 +25,25 @@ describe('shouldServeMaintenance', () => {
     expect(shouldServeMaintenance('/favicon.ico', 'on')).toBe(false);
     expect(shouldServeMaintenance('/robots.txt', 'on')).toBe(false);
     expect(shouldServeMaintenance('/og.png', 'on')).toBe(false);
+  });
+});
+
+describe('hasValidBypass', () => {
+  it('is false when no secret is configured (bypass disabled by default)', () => {
+    expect(hasValidBypass('anything', 'anything', undefined)).toBe(false);
+    expect(hasValidBypass('anything', 'anything', '')).toBe(false);
+  });
+
+  it('is true when the query token matches the secret', () => {
+    expect(hasValidBypass('s3cret', undefined, 's3cret')).toBe(true);
+  });
+
+  it('is true when the cookie token matches the secret', () => {
+    expect(hasValidBypass(undefined, 's3cret', 's3cret')).toBe(true);
+  });
+
+  it('is false when neither token matches', () => {
+    expect(hasValidBypass('wrong', 'alsowrong', 's3cret')).toBe(false);
+    expect(hasValidBypass(undefined, undefined, 's3cret')).toBe(false);
   });
 });
