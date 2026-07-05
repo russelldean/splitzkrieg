@@ -3,7 +3,6 @@ import type { BowlerStarStats } from '@/lib/queries';
 
 interface Props {
   stats: BowlerStarStats;
-  inTicker: boolean;
   slug?: string;
   easterEgg?: { src: string; alt: string; width: number; height: number };
 }
@@ -78,7 +77,7 @@ function BuffaloNickel() {
   );
 }
 
-export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
+export function YouAreAStar({ stats, slug, easterEgg }: Props) {
 
   const lines: StarLine[] = [];
 
@@ -183,14 +182,6 @@ export function YouAreAStar({ stats, inTicker, slug, easterEgg }: Props) {
       label: 'Team Captain',
       value: '\u2713',
       hint: 'Teams',
-    });
-  }
-
-  if (inTicker) {
-    lines.push({
-      label: 'Featured on Ticker',
-      value: 'Now',
-      hint: 'Home',
     });
   }
 
