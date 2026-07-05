@@ -1,7 +1,7 @@
-# Live Data Migration: Retire the Build-Time Cache for ISR
+# Live Data + Mature Data Model: Retire the Build-Time Cache
 
 Date: 2026-07-04
-Status: Design approved, pending spec review
+Status: Phase 0 complete (GO). Two-track plan approved. Ready to plan Track #1.
 Author: Russ + Claude
 
 ## Problem
@@ -13,230 +13,227 @@ the SQL string, per-season data versions in `.data-versions.json`, dependency
 "channels", and `stable` flags.
 
 That cache is the project's single largest source of friction and wasted time.
-Evidence: renaming one bowler ("J Peters") took five commits (channel bump,
-patch cached query files, fix invalidation, remove one-shot patch). The
-CLAUDE.md's biggest section is a cache "NEVER DO THESE" list. Four separate
-memory files exist solely to document cache rules.
+Renaming one bowler ("J Peters") took five commits (channel bump, patch cached
+query files, fix invalidation, remove one-shot patch). The CLAUDE.md's biggest
+section is a cache "NEVER DO THESE" list. Four memory files exist solely to
+document cache rules.
 
-The cache exists to solve a BUILD-TIME problem (thousands of pages querying a
-tiny DB at once), not a serve-time one. A CDN already makes serving fast.
+Separately, the query layer grew organically: ~55 generic, model-shaped query
+functions that each page composes ad hoc. No page has a defined data contract.
+The bowler page alone fires 14 generic career-aggregation queries. This is the
+"everything available to everybody, patched on over time" design Russ wants to
+mature.
+
+## Phase 0 Findings (measured 2026-07-04)
+
+Full detail in `docs/superpowers/plans/2026-07-04-phase0-RESULTS.md`. Measured on
+a real Vercel preview against the production DB:
+
+- Region colocation is GOOD: DB is North Central US (Chicago), Vercel functions
+  pin to `cle1` (Cleveland), ~8-15ms apart. No region fix needed.
+- Prebuilt / cached pages serve in ~150ms. Great.
+- A heavy bowler page rendered ON DEMAND takes 4 to 6 seconds. The page is
+  ALREADY fully parallelized (14 queries in one `Promise.all`), so this is not a
+  code problem: the 5-DTU Azure Basic tier is the ceiling. Career-wide
+  aggregations across 35 seasons cannot render fast on demand on that DB.
+
+Conclusion: "serve everything live on demand" is NOT viable for heavy pages on
+the current DB tier. But two independent wins are: (1) swap the cache mechanism,
+and (2) make heavy pages cheap enough to eventually serve live. Hence two tracks.
 
 ## Key Insight
 
-At current traffic (~7,800 pageviews/month, baseline 30 to 80/day, spiking to
-~1,400 on bowling night, under 1 pageview/minute average), serving data live
-costs almost nothing in dollars. Moving from build-time queries to
-request-time queries with a short cache TTL:
+The bespoke cache solves a BUILD-TIME problem (thousands of pages querying a tiny
+DB at once), not a serve-time one. Two levers replace it:
 
-- Keeps monthly cost at ~$26 (no DB tier bump needed).
-- Lets the DB be touched a trivial number of times (once per page per TTL
-  window, regardless of crowd size), so a 5-DTU instance handles bowling night
-  easily.
-- Retires the entire bespoke cache system in favor of Next.js built-in ISR +
-  tag-based revalidation.
-- Solves the rename pain: an edit becomes one `revalidateTag` call instead of a
-  cache-patch commit chain.
+1. Native Next ISR + tag-based invalidation removes the manual version ledger and
+   the rename ritual. This is nearly free and independent of query cost.
+2. Per-page view models backed by precomputed read-model tables make each page's
+   read cheap and deliberate, which (later) unlocks true live-on-demand on the
+   $5 DB with no tier bump.
 
-34 of 35 seasons are immutable history. Only the current season and week are
-"live". This maps onto a tiered-TTL design.
+## The Two-Track Plan
+
+### Track #1: Mechanism swap (do first, near-free)
+
+Replace the bespoke cache with native Next primitives. Heavy pages stay PREBUILT
+and served from cache; on-demand render happens only as backgrounded
+revalidation (stale-while-revalidate hides its cost).
+
+- Cache query results with `unstable_cache(fn, keys, { tags: [...] })` in Next's
+  Data Cache (persisted across deploys on Vercel, same benefit the disk cache
+  gives today) instead of `cachedQuery`.
+- Each cached query declares TAGS for what it depends on
+  (`bowler-297`, `scores-36`, `season-36`).
+- Invalidate with `revalidateTag('bowler-297')`: every result and page carrying
+  that tag purges and re-renders from the DB (which already holds the truth). No
+  cache-file patching, no version file.
+- Outcome: kills the rename ritual (edit -> one `revalidateTag` call), deletes
+  `cachedQuery` / `.data-versions.json` / channels / `stable` flags /
+  `.published-week`. Does NOT change page data-fetching or remove build-time
+  prerender.
+
+### Track #2: View models + read models (incremental, unlocks true live)
+
+Apply basehit's proven "view-shaped reads" lesson (Mike retired a generic
+`?components=` pattern for exactly the reasons Russ describes; see
+`~/projects/basehit/.claude/rules/api-endpoint-design.md`):
+
+- Each page gets ONE deliberate view model (e.g. `getBowlerPageView(id)`) that
+  returns exactly what the page renders, instead of composing ~14 generic
+  queries. The view model is the page's data contract, owned in one place, cost
+  auditable in one place.
+- Back expensive aggregates with precomputed read-model summary tables (e.g.
+  `bowlerCareerStats`), populated by the import pipeline. This extends the
+  pattern the codebase already uses informally (`matchResults`, `bowlerPatches`,
+  `bowlerMilestones`, `incomingAvg`, computed `hcpGame*` columns).
+- Bowler page: ~14 live aggregations become 1 to 2 cheap indexed reads. On-demand
+  render drops toward ~150ms, making true live-on-demand possible on the $5 DB.
+- Read models are DERIVED from `scores` (source of truth), so they are
+  regenerable and disposable. Changing what is precomputed is a rewrite-and-
+  rebuild, never a data-loss risk.
+
+## Governing Principle (keeps future work unhandcuffed)
+
+Default to a cheap query in the view model. Promote a metric to a precomputed
+read-model table ONLY when that path proves slow. YAGNI on read models. New
+page ideas ship as cheap reads first; precomputation is a performance backstop
+applied when measured, never a prerequisite for a feature. Eagerly precomputing
+everything is the one way to make this design rigid; we do not do that.
 
 ## Goals
 
-- Serve pages via ISR (Incremental Static Regeneration) instead of pure
-  build-time static generation.
-- Retire `cachedQuery`, `.data-versions.json`, channel hashes, and `stable`
-  flags once the new path is proven.
-- Make data edits (imports, renames, publishes) propagate via TTL or a single
-  on-demand revalidation call, with no manual cache bookkeeping.
-- Keep monthly cost at ~$26.
-- Never expose visitors to "long delays". Target sub-300ms on cache-miss
-  renders, instant on hits.
+- Retire `cachedQuery`, `.data-versions.json`, channel hashes, `stable` flags,
+  `.published-week`, and the rename-patch scripts (Track #1).
+- Data edits propagate via a single `revalidateTag` call, no manual bookkeeping.
+- Give each page a deliberate view model backed by read models where needed, so
+  the data layer is mature and efficient (Track #2).
+- Keep monthly cost at ~$26 (no DB tier bump).
+- Never expose visitors to long delays: heavy pages stay cache-fast; on-demand
+  render is backgrounded until Track #2 makes it cheap.
 
 ## Non-Goals
 
-- No move to zero-staleness live serving (Option C: Azure S1/S2 or pooled
-  Postgres at $50 to $95/month). Not needed for weekly-updating data.
+- No zero-staleness live serving via a DB tier bump (Option C, +$30 to $75/mo).
+  Rejected explicitly.
 - No DB engine change. Stay on Azure SQL Basic.
-- No redesign of pages, features, or visual layout. This is a data-delivery
-  change only.
+- No visual / feature redesign of pages. Track #2 changes the DATA layer (view
+  models, read-model tables), not the rendered UI.
 - No change to the `/evillair` admin dashboard, which already runs live
-  (`force-dynamic`) and is proof that live queries work in production.
+  (`force-dynamic`) and proves live queries work in production.
 
 ## Target Architecture
 
-### Rendering: tiered ISR
+### Rendering: tiered ISR, heavy pages prebuilt
 
-Every page becomes ISR (`export const revalidate = N`), with TTL tiered by how
-fresh the data must be:
-
-- Current season / current week pages: short TTL (60 to 120 seconds).
-- Historical season pages (34 dead seasons): very long TTL (effectively
-  infinite), behaving like static but revalidatable on demand.
-- Home page: short TTL (updates on bowling night).
-
-Stale-while-revalidate means a visitor always gets the cached page instantly
-while a refresh happens in the background. The only genuinely slow request is a
-page that has never been rendered (a brand-new bowler on first hit, or any page
-right after a deploy clears cache). It pays the miss cost once, then is warm.
+- Pages are ISR (`export const revalidate = N`). Current season/week/home get
+  short TTLs (60 to 120s). Historical seasons get very long TTLs.
+- Heavy pages keep `generateStaticParams` prebuild until Track #2 makes their
+  view model cheap; then they can flip to on-demand ISR if desired.
+- Stale-while-revalidate: visitors always get the cached page instantly while a
+  refresh runs in the background.
 
 ### Invalidation: tags replace channels
 
-Wrap query functions so their results are tagged (`unstable_cache(fn, keys,
-{ tags: [...] })` or route-level tags). Data edits call `revalidateTag`:
+- Query results tagged via `unstable_cache`; edits call `revalidateTag`.
+- `revalidateTag('scores-36')` after a score import. `revalidateTag('bowler-297')`
+  after a rename. Extends the existing `/api/revalidate` route (already does
+  `revalidatePath` for current-season and per-bowler pages behind a secret).
 
-- `revalidateTag('scores-s36')` after a score import (replaces the scores
-  channel bump).
-- `revalidateTag('bowler-297')` after a rename (replaces the five-commit
-  cache-patch saga).
+### View models + read models
 
-This extends the existing `/api/revalidate` route, which already does
-`revalidatePath` for current-season and per-bowler pages behind a secret.
+- One view-model query function per page, returning a flat page-shaped result.
+- Precomputed summary tables for proven-expensive aggregates, maintained by the
+  import pipeline alongside the normalized write tables.
 
-### Connection handling for serverless
+### Serverless connection handling
 
-The current `mssql` pool (`max: 10`) assumes one long-lived build process. In
-SSR each function instance owns its own pool, so a spike can exhaust Azure's
-connection cap differently than a build does. Mitigations:
-
-- Small pool max per instance (2 to 3).
-- Enable Vercel Fluid Compute so warm instances are reused (fewer fresh pools
-  and fresh TLS connects).
-- Keep the `withRetry` backoff already in `db.ts`.
-
-### Region colocation
-
-Functions are pinned to `cle1` (Cleveland) in `vercel.json`. The Azure SQL
-region is unverified from the hostname and MUST be confirmed in Phase 0.
-Cross-region round trips are the difference between ~80ms and ~400ms of
-per-page query time. If the DB is far from Cleveland, either move function
-region or accept the higher (still sub-second) latency.
-
-### Query parallelization
-
-Pages that currently `await` queries sequentially should batch them with
-`Promise.all` so N DB round trips collapse toward 1. This is the second-biggest
-latency lever after colocation.
+- The current `mssql` pool (`max: 10`) assumes one long-lived build process. In
+  SSR each function instance owns its own pool. Set a small pool max (2 to 3),
+  keep Fluid Compute on (reuses warm instances), keep the `withRetry` backoff.
 
 ## What We Keep (safety)
 
-- `cachedQuery` and `.data-versions.json` stay in place as the fallback path
-  during migration. Deleted only after a full clean week + publish cycle.
-- Vercel Preview Deployments: every branch gets a live URL hitting the real
-  production DB. The new ISR site is validated on a preview URL (including a
-  bowling-night load test) while `main` keeps serving the current static site
-  to the public, untouched.
-- Migration is incremental. Static and ISR pages coexist in one app, so we
-  convert current-season pages first and leave history static until proven.
+- `cachedQuery` and `.data-versions.json` stay as the fallback path during Track
+  #1, deleted only after a clean full week + publish cycle on the new path.
+- Vercel Preview Deployments validate each change on a real-DB preview URL while
+  `main` keeps serving production untouched. (Note: previews have Vercel
+  Authentication on; use a Protection Bypass for Automation secret to measure
+  them via curl.)
+- Both tracks are incremental. Native-ISR and legacy pages coexist; view models
+  roll out one page at a time.
 
 ## Migration Phases
 
-### Phase 0: Prove it (go/no-go gate)
+### Phase 0: Prove it - DONE (GO)
 
-- Confirm Azure SQL region; fix colocation if needed.
-- Convert two representative pages (home page + one heavy bowler page) to ISR
-  on a branch.
-- Tune `mssql` pool for serverless; enable Fluid Compute.
-- Deploy to a preview URL and measure real cache-miss latency against the real
-  DB, including a simulated spike.
-- Read the Vercel Usage numbers (invocations, GB-hours, ISR reads/writes)
-  during the simulated spike and set a spend alert before going further.
-- GO/NO-GO decision based on measured latency AND usage, not estimates.
-  Target: sub-300ms typical miss, no errors under a simulated bowling-night
-  load, and usage that projects to no material cost increase.
+See Phase 0 Findings above and the RESULTS doc.
 
-### Phase 1: Migrate live pages
+### Track #1 - Mechanism swap
 
-- Convert current-season, current-week, home, stats, and playoff pages to ISR
-  with short TTLs.
-- Introduce tag-based caching on the query functions those pages use.
-- History remains static (untouched) for now.
+- Phase 1: Introduce `unstable_cache` + tags on the query layer. Convert pages to
+  ISR (keep prebuild). Legacy `cachedQuery` remains as fallback.
+- Phase 2: Rewire edit workflows. Extend `/api/revalidate` and import/admin flows
+  to call `revalidateTag` for scores and per-bowler edits. Replace the
+  `/evillair` publish button's rebuild trigger with revalidation. Rename becomes
+  one `revalidateTag` call.
+- Phase 3: Retire the old system. Delete `cachedQuery`, `.data-versions.json`,
+  channel logic, `stable` flags, the rename-patch scripts, the CLAUDE.md cache
+  section, and the obsolete cache memory files. Relax the `cpus: 4` build limit
+  in `next.config.ts`.
 
-### Phase 2: Rewire edit workflows to revalidation
+### Track #2 - View models + read models (incremental)
 
-- Extend `/api/revalidate` and import/admin flows to call `revalidateTag` for
-  scores and per-bowler edits.
-- Replace the `/evillair` publish button's rebuild trigger with a revalidation
-  trigger.
-- Update the rename workflow to a single `revalidateTag` call.
-
-### Phase 3: Retire the old system (decision point)
-
-- After a clean full week + publish cycle on the new path, convert historical
-  pages to long-TTL ISR (recommended) so renames revalidate on demand instead
-  of forcing a rebuild.
-- Delete `cachedQuery`, `.data-versions.json`, channel logic, `stable` flags,
-  and the associated scripts and memory rule files.
-- Relax the `cpus: 4` build limit in `next.config.ts` (its only purpose was
-  protecting the DB during static builds).
-- Fallback: if long-TTL ISR on history ever misbehaves, historical pages can
-  stay pure-static instead. Pure-static history is a valid, less-ambitious end
-  state.
+- Phase 4: Pilot on the bowler page (worst offender). Design the
+  `bowlerCareerStats` read model, populate it in the import pipeline, build
+  `getBowlerPageView`, prove ~150ms on-demand render on a preview.
+- Phase 5: Roll view models to team / season / week / stats pages, one at a time.
+  Each is independently shippable.
+- Phase 6: Where a page's view model is now cheap, optionally flip it to true
+  on-demand ISR (drop prebuild) so genuinely-live pages need no rebuild at all.
 
 ## Vercel Usage Guardrails
 
 Vercel usage can overshoot fast when misconfigured (reference: the 2026-04-06
 Turbo build-machine incident burned $15.79 in 11 days). ISR moves the overshoot
-risk from build minutes to function invocations and revalidation fan-out. The
-specific failure modes and their guards:
+risk from build minutes to function invocations and revalidation fan-out:
 
-- **TTL too short across many pages.** A low `revalidate` (especially sub-60s)
-  on thousands of pages turns every crawler pass into a wave of function
-  invocations + DB queries. Guard: never go below 60s; history at effectively
-  infinite TTL; only current-season pages get short TTLs.
-- **Revalidation storms.** A broad `revalidateTag` (e.g. revalidating all 600+
-  bowlers on any score change) triggers mass regeneration: a single publish
-  becomes hundreds of invocations and re-creates the connection-cap problem at
-  request time. Guard: revalidate only the narrowest affected tag; preserve the
-  existing "only bowlers who bowled this week" scoping already in
-  `/api/revalidate`.
-- **Self-referential or over-frequent revalidation.** A page that revalidates
-  itself, or a cron hitting revalidate too often, burns compute in a loop.
-  Guard: no self-referential revalidation; audit cron frequency.
-- **Accidental per-request image transforms.** Image Optimization drives the
-  edge-request count that already forced the Pro plan. Guard: no new per-request
-  transforms; this migration touches data delivery only.
+- TTL too short across many pages: never below 60s; history at very long TTL;
+  only current-season pages get short TTLs.
+- Revalidation storms: revalidate only the narrowest affected tag; preserve the
+  existing "only bowlers who bowled this week" scoping in `/api/revalidate`.
+- Self-referential / over-frequent revalidation: none; audit cron frequency.
+- Accidental per-request image transforms: none; this touches data delivery.
 
-Note the offsetting win: ISR REDUCES build cost. No more generating thousands of
-pages per deploy, so build minutes (the source of the prior overshoot) shrink.
-
-Monitoring: watch the Vercel Usage tab (function invocations, GB-hours / active
-CPU, edge requests, ISR reads/writes) and set a spend alert BEFORE Phase 1. The
-Phase 0 preview deploy is the place to catch overshoot: run the simulated spike
-and read the usage numbers there, before any of this reaches production.
+Offsetting win: ISR reduces build cost (fewer pages generated per deploy).
+Monitoring: watch the Vercel Usage tab and keep the spend alert set (done in
+Phase 0, ~$30 notify).
 
 ## Risks and Mitigations
 
 | Risk | Mitigation |
 |------|------------|
 | Serverless connection exhaustion | Small pool max (2 to 3), Fluid Compute, retry backoff |
-| Cross-region latency | Verify/fix region colocation in Phase 0 |
-| Query fails at request time (no build-time catch) | Graceful empty-states, existing `cachedQuery` fallbacks, Vercel + PostHog monitoring |
-| Cold-page first-render latency | Long TTLs on history; stale-while-revalidate; Basic tier is always-on (no serverless pause) |
-| Regression we can't undo | Preview deploys + incremental migration + keep old code until proven; Vercel one-click rollback |
-| Vercel usage/cost overshoot | Conservative TTLs (60s floor), narrow revalidation tags, no self-referential revalidation, spend alert, usage read on the Phase 0 preview before production |
+| Query fails at request time (no build-time catch) | Graceful empty-states, `cachedQuery` fallbacks during migration, Vercel + PostHog monitoring |
+| Cold never-rendered page latency (heavy pages, pre-Track-#2) | Keep heavy pages prebuilt; stale-while-revalidate; Basic tier is always-on (no serverless pause) |
+| Read model drifts from source of truth | Read models are derived + regenerable; import pipeline updates them atomically with the write tables; a rebuild reconciles |
+| Over-precomputation makes iteration rigid | Governing principle: cheap-by-default, precompute-when-measured |
+| Regression we can't undo | Preview deploys + incremental rollout + keep old code until proven; Vercel one-click rollback |
+| Vercel usage/cost overshoot | 60s TTL floor, narrow tags, no self-referential revalidation, spend alert |
 
 ## Costs
 
 - Dollars: unchanged at ~$26/month. Function invocations at this traffic are
-  negligible. The Vercel Pro $20 is driven by edge/asset requests, which do not
-  change.
-- Effort: the real cost. Estimated a few focused sessions across the four
-  phases, front-loaded on Phase 0 proof.
-
-## Open Questions to Resolve in Phase 0
-
-1. What Azure region is `splitzkrieg-sql` in, and does it colocate with `cle1`?
-2. Measured cache-miss latency for the home page and a heavy bowler page on a
-   preview deploy?
-3. Does Fluid Compute + a small pool hold up under a simulated spike without
-   hitting the connection cap?
+  negligible. The Vercel Pro $20 is edge/asset-driven and does not change.
+- Effort: the real cost. Track #1 is a few focused sessions. Track #2 is ongoing
+  and incremental, one page at a time, at whatever pace suits.
 
 ## Success Criteria
 
-- Public site serves via ISR with visitor-perceived latency indistinguishable
-  from today on cache hits, sub-300ms on typical misses.
-- A score publish goes live via one revalidation call, no rebuild, no manual
+- A score publish goes live via one `revalidateTag` call, no rebuild, no manual
   cache bookkeeping.
 - A bowler rename is a single `revalidateTag` call, not a commit chain.
-- The bespoke cache system and its rule files are deleted.
+- The bespoke cache system and its rule files are deleted (Track #1 complete).
+- Each migrated page reads through one deliberate view model; the bowler page
+  renders on demand in roughly the same time as a cached page (Track #2 pilot).
 - Monthly cost stays ~$26.
