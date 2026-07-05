@@ -351,7 +351,7 @@ export async function getHighGameProgression(): Promise<HighGameProgressionResul
 
 // ── Game Profiles (Fast Starter / Middle Child / Late Bloomer / Flatliner) ──
 
-function classifyArchetype(avg1: number, avg2: number, avg3: number, pctSpread: number): { bestGame: 1 | 2 | 3; archetype: GameArchetype } {
+export function classifyArchetype(avg1: number, avg2: number, avg3: number, pctSpread: number): { bestGame: 1 | 2 | 3; archetype: GameArchetype } {
   const avgs = [avg1, avg2, avg3] as const;
   const maxIdx = avgs.indexOf(Math.max(...avgs));
   const bestGame = (maxIdx + 1) as 1 | 2 | 3;

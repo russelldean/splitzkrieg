@@ -99,7 +99,7 @@ export interface BowlerCareerSummary {
   prevRollingAvg: number | null;
 }
 
-const GET_BOWLER_CAREER_SUMMARY_SQL = `
+export const GET_BOWLER_CAREER_SUMMARY_SQL = `
   SELECT
     v.*,
     (
@@ -207,7 +207,7 @@ export interface BowlerSeasonStats {
   turkeys: number;
 }
 
-const BOWLER_SEASON_STATS_SQL = `
+export const BOWLER_SEASON_STATS_SQL = `
   SELECT
     sc.seasonID,
     sn.romanNumeral,
@@ -285,7 +285,7 @@ export interface GameLogWeek {
   incomingAvg: number | null;
 }
 
-const GET_BOWLER_GAME_LOG_SQL = `
+export const GET_BOWLER_GAME_LOG_SQL = `
   SELECT
     sc.seasonID,
     sn.displayName,
@@ -344,7 +344,7 @@ export interface RollingAvgPoint {
   rollingAvg: number;
 }
 
-const GET_BOWLER_ROLLING_AVG_HISTORY_SQL = `
+export const GET_BOWLER_ROLLING_AVG_HISTORY_SQL = `
   SELECT
     sc.seasonID,
     sn.displayName,
@@ -460,7 +460,7 @@ export interface BowlerStarStats {
   hcpChampionships: number;
 }
 
-const GET_BOWLER_STAR_STATS_SQL = `
+export const GET_BOWLER_STAR_STATS_SQL = `
   SELECT p.code, COUNT(*) AS cnt /* v4: scratchChampion + hcpChampion */
   FROM bowlerPatches bp
   JOIN patches p ON p.patchID = bp.patchID
@@ -474,7 +474,7 @@ export interface BowlerPatch {
   patch: 'perfectGame' | 'botw' | 'highGame' | 'highSeries' | 'threeOfAKind' | 'playoff' | 'champion' | 'scratchPlayoff' | 'hcpPlayoff' | 'scratchChampion' | 'hcpChampion';
 }
 
-const GET_BOWLER_PATCHES_SQL = `
+export const GET_BOWLER_PATCHES_SQL = `
   SELECT bp.seasonID, bp.week, p.code AS patch /* v2: perfectGame */
   FROM bowlerPatches bp
   JOIN patches p ON p.patchID = bp.patchID

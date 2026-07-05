@@ -61,7 +61,7 @@ const RANDOM_FACTS_SQL = `
     )
 `;
 
-const BOWLER_FACTS_SQL = `
+export const BOWLER_FACTS_SQL = `
   SELECT
     f.factTypeID,
     b.bowlerName,
