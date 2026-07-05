@@ -12,7 +12,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
   getSeasonBySlug,
-  getSeasonWeeklyScores,
+  getSeasonWeekNumbers,
   getSeasonSchedule,
   getTeamChampionshipWins,
   getIndividualChampionshipWins,
@@ -86,7 +86,7 @@ export default async function PlayoffRoundPage({
     mScratchField,
     wScratchField,
     handicapField,
-    weeklyScores,
+    weekNumbers,
     schedule,
   ] = await Promise.all([
     getPlayoffTeamMatches(season.seasonID, round as 1 | 2),
@@ -96,7 +96,7 @@ export default async function PlayoffRoundPage({
     getPlayoffBracketParticipants(season.seasonID, 'MensScratch', round as 1 | 2),
     getPlayoffBracketParticipants(season.seasonID, 'WomensScratch', round as 1 | 2),
     getPlayoffBracketParticipants(season.seasonID, 'Handicap', round as 1 | 2),
-    getSeasonWeeklyScores(season.seasonID),
+    getSeasonWeekNumbers(season.seasonID),
     getSeasonSchedule(season.seasonID),
   ]);
 
@@ -109,7 +109,7 @@ export default async function PlayoffRoundPage({
   }
 
   const allWeeks = new Set<number>();
-  weeklyScores.forEach((s) => allWeeks.add(s.week));
+  weekNumbers.forEach((w) => allWeeks.add(w));
   schedule.forEach((s) => allWeeks.add(s.week));
   const maxRegularWeek = Math.max(0, ...Array.from(allWeeks));
 

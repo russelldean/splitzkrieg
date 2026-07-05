@@ -120,26 +120,6 @@ async function main() {
       WHERE sch.seasonID = @seasonID ORDER BY sch.week ASC
     `, { seasonID: sid }, false);
 
-    // getSeasonWeeklyScores
-    await runIfMissing(`getSeasonWeeklyScores-${sid}`, `
-      SELECT sc.scoreID, sc.bowlerID, sc.seasonID, sc.week, sc.teamID,
-        sc.game1, sc.game2, sc.game3, sc.scratchSeries,
-        sc.isPenalty, sc.incomingAvg, sc.incomingHcp,
-        sc.hcpGame1, sc.hcpGame2, sc.hcpGame3, sc.handSeries,
-        b.bowlerName, b.slug AS bowlerSlug,
-        COALESCE(tnh.teamName, t.teamName) AS teamName,
-        t.slug AS teamSlug,
-        sch.matchDate
-      FROM scores sc
-      JOIN bowlers b ON sc.bowlerID = b.bowlerID
-      JOIN teams t ON sc.teamID = t.teamID
-      LEFT JOIN teamNameHistory tnh ON tnh.seasonID = sc.seasonID AND tnh.teamID = sc.teamID
-      LEFT JOIN schedule sch ON sch.seasonID = sc.seasonID AND sch.week = sc.week
-        AND (sch.team1ID = sc.teamID OR sch.team2ID = sc.teamID)
-      WHERE sc.seasonID = @seasonID
-      ORDER BY sc.week ASC, sc.teamID ASC, sc.isPenalty ASC, b.bowlerName ASC
-    `, { seasonID: sid }, false);
-
     // getSeasonWeekSummaries
     await runIfMissing(`getSeasonWeekSummaries-${sid}`, `
       WITH weekStats AS (

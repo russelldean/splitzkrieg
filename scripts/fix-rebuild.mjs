@@ -115,7 +115,6 @@ const SEASON_SCOPED_PATTERNS = [
   `getSeasonFullStats-${seasonID}`,
   `getSeasonRecords-${seasonID}`,
   `getSeasonHeroStats-${seasonID}`,
-  `getSeasonWeeklyScores-${seasonID}`,
   `getSeasonMatchResults-${seasonID}`,
   `getStandingsRaceData-${seasonID}`,
   `getSeasonWeekSummaries-${seasonID}`,
