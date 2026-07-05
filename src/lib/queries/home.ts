@@ -323,7 +323,24 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
  * Pulls from the most recent published week of the current season.
  */
 
-const HIGHLIGHTS_SCORES_SQL = `/* v2: add dependsOn scores channel */
+// Current week's non-penalty scores plus each bowler's pre-week personal bests, used
+// by the home ticker to flag debuts / new-high-game / new-high-series. Every output
+// row shares the same (season, week) boundary, so the prior bests are ONE aggregate
+// over non-penalty history strictly before this week (priorAgg CTE, joined once) - not
+// 3 correlated subqueries scanning history per row (the old shape, ~1.5s cold / 33s
+// under build contention). isFirstNight = bowler absent from priorAgg. Verified
+// row-for-row identical to the correlated version across seasons/weeks.
+const HIGHLIGHTS_SCORES_SQL = `
+  WITH priorAgg AS (
+    SELECT sp.bowlerID,
+           MAX(x.val)            AS priorBestGame,
+           MAX(sp.scratchSeries) AS priorBestSeries
+    FROM scores sp
+    CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
+    WHERE sp.isPenalty = 0
+      AND (sp.seasonID < @seasonID OR (sp.seasonID = @seasonID AND sp.week < @week))
+    GROUP BY sp.bowlerID
+  )
   SELECT
     b.bowlerName,
     b.slug,
@@ -332,23 +349,12 @@ const HIGHLIGHTS_SCORES_SQL = `/* v2: add dependsOn scores channel */
     sc.game2,
     sc.game3,
     sc.scratchSeries,
-    CASE WHEN NOT EXISTS (
-      SELECT 1 FROM scores sc3
-      WHERE sc3.bowlerID = sc.bowlerID
-        AND sc3.isPenalty = 0
-        AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-    ) THEN 1 ELSE 0 END AS isFirstNight,
-    (SELECT MAX(x.val) FROM scores sp
-      CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
-      WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
-        AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
-    ) AS priorBestGame,
-    (SELECT MAX(sp.scratchSeries) FROM scores sp
-      WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
-        AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
-    ) AS priorBestSeries
+    CASE WHEN pa.bowlerID IS NULL THEN 1 ELSE 0 END AS isFirstNight,
+    pa.priorBestGame,
+    pa.priorBestSeries
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
+  LEFT JOIN priorAgg pa ON pa.bowlerID = sc.bowlerID
   WHERE sc.seasonID = @seasonID
     AND sc.week = @week
     AND sc.isPenalty = 0
