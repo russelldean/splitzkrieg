@@ -80,11 +80,11 @@ const GET_RECENT_MILESTONES_SQL = `
 `;
 
 const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
-  return cachedQuery('getRecentMilestones', async () => {
+  return taggedQuery<Milestone[]>('getRecentMilestones', async () => {
     const db = await getDb();
     const result = await db.request().query<Milestone>(GET_RECENT_MILESTONES_SQL);
     return result.recordset;
-  }, [], { sql: GET_RECENT_MILESTONES_SQL, dependsOn: ['scores'] });
+  }, [], { tags: [tags.scoresAll], revalidate: 120 });
 });
 
 // ── Published week resolver ─────────────────────────────────
@@ -358,7 +358,7 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
   const ctx = await getPublishedContext();
   if (!ctx || ctx.week === 0) return [];
 
-  return cachedQuery('getWeeklyHighlights', async () => {
+  return taggedQuery('getWeeklyHighlights', async () => {
 
     const db = await getDb();
     const result = await db.request()
@@ -417,5 +417,5 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
     }
 
     return items;
-  }, [], { sql: HIGHLIGHTS_SCORES_SQL, dependsOn: ['scores'], includePublishedTag: true });
+  }, [], { tags: [tags.scoresForSeason(ctx.seasonID)], revalidate: 120 });
 });

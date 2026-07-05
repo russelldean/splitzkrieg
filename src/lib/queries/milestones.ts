@@ -3,7 +3,8 @@
  * Computes approaching + recently-achieved milestones for active bowlers.
  */
 import { cache } from 'react';
-import { getDb, cachedQuery } from '../db';
+import { getDb, cachedQuery, taggedQuery } from '../db';
+import { tags } from '../cache-tags';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '../milestone-config';
 import type { TickerItem } from './home';
 
@@ -239,7 +240,7 @@ function computeLeagueMilestones(
  * ─────────────────────────────────────────────────────────── */
 
 export const getLeagueMilestones = cache(async (): Promise<LeagueMilestones> => {
-  return cachedQuery(
+  return taggedQuery(
     'getLeagueMilestones',
     async () => {
       const db = await getDb();
@@ -251,7 +252,7 @@ export const getLeagueMilestones = cache(async (): Promise<LeagueMilestones> => 
       return computeLeagueMilestones(statsResult.recordset, contribResult.recordset, allTimeResult.recordset);
     },
     { approaching: [], achieved: [] },
-    { sql: COMBINED_SQL, dependsOn: ['scores'] },
+    { tags: [tags.scoresAll], revalidate: 120 },
   );
 });
 
