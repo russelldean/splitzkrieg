@@ -5,8 +5,9 @@
  * only the bowlers who bowled this week — not all 600+.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
+import { tags } from '@/lib/cache-tags';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   let secret: string | null = request.nextUrl.searchParams.get('secret');
@@ -38,6 +39,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     `);
     const { seasonID, slug } = seasonRes.recordset[0];
     seasonSlug = slug;
+    // Track #1 pilot: tag-based revalidation for migrated queries (e.g. the
+    // current-season snapshot). Fires only when seasonID resolves; path-based
+    // revalidation below stays as-is for everything not yet migrated.
+    // Next 16: 'max' = stale-while-revalidate (serve stale, refetch in background,
+    // lazily on next visit). Recommended over the deprecated single-arg form.
+    revalidateTag(tags.scoresForSeason(seasonID), 'max');
 
     const weekRes = await db.request().query(
       `SELECT settingValue FROM leagueSettings WHERE settingKey = 'publishedWeek'`
