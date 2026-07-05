@@ -9,4 +9,15 @@ describe('cache-tags', () => {
     expect(tags.team(12)).toBe('team-12');
     expect(tags.season(36)).toBe('season-36');
   });
+
+  it('exposes coarse channel tags for cross-season queries', () => {
+    expect(tags.scoresAll).toBe('scores');
+    expect(tags.scheduleAll).toBe('schedule');
+    expect(tags.playoffsAll).toBe('playoffs');
+  });
+
+  it('builds per-season playoff tags and the current-season pointer', () => {
+    expect(tags.playoffsForSeason(36)).toBe('playoffs-36');
+    expect(tags.currentSeasonPointer).toBe('current-season');
+  });
 });
