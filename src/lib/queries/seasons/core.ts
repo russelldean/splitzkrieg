@@ -228,39 +228,58 @@ export interface LeagueStats {
   distinctChampionTeams: number;
 }
 
+// All-time "by the numbers" for the about page. The non-distinct figures (sums, plain
+// counts, maxes) collapse into ONE scan of scores (the inner `s` subquery) instead of
+// ~12 separate full scans. The 6 COUNT(DISTINCT bowlerID ...) stay as their own
+// subqueries ON PURPOSE: folding them into the single pass forced 6 distinct-sorts over
+// the whole scan and measured SLOWER; as separate subqueries they each get index-assisted
+// seeks. totalBowlers / totalTeams / totalSeasons / distinctChampionTeams are small,
+// non-scores counts. Verified identical to the all-subquery version; ~1.05s -> ~0.55s.
 const LEAGUE_STATS_SQL = `
   SELECT
     (SELECT COUNT(*) FROM seasons) AS totalSeasons,
     (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0) AS totalBowlers,
     (SELECT COUNT(*) FROM teams) AS totalTeams,
-    (SELECT COUNT(*) * 3 FROM scores WHERE isPenalty = 0) AS totalGames,
-    (SELECT SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT) + CAST(game3 AS BIGINT)) FROM scores WHERE isPenalty = 0) AS totalPins,
-    (SELECT SUM(ISNULL(turkeys, 0)) FROM scores WHERE isPenalty = 0) AS totalTurkeys,
-    (SELECT SUM(
-      CASE WHEN game1 >= 200 THEN 1 ELSE 0 END +
-      CASE WHEN game2 >= 200 THEN 1 ELSE 0 END +
-      CASE WHEN game3 >= 200 THEN 1 ELSE 0 END
-    ) FROM scores WHERE isPenalty = 0) AS games200Plus,
-    (SELECT SUM(
-      CASE WHEN game1 = 300 THEN 1 ELSE 0 END +
-      CASE WHEN game2 = 300 THEN 1 ELSE 0 END +
-      CASE WHEN game3 = 300 THEN 1 ELSE 0 END
-    ) FROM scores WHERE isPenalty = 0) AS games300,
-    (SELECT COUNT(*) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 600) AS series600Plus,
-    (SELECT COUNT(*) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 700) AS series700Plus,
-    (SELECT COUNT(*) FROM scores WHERE isPenalty = 0 AND scratchSeries = 900) AS perfectSeriesCount,
-    (SELECT MAX(v) FROM (
-      SELECT MAX(game1) AS v FROM scores WHERE isPenalty = 0
-      UNION ALL SELECT MAX(game2) FROM scores WHERE isPenalty = 0
-      UNION ALL SELECT MAX(game3) FROM scores WHERE isPenalty = 0
-    ) g) AS highGame,
-    (SELECT MAX(scratchSeries) FROM scores WHERE isPenalty = 0) AS highSeries,
+    s.totalGames,
+    s.totalPins,
+    s.totalTurkeys,
+    s.games200Plus,
+    s.games300,
+    s.series600Plus,
+    s.series700Plus,
+    s.perfectSeriesCount,
+    (SELECT MAX(v) FROM (VALUES (s.maxG1), (s.maxG2), (s.maxG3)) AS g(v)) AS highGame,
+    s.highSeries,
     (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND ISNULL(turkeys, 0) > 0) AS bowlersWithTurkey,
     (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND (game1 >= 200 OR game2 >= 200 OR game3 >= 200)) AS bowlersWith200,
     (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND (game1 = 300 OR game2 = 300 OR game3 = 300)) AS bowlersWith300,
     (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 600) AS bowlersWith600,
     (SELECT COUNT(DISTINCT bowlerID) FROM scores WHERE isPenalty = 0 AND scratchSeries >= 700) AS bowlersWith700,
     (SELECT COUNT(DISTINCT winnerTeamID) FROM seasonChampions WHERE championshipType = 'team' AND winnerTeamID IS NOT NULL) AS distinctChampionTeams
+  FROM (
+    SELECT
+      COUNT(*) * 3 AS totalGames,
+      SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT) + CAST(game3 AS BIGINT)) AS totalPins,
+      SUM(ISNULL(turkeys, 0)) AS totalTurkeys,
+      SUM(
+        CASE WHEN game1 >= 200 THEN 1 ELSE 0 END +
+        CASE WHEN game2 >= 200 THEN 1 ELSE 0 END +
+        CASE WHEN game3 >= 200 THEN 1 ELSE 0 END
+      ) AS games200Plus,
+      SUM(
+        CASE WHEN game1 = 300 THEN 1 ELSE 0 END +
+        CASE WHEN game2 = 300 THEN 1 ELSE 0 END +
+        CASE WHEN game3 = 300 THEN 1 ELSE 0 END
+      ) AS games300,
+      SUM(CASE WHEN scratchSeries >= 600 THEN 1 ELSE 0 END) AS series600Plus,
+      SUM(CASE WHEN scratchSeries >= 700 THEN 1 ELSE 0 END) AS series700Plus,
+      SUM(CASE WHEN scratchSeries = 900 THEN 1 ELSE 0 END) AS perfectSeriesCount,
+      MAX(game1) AS maxG1,
+      MAX(game2) AS maxG2,
+      MAX(game3) AS maxG3,
+      MAX(scratchSeries) AS highSeries
+    FROM scores WHERE isPenalty = 0
+  ) s
 `;
 
 export const getLeagueStats = cache(async (): Promise<LeagueStats> => {
