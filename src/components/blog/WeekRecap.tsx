@@ -12,7 +12,7 @@
  */
 import {
   getSeasonBySlug,
-  getSeasonWeeklyScores,
+  getWeekScores,
   getSeasonSchedule,
   getSeasonMatchResults,
   getWeekCareerMilestones,
@@ -41,8 +41,8 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData || isNaN(weekNum)) return null;
 
-  const [allScores, allSchedule, allMatchResults, standings, careerMilestones, siteUpdates, weekMatchDetails] = await Promise.all([
-    getSeasonWeeklyScores(seasonData.seasonID),
+  const [weekScores, allSchedule, allMatchResults, standings, careerMilestones, siteUpdates, weekMatchDetails] = await Promise.all([
+    getWeekScores(seasonData.seasonID, weekNum),
     getSeasonSchedule(seasonData.seasonID),
     getSeasonMatchResults(seasonData.seasonID),
     getStandingsSnapshot(seasonData.seasonID, weekNum),
@@ -51,7 +51,6 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
     getMatchResultsSummary(seasonData.seasonID, weekNum),
   ]);
 
-  const weekScores = allScores.filter(s => s.week === weekNum);
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 
   // Fetch custom discovery link overrides for this post — no isPublished filter
