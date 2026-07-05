@@ -36,12 +36,10 @@ let pool: sql.ConnectionPool | null = null;
 // Azure SQL has a 30-connection limit. The semaphore is per-process, and
 // Vercel runs N parallel build workers (set in next.config.ts cpus).
 // Effective ceiling: cpus × MAX_CONCURRENT_QUERIES.
-// Current setting: 10 × 2 = 20 — same proven-safe ceiling as the old 4 × 5
-// (which replaced a 4 × 7 = 28 config that crashed a publish-week build at
-// 30/30), but paired with cpus:10 for ~2.5x render parallelism. Only COLD
-// queries acquire a slot; warm cache hits never open a connection, so the
-// higher worker count speeds warm rebuilds without touching the DB ceiling.
-const MAX_CONCURRENT_QUERIES = 2;
+// Current setting: 4 × 5 = 20 — leaves 10-conn headroom for raw pool
+// connections during retries. Lowered from 7 after a publish-week build
+// crashed at 30/30 connections; can be restored once the cache is stable.
+const MAX_CONCURRENT_QUERIES = 5;
 let activeQueries = 0;
 const queryQueue: (() => void)[] = [];
 
