@@ -6,7 +6,20 @@ import {
   buildGameProfile,
   assembleBowlerView,
   computeWeekDelta,
+  BOWLER_VIEW_BATCH_SQL,
 } from './bowler-page';
+
+describe('BOWLER_VIEW_BATCH_SQL', () => {
+  it('has exactly 8 statements, matching assembleBowlerView recordset indices', () => {
+    // Guard the highest-risk invariant: statement order/count must stay in lockstep
+    // with assembleBowlerView's recordsets[0..7]. Reordering or adding a statement
+    // without updating the assembler would silently mis-map data.
+    const statements = BOWLER_VIEW_BATCH_SQL.split(';\n').filter(s => s.trim());
+    expect(statements).toHaveLength(8);
+    // sanity: every statement is a per-bowler read keyed on @bowlerID
+    for (const s of statements) expect(s).toContain('@bowlerID');
+  });
+});
 
 describe('reduceStarStats', () => {
   it('maps patch codes to counts, defaults missing to 0', () => {

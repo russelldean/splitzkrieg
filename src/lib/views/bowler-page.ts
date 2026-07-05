@@ -179,7 +179,7 @@ export function assembleBowlerView(recordsets: unknown[][]): BowlerPageView {
 
 /**
  * Last-week delta (page.tsx:154-189). Needs currentSeasonID (league state) to gate
- * "active in the current season" — kept OUT of the cached view so the per-bowler
+ * "active in the current season" - kept OUT of the cached view so the per-bowler
  * cache key stays clean; the page passes league.currentSeasonID in.
  */
 export function computeWeekDelta(view: BowlerPageView, currentSeasonID: number | null): WeekDelta | null {
@@ -234,7 +234,7 @@ const BOWLER_ARCHETYPE_SQL = `
  * Batched per-bowler SQL. Order MUST match assembleBowlerView's recordset order:
  * 0 careerSummary, 1 seasonStats, 2 gameLog, 3 rollingAvgHistory,
  * 4 patches, 5 starStats, 6 facts, 7 archetype.
- * The first 7 are reused verbatim from the query modules — do NOT edit them here.
+ * The first 7 are reused verbatim from the query modules - do NOT edit them here.
  */
 export const BOWLER_VIEW_BATCH_SQL = [
   GET_BOWLER_CAREER_SUMMARY_SQL,

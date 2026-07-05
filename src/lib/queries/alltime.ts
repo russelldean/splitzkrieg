@@ -419,11 +419,6 @@ export async function getGameProfiles(): Promise<GameProfilesResult> {
   }, { all: [], leaderboard: [] }, { sql: GAME_PROFILES_SQL, dependsOn: ['scores'] });
 }
 
-export async function getBowlerGameProfile(slug: string): Promise<GameProfileRow | null> {
-  const { all } = await getGameProfiles();
-  return all.find(b => b.slug === slug) ?? null;
-}
-
 export interface LeagueGameAvgs {
   avg1: number;
   avg2: number;
