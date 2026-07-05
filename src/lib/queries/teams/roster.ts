@@ -105,37 +105,49 @@ export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Pr
   }, [], { sql: GET_TEAM_SEASON_BOWLERS_SQL, seasonID });
 }
 
+// firstSeason/lastSeason previously used two correlated subqueries that re-scanned
+// `scores` once per bowler (~2N cold scans) - the dominant cold cost on the team
+// page (see scripts/phase3/profile-team-cold.mjs). Rewritten to scan the team's
+// scores once (materialized CTE) and pick first/last via ROW_NUMBER. Verified
+// row-for-row identical to the old output across teams (verify-alltime-roster.mjs);
+// 4-15x faster.
 export const GET_TEAM_ALL_TIME_ROSTER_SQL = `
+  WITH teamScores AS (
+    SELECT sc.bowlerID, sc.scoreID, sc.scratchSeries, sc.seasonID,
+           sn.displayName, sn.year, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END AS pOrd
+    FROM scores sc
+    JOIN seasons sn ON sc.seasonID = sn.seasonID
+    WHERE sc.teamID = @teamID AND sc.isPenalty = 0
+  ),
+  firstLast AS (
+    SELECT bowlerID,
+      MAX(CASE WHEN rnFirst = 1 THEN displayName END) AS firstSeason,
+      MAX(CASE WHEN rnLast  = 1 THEN displayName END) AS lastSeason
+    FROM (
+      SELECT bowlerID, displayName,
+        ROW_NUMBER() OVER (PARTITION BY bowlerID ORDER BY year ASC,  pOrd ASC)  AS rnFirst,
+        ROW_NUMBER() OVER (PARTITION BY bowlerID ORDER BY year DESC, pOrd DESC) AS rnLast
+      FROM teamScores
+    ) x
+    GROUP BY bowlerID
+  )
   SELECT
     b.bowlerID,
     b.bowlerName,
     b.slug,
-    COUNT(sc.scoreID) * 3 AS totalGames,
-    SUM(sc.scratchSeries) AS totalPins,
+    COUNT(ts.scoreID) * 3 AS totalGames,
+    SUM(ts.scratchSeries) AS totalPins,
     CAST(
-      SUM(sc.scratchSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
+      SUM(ts.scratchSeries) * 1.0 /
+      NULLIF(COUNT(ts.scoreID) * 3, 0)
     AS DECIMAL(5,1)) AS average,
-    COUNT(DISTINCT sc.seasonID) AS seasonsWithTeam,
-    (
-      SELECT TOP 1 sn.displayName
-      FROM scores sc2
-      JOIN seasons sn ON sc2.seasonID = sn.seasonID
-      WHERE sc2.bowlerID = b.bowlerID AND sc2.teamID = @teamID AND sc2.isPenalty = 0
-      ORDER BY sn.year ASC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END ASC
-    ) AS firstSeason,
-    (
-      SELECT TOP 1 sn.displayName
-      FROM scores sc2
-      JOIN seasons sn ON sc2.seasonID = sn.seasonID
-      WHERE sc2.bowlerID = b.bowlerID AND sc2.teamID = @teamID AND sc2.isPenalty = 0
-      ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
-    ) AS lastSeason
-  FROM scores sc
-  JOIN bowlers b ON sc.bowlerID = b.bowlerID
-  WHERE sc.teamID = @teamID
-    AND sc.isPenalty = 0
-  GROUP BY b.bowlerID, b.bowlerName, b.slug
+    COUNT(DISTINCT ts.seasonID) AS seasonsWithTeam,
+    fl.firstSeason,
+    fl.lastSeason
+  FROM teamScores ts
+  JOIN bowlers b ON b.bowlerID = ts.bowlerID
+  JOIN firstLast fl ON fl.bowlerID = ts.bowlerID
+  GROUP BY b.bowlerID, b.bowlerName, b.slug, fl.firstSeason, fl.lastSeason
   ORDER BY totalGames DESC, average DESC
 `;
 
