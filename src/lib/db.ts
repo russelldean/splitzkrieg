@@ -178,6 +178,40 @@ function writeToDiskCache<T>(key: string, data: T, stable?: boolean): void {
   }
 }
 
+// A live query counts as slow past this. Slow queries are the root cause of the
+// build/on-demand timeouts, so surfacing them points at the queries/data model
+// that need fixing BEFORE they fail under load.
+const SLOW_QUERY_MS = 3000;
+
+/**
+ * Structured, greppable telemetry for the actual DB path (cache misses only).
+ * Emits one JSON line per slow success or failure so query health can be
+ * traced in Vercel logs (filter on [QUERY_FAIL] / [QUERY_SLOW]) instead of
+ * being silently swallowed. Root-cause the offenders, do not paper over them.
+ */
+function recordQueryOutcome(o: {
+  key: string;
+  ms: number;
+  ok: boolean;
+  error?: unknown;
+}): void {
+  const phase = process.env.NEXT_PHASE === 'phase-production-build' ? 'build' : 'request';
+  if (o.ok) {
+    console.warn(`[QUERY_SLOW] ${JSON.stringify({ key: o.key, ms: o.ms, phase })}`);
+    return;
+  }
+  const err = o.error;
+  console.error(
+    `[QUERY_FAIL] ${JSON.stringify({
+      key: o.key,
+      ms: o.ms,
+      phase,
+      code: (err as { code?: string })?.code ?? null,
+      message: err instanceof Error ? err.message : String(err),
+    })}`,
+  );
+}
+
 /**
  * Execute a DB query with retry logic for Azure SQL throttling.
  * Retries up to `maxRetries` times with exponential backoff on timeout errors.
@@ -235,6 +269,13 @@ export async function cachedQuery<T>(
      * without a scores version bump leaves the cache stale.
      */
     includePublishedTag?: boolean;
+    /**
+     * Rethrow instead of returning the fallback when the query fails after
+     * retries. Use for notFound()-gating lookups (getBowlerBySlug etc.): a DB
+     * failure must surface as a retryable 500, NOT a null that the page turns
+     * into notFound() and Next caches as a permanent 404.
+     */
+    throwOnError?: boolean;
   },
 ): Promise<T> {
   const stable = options?.stable;
@@ -304,13 +345,19 @@ export async function cachedQuery<T>(
 
   // 3. Run query with retry (concurrency-limited)
   await acquireSlot();
+  const startedAt = Date.now();
   try {
     const result = await withRetry(fn, cacheKey);
+    const ms = Date.now() - startedAt;
     // 4. Cache successful result
     writeToDiskCache(cacheKey, result, stable);
+    if (ms >= SLOW_QUERY_MS) recordQueryOutcome({ key: cacheKey, ms, ok: true });
     return result;
   } catch (err) {
-    console.warn(`${cacheKey}: DB unavailable`, err);
+    recordQueryOutcome({ key: cacheKey, ms: Date.now() - startedAt, ok: false, error: err });
+    // Gating lookups opt into rethrow so a transient DB failure becomes a
+    // retryable error, never a fallback that bakes a permanent cached 404.
+    if (options?.throwOnError) throw err;
     return fallback as T;
   } finally {
     releaseSlot();

@@ -77,7 +77,8 @@ export const getSeasonBySlug = cache(async (slug: string): Promise<Season | null
       .input('slug', slug)
       .query<Season>(GET_SEASON_BY_SLUG_SQL);
     return result.recordset[0] ?? null;
-  }, null, { sql: GET_SEASON_BY_SLUG_SQL, stable: true });
+    // throwOnError: a DB failure must 500 (retryable), not return null -> notFound() -> cached 404.
+  }, null, { sql: GET_SEASON_BY_SLUG_SQL, stable: true, throwOnError: true });
 });
 
 const GET_ALL_SEASONS_DIRECTORY_SQL = `

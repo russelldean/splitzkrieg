@@ -68,7 +68,8 @@ export async function getBowlerBySlug(slug: string): Promise<Bowler | null> {
       .input('slug', slug)
       .query<Bowler>(GET_BOWLER_BY_SLUG_SQL);
     return result.recordset[0] ?? null;
-  }, null, { stable: true, sql: GET_BOWLER_BY_SLUG_SQL });
+    // throwOnError: a DB failure must 500 (retryable), not return null -> notFound() -> cached 404.
+  }, null, { stable: true, sql: GET_BOWLER_BY_SLUG_SQL, throwOnError: true });
 }
 
 /* ───────────────────────────────────────────────────────────
