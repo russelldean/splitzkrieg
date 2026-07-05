@@ -165,13 +165,26 @@ export async function getSeasonWeeklyScoresLite(seasonID: number): Promise<Weekl
   }, [], { sql: GET_SEASON_WEEKLY_SCORES_LITE_SQL, seasonID });
 }
 
-// Single-week scores with the 3 per-row correlated subqueries (isFirstNight,
-// priorBestGame, priorBestSeries) scoped by an `AND sc.week = @week` on the OUTER
-// select, so those subqueries (which still scan history strictly BEFORE this week)
-// run for ~one week's rows instead of the whole season. The week page + WeekRecap
-// need the correlated columns (personal-best highlights) but only for the week they
-// render; playoffs/stats only need max(week), so they use getSeasonWeekNumbers.
+// Single-week scores plus each bowler's pre-week personal bests (isFirstNight,
+// priorBestGame, priorBestSeries). Because every output row shares the same
+// (season, week) boundary, those bests collapse to ONE aggregate over the bowler's
+// non-penalty history strictly BEFORE this week (priorAgg CTE), joined once - not 3
+// correlated subqueries scanning history per row (the old shape, ~1.7s cold).
+// isFirstNight = no prior non-penalty night = bowler absent from priorAgg. Verified
+// row-for-row identical to the old correlated version across seasons/weeks incl.
+// penalty rows. The week page + WeekRecap use this; playoffs/stats only need
+// max(week) and use getSeasonWeekNumbers.
 const GET_WEEK_SCORES_SQL = `
+  WITH priorAgg AS (
+    SELECT sp.bowlerID,
+           MAX(x.val)            AS priorBestGame,
+           MAX(sp.scratchSeries) AS priorBestSeries
+    FROM scores sp
+    CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
+    WHERE sp.isPenalty = 0
+      AND (sp.seasonID < @seasonID OR (sp.seasonID = @seasonID AND sp.week < @week))
+    GROUP BY sp.bowlerID
+  )
   SELECT
     sc.week,
     sch.matchDate,
@@ -191,21 +204,9 @@ const GET_WEEK_SCORES_SQL = `
     ISNULL(sc.turkeys, 0) AS turkeys,
     b.gender,
     sc.isPenalty,
-    CASE WHEN NOT EXISTS (
-      SELECT 1 FROM scores sc3
-      WHERE sc3.bowlerID = sc.bowlerID
-        AND sc3.isPenalty = 0
-        AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
-    ) THEN 1 ELSE 0 END AS isFirstNight,
-    (SELECT MAX(x.val) FROM scores sp
-      CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
-      WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
-        AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
-    ) AS priorBestGame,
-    (SELECT MAX(sp.scratchSeries) FROM scores sp
-      WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
-        AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
-    ) AS priorBestSeries
+    CASE WHEN pa.bowlerID IS NULL THEN 1 ELSE 0 END AS isFirstNight,
+    pa.priorBestGame,
+    pa.priorBestSeries
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   JOIN teams t ON sc.teamID = t.teamID
@@ -219,6 +220,7 @@ const GET_WEEK_SCORES_SQL = `
   ) sch
     ON  sch.seasonID = sc.seasonID
     AND sch.week     = sc.week
+  LEFT JOIN priorAgg pa ON pa.bowlerID = sc.bowlerID
   WHERE sc.seasonID = @seasonID
     AND sc.week = @week
   ORDER BY sc.week ASC, sc.teamID ASC, sc.isPenalty ASC, b.bowlerName ASC
