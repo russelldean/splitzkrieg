@@ -10,6 +10,7 @@ import sql from 'mssql';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { unstable_cache } from 'next/cache';
 
 const config: sql.config = {
   server: process.env.AZURE_SQL_SERVER!,
@@ -315,4 +316,40 @@ export async function cachedQuery<T>(
   } finally {
     releaseSlot();
   }
+}
+
+/**
+ * Native-cache sibling of cachedQuery. Caches the result in Next's Data Cache
+ * (persisted across deploys on Vercel), keyed by `key`, invalidated by `tags`
+ * via revalidateTag. No SQL-hash keying, no .data-versions.json bookkeeping.
+ *
+ * - key: stable identifier including any params (e.g. `current-season-snapshot-36`)
+ * - tags: entity/channel tags this result depends on (e.g. ['scores-36'])
+ * - revalidate: TTL seconds, or false for tag-only invalidation
+ *
+ * Preserves cachedQuery's semantics: build-time concurrency slot + retry, and
+ * returns `fallback` on DB failure (never caches a failure).
+ */
+export function taggedQuery<T>(
+  key: string,
+  fn: () => Promise<T>,
+  fallback: T,
+  options: { tags: string[]; revalidate?: number | false },
+): Promise<T> {
+  const runner = unstable_cache(
+    async () => {
+      await acquireSlot();
+      try {
+        return await withRetry(fn, key);
+      } finally {
+        releaseSlot();
+      }
+    },
+    [key],
+    { tags: options.tags, revalidate: options.revalidate ?? false },
+  );
+  return runner().catch((err) => {
+    console.warn(`taggedQuery ${key}: DB unavailable`, err);
+    return fallback;
+  });
 }
