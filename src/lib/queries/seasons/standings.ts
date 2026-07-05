@@ -396,6 +396,23 @@ export async function getSeasonLeaderboard(
 }
 
 const GET_SEASON_FULL_STATS_SQL = `
+  WITH primaryTeam AS (
+    -- Each bowler's team for the season = the team they bowled the most games for;
+    -- ties broken by the team of their LATEST week (the team they finished on). This
+    -- replaces a per-bowler CROSS APPLY TOP 1 (which was ~100% of the query cost and
+    -- broke ties arbitrarily) with one single-pass ROW_NUMBER. All stat columns are
+    -- unchanged; only genuine-tie team attributions shift to this deterministic rule.
+    SELECT bowlerID, teamID FROM (
+      SELECT sc.bowlerID, sc.teamID,
+        ROW_NUMBER() OVER (
+          PARTITION BY sc.bowlerID
+          ORDER BY COUNT(*) DESC, MAX(sc.week) DESC, sc.teamID ASC
+        ) AS rn
+      FROM scores sc
+      WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
+      GROUP BY sc.bowlerID, sc.teamID
+    ) x WHERE rn = 1
+  )
   SELECT
     agg.bowlerID,
     b.bowlerName,
@@ -446,13 +463,7 @@ const GET_SEASON_FULL_STATS_SQL = `
     GROUP BY sc.bowlerID
   ) agg
   JOIN bowlers b ON b.bowlerID = agg.bowlerID
-  CROSS APPLY (
-    SELECT TOP 1 sc2.teamID
-    FROM scores sc2
-    WHERE sc2.bowlerID = agg.bowlerID AND sc2.seasonID = @seasonID AND sc2.isPenalty = 0
-    GROUP BY sc2.teamID
-    ORDER BY COUNT(*) DESC
-  ) pt
+  JOIN primaryTeam pt ON pt.bowlerID = agg.bowlerID
   LEFT JOIN teams t ON t.teamID = pt.teamID
   LEFT JOIN teamNameHistory tnh
     ON  tnh.seasonID = @seasonID
