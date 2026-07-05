@@ -47,7 +47,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSerif.variable} ${inter.variable} ${orbitron.variable}`}>
+    <html
+      lang="en"
+      data-build={(process.env.VERCEL_GIT_COMMIT_SHA ?? 'local').slice(0, 7)}
+      className={`${dmSerif.variable} ${inter.variable} ${orbitron.variable}`}
+    >
       <body className="bg-cream text-navy font-body">
         <PostHogProvider>
           <PageTransition />
