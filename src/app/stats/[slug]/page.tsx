@@ -10,7 +10,7 @@ import {
   getSeasonBySlug,
   getSeasonLeaderboard,
   getSeasonFullStats,
-  getSeasonWeeklyScores,
+  getSeasonWeekNumbers,
   getMinGamesForWeek,
   getAllSeasonNavList,
   getSeasonIndividualChampions,
@@ -114,15 +114,15 @@ export default async function SeasonStatsPage({
   const season = await getSeasonBySlug(slug);
   if (!season) notFound();
 
-  const [fullStats, weeklyScores, allSeasons, champions] = await Promise.all([
+  const [fullStats, weekNumbers, allSeasons, champions] = await Promise.all([
     getSeasonFullStats(season.seasonID),
-    getSeasonWeeklyScores(season.seasonID),
+    getSeasonWeekNumbers(season.seasonID),
     getAllSeasonNavList(),
     getSeasonIndividualChampions(season.seasonID),
   ]);
 
-  const currentWeek = weeklyScores.length > 0
-    ? Math.max(...weeklyScores.map(s => s.week))
+  const currentWeek = weekNumbers.length > 0
+    ? Math.max(...weekNumbers)
     : 1;
   const minGames = getMinGamesForWeek(currentWeek);
 
