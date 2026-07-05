@@ -45,7 +45,7 @@ export const MAINTENANCE_HTML = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Splitzkrieg is getting ready for the new season</title>
+<title>Get ready for Season XXXVI | Splitzkrieg</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -63,8 +63,8 @@ export const MAINTENANCE_HTML = `<!doctype html>
 <body>
   <div class="wrap">
     <div class="mark">Splitzkrieg</div>
-    <h1>We are getting ready for the new season.</h1>
-    <p>The site is briefly offline while we roll out something better.</p>
+    <h1>Get ready for Season XXXVI</h1>
+    <p>The site is briefly offline while we roll out updates for the new season, pun intended.</p>
     <p>Check back soon.</p>
   </div>
 </body>
