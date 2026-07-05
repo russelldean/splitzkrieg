@@ -38,10 +38,6 @@ export const metadata = {
   description: 'Stats, records, and history for the Splitzkrieg Bowling League. Since 2007.',
 };
 
-// Track #1 pilot: ISR. Data Cache + tags handle freshness; revalidateTag
-// refreshes on publish. 120s TTL is a backstop.
-export const revalidate = 120;
-
 export default async function Home() {
   const [seasonSnapshot, weeklyHighlights, leagueMilestones, blogBadgeId, instagramPosts, allPosts, randomFacts] = await Promise.all([
     getCurrentSeasonSnapshot(),

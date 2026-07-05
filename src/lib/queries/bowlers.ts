@@ -3,8 +3,7 @@
  * Includes profile, career stats, game log, rolling average, and directory.
  */
 import { cache } from 'react';
-import { getDb, cachedQuery, taggedQuery } from '../db';
-import { tags } from '../cache-tags';
+import { getDb, cachedQuery } from '../db';
 import { getPublishedContext } from './home';
 
 export interface BowlerSlug {
@@ -382,14 +381,14 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number[]> => {
   const ctx = await getPublishedContext();
   if (!ctx || ctx.week === 0) return [];
 
-  return taggedQuery('getBowlerOfTheWeek', async () => {
+  return cachedQuery('getBowlerOfTheWeek', async () => {
     const db = await getDb();
     const result = await db.request()
       .input('seasonID', ctx.seasonID)
       .input('week', ctx.week)
       .query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
     return result.recordset.map((r) => r.bowlerID);
-  }, [], { tags: [tags.scoresForSeason(ctx.seasonID)], revalidate: 120 });
+  }, [], { sql: GET_BOWLER_OF_THE_WEEK_SQL, dependsOn: ['scores'] });
 });
 
 export interface DirectoryBowler {

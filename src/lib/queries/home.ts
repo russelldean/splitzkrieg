@@ -2,8 +2,7 @@
  * Home page queries: countdown, milestones, season snapshot.
  */
 import { cache } from 'react';
-import { getDb, cachedQuery, taggedQuery } from '../db';
-import { tags } from '../cache-tags';
+import { getDb, cachedQuery } from '../db';
 
 const BADGE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
@@ -80,11 +79,11 @@ const GET_RECENT_MILESTONES_SQL = `
 `;
 
 const getRecentMilestones = cache(async (): Promise<Milestone[]> => {
-  return taggedQuery<Milestone[]>('getRecentMilestones', async () => {
+  return cachedQuery('getRecentMilestones', async () => {
     const db = await getDb();
     const result = await db.request().query<Milestone>(GET_RECENT_MILESTONES_SQL);
     return result.recordset;
-  }, [], { tags: [tags.scoresAll], revalidate: 120 });
+  }, [], { sql: GET_RECENT_MILESTONES_SQL, dependsOn: ['scores'] });
 });
 
 // ── Published week resolver ─────────────────────────────────
@@ -269,14 +268,15 @@ const SNAPSHOT_TOTW_SQL = `/* v3: week passed as param */
   ORDER BY totalHandSeries DESC
 `;
 
+const SNAPSHOT_ALL_SQL = CURRENT_SEASON_SQL + SNAPSHOT_STATS_SQL + SNAPSHOT_TOP_MALE_AVG_SQL
+  + SNAPSHOT_TOP_FEMALE_AVG_SQL + SNAPSHOT_TOP_HCP_AVG_SQL + SNAPSHOT_HIGH_GAME_SQL
+  + SNAPSHOT_HIGH_SERIES_SQL + SNAPSHOT_BOTW_SQL + SNAPSHOT_TOTW_SQL;
+
 export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot | null> => {
   const ctx = await getPublishedContext();
   if (!ctx || ctx.week === 0) return null;
 
-  // Track #1 pilot: migrated from cachedQuery to native taggedQuery. Key includes
-  // season + published week (so a publish fetches fresh, replacing the old
-  // includePublishedTag behavior); tag scores-<season> lets a score import refresh it.
-  return taggedQuery(`current-season-snapshot-${ctx.seasonID}-w${ctx.week}`, async () => {
+  return cachedQuery('getCurrentSeasonSnapshot', async () => {
 
     const db = await getDb();
     const req = () => db.request().input('seasonID', ctx.seasonID).input('week', ctx.week);
@@ -315,7 +315,7 @@ export const getCurrentSeasonSnapshot = cache(async (): Promise<SeasonSnapshot |
       bowlersOfTheWeek: botwResult.recordset,
       teamOfTheWeek,
     };
-  }, null, { tags: [tags.scoresForSeason(ctx.seasonID)], revalidate: 120 });
+  }, null, { sql: SNAPSHOT_ALL_SQL, dependsOn: ['scores'], includePublishedTag: true });
 });
 
 /**
@@ -358,7 +358,7 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
   const ctx = await getPublishedContext();
   if (!ctx || ctx.week === 0) return [];
 
-  return taggedQuery('getWeeklyHighlights', async () => {
+  return cachedQuery('getWeeklyHighlights', async () => {
 
     const db = await getDb();
     const result = await db.request()
@@ -417,5 +417,5 @@ export const getWeeklyHighlights = cache(async (): Promise<TickerItem[]> => {
     }
 
     return items;
-  }, [], { tags: [tags.scoresForSeason(ctx.seasonID)], revalidate: 120 });
+  }, [], { sql: HIGHLIGHTS_SCORES_SQL, dependsOn: ['scores'], includePublishedTag: true });
 });

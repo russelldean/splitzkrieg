@@ -5,44 +5,24 @@
  * only the bowlers who bowled this week — not all 600+.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { getDb } from '@/lib/db';
-import { tags } from '@/lib/cache-tags';
-
-// Only these tag shapes may be revalidated via the request body, so the
-// endpoint can't be used to bust arbitrary tags. Matches the cache-tags vocab.
-const ALLOWED_TAG = /^(scores|schedule|playoffs|bowler|team|season)(-\d+)?$|^current-season$/;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // Parse the JSON body once (a request body can only be read once). Supports
-  // both secret-in-body and the { tags: [...] } rename/import entrypoint.
-  let body: { secret?: string; tags?: unknown } | null = null;
-  try {
-    body = await request.json();
-  } catch {
-    // no body / not JSON — query-param secret path
-  }
+  let secret: string | null = request.nextUrl.searchParams.get('secret');
 
-  const secret: string | null = request.nextUrl.searchParams.get('secret') ?? body?.secret ?? null;
+  if (!secret) {
+    try {
+      const body = await request.json();
+      secret = body?.secret ?? null;
+    } catch {
+      // not JSON
+    }
+  }
 
   const expectedSecret = process.env.REVALIDATION_SECRET;
   if (!expectedSecret || !secret || secret !== expectedSecret) {
     return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });
-  }
-
-  // Targeted entrypoint: { tags: [...] } busts exactly those tags and returns.
-  // Used by the bowler/team rename workflow and schedule/playoff imports.
-  if (Array.isArray(body?.tags)) {
-    const requested = body.tags.filter((t): t is string => typeof t === 'string');
-    const valid = requested.filter((t) => ALLOWED_TAG.test(t));
-    for (const t of valid) {
-      revalidateTag(t, 'max');
-    }
-    return NextResponse.json({
-      revalidated: true,
-      tags: valid,
-      rejected: requested.filter((t) => !ALLOWED_TAG.test(t)),
-    });
   }
 
   let seasonSlug = 'spring-2026';
@@ -58,14 +38,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     `);
     const { seasonID, slug } = seasonRes.recordset[0];
     seasonSlug = slug;
-    // Track #1 pilot: tag-based revalidation for migrated queries (e.g. the
-    // current-season snapshot). Fires only when seasonID resolves; path-based
-    // revalidation below stays as-is for everything not yet migrated.
-    // Next 16: 'max' = stale-while-revalidate (serve stale, refetch in background,
-    // lazily on next visit). Recommended over the deprecated single-arg form.
-    revalidateTag(tags.scoresForSeason(seasonID), 'max');
-    // Coarse channel bust so cross-season boards (all-time, directories) refresh.
-    revalidateTag(tags.scoresAll, 'max');
 
     const weekRes = await db.request().query(
       `SELECT settingValue FROM leagueSettings WHERE settingKey = 'publishedWeek'`
@@ -77,17 +49,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .input('sid', seasonID)
       .input('week', publishedWeek)
       .query(`
-        SELECT DISTINCT b.slug, b.bowlerID
+        SELECT DISTINCT b.slug
         FROM scores s
         JOIN bowlers b ON s.bowlerID = b.bowlerID
         WHERE s.seasonID = @sid AND s.week = @week AND s.isPenalty = 0
       `);
-    const bowlerRows = bowlerRes.recordset as { slug: string; bowlerID: number }[];
-    bowlerSlugs = bowlerRows.map((r) => r.slug);
-    // Per-bowler tags for only the bowlers who bowled this week (scoping preserved).
-    for (const { bowlerID } of bowlerRows) {
-      revalidateTag(tags.bowler(bowlerID), 'max');
-    }
+    bowlerSlugs = bowlerRes.recordset.map((r: { slug: string }) => r.slug);
   } catch {
     // Fall back to homepage-only revalidation
   }
