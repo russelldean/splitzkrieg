@@ -171,6 +171,62 @@ export async function getSeasonWeeklyScores(seasonID: number): Promise<WeeklyMat
   }, [], { sql: GET_SEASON_WEEKLY_SCORES_SQL, seasonID });
 }
 
+// Lite variant WITHOUT the three per-row correlated subqueries (isFirstNight,
+// priorBestGame, priorBestSeries) that scan the full scores history once per row -
+// the reason the full query costs ~3.3s. The season page's SeasonHighlights never
+// reads those fields (only the week + playoff pages do), so it uses this instead.
+// Same shape as WeeklyMatchScore; the three unused fields are NULL/false.
+const GET_SEASON_WEEKLY_SCORES_LITE_SQL = `
+  SELECT
+    sc.week,
+    sch.matchDate,
+    sc.teamID,
+    COALESCE(tnh.teamName, t.teamName)  AS teamName,
+    t.slug                               AS teamSlug,
+    sc.bowlerID,
+    b.bowlerName,
+    b.slug                               AS bowlerSlug,
+    sc.game1,
+    sc.game2,
+    sc.game3,
+    sc.scratchSeries,
+    sc.handSeries,
+    sc.incomingAvg,
+    sc.incomingHcp,
+    ISNULL(sc.turkeys, 0) AS turkeys,
+    b.gender,
+    sc.isPenalty,
+    CAST(0 AS BIT) AS isFirstNight,
+    CAST(NULL AS INT) AS priorBestGame,
+    CAST(NULL AS INT) AS priorBestSeries
+  FROM scores sc
+  JOIN bowlers b ON sc.bowlerID = b.bowlerID
+  JOIN teams t ON sc.teamID = t.teamID
+  LEFT JOIN teamNameHistory tnh
+    ON  tnh.seasonID = sc.seasonID
+    AND tnh.teamID   = sc.teamID
+  LEFT JOIN (
+    SELECT seasonID, week, MIN(matchDate) AS matchDate
+    FROM schedule
+    GROUP BY seasonID, week
+  ) sch
+    ON  sch.seasonID = sc.seasonID
+    AND sch.week     = sc.week
+  WHERE sc.seasonID = @seasonID
+  ORDER BY sc.week ASC, sc.teamID ASC, sc.isPenalty ASC, b.bowlerName ASC
+`;
+
+export async function getSeasonWeeklyScoresLite(seasonID: number): Promise<WeeklyMatchScore[]> {
+  return cachedQuery(`getSeasonWeeklyScoresLite-${seasonID}`, async () => {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<WeeklyMatchScore>(GET_SEASON_WEEKLY_SCORES_LITE_SQL);
+    return result.recordset;
+  }, [], { sql: GET_SEASON_WEEKLY_SCORES_LITE_SQL, seasonID });
+}
+
 const GET_SEASON_MATCH_RESULTS_SQL = `
   SELECT
     sch.week,
