@@ -1,9 +1,10 @@
 /**
  * Static team profile page.
  *
- * Current-season teams are pre-rendered at build time via generateStaticParams.
- * Historical teams render on demand (dynamicParams = true); this page already
- * notFound()s unknown slugs, so on-demand rendering stays safe.
+ * Team pages render fully on demand (dynamicParams = true, nothing prebuilt).
+ * Their current-season data is live and each page is query-heavy, so prebuilding
+ * re-queries the DB cold every build. On-demand keeps the read throttled to one
+ * page per request. This page notFound()s unknown slugs.
  *
  * Phase 4: Complete team profile with six sections:
  * Hero header, franchise history, current roster, season-by-season,
@@ -12,7 +13,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
-  getCurrentSeasonTeamSlugs,
   getTeamBySlug,
   getTeamCurrentRoster,
   getTeamSeasonByseason,
@@ -102,9 +102,11 @@ function GhostTeamExplainer() {
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Prebuild only current-season teams; historical teams render on demand.
-  const slugs = await getCurrentSeasonTeamSlugs();
-  return slugs.map(({ slug }) => ({ slug }));
+  // Nothing prebuilt: team pages are query-heavy and their current-season data is
+  // live, so prebuilding re-queries the DB cold every build (60s static-gen
+  // timeouts, DB overload). Render fully on demand. Phase 3 consolidates the
+  // per-page queries so the on-demand render is fast.
+  return [];
 }
 
 export async function generateMetadata({

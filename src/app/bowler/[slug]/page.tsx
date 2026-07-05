@@ -1,9 +1,10 @@
 /**
  * Static bowler profile page.
  *
- * Current-season bowlers are pre-rendered at build time via generateStaticParams.
- * Historical bowlers render on demand (dynamicParams = true); this page already
- * notFound()s unknown slugs, so on-demand rendering stays safe.
+ * Bowler pages render fully on demand (dynamicParams = true, nothing prebuilt).
+ * They fire ~14 queries each and their current-season data is live, so
+ * prebuilding them re-queries the DB cold every build. On-demand keeps the heavy
+ * read throttled to one page per request. This page notFound()s unknown slugs.
  *
  * Phase 2: Complete bowler profile with all five sections:
  * Hero header, personal records, average progression chart, season stats table, game log.
@@ -11,7 +12,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
-  getCurrentSeasonBowlerSlugs,
   getBowlerBySlug,
   getBowlerCareerSummary,
   getBowlerSeasonStats,
@@ -57,9 +57,11 @@ import { computePersonalMilestones } from '@/lib/milestone-config';
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Prebuild only current-season bowlers; historical bowlers render on demand.
-  const slugs = await getCurrentSeasonBowlerSlugs();
-  return slugs.map(({ slug }) => ({ slug }));
+  // Nothing prebuilt: bowler pages fire ~14 queries each and their current-season
+  // data is live, so prebuilding re-queries the DB cold every build (60s
+  // static-gen timeouts, DB overload). Render fully on demand. Phase 3
+  // consolidates the per-page queries so the on-demand render is fast.
+  return [];
 }
 
 export async function generateMetadata({
