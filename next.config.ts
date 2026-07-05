@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     // overwhelm the DB during static page generation.
     // Effective concurrent connections = cpus × MAX_CONCURRENT_QUERIES (in db.ts).
     // Max safe value: floor(30 / 7) = 4.
-    cpus: 4,
+    cpus: 2,
   },
   images: {
     remotePatterns: [
