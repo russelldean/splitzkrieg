@@ -128,9 +128,9 @@ describe('assembleTeamView', () => {
     [{ seasonID: 36, displayName: 'Spring 2026' }, { seasonID: 34, displayName: 'Spring 2025' }],                   // 1 teamSeasons
     [{ bowlerID: 1, bowlerName: 'A', slug: 'a', totalGames: 39, totalPins: 7100, average: 182, seasonsWithTeam: 2, firstSeason: 'Spring 2025', lastSeason: 'Spring 2026' }], // 2 allTimeRoster
     [{ teamID: 7, teamName: 'Lucky Strikes', seasonID: 36 }],                                                        // 3 franchiseHistory
-    [{ teamID: 7, rank: 3, wins: 12, losses: 8 }],                                                                  // 4 currentStanding
-    [{ opponentTeamID: 9, opponentName: 'Hot Shotz', wins: 5, losses: 4 }],                                          // 5 h2h
-    [{ opponentTeamID: 9, opponentName: 'Hot Shotz', playoffWins: 1, playoffLosses: 0 }],                            // 6 playoffH2H
+    [{ divisionRank: 3, divisionSize: 6, wins: 12, losses: 8 }],                                                    // 4 currentStanding (TeamCurrentStanding.divisionRank)
+    [{ opponentID: 9, opponentName: 'Hot Shotz', seasonID: 36, week: 4 }],                                          // 5 h2h (TeamH2HMatchup)
+    [{ opponentID: 9, opponentName: 'Hot Shotz', seasonID: 34, round: 'Semifinal', won: true }],                     // 6 playoffH2H (PlayoffH2HMatchup.won boolean, one row per matchup)
     [ // 7 all-season bowlers
       { seasonID: 36, bowlerID: 1, bowlerName: 'A', slug: 'a', gamesBowled: 9, totalPins: 1700, average: 189 },
       { seasonID: 34, bowlerID: 1, bowlerName: 'A', slug: 'a', gamesBowled: 30, totalPins: 5400, average: 180 },
@@ -142,9 +142,9 @@ describe('assembleTeamView', () => {
     expect(view.teamSeasons).toHaveLength(2);
     expect(view.allTimeRoster[0].totalGames).toBe(39);
     expect(view.franchiseHistory[0].teamName).toBe('Lucky Strikes');
-    expect(view.currentStanding?.rank).toBe(3);
+    expect(view.currentStanding?.divisionRank).toBe(3);
     expect(view.h2hMatchups[0].opponentName).toBe('Hot Shotz');
-    expect(view.playoffH2H[0].playoffWins).toBe(1);
+    expect(view.playoffH2H[0].won).toBe(true);
     expect(view.bowlersBySeason[36][0].gamesBowled).toBe(9);
     expect(view.bowlersBySeason[34][0].gamesBowled).toBe(30);
   });
