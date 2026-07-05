@@ -12,21 +12,9 @@
  */
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import {
-  getTeamBySlug,
-  getTeamCurrentRoster,
-  getTeamSeasonByseason,
-  getTeamSeasonBowlers,
-  getTeamAllTimeRoster,
-  getTeamFranchiseHistory,
-  getTeamCurrentStanding,
-  getTeamH2H,
-  getActiveTeamIDs,
-  getGhostTeamH2H,
-  getTeamPlayoffH2H,
-  getCurrentSeasonSlug,
-  type TeamSeasonBowler,
-} from '@/lib/queries';
+import { getTeamBySlug, getGhostTeamH2H, type GhostTeamMatchup } from '@/lib/queries';
+import { getTeamPageView } from '@/lib/views/team-page';
+import { getTeamLeagueContext } from '@/lib/views/team-league-context';
 import { TeamHero } from '@/components/team/TeamHero';
 import { CurrentRoster } from '@/components/team/CurrentRoster';
 import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
@@ -37,7 +25,6 @@ import { PlayoffH2H } from '@/components/team/PlayoffH2H';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { StickyContextBar } from '@/components/ui/StickyContextBar';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import type { GhostTeamMatchup } from '@/lib/queries';
 
 function GhostTeamAllTime({ ghostH2H, ghostWinPct }: { ghostH2H: GhostTeamMatchup[]; ghostWinPct: number | null }) {
   let wins = 0, losses = 0, ties = 0;
@@ -144,27 +131,16 @@ export default async function TeamPage({
 
   const isGhostTeam = team.teamID === 45;
 
-  // Parallel build-time data fetching
-  const [currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, currentSlug, h2hMatchups, activeTeams, ghostH2H, playoffH2H] = await Promise.all([
-    getTeamCurrentRoster(team.teamID),
-    getTeamSeasonByseason(team.teamID),
-    getTeamAllTimeRoster(team.teamID),
-    getTeamFranchiseHistory(team.teamID),
-    getTeamCurrentStanding(team.teamID),
-    getCurrentSeasonSlug(),
-    isGhostTeam ? Promise.resolve([]) : getTeamH2H(team.teamID),
-    getActiveTeamIDs(),
-    isGhostTeam ? getGhostTeamH2H() : Promise.resolve([]),
-    isGhostTeam ? Promise.resolve([]) : getTeamPlayoffH2H(team.teamID),
+  const [view, league] = await Promise.all([
+    getTeamPageView(team.teamID),
+    getTeamLeagueContext(),
   ]);
 
-  // Pre-fetch bowler data for all seasons (static build handles the load)
-  const bowlersBySeason: Record<number, TeamSeasonBowler[]> = {};
-  await Promise.all(
-    teamSeasons.map(async (s) => {
-      bowlersBySeason[s.seasonID] = await getTeamSeasonBowlers(team.teamID, s.seasonID);
-    })
-  );
+  const { currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, h2hMatchups, playoffH2H, bowlersBySeason } = view;
+  const { activeTeams, currentSlug } = league;
+
+  // Ghost Team (teamID 45) uses a bespoke matchup query; unused for all other teams.
+  const ghostH2H = isGhostTeam ? await getGhostTeamH2H() : [];
 
   // Derive counts for hero
   const rosterCount = currentRoster.length;
