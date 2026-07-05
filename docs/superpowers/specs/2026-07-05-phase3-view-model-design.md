@@ -33,6 +33,31 @@ Two structural facts fall out:
    every bowler, yet recomputed per page.
 2. The remaining ~9 are bowler-specific but individually fast.
 
+## Content decisions (2026-07-05, approved during planning)
+
+This perf work is also trimming two low-value pieces that dragged the heaviest
+league queries onto the page (originally deferred as a separate product decision;
+Russ approved folding them in):
+- **Drop the YouAreAStar "Featured on Ticker" cross-reference.** That single check
+  was the *only* reason `getWeeklyHighlights` + `getLeagueMilestones` (the latter
+  fires 3 sub-queries) were fetched on the bowler page. The star *counts* come from
+  the cheap per-bowler `starStats`; only the "is this bowler in the homepage ticker
+  right now" line needed the two league reads. Both reads leave the page.
+- **Keep the GameProfile section, but compute the bowler's own archetype in the
+  per-bowler batch** instead of calling `getGameProfiles` (a full scan of every
+  score for every bowler). An individual archetype only needs that bowler's own
+  `AVG(game1/2/3)` plus the hardcoded flatliner cutoff, so it becomes one more
+  statement in the `@bowlerID` batch (no extra round-trip) and `getGameProfiles`
+  leaves the page entirely.
+- **Keep the GameProfile league-average comparison bar** (`getLeagueGameAvgs`) as
+  one shared read. It is a single-row aggregate and barely moves within a season;
+  it stays cached (recompute is rare, not per-page). Measure its cold time at the
+  pilot gate; if it is ever slow, precompute it per-season into the existing
+  `leagueSettings` table (no new table) rather than scanning on render.
+
+Net: the page keeps every visible section except the one ticker line, and the two
+heaviest queries (`getGameProfiles`, `getLeagueMilestones`) are gone.
+
 ## Approach: consolidate round-trips into a per-page view model
 
 Adopt BaseHit's convention: **one view-shaped read per page**. Each page gets a
@@ -48,12 +73,23 @@ The entire fix is collapsing round-trips. No new tables, no schema changes.
 
 ### `getBowlerPageView(bowlerID)` — one batched read
 A new view-model function (proposed location `src/lib/views/bowler-page.ts`) that:
-- Runs the page's ~9 bowler-specific SELECTs as a **single batched mssql request**
+- Runs the page's per-bowler SELECTs as a **single batched mssql request**
   returning multiple result sets (`result.recordsets[]`), i.e. **one round-trip**
-  instead of nine. The SQL is **reused as-is** from the existing query modules
-  (already correct and <200ms each); only the transport changes (one request).
-- Is wrapped in a single `cachedQuery` with `dependsOn: ['scores']` and the
-  per-bowler version tag, so the page has **one** cache entry instead of ~15.
+  instead of many. The batch is **8 statements**: the 7 existing per-bowler queries
+  (career summary, season stats, game log, rolling-avg history, patches, star
+  stats, facts) reused **as-is** from the query modules, plus one new single-bowler
+  `AVG(game1/2/3)` for the GameProfile archetype (classified in JS via the reused
+  `classifyArchetype` from `alltime.ts`). All 8 key on `@bowlerID`; only the
+  transport changes (one request).
+- Is wrapped in a single `cachedQuery` keyed with the **`bowlerID`** option (NOT
+  `dependsOn: ['scores']`), so the page has **one** cache entry instead of ~15, and
+  it invalidates **per-bowler** — matching the queries it consolidates
+  (`getBowlerCareerSummary`, `getBowlerSeasonStats`, etc. all use `{ bowlerID }`).
+  This preserves granular invalidation: a weekly import only busts the view caches
+  of bowlers who actually bowled. (`cachedQuery` treats `dependsOn` and `bowlerID`
+  as mutually exclusive for the version tag — passing both silently drops the
+  per-bowler tag, and `dependsOn: ['scores']` would coarsely bust every bowler's
+  view whenever any score changes anywhere. Use `bowlerID` alone here.)
 - Computes the page's server-side derivations (isBowlerOfTheWeek, last-week deltas,
   team breakdown) internally and returns them on the DTO, so the page component
   stops deriving.
@@ -61,11 +97,30 @@ A new view-model function (proposed location `src/lib/views/bowler-page.ts`) tha
   retryable 500, never a cached 404 (consistent with the Phase 1 fragility fix).
 
 ### `getLeagueContext()` — fetched once, shared
-A shared cached function returning the league-wide data (BOTW ids, weekly
-highlights, league milestones, league game averages, current-season id/slug). One
-cache entry reused across the whole site instead of recomputed per bowler. The
-bowler page thus makes **~2 round-trips total** (bowler view + league context),
-down from 15.
+A `React.cache` composition (proposed `src/lib/views/league-context.ts`) that
+bundles the league-wide reads the page still needs, **now just 4** after the
+content trims:
+- `getBowlerOfTheWeek()` — hero BOTW badge,
+- `getLeagueGameAvgs()` — GameProfile comparison bar,
+- `getCurrentSeasonID()` — current-season delta gate (`stable`),
+- `getCurrentSeasonSlug()` — TrailNav.
+
+It is **not** a new `cachedQuery` entry: each underlying function keeps its own
+cache options (correct per-channel invalidation), and composing them preserves
+that. `getWeeklyHighlights`, `getLeagueMilestones`, and `getGameProfiles` are
+**removed** from the page (see Content decisions). Of the 4, only
+`getBowlerOfTheWeek` and `getLeagueGameAvgs` touch the DB on a cold render (both
+small); the season id/slug are stable/warm. The bowler page thus makes **~3 cold
+round-trips total** (1 batched bowler view + BOTW + league avgs), down from 15,
+with **no full-league scan**.
+
+**Metadata is a separate render pass.** `generateMetadata` calls `getBowlerBySlug`
++ `getBowlerCareerSummary` independently; today React `cache()` dedupes the summary
+with the page body, but once the body reads `careerSummary` from the batched view
+that dedup no longer applies, so a cold on-demand hit pays metadata's round-trips
+too (both are cache-friendly: `stable` slug lookup + `bowlerID` summary, so warm =
+disk hits). The pilot must time the **whole page** (metadata + body), not just
+`getBowlerPageView`, or the ~1s target is measured against the wrong thing.
 
 ### The page becomes a flat read
 `src/app/bowler/[slug]/page.tsx` collapses to roughly:
@@ -82,21 +137,31 @@ No 15-way `Promise.all`, no in-page derivation.
 
 ### DTO shape
 `getBowlerPageView` returns a single flat object whose fields map 1:1 to the
-recordsets it fetches plus computed flags: `{ careerSummary, seasonStats, gameLog,
-rollingAvgHistory, starStats, patches, facts, gameProfile, teams, lastWeekDelta,
-... }`. The DTO is this page's contract — not shared with other pages' view models
-(shared SQL is reused at the query layer, not by sharing DTOs).
+recordsets it fetches plus computed values: `{ careerSummary, seasonStats, gameLog,
+rollingAvgHistory, patches, starStats, facts, gameProfile, teams }`. `gameProfile`
+is the bowler's own archetype row (built from the batch's `AVG` statement, not from
+league-wide `getGameProfiles`). Derivations that need league state (the BOTW flag
+and the current-season delta gate) are computed by pure helpers the **page** applies
+over `(view, leagueContext)` so they stay out of the per-bowler cache key. The DTO
+is this page's contract — not shared with other pages' view models (shared SQL is
+reused at the query layer, not by sharing DTOs).
 
 ## What stays the same (non-goals)
 - **On-demand ISR** — bowler stays `generateStaticParams: []` for now. (With ~2
   round-trips it may later be cheap enough to prebuild; decide after measuring.)
 - **The `cachedQuery` disk cache** and `dependsOn` channels — kept.
-- **The existing SQL** — reused verbatim inside the batched request.
-- **The DB schema** — untouched. No new tables, no views, no migrations.
-- **What the page displays** — unchanged. (Trimming low-value sections is a
-  separate product decision, not part of this perf work.)
-- **The generic query functions** — kept; the home page and others still use them.
-  We only stop composing 15 of them on the bowler page.
+- **The existing per-bowler SQL** — reused verbatim inside the batched request
+  (the one new statement is a single-bowler `AVG(game1/2/3)` for the archetype).
+- **The DB schema** — untouched. No new tables, no views, no migrations. (If
+  `getLeagueGameAvgs` ever measures slow, a per-season precompute would use the
+  existing `leagueSettings` table, still no new table.)
+- **What the page displays** — unchanged **except** the single "Featured on Ticker"
+  star line, which is removed (see Content decisions). All nine sections otherwise
+  render identically.
+- **The generic query functions** — kept; the home page and others still use them
+  (`getGameProfiles` still backs `/stats/all-time`, `getWeeklyHighlights` /
+  `getLeagueMilestones` still back home and `/milestones`). We only stop composing
+  them on the bowler page.
 - **No precompute/read-model tables** — revisit only if a specific future query
   ever profiles slow.
 
@@ -127,14 +192,14 @@ rollingAvgHistory, starStats, patches, facts, gameProfile, teams, lastWeekDelta,
 ## Risks and mitigations
 | Risk | Mitigation |
 |------|------------|
-| Batched multi-statement request shares params awkwardly | All bowler-specific SELECTs key on `@bowlerID`; league-wide data is a separate request. Split into 2 batched requests if param needs diverge. |
+| Batched multi-statement request shares params awkwardly | Most bowler-specific SELECTs key on `@bowlerID`; the one exception is `getBowlerGameProfile`, which currently keys on `@slug`. Set BOTH `.input('bowlerID', ...)` and `.input('slug', ...)` on the single batched request (mssql allows multiple inputs) rather than splitting — or re-key that SELECT to `bowlerID`. League-wide data stays a separate request. |
 | View-model drifts from what the page shows | DTO is the page's contract; before/after render comparison in verification. |
 | Round-trip consolidation doesn't reach ~1s | Measure at the pilot gate before rolling out; if per-request overhead dominates, investigate connection warmth/pooling next (still no precompute tables). |
 | Regressions in reused SQL | SQL is copied verbatim, not rewritten; correctness comparison per bowler. |
 
 ## Success criteria
 - Bowler page renders in roughly a second on demand behind the bypass.
-- The page makes ~2 DB round-trips instead of 15.
+- The page makes ~3 cold DB round-trips instead of 15, with no full-league scan.
 - Bowler pages could be prebuilt without a connection storm (verified by a batched
   build, if we choose to prebuild).
 - The same view-model shape is applied to team/season/week/stats.
