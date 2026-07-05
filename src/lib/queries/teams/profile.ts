@@ -29,7 +29,7 @@ export interface TeamCurrentStanding {
   divisionName: string | null;
 }
 
-const GET_TEAM_CURRENT_STANDING_SQL = `
+export const GET_TEAM_CURRENT_STANDING_SQL = `
   WITH currentSeason AS (
     SELECT TOP 1 seasonID, romanNumeral,
       LOWER(REPLACE(displayName, ' ', '-')) AS seasonSlug

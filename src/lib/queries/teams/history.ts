@@ -56,7 +56,7 @@ export interface TeamPlayoffFinish {
   finish: 'champion' | 'runner-up' | 'semifinalist';
 }
 
-const GET_TEAM_SEASON_BY_SEASON_SQL = `
+export const GET_TEAM_SEASON_BY_SEASON_SQL = `
   WITH teamGameResults AS (
     SELECT sch.seasonID,
       CASE WHEN mr.team1Game1 > mr.team2Game1 THEN 1 ELSE 0 END
@@ -146,7 +146,7 @@ export async function getTeamSeasonByseason(teamID: number): Promise<TeamSeasonR
   }, [], { sql: GET_TEAM_SEASON_BY_SEASON_SQL, dependsOn: ['scores', 'schedule'] });
 }
 
-const GET_TEAM_FRANCHISE_HISTORY_SQL = `
+export const GET_TEAM_FRANCHISE_HISTORY_SQL = `
   SELECT
     tnh.id,
     tnh.seasonID,

@@ -33,7 +33,7 @@ export interface AllTimeRosterMember {
   lastSeason: string | null;
 }
 
-const GET_TEAM_CURRENT_ROSTER_SQL = `
+export const GET_TEAM_CURRENT_ROSTER_SQL = `
   SELECT
     b.bowlerID,
     b.bowlerName,
@@ -105,7 +105,7 @@ export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Pr
   }, [], { sql: GET_TEAM_SEASON_BOWLERS_SQL, seasonID });
 }
 
-const GET_TEAM_ALL_TIME_ROSTER_SQL = `
+export const GET_TEAM_ALL_TIME_ROSTER_SQL = `
   SELECT
     b.bowlerID,
     b.bowlerName,

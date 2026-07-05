@@ -53,7 +53,7 @@ export interface PairH2HSummary {
   ties: number;
 }
 
-const GET_TEAM_H2H_SQL = `
+export const GET_TEAM_H2H_SQL = `
   WITH matchups AS (
     SELECT
       sch.team2ID AS opponentID,
@@ -234,7 +234,7 @@ export interface PlayoffH2HMatchup {
   won: boolean;
 }
 
-const GET_TEAM_PLAYOFF_H2H_SQL = `
+export const GET_TEAM_PLAYOFF_H2H_SQL = `
   SELECT
     CASE WHEN pr.team1ID = @teamID THEN pr.team2ID ELSE pr.team1ID END AS opponentID,
     t.teamName AS opponentName,
