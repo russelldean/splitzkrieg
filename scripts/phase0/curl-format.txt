@@ -1,0 +1,6 @@
+   dns:  %{time_namelookup}s
+connect:  %{time_connect}s
+   tls:  %{time_appconnect}s
+ ttfb:  %{time_starttransfer}s
+ total:  %{time_total}s
+ code:  %{http_code}
