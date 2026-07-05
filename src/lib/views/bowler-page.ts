@@ -5,6 +5,17 @@
  * GameProfile archetype into one mssql request (result.recordsets[0..7]), then maps
  * them into a flat DTO. Per-bowler SQL is reused verbatim from the query modules.
  */
+import { cache } from 'react';
+import { getDb, cachedQuery } from '../db';
+import {
+  GET_BOWLER_CAREER_SUMMARY_SQL,
+  BOWLER_SEASON_STATS_SQL,
+  GET_BOWLER_GAME_LOG_SQL,
+  GET_BOWLER_ROLLING_AVG_HISTORY_SQL,
+  GET_BOWLER_PATCHES_SQL,
+  GET_BOWLER_STAR_STATS_SQL,
+} from '../queries/bowlers';
+import { BOWLER_FACTS_SQL } from '../queries/facts';
 import type {
   BowlerCareerSummary,
   BowlerSeasonStats,
@@ -202,3 +213,69 @@ export function computeWeekDelta(view: BowlerPageView, currentSeasonID: number |
     newHighSeries: careerSummary.highSeries !== null && weekSeries >= careerSummary.highSeries,
   };
 }
+
+/**
+ * New single-bowler archetype aggregate (same WHERE as getGameProfiles, one bowler).
+ * Statement 8 of the batch; feeds buildGameProfile.
+ */
+const BOWLER_ARCHETYPE_SQL = `
+  SELECT
+    COUNT(*) AS games,
+    AVG(CAST(game1 AS FLOAT)) AS avg1,
+    AVG(CAST(game2 AS FLOAT)) AS avg2,
+    AVG(CAST(game3 AS FLOAT)) AS avg3
+  FROM scores
+  WHERE bowlerID = @bowlerID
+    AND isPenalty = 0
+    AND game1 IS NOT NULL AND game2 IS NOT NULL AND game3 IS NOT NULL
+`;
+
+/**
+ * Batched per-bowler SQL. Order MUST match assembleBowlerView's recordset order:
+ * 0 careerSummary, 1 seasonStats, 2 gameLog, 3 rollingAvgHistory,
+ * 4 patches, 5 starStats, 6 facts, 7 archetype.
+ * The first 7 are reused verbatim from the query modules — do NOT edit them here.
+ */
+export const BOWLER_VIEW_BATCH_SQL = [
+  GET_BOWLER_CAREER_SUMMARY_SQL,
+  BOWLER_SEASON_STATS_SQL,
+  GET_BOWLER_GAME_LOG_SQL,
+  GET_BOWLER_ROLLING_AVG_HISTORY_SQL,
+  GET_BOWLER_PATCHES_SQL,
+  GET_BOWLER_STAR_STATS_SQL,
+  BOWLER_FACTS_SQL,
+  BOWLER_ARCHETYPE_SQL,
+].join(';\n');
+
+const EMPTY_VIEW: BowlerPageView = {
+  careerSummary: null,
+  seasonStats: [],
+  gameLog: [],
+  rollingAvgHistory: [],
+  patches: [],
+  starStats: reduceStarStats([]),
+  facts: [],
+  teams: [],
+  gameProfile: null,
+};
+
+/**
+ * One round-trip for the whole bowler page (was 8). Per-bowler cache invalidation
+ * via { bowlerID } (NOT dependsOn: ['scores']). React.cache dedupes within a render.
+ */
+export const getBowlerPageView = cache(async (bowlerID: number): Promise<BowlerPageView> => {
+  return cachedQuery(
+    `getBowlerPageView-${bowlerID}`,
+    async () => {
+      const db = await getDb();
+      const result = await db
+        .request()
+        .input('bowlerID', bowlerID)
+        .query(BOWLER_VIEW_BATCH_SQL);
+      // mssql returns one entry per statement in result.recordsets, in order.
+      return assembleBowlerView(result.recordsets as unknown[][]);
+    },
+    EMPTY_VIEW,
+    { sql: BOWLER_VIEW_BATCH_SQL, bowlerID },
+  );
+});
