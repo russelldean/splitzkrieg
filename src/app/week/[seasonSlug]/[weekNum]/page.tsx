@@ -10,7 +10,8 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import {
   getSeasonBySlug,
-  getSeasonWeeklyScores,
+  getWeekScores,
+  getSeasonWeekNumbers,
   getSeasonSchedule,
   getSeasonMatchResults,
   getAllSeasonNavList,
@@ -41,11 +42,11 @@ export async function generateStaticParams(): Promise<{ seasonSlug: string; week
   const season = await getSeasonBySlug(currentSlug);
   if (!season) return [];
 
-  const scores = await getSeasonWeeklyScores(season.seasonID);
+  const scoreWeeks = await getSeasonWeekNumbers(season.seasonID);
   const schedule = await getSeasonSchedule(season.seasonID);
 
   const weeks = new Set<number>();
-  scores.forEach((s) => weeks.add(s.week));
+  scoreWeeks.forEach((w) => weeks.add(w));
   schedule.forEach((s) => weeks.add(s.week));
 
   return Array.from(weeks).map((week) => ({
@@ -79,8 +80,9 @@ export default async function WeekPage({
   const season = await getSeasonBySlug(seasonSlug);
   if (!season || isNaN(weekNum)) notFound();
 
-  const [allScores, allSchedule, allMatchResults, allSeasons, playoffRounds] = await Promise.all([
-    getSeasonWeeklyScores(season.seasonID),
+  const [weekScores, scoreWeeks, allSchedule, allMatchResults, allSeasons, playoffRounds] = await Promise.all([
+    getWeekScores(season.seasonID, weekNum),
+    getSeasonWeekNumbers(season.seasonID),
     getSeasonSchedule(season.seasonID),
     getSeasonMatchResults(season.seasonID),
     getAllSeasonNavList(),
@@ -88,16 +90,15 @@ export default async function WeekPage({
   ]);
   const hasPlayoffR1 = playoffRounds.some(p => p.seasonID === season.seasonID && p.round === 1);
 
-  // Determine all weeks for this season
+  // Determine all weeks for this season (score weeks + schedule weeks)
   const allWeeks = new Set<number>();
-  allScores.forEach(s => allWeeks.add(s.week));
+  scoreWeeks.forEach(w => allWeeks.add(w));
   allSchedule.forEach(s => allWeeks.add(s.week));
   const sortedWeeks = Array.from(allWeeks).sort((a, b) => a - b);
 
   if (!allWeeks.has(weekNum)) notFound();
 
-  // Filter to this week only
-  const weekScores = allScores.filter(s => s.week === weekNum);
+  // weekScores is already scoped to this week; schedule/match results filtered here
   const weekSchedule = allSchedule.filter(s => s.week === weekNum);
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 

@@ -227,6 +227,97 @@ export async function getSeasonWeeklyScoresLite(seasonID: number): Promise<Weekl
   }, [], { sql: GET_SEASON_WEEKLY_SCORES_LITE_SQL, seasonID });
 }
 
+// Single-week variant of GET_SEASON_WEEKLY_SCORES_SQL: identical query with an added
+// `AND sc.week = @week` on the OUTER select, so the 3 per-row correlated subqueries
+// (which still scan history strictly BEFORE this week) run for ~one week's rows
+// instead of the whole season - ~10x fewer. The week page needs the correlated
+// columns (personal-best highlights) but only for the week it renders.
+const GET_WEEK_SCORES_SQL = `
+  SELECT
+    sc.week,
+    sch.matchDate,
+    sc.teamID,
+    COALESCE(tnh.teamName, t.teamName)  AS teamName,
+    t.slug                               AS teamSlug,
+    sc.bowlerID,
+    b.bowlerName,
+    b.slug                               AS bowlerSlug,
+    sc.game1,
+    sc.game2,
+    sc.game3,
+    sc.scratchSeries,
+    sc.handSeries,
+    sc.incomingAvg,
+    sc.incomingHcp,
+    ISNULL(sc.turkeys, 0) AS turkeys,
+    b.gender,
+    sc.isPenalty,
+    CASE WHEN NOT EXISTS (
+      SELECT 1 FROM scores sc3
+      WHERE sc3.bowlerID = sc.bowlerID
+        AND sc3.isPenalty = 0
+        AND (sc3.seasonID < sc.seasonID OR (sc3.seasonID = sc.seasonID AND sc3.week < sc.week))
+    ) THEN 1 ELSE 0 END AS isFirstNight,
+    (SELECT MAX(x.val) FROM scores sp
+      CROSS APPLY (VALUES (sp.game1),(sp.game2),(sp.game3)) AS x(val)
+      WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+        AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+    ) AS priorBestGame,
+    (SELECT MAX(sp.scratchSeries) FROM scores sp
+      WHERE sp.bowlerID = sc.bowlerID AND sp.isPenalty = 0
+        AND (sp.seasonID < sc.seasonID OR (sp.seasonID = sc.seasonID AND sp.week < sc.week))
+    ) AS priorBestSeries
+  FROM scores sc
+  JOIN bowlers b ON sc.bowlerID = b.bowlerID
+  JOIN teams t ON sc.teamID = t.teamID
+  LEFT JOIN teamNameHistory tnh
+    ON  tnh.seasonID = sc.seasonID
+    AND tnh.teamID   = sc.teamID
+  LEFT JOIN (
+    SELECT seasonID, week, MIN(matchDate) AS matchDate
+    FROM schedule
+    GROUP BY seasonID, week
+  ) sch
+    ON  sch.seasonID = sc.seasonID
+    AND sch.week     = sc.week
+  WHERE sc.seasonID = @seasonID
+    AND sc.week = @week
+  ORDER BY sc.week ASC, sc.teamID ASC, sc.isPenalty ASC, b.bowlerName ASC
+`;
+
+export async function getWeekScores(seasonID: number, week: number): Promise<WeeklyMatchScore[]> {
+  const params = JSON.stringify({ seasonID, week });
+  return cachedQuery(`getWeekScores-${seasonID}-${week}`, async () => {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .input('week', week)
+      .query<WeeklyMatchScore>(GET_WEEK_SCORES_SQL);
+    return result.recordset;
+  }, [], { sql: GET_WEEK_SCORES_SQL + params, seasonID });
+}
+
+const GET_SEASON_WEEK_NUMBERS_SQL = `
+  SELECT DISTINCT week
+  FROM scores
+  WHERE seasonID = @seasonID AND isPenalty = 0
+  ORDER BY week
+`;
+
+// Cheap list of week numbers that have scores, for week-page prev/next navigation
+// (replaces pulling the whole season's rows just to enumerate weeks).
+export async function getSeasonWeekNumbers(seasonID: number): Promise<number[]> {
+  return cachedQuery(`getSeasonWeekNumbers-${seasonID}`, async () => {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<{ week: number }>(GET_SEASON_WEEK_NUMBERS_SQL);
+    return result.recordset.map((r) => r.week);
+  }, [], { sql: GET_SEASON_WEEK_NUMBERS_SQL, seasonID });
+}
+
 const GET_SEASON_MATCH_RESULTS_SQL = `
   SELECT
     sch.week,
