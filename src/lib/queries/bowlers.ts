@@ -31,6 +31,25 @@ export async function getAllBowlerSlugs(): Promise<BowlerSlug[]> {
   }, [], { sql: GET_ALL_BOWLER_SLUGS_SQL, dependsOn: ['scores'] });
 }
 
+const GET_CURRENT_SEASON_BOWLER_SLUGS_SQL = `
+  SELECT DISTINCT b.slug
+  FROM bowlers b
+  JOIN scores sc ON sc.bowlerID = b.bowlerID
+  JOIN seasons se ON se.seasonID = sc.seasonID
+  WHERE se.isCurrentSeason = 1
+    AND sc.isPenalty = 0
+    AND b.slug IS NOT NULL
+  ORDER BY b.slug
+`;
+
+export async function getCurrentSeasonBowlerSlugs(): Promise<BowlerSlug[]> {
+  return cachedQuery('getCurrentSeasonBowlerSlugs', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{ slug: string }>(GET_CURRENT_SEASON_BOWLER_SLUGS_SQL);
+    return result.recordset;
+  }, [], { sql: GET_CURRENT_SEASON_BOWLER_SLUGS_SQL, dependsOn: ['scores'] });
+}
+
 const GET_BOWLER_BY_SLUG_SQL = `
   SELECT
     bowlerID,

@@ -1,12 +1,12 @@
 /**
  * Per-season stats page.
  * Shows leaderboards and full stats for a specific season.
- * Pre-rendered at build time via generateStaticParams.
+ * Only the current season is pre-rendered at build time; historical seasons
+ * render on demand (dynamicParams = true), and unknown slugs still 404.
  */
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
-  getAllSeasonSlugs,
   getSeasonBySlug,
   getSeasonLeaderboard,
   getSeasonFullStats,
@@ -14,6 +14,7 @@ import {
   getMinGamesForWeek,
   getAllSeasonNavList,
   getSeasonIndividualChampions,
+  getCurrentSeasonSlug,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
@@ -24,11 +25,12 @@ import { FullStatsTable } from '@/components/season/FullStatsTable';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const slugs = await getAllSeasonSlugs();
-  return slugs.map(({ slug }) => ({ slug }));
+  // Prebuild only the current season's stats; historical render on demand.
+  const slug = await getCurrentSeasonSlug();
+  return slug ? [{ slug }] : [];
 }
 
 export async function generateMetadata({

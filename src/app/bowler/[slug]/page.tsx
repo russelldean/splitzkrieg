@@ -1,9 +1,9 @@
 /**
  * Static bowler profile page.
  *
- * All bowler pages are pre-rendered at build time via generateStaticParams.
- * dynamicParams = false ensures unknown slugs return 404 immediately --
- * the DB is never queried at runtime.
+ * Current-season bowlers are pre-rendered at build time via generateStaticParams.
+ * Historical bowlers render on demand (dynamicParams = true); this page already
+ * notFound()s unknown slugs, so on-demand rendering stays safe.
  *
  * Phase 2: Complete bowler profile with all five sections:
  * Hero header, personal records, average progression chart, season stats table, game log.
@@ -11,7 +11,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
-  getAllBowlerSlugs,
+  getCurrentSeasonBowlerSlugs,
   getBowlerBySlug,
   getBowlerCareerSummary,
   getBowlerSeasonStats,
@@ -53,11 +53,12 @@ import { StickyContextBar } from '@/components/ui/StickyContextBar';
 import type { TeamStat } from '@/components/bowler/TeamBreakdown';
 import { computePersonalMilestones } from '@/lib/milestone-config';
 
-// Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
-export const dynamicParams = false;
+// Historical slugs render on demand; unknown slugs still 404 via the page body.
+export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const slugs = await getAllBowlerSlugs();
+  // Prebuild only current-season bowlers; historical bowlers render on demand.
+  const slugs = await getCurrentSeasonBowlerSlugs();
   return slugs.map(({ slug }) => ({ slug }));
 }
 

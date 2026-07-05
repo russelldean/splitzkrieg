@@ -1,9 +1,9 @@
 /**
  * Static team profile page.
  *
- * All team pages are pre-rendered at build time via generateStaticParams.
- * dynamicParams = false ensures unknown slugs return 404 immediately --
- * the DB is never queried at runtime.
+ * Current-season teams are pre-rendered at build time via generateStaticParams.
+ * Historical teams render on demand (dynamicParams = true); this page already
+ * notFound()s unknown slugs, so on-demand rendering stays safe.
  *
  * Phase 4: Complete team profile with six sections:
  * Hero header, franchise history, current roster, season-by-season,
@@ -12,7 +12,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
-  getAllTeamSlugs,
+  getCurrentSeasonTeamSlugs,
   getTeamBySlug,
   getTeamCurrentRoster,
   getTeamSeasonByseason,
@@ -98,11 +98,12 @@ function GhostTeamExplainer() {
   );
 }
 
-// Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
-export const dynamicParams = false;
+// Historical slugs render on demand; unknown slugs still 404 via the page body.
+export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const slugs = await getAllTeamSlugs();
+  // Prebuild only current-season teams; historical teams render on demand.
+  const slugs = await getCurrentSeasonTeamSlugs();
   return slugs.map(({ slug }) => ({ slug }));
 }
 

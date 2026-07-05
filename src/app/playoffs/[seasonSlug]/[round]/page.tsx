@@ -11,7 +11,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
-  getAllSeasonSlugs,
   getSeasonBySlug,
   getSeasonWeeklyScores,
   getSeasonSchedule,
@@ -21,7 +20,6 @@ import {
 import {
   getPlayoffTeamMatches,
   getPlayoffBracketParticipants,
-  getSeasonsWithPlayoffData,
   type PlayoffPageBowler,
   type PlayoffTeamMatch,
   type PlayoffBracketParticipant,
@@ -35,7 +33,7 @@ import { TeamBoxScore } from '@/components/season/TeamBoxScore';
 import { findMatchMVP } from '@/lib/week-utils';
 import type { WeeklyMatchScore } from '@/lib/queries';
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 const ROUND_LABEL: Record<number, string> = {
   1: 'Semifinals',
@@ -49,21 +47,8 @@ const BRACKET_LABEL: Record<ChampionshipType, string> = {
 };
 
 export async function generateStaticParams(): Promise<{ seasonSlug: string; round: string }[]> {
-  const [seasonSlugs, withData] = await Promise.all([
-    getAllSeasonSlugs(),
-    getSeasonsWithPlayoffData(),
-  ]);
-  const slugByID = new Map<number, string>();
-  for (const { slug } of seasonSlugs) {
-    const season = await getSeasonBySlug(slug);
-    if (season) slugByID.set(season.seasonID, slug);
-  }
-  return withData
-    .filter((row) => slugByID.has(row.seasonID))
-    .map((row) => ({
-      seasonSlug: slugByID.get(row.seasonID)!,
-      round: String(row.round),
-    }));
+  // Playoff pages render fully on demand; none prebuilt.
+  return [];
 }
 
 export async function generateMetadata({

@@ -1,8 +1,9 @@
 /**
  * Static season page.
  *
- * All season pages are pre-rendered at build time via generateStaticParams.
- * dynamicParams = false ensures unknown slugs return 404 immediately.
+ * Only the current season is pre-rendered at build time via generateStaticParams.
+ * Historical seasons render on demand (dynamicParams = true); this page already
+ * notFound()s unknown slugs, so on-demand rendering stays safe.
  *
  * Restructured: Focused on standings, race chart, records.
  * Leaderboards + full stats moved to /stats.
@@ -12,7 +13,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
-  getAllSeasonSlugs,
   getSeasonBySlug,
   getSeasonStandings,
   getSeasonHeroStats,
@@ -24,6 +24,7 @@ import {
   getAllSeasonNavList,
   getSeasonWeekSummaries,
   getCurrentSeasonID,
+  getCurrentSeasonSlug,
 } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
@@ -35,12 +36,13 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SeasonNav } from '@/components/season/SeasonNav';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
-// Unknown slugs return 404 -- never attempt to render or hit the DB at runtime.
-export const dynamicParams = false;
+// Historical slugs render on demand; unknown slugs still 404 via the page body.
+export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const slugs = await getAllSeasonSlugs();
-  return slugs.map(({ slug }) => ({ slug }));
+  // Prebuild only the current season; historical seasons render on demand.
+  const slug = await getCurrentSeasonSlug();
+  return slug ? [{ slug }] : [];
 }
 
 export async function generateMetadata({

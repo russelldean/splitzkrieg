@@ -1,14 +1,14 @@
 /**
  * Individual week detail page.
  * Shows full matchup scores, box scores, and week stats.
- * Pre-rendered at build time with prev/next week navigation.
+ * Only the current season's weeks are pre-rendered at build time; historical
+ * weeks render on demand (dynamicParams = true), with prev/next week navigation.
  */
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import {
-  getAllSeasonSlugs,
   getSeasonBySlug,
   getSeasonWeeklyScores,
   getSeasonSchedule,
@@ -17,6 +17,7 @@ import {
   getPairwiseH2H,
   getWeekCareerMilestones,
   getSeasonStandings,
+  getCurrentSeasonSlug,
 } from '@/lib/queries';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekSchedulePreview } from '@/components/season/WeekSchedulePreview';
@@ -30,29 +31,27 @@ import { getPostForWeek } from '@/lib/blog';
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ seasonSlug: string; weekNum: string }[]> {
-  const seasonSlugs = await getAllSeasonSlugs();
-  const params: { seasonSlug: string; weekNum: string }[] = [];
+  // Prebuild only the current season's weeks; historical weeks render on demand.
+  const currentSlug = await getCurrentSeasonSlug();
+  if (!currentSlug) return [];
 
-  for (const { slug } of seasonSlugs) {
-    const season = await getSeasonBySlug(slug);
-    if (!season) continue;
+  const season = await getSeasonBySlug(currentSlug);
+  if (!season) return [];
 
-    const scores = await getSeasonWeeklyScores(season.seasonID);
-    const schedule = await getSeasonSchedule(season.seasonID);
+  const scores = await getSeasonWeeklyScores(season.seasonID);
+  const schedule = await getSeasonSchedule(season.seasonID);
 
-    const weeks = new Set<number>();
-    scores.forEach(s => weeks.add(s.week));
-    schedule.forEach(s => weeks.add(s.week));
+  const weeks = new Set<number>();
+  scores.forEach((s) => weeks.add(s.week));
+  schedule.forEach((s) => weeks.add(s.week));
 
-    for (const week of weeks) {
-      params.push({ seasonSlug: slug, weekNum: String(week) });
-    }
-  }
-
-  return params;
+  return Array.from(weeks).map((week) => ({
+    seasonSlug: currentSlug,
+    weekNum: String(week),
+  }));
 }
 
 export async function generateMetadata({

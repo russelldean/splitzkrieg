@@ -128,6 +128,24 @@ export async function getAllTeamSlugs(): Promise<TeamSlug[]> {
   }, [], { stable: true, sql: GET_ALL_TEAM_SLUGS_SQL });
 }
 
+const GET_CURRENT_SEASON_TEAM_SLUGS_SQL = `
+  SELECT DISTINCT t.slug
+  FROM teams t
+  JOIN schedule sch ON sch.team1ID = t.teamID OR sch.team2ID = t.teamID
+  JOIN seasons se ON se.seasonID = sch.seasonID
+  WHERE se.isCurrentSeason = 1
+    AND t.slug IS NOT NULL
+  ORDER BY t.slug
+`;
+
+export async function getCurrentSeasonTeamSlugs(): Promise<TeamSlug[]> {
+  return cachedQuery('getCurrentSeasonTeamSlugs', async () => {
+    const db = await getDb();
+    const result = await db.request().query<TeamSlug>(GET_CURRENT_SEASON_TEAM_SLUGS_SQL);
+    return result.recordset;
+  }, [], { sql: GET_CURRENT_SEASON_TEAM_SLUGS_SQL, dependsOn: ['schedule'] });
+}
+
 const GET_TEAM_BY_SLUG_SQL = `
   SELECT t.teamID, t.teamName, t.slug,
          t.captainBowlerID,
