@@ -26,6 +26,39 @@ export function getMatchups(schedule: SeasonScheduleWeek[], week: number) {
   return schedule.filter(s => s.week === week);
 }
 
+export interface DateGroup<T> {
+  date: string | null;
+  items: T[];
+}
+
+/**
+ * Group items by their match date, returned in ascending date order (null last).
+ * Within-group order is preserved. Order-independent: does not assume the input
+ * is pre-sorted. A single-date input returns one group.
+ */
+export function groupByMatchDate<T>(
+  items: T[],
+  getDate: (item: T) => string | null,
+): DateGroup<T>[] {
+  const map = new Map<string | null, T[]>();
+  const order: (string | null)[] = [];
+  for (const item of items) {
+    const d = getDate(item);
+    if (!map.has(d)) {
+      map.set(d, []);
+      order.push(d);
+    }
+    map.get(d)!.push(item);
+  }
+  order.sort((a, b) => {
+    if (a === b) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return a < b ? -1 : 1;
+  });
+  return order.map((date) => ({ date, items: map.get(date)! }));
+}
+
 /** Find bowler with highest handicap series across both teams in a matchup. */
 export function findMatchMVP(
   homeBowlers: WeeklyMatchScore[],
