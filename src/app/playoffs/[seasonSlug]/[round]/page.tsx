@@ -16,10 +16,12 @@ import {
   getSeasonSchedule,
   getTeamChampionshipWins,
   getIndividualChampionshipWins,
+  getAllSeasonNavList,
 } from '@/lib/queries';
 import {
   getPlayoffTeamMatches,
   getPlayoffBracketParticipants,
+  getSeasonsWithPlayoffData,
   type PlayoffPageBowler,
   type PlayoffTeamMatch,
   type PlayoffBracketParticipant,
@@ -47,7 +49,22 @@ const BRACKET_LABEL: Record<ChampionshipType, string> = {
 };
 
 export async function generateStaticParams(): Promise<{ seasonSlug: string; round: string }[]> {
-  // Playoff pages render fully on demand; none prebuilt.
+  // BUILD_ALL=1 prebuilds every real playoff round (full static build); default
+  // renders playoff pages on demand. getSeasonsWithPlayoffData is the source of
+  // truth for which (season, round) combos actually have playoff data.
+  if (process.env.BUILD_ALL === '1') {
+    const [rows, seasons] = await Promise.all([
+      getSeasonsWithPlayoffData(),
+      getAllSeasonNavList(),
+    ]);
+    const slugByID = new Map(seasons.map((s) => [s.seasonID, s.slug]));
+    const params: { seasonSlug: string; round: string }[] = [];
+    for (const r of rows) {
+      const slug = slugByID.get(r.seasonID);
+      if (slug) params.push({ seasonSlug: slug, round: String(r.round) });
+    }
+    return params;
+  }
   return [];
 }
 

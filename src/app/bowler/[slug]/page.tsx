@@ -14,6 +14,7 @@ import type { Metadata } from 'next';
 import {
   getBowlerBySlug,
   getBowlerCareerSummary,
+  getAllBowlerSlugs,
 } from '@/lib/queries';
 import { getBowlerPageView, computeWeekDelta } from '@/lib/views/bowler-page';
 import { getLeagueContext } from '@/lib/views/league-context';
@@ -35,10 +36,15 @@ import { computePersonalMilestones } from '@/lib/milestone-config';
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Nothing prebuilt: bowler pages fire ~14 queries each and their current-season
-  // data is live, so prebuilding re-queries the DB cold every build (60s
-  // static-gen timeouts, DB overload). Render fully on demand. Phase 3
-  // consolidates the per-page queries so the on-demand render is fast.
+  // BUILD_ALL=1 prebuilds every bowler (full static build). Default = nothing
+  // prebuilt: current-season data is live, so per-deploy prebuilding re-queries
+  // cold. Render on demand otherwise.
+  if (process.env.BUILD_ALL === '1') {
+    const bowlers = await getAllBowlerSlugs();
+    return bowlers
+      .filter((b) => b.slug)
+      .map((b) => ({ slug: b.slug }));
+  }
   return [];
 }
 

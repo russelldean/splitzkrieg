@@ -35,6 +35,20 @@ import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ seasonSlug: string; weekNum: string }[]> {
+  // BUILD_ALL=1 prebuilds every season's weeks (full static build); default
+  // prebuilds only the current season and renders historical weeks on demand.
+  if (process.env.BUILD_ALL === '1') {
+    const seasons = await getAllSeasonNavList();
+    const params: { seasonSlug: string; weekNum: string }[] = [];
+    for (const s of seasons) {
+      const weeks = await getSeasonWeekNumbers(s.seasonID);
+      for (const w of weeks) {
+        params.push({ seasonSlug: s.slug, weekNum: String(w) });
+      }
+    }
+    return params;
+  }
+
   // Prebuild only the current season's weeks; historical weeks render on demand.
   const currentSlug = await getCurrentSeasonSlug();
   if (!currentSlug) return [];

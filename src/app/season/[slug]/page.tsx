@@ -25,6 +25,7 @@ import {
   getSeasonWeekSummaries,
   getCurrentSeasonID,
   getCurrentSeasonSlug,
+  getAllSeasonSlugs,
 } from '@/lib/queries';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
@@ -40,7 +41,12 @@ import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Prebuild only the current season; historical seasons render on demand.
+  // BUILD_ALL=1 prebuilds every season (full static build); default prebuilds
+  // only the current season and renders historical on demand.
+  if (process.env.BUILD_ALL === '1') {
+    const seasons = await getAllSeasonSlugs();
+    return seasons.map((s) => ({ slug: s.slug }));
+  }
   const slug = await getCurrentSeasonSlug();
   return slug ? [{ slug }] : [];
 }

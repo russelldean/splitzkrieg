@@ -15,6 +15,7 @@ import {
   getAllSeasonNavList,
   getSeasonIndividualChampions,
   getCurrentSeasonSlug,
+  getAllSeasonSlugs,
 } from '@/lib/queries';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
@@ -28,7 +29,12 @@ import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Prebuild only the current season's stats; historical render on demand.
+  // BUILD_ALL=1 prebuilds every season's stats (full static build); default
+  // prebuilds only the current season and renders historical on demand.
+  if (process.env.BUILD_ALL === '1') {
+    const seasons = await getAllSeasonSlugs();
+    return seasons.map((s) => ({ slug: s.slug }));
+  }
   const slug = await getCurrentSeasonSlug();
   return slug ? [{ slug }] : [];
 }

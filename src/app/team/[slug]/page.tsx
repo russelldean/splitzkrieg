@@ -12,7 +12,7 @@
  */
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getTeamBySlug, getGhostTeamH2H, type GhostTeamMatchup } from '@/lib/queries';
+import { getTeamBySlug, getGhostTeamH2H, getAllTeamSlugs, type GhostTeamMatchup } from '@/lib/queries';
 import { getTeamPageView } from '@/lib/views/team-page';
 import { getTeamLeagueContext } from '@/lib/views/team-league-context';
 import { TeamHero } from '@/components/team/TeamHero';
@@ -89,10 +89,13 @@ function GhostTeamExplainer() {
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Nothing prebuilt: team pages are query-heavy and their current-season data is
-  // live, so prebuilding re-queries the DB cold every build (60s static-gen
-  // timeouts, DB overload). Render fully on demand. Phase 3 consolidates the
-  // per-page queries so the on-demand render is fast.
+  // BUILD_ALL=1 prebuilds every team (full static build). Default = nothing
+  // prebuilt: team pages are query-heavy and current-season data is live, so
+  // per-deploy prebuilding re-queries cold. Render on demand otherwise.
+  if (process.env.BUILD_ALL === '1') {
+    const teams = await getAllTeamSlugs();
+    return teams.map((t) => ({ slug: t.slug }));
+  }
   return [];
 }
 
