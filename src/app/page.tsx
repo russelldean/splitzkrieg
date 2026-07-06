@@ -221,11 +221,20 @@ export default async function Home() {
 
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
         {seasonSnapshot && (() => {
-          // Pre-season: promote the new-season schedule in the hero bar instead
-          // of stale prior-season week results.
-          const heroHref = '/schedule.html';
-          const heroTitle = 'Season XXXVI Schedule';
-          const heroSub = 'Fall 2026';
+          const playoffsActive = nextWeekNumber === 0 && playoffsNextWeek.length > 0;
+          const heroHref = championship
+            ? `/playoffs/${championship.slug}/2`
+            : playoffsActive
+              ? `/playoffs/${seasonSnapshot.slug}/1`
+              : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
+          const heroTitle = playoffsActive || championship
+            ? 'Playoff Results'
+            : `Week ${seasonSnapshot.weekNumber} Results`;
+          const heroSub = championship
+            ? 'The Final'
+            : playoffsActive
+              ? 'Round 1 · Semifinals'
+              : latestWeekDate;
           return (
           <div className="relative rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
             <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />

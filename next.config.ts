@@ -16,6 +16,16 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.fbcdn.net' },
     ],
   },
+  // INTERIM (pre-season): serve the Season XXXVI schedule announcement as the
+  // front page and hide the season-dependent homepage until the season starts.
+  // To restore the normal homepage, delete this rewrites() block.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/', destination: '/schedule.html' }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
 };
 
 export default withBundleAnalyzer({ enabled: process.env.ANALYZE === "true" })(nextConfig);

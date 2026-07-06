@@ -46,6 +46,11 @@
     color:var(--accent);text-decoration:none;white-space:nowrap}
   .site:hover{text-decoration:underline}
   .site:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+  .sitenav{display:flex;flex-wrap:wrap;gap:.35rem 1rem;font-family:var(--mono);font-size:.78rem;
+    font-weight:600;letter-spacing:.02em}
+  .sitenav a{color:var(--accent);text-decoration:none}
+  .sitenav a:hover{text-decoration:underline}
+  .sitenav a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
   .pay{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
     border-radius:10px;padding:1.15rem 1.3rem;margin-bottom:1.8rem}
   .pay-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
@@ -96,7 +101,13 @@
   <header>
     <div class="topbar">
       <p class="eyebrow">Splitzkrieg Bowling League</p>
-      <a class="site" href="https://splitzkrieg.com" target="_blank" rel="noopener">splitzkrieg.com ↗</a>
+      <nav class="sitenav">
+        <a href="/seasons">Seasons</a>
+        <a href="/teams">Teams</a>
+        <a href="/stats">Stats</a>
+        <a href="/bowlers">Bowlers</a>
+        <a href="/blog">Blog</a>
+      </nav>
     </div>
     <h1>Season XXXVI <span>· Fall 2026</span></h1>
     <div class="meta">
