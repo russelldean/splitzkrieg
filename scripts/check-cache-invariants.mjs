@@ -32,10 +32,56 @@ const MUTABLE_TABLES = [
   'playoffScores',
 ];
 
-// Regex to extract cachedQuery options block (the 4th argument)
-// Matches: }, fallback, { options });
-const CACHED_QUERY_RE = /cachedQuery\(\s*[`']([^`']+)[`']/g;
-const OPTIONS_RE = /cachedQuery\([^)]+\)\s*=>\s*\{[\s\S]*?\},\s*(?:\[\]|null|{[^}]*}),\s*(\{[^}]+\})\s*\)/g;
+// Matches the cachedQuery key so we can find each call + its name. The full
+// call (fn body + options) is then parsed with a string-aware scanner below,
+// NOT a fixed line window — long function bodies used to truncate and produce
+// false NO_OPTIONS / NO_SQL reports.
+const CACHED_QUERY_NAME_RE = /cachedQuery\(\s*[`']([\w-]+(?:-\$\{[^}]+\})?)[`']/g;
+
+// Skip a string/template literal starting at index i (s[i] is the quote).
+// Returns the index of the closing quote. Template ${...} exprs are treated as
+// opaque text, which is safe here (no nested backticks in these query files).
+function skipString(s, i) {
+  const q = s[i];
+  for (let k = i + 1; k < s.length; k++) {
+    if (s[k] === '\\') { k++; continue; }
+    if (s[k] === q) return k;
+  }
+  return s.length - 1;
+}
+
+// Given the index of an opening '(', return the index of its matching ')',
+// skipping strings and comments so parens inside SQL/text don't miscount.
+function findMatchingParen(s, open) {
+  let depth = 0;
+  for (let k = open; k < s.length; k++) {
+    const c = s[k];
+    if (c === "'" || c === '"' || c === '`') { k = skipString(s, k); continue; }
+    if (c === '/' && s[k + 1] === '/') { const e = s.indexOf('\n', k); k = e === -1 ? s.length : e; continue; }
+    if (c === '/' && s[k + 1] === '*') { const e = s.indexOf('*/', k + 2); k = e === -1 ? s.length : e + 1; continue; }
+    if (c === '(') depth++;
+    else if (c === ')') { depth--; if (depth === 0) return k; }
+  }
+  return -1;
+}
+
+// Split a cachedQuery argument list into top-level arguments, respecting
+// nested (), {}, [], strings, and comments.
+function splitTopLevelArgs(s) {
+  const args = [];
+  let depth = 0, start = 0;
+  for (let k = 0; k < s.length; k++) {
+    const c = s[k];
+    if (c === "'" || c === '"' || c === '`') { k = skipString(s, k); continue; }
+    if (c === '/' && s[k + 1] === '/') { const e = s.indexOf('\n', k); k = e === -1 ? s.length : e; continue; }
+    if (c === '/' && s[k + 1] === '*') { const e = s.indexOf('*/', k + 2); k = e === -1 ? s.length : e + 1; continue; }
+    if (c === '(' || c === '{' || c === '[') depth++;
+    else if (c === ')' || c === '}' || c === ']') depth--;
+    else if (c === ',' && depth === 0) { args.push(s.slice(start, k).trim()); start = k + 1; }
+  }
+  args.push(s.slice(start).trim());
+  return args;
+}
 
 // Queries intentionally using "weekly" tier (published-tag invalidation only).
 // These don't need dependsOn because they only matter for the current published week.
@@ -68,57 +114,45 @@ function extractQueries(filePath) {
   const relPath = path.relative(path.join(__dirname, '..'), filePath);
   const queries = [];
 
-  // Find all cachedQuery calls with their surrounding context
-  const lines = content.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const match = line.match(/cachedQuery\(\s*[`']([\w-]+(?:-\$\{[^}]+\})?)[`']/);
-    if (!match) continue;
-
+  const re = new RegExp(CACHED_QUERY_NAME_RE.source, 'g');
+  let match;
+  while ((match = re.exec(content)) !== null) {
     const queryName = match[1].replace(/-\$\{[^}]+\}/, '');
 
-    // Collect lines until we find the closing );
-    let block = '';
-    let depth = 0;
-    for (let j = i; j < Math.min(i + 60, lines.length); j++) {
-      block += lines[j] + '\n';
-      for (const ch of lines[j]) {
-        if (ch === '(') depth++;
-        if (ch === ')') depth--;
-      }
-      if (depth <= 0 && j > i) break;
-    }
+    // Parse the whole cachedQuery(...) call, however long its body is.
+    const openIdx = content.indexOf('(', match.index);
+    const closeIdx = findMatchingParen(content, openIdx);
+    if (closeIdx === -1) continue;
+    const callText = content.slice(openIdx + 1, closeIdx);
 
-    // Extract options object (last { ... } before closing )
-    const optMatch = block.match(/,\s*(\{[^{}]+\})\s*\)\s*;?\s*$/m);
-    const options = optMatch ? optMatch[1] : null;
+    // Options is the last argument, iff it's an object literal. Ignore any
+    // empty trailing arg from a trailing comma (multi-line call style).
+    const args = splitTopLevelArgs(callText).filter((a) => a.length > 0);
+    const lastArg = args[args.length - 1] || '';
+    const options = lastArg.startsWith('{') ? lastArg : null;
 
-    // Extract SQL variable names used in the query function
-    const sqlVarMatch = block.match(/\.query(?:<[^>]+>)?\((\w+)/);
-    const sqlVar = sqlVarMatch ? sqlVarMatch[1] : null;
+    const line = content.slice(0, match.index).split('\n').length;
 
-    // Find which tables the SQL references (look at the SQL constant in the file)
-    let tablesRead = [];
-    if (sqlVar) {
-      // Find the SQL constant definition
-      const sqlDefMatch = content.match(new RegExp(`(?:const|let)\\s+${sqlVar}\\s*=\\s*\`([\\s\\S]*?)\`;`));
+    // Collect every SQL constant this call references: from .query(VAR) in the
+    // body AND from the sql: option (handles multi-statement queries).
+    const sqlVars = new Set();
+    for (const qm of callText.matchAll(/\.query(?:<[^>]+>)?\(\s*(\w+)/g)) sqlVars.add(qm[1]);
+    if (options) for (const sm of options.matchAll(/\b([A-Za-z_][A-Za-z0-9_]*_SQL)\b/g)) sqlVars.add(sm[1]);
+
+    const tablesRead = [];
+    for (const sqlVar of sqlVars) {
+      const sqlDefMatch = content.match(new RegExp(`(?:const|let)\\s+${sqlVar}\\s*=\\s*\`([\\s\\S]*?)\``));
       if (sqlDefMatch) {
         const sqlText = sqlDefMatch[1].toLowerCase();
         for (const table of MUTABLE_TABLES) {
-          if (sqlText.includes(table.toLowerCase())) {
+          if (sqlText.includes(table.toLowerCase()) && !tablesRead.includes(table)) {
             tablesRead.push(table);
           }
         }
       }
     }
 
-    queries.push({
-      name: queryName,
-      file: relPath,
-      line: i + 1,
-      options,
-      tablesRead,
-    });
+    queries.push({ name: queryName, file: relPath, line, options, tablesRead });
   }
 
   return queries;

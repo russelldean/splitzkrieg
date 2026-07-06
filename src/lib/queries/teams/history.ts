@@ -283,5 +283,5 @@ export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[
     const db = await getDb();
     const result = await db.request().query<TeamPlayoffFinish>(GET_TEAM_PLAYOFF_FINISHES_SQL);
     return result.recordset;
-  }, [], { sql: GET_TEAM_PLAYOFF_FINISHES_SQL, stable: true });
+  }, [], { sql: GET_TEAM_PLAYOFF_FINISHES_SQL, dependsOn: ['playoffScores'] });
 });
