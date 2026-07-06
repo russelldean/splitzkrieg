@@ -28,6 +28,7 @@ import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
+import { toDateKey } from '@/lib/week-utils';
 import { getPostForWeek } from '@/lib/blog';
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
@@ -117,10 +118,12 @@ export default async function WeekPage({
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 
   // Date(s) for this week. A split week spans more than one date -> show both.
+  // Normalize to a canonical key: matchDate is a Date object here (mssql), so a
+  // raw Set would treat each row's Date as distinct.
   const distinctDates = Array.from(
     new Set(
       [...weekSchedule, ...weekScores]
-        .map((r) => r.matchDate)
+        .map((r) => toDateKey(r.matchDate))
         .filter((d): d is string => d != null),
     ),
   ).sort();

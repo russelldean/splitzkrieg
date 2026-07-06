@@ -27,4 +27,28 @@ describe('groupByMatchDate', () => {
     const groups = groupByMatchDate(items, (x) => x.matchDate);
     expect(groups.map((g) => g.date)).toEqual(['2026-07-13', null]);
   });
+
+  it('groups equal Date objects into one group (mssql returns date columns as Date)', () => {
+    // Distinct Date instances for the same calendar day must NOT become separate
+    // groups (reference-equality trap). This is the split-week preview bug.
+    const items = [
+      { matchDate: new Date('2026-08-24T00:00:00.000Z') },
+      { matchDate: new Date('2026-08-24T00:00:00.000Z') },
+      { matchDate: new Date('2026-08-24T00:00:00.000Z') },
+    ];
+    const groups = groupByMatchDate(items, (x) => x.matchDate);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].date).toBe('2026-08-24');
+    expect(groups[0].items).toHaveLength(3);
+  });
+
+  it('groups Date objects across two days into two groups', () => {
+    const items = [
+      { matchDate: new Date('2026-07-13T00:00:00.000Z') },
+      { matchDate: new Date('2026-07-20T00:00:00.000Z') },
+      { matchDate: new Date('2026-07-13T00:00:00.000Z') },
+    ];
+    const groups = groupByMatchDate(items, (x) => x.matchDate);
+    expect(groups.map((g) => g.date)).toEqual(['2026-07-13', '2026-07-20']);
+  });
 });

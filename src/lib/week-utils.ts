@@ -32,18 +32,32 @@ export interface DateGroup<T> {
 }
 
 /**
+ * Canonical YYYY-MM-DD key for a match date. Match dates arrive as a JS Date
+ * (mssql returns SQL `date` columns as Date objects) in server components and
+ * as an ISO string once serialized to a client component; both must key/compare
+ * the same, so Date objects can't be used as Map/Set keys directly (reference
+ * equality would split every match into its own group).
+ */
+export function toDateKey(d: string | Date | null): string | null {
+  if (d == null) return null;
+  const date = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(date.getTime())) return typeof d === 'string' ? d : null;
+  return date.toISOString().slice(0, 10);
+}
+
+/**
  * Group items by their match date, returned in ascending date order (null last).
  * Within-group order is preserved. Order-independent: does not assume the input
  * is pre-sorted. A single-date input returns one group.
  */
 export function groupByMatchDate<T>(
   items: T[],
-  getDate: (item: T) => string | null,
+  getDate: (item: T) => string | Date | null,
 ): DateGroup<T>[] {
   const map = new Map<string | null, T[]>();
   const order: (string | null)[] = [];
   for (const item of items) {
-    const d = getDate(item);
+    const d = toDateKey(getDate(item));
     if (!map.has(d)) {
       map.set(d, []);
       order.push(d);
