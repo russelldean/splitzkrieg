@@ -116,9 +116,22 @@ export default async function WeekPage({
   const weekSchedule = allSchedule.filter(s => s.week === weekNum);
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
 
-  // Get date for this week
-  const matchDate = weekScores[0]?.matchDate ?? weekSchedule[0]?.matchDate ?? null;
-  const dateStr = formatMatchDate(matchDate, { weekday: 'long', month: 'long', day: 'numeric' });
+  // Date(s) for this week. A split week spans more than one date -> show both.
+  const distinctDates = Array.from(
+    new Set(
+      [...weekSchedule, ...weekScores]
+        .map((r) => r.matchDate)
+        .filter((d): d is string => d != null),
+    ),
+  ).sort();
+  const dateStr =
+    distinctDates.length > 1
+      ? distinctDates.map((d) => formatMatchDate(d, { month: 'short', day: 'numeric' })).join(' & ')
+      : formatMatchDate(distinctDates[0] ?? null, {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        });
 
   // Detect future week (has schedule but no scores, and season is current)
   const isFutureWeek = weekSchedule.length > 0 && weekScores.length === 0;
