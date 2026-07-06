@@ -1,13 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { TeamCard } from '@/components/team/TeamCard';
 import type { DirectoryTeam } from '@/lib/queries';
 
 export function TeamsDirectory({ teams }: { teams: DirectoryTeam[] }) {
   const searchParams = useSearchParams();
-  const [showCurrent, setShowCurrent] = useState(searchParams.get('filter') === 'current');
+  const router = useRouter();
+  const pathname = usePathname();
+  const showCurrent = searchParams.get('filter') === 'current';
+  const setShowCurrent = (current: boolean) => {
+    router.replace(current ? `${pathname}?filter=current` : pathname, { scroll: false });
+  };
   const activeTeams = teams.filter(t => t.isActive);
   const historicalTeams = teams.filter(t => !t.isActive);
   const showAll = !showCurrent;
