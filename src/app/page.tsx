@@ -210,13 +210,6 @@ export default async function Home() {
             <p className="hidden sm:block font-body text-sm text-navy/60 -mt-5 sm:-mt-8">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
-            <Link
-              href="/schedule.html"
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-navy/20 bg-white/70 px-4 py-1.5 font-heading text-sm text-navy shadow-sm hover:border-red-600/40 hover:text-red-700 transition-colors"
-            >
-              Season XXXVI Schedule
-              <span aria-hidden="true">&rarr;</span>
-            </Link>
           </div>
           <div className="hidden sm:block w-12 mx-auto border-t border-navy/30 mt-2 mb-2" />
           <RandomFact facts={randomFacts} />
@@ -228,20 +221,11 @@ export default async function Home() {
 
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
         {seasonSnapshot && (() => {
-          const playoffsActive = nextWeekNumber === 0 && playoffsNextWeek.length > 0;
-          const heroHref = championship
-            ? `/playoffs/${championship.slug}/2`
-            : playoffsActive
-              ? `/playoffs/${seasonSnapshot.slug}/1`
-              : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
-          const heroTitle = playoffsActive || championship
-            ? 'Playoff Results'
-            : `Week ${seasonSnapshot.weekNumber} Results`;
-          const heroSub = championship
-            ? 'The Final'
-            : playoffsActive
-              ? 'Round 1 · Semifinals'
-              : latestWeekDate;
+          // Pre-season: promote the new-season schedule in the hero bar instead
+          // of stale prior-season week results.
+          const heroHref = '/schedule.html';
+          const heroTitle = 'Season XXXVI Schedule';
+          const heroSub = 'Fall 2026';
           return (
           <div className="relative rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
             <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
