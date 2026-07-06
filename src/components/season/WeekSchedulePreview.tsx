@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { SeasonScheduleWeek, PairH2HSummary, StandingsRow } from '@/lib/queries';
+import { groupByMatchDate } from '@/lib/week-utils';
+import { SplitDateHeading } from './SplitDateHeading';
 
 const GHOST_TEAM_ID = 45;
 
@@ -118,6 +120,33 @@ export function WeekSchedulePreview({ schedule, h2hSummaries, standings = [] }: 
   for (const teams of divisionTeams.values()) {
     // standings are already sorted by totalPts DESC within division
     teams.forEach((t, i) => rankMap.set(t.teamID, i + 1));
+  }
+
+  // Split week: the week's matches span more than one date. Group by date and
+  // render a flat grid within each date (takes precedence over division grouping).
+  const dateGroups = groupByMatchDate(schedule, (s) => s.matchDate);
+  if (dateGroups.length > 1) {
+    return (
+      <div className="space-y-6">
+        <h3 className="font-heading text-lg text-navy">Upcoming Matchups</h3>
+        {dateGroups.map((group) => (
+          <div key={group.date ?? 'tbd'}>
+            <SplitDateHeading date={group.date} count={group.items.length} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {group.items.map((matchup, idx) => (
+                <MatchCard
+                  key={idx}
+                  matchup={matchup}
+                  h2hMap={h2hMap}
+                  standingsMap={standingsMap}
+                  rankMap={rankMap}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   // Group matchups by division
