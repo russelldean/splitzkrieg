@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { WeeklyMatchScore, SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
-import { organizeByWeek, indexMatchResults, findMatchMVP } from '@/lib/week-utils';
+import { organizeByWeek, indexMatchResults, findMatchMVP, groupByMatchDate } from '@/lib/week-utils';
 import { MatchupSummary } from './MatchupCards';
 import { TeamBoxScore } from './TeamBoxScore';
+import { SplitDateHeading } from './SplitDateHeading';
 
 const GHOST_TEAM_NAME = 'Ghost Team';
 const GHOST_TEAM_SLUG = 'ghost-team';
@@ -122,19 +123,10 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
 
   if (rows.every(r => r.t1Pts === null)) return null;
 
-  return (
-    <div className="mb-4">
-      <div className="flex justify-end mb-2">
-        <button
-          onClick={toggleAll}
-          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors px-1"
-        >
-          {allOpen ? 'Collapse All' : 'Expand All'}
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        {rows.map((row, idx) => {
+  // Split week: the week's matches span more than one date. Group by date
+  // (order-independent) while keeping each row's global index so expand/collapse
+  // and #match-N hash links keep working.
+  const renderMatchRow = (row: (typeof rows)[number], idx: number) => {
           const { matchup, mr, homeBowlers, awayBowlers, mvpID, t1Pts, t2Pts, mvpBowler } = row;
           const homeForfeit = forfeitTeamIDs.has(matchup.homeTeamID);
           const awayForfeit = forfeitTeamIDs.has(matchup.awayTeamID);
@@ -229,7 +221,32 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
               )}
             </div>
           );
-        })}
+  };
+
+  const indexedRows = rows.map((row, idx) => ({ row, idx }));
+  const dateGroups = groupByMatchDate(indexedRows, (x) => x.row.matchup.matchDate);
+  const isSplit = dateGroups.length > 1;
+
+  return (
+    <div className="mb-4">
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={toggleAll}
+          className="text-sm font-body text-navy/65 hover:text-red-600 transition-colors px-1"
+        >
+          {allOpen ? 'Collapse All' : 'Expand All'}
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {isSplit
+          ? dateGroups.map((group) => (
+              <div key={group.date ?? 'tbd'} className="space-y-2">
+                <SplitDateHeading date={group.date} count={group.items.length} />
+                {group.items.map(({ row, idx }) => renderMatchRow(row, idx))}
+              </div>
+            ))
+          : rows.map((row, idx) => renderMatchRow(row, idx))}
       </div>
 
       {forfeitTeamNames.length > 0 && (
