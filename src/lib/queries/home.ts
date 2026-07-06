@@ -122,10 +122,17 @@ async function _resolvePublishedContext(): Promise<PublishedContext | null> {
 
   let week: number | null = null;
   try {
-    const lsResult = await db.request().query<{ settingValue: string }>(
-      `SELECT settingValue FROM leagueSettings WHERE settingKey = 'publishedWeek'`
+    const lsResult = await db.request().query<{ settingKey: string; settingValue: string }>(
+      `SELECT settingKey, settingValue FROM leagueSettings WHERE settingKey IN ('publishedWeek', 'publishedSeasonID')`
     );
-    if (lsResult.recordset[0]) week = parseInt(lsResult.recordset[0].settingValue, 10);
+    const settings = Object.fromEntries(lsResult.recordset.map(r => [r.settingKey, r.settingValue]));
+    const publishedSeasonID = settings.publishedSeasonID != null ? parseInt(settings.publishedSeasonID, 10) : null;
+    // Only trust publishedWeek when it belongs to the current season. After a
+    // season changeover this setting still holds the PRIOR season's last week
+    // (e.g. 9); it must not leak onto the new, not-yet-started season.
+    if (settings.publishedWeek != null && (publishedSeasonID == null || publishedSeasonID === season.seasonID)) {
+      week = parseInt(settings.publishedWeek, 10);
+    }
   } catch {
     // table doesn't exist yet — fall through
   }
@@ -138,6 +145,9 @@ async function _resolvePublishedContext(): Promise<PublishedContext | null> {
       );
     week = maxResult.recordset[0]?.maxWeek ?? 0;
   }
+
+  // Pre-season (no games played yet): "this week" is week 1, the first night.
+  if (week < 1) week = 1;
 
   return { ...season, week };
 }
