@@ -210,6 +210,13 @@ export default async function Home() {
             <p className="hidden sm:block font-body text-sm text-navy/60 -mt-5 sm:-mt-8">
               Stats, records, and {new Date().getFullYear() - 2007} years of league history
             </p>
+            <Link
+              href="/schedule.html"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-navy/20 bg-white/70 px-4 py-1.5 font-heading text-sm text-navy shadow-sm hover:border-red-600/40 hover:text-red-700 transition-colors"
+            >
+              Season XXXVI Schedule
+              <span aria-hidden="true">&rarr;</span>
+            </Link>
           </div>
           <div className="hidden sm:block w-12 mx-auto border-t border-navy/30 mt-2 mb-2" />
           <RandomFact facts={randomFacts} />

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Season XXXVI Schedule · Splitzkrieg Bowling League</title>
+<style>
+  :root{
+    --ground:#F5F1E6; --panel:#FBF8F0; --ink:#1B2A4A; --ink-soft:#4A5878;
+    --line:#E2DBC8; --accent:#C0362C; --accent-soft:#EFE0D6;
+    --a-tag:#2A6F5A; --b-tag:#8A5A1E;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#12172A; --panel:#1A2138; --ink:#ECE7D6; --ink-soft:#9AA6C4;
+      --line:#2A3352; --accent:#E86254; --accent-soft:#2B2036;
+      --a-tag:#5FD0AE; --b-tag:#E0A64E;
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#F5F1E6; --panel:#FBF8F0; --ink:#1B2A4A; --ink-soft:#4A5878;
+    --line:#E2DBC8; --accent:#C0362C; --accent-soft:#EFE0D6; --a-tag:#2A6F5A; --b-tag:#8A5A1E;
+  }
+  :root[data-theme="dark"]{
+    --ground:#12172A; --panel:#1A2138; --ink:#ECE7D6; --ink-soft:#9AA6C4;
+    --line:#2A3352; --accent:#E86254; --accent-soft:#2B2036; --a-tag:#5FD0AE; --b-tag:#E0A64E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased;padding:clamp(1rem,4vw,3rem)}
+  .wrap{max-width:960px;margin:0 auto}
+  header{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 .5rem}
+  h1{font-family:var(--serif);font-size:clamp(2rem,5vw,3.1rem);line-height:1.02;margin:0;
+    text-wrap:balance;font-weight:600}
+  h1 span{color:var(--ink-soft);font-style:italic}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;margin-top:.9rem;font-size:.86rem;color:var(--ink-soft);
+    font-family:var(--mono)}
+  .meta b{color:var(--ink);font-weight:600}
+  .topbar{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
+  .site{font-family:var(--mono);font-size:.78rem;font-weight:600;letter-spacing:.02em;
+    color:var(--accent);text-decoration:none;white-space:nowrap}
+  .site:hover{text-decoration:underline}
+  .site:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+  .pay{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:1.15rem 1.3rem;margin-bottom:1.8rem}
+  .pay-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+    flex-wrap:wrap;margin-bottom:.9rem}
+  .pay h3{margin:0;font-family:var(--serif);font-size:1.2rem;font-weight:600}
+  .pay-amt{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--ink);
+    font-variant-numeric:tabular-nums}
+  .pay-amt small{font-family:var(--mono);font-size:.68rem;color:var(--ink-soft);font-weight:400;
+    letter-spacing:.06em;text-transform:uppercase}
+  .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem}
+  @media(max-width:560px){.pay-grid{grid-template-columns:1fr}}
+  .pay-label{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 .4rem;font-weight:600}
+  .pay p:not(.pay-label){margin:.2rem 0;font-size:.92rem}
+  .method{display:inline-block;min-width:3.6rem;color:var(--ink-soft);font-family:var(--mono);font-size:.78rem}
+  .pay b{font-weight:600;color:var(--ink)}
+  .divs{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.8rem}
+  @media(max-width:560px){.divs{grid-template-columns:1fr}}
+  .divcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.15rem}
+  .divcard h3{margin:0 0 .6rem;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-family:var(--mono);
+    display:flex;align-items:center;gap:.5rem}
+  .dot{width:.6rem;height:.6rem;border-radius:2px;display:inline-block}
+  .divcard ul{margin:0;padding:0;list-style:none;columns:1;font-size:.9rem}
+  .divcard li{padding:.12rem 0;color:var(--ink)}
+  h2.wk{font-family:var(--serif);font-size:1.35rem;margin:1.8rem 0 .2rem;font-weight:600}
+  .phase{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .split-badge{color:var(--accent)}
+  .nightblock{margin-top:.7rem}
+  .nighthead{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin:.5rem 0 .35rem;font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  td{padding:.32rem .5rem;border-bottom:1px solid var(--line);vertical-align:baseline}
+  .lane{font-family:var(--mono);color:var(--ink);width:3.6rem;font-size:.74rem;font-weight:600;
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .lane small{color:var(--ink-soft);font-weight:400;font-size:.62rem;letter-spacing:.05em}
+  .t1{text-align:right;width:44%;font-weight:500}
+  .vs{text-align:center;color:var(--accent);font-family:var(--mono);font-size:.72rem;width:2.5rem}
+  .t2{width:44%;font-weight:500}
+  .po{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:1rem 1.2rem;margin-top:2rem}
+  .po h3{margin:0 0 .5rem;font-family:var(--mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .po p{margin:.15rem 0;font-size:.9rem}
+  .foot{margin-top:2rem;padding:1rem 1.2rem;border-radius:10px;background:var(--accent-soft);
+    border:1px solid var(--line);font-size:.86rem}
+  .foot b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="topbar">
+      <p class="eyebrow">Splitzkrieg Bowling League</p>
+      <a class="site" href="https://splitzkrieg.com" target="_blank" rel="noopener">splitzkrieg.com ↗</a>
+    </div>
+    <h1>Season XXXVI <span>· Fall 2026</span></h1>
+    <div class="meta">
+      <span><b>20</b> teams</span><span><b>2</b> divisions</span><span><b>9</b> league nights</span>
+      <span><b>90</b> matches</span><span>Jul 13 → Nov 16, 2026</span>
+    </div>
+  </header>
+
+  <section class="pay">
+    <div class="pay-head">
+      <h3>How to Pay</h3>
+      <span class="pay-amt">$575 <small>per team</small></span>
+    </div>
+    <div class="pay-grid">
+      <div>
+        <p class="pay-label">Cash (still king)</p>
+        <p>James will accept cash Monday night if you have it.</p>
+      </div>
+      <div>
+        <p class="pay-label">Electronic</p>
+        <p><span class="method">PayPal</span> <b>splitzkriegpayments@gmail.com</b></p>
+        <p><span class="method">Venmo</span> <b>@Splitzkrieg</b></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divs">
+    <div class="divcard">
+      <h3><span class="dot" style="background:var(--a-tag)"></span>Division A</h3>
+      <ul id="divA"></ul>
+    </div>
+    <div class="divcard">
+      <h3><span class="dot" style="background:var(--b-tag)"></span>Division B</h3>
+      <ul id="divB"></ul>
+    </div>
+  </div>
+
+  <div id="sched"></div>
+
+  <div class="po">
+    <h3>Playoffs</h3>
+    <p><b>Round 1</b> · Mon Nov 9, 2026</p>
+    <p><b>Finals</b> · Mon Nov 16, 2026</p>
+  </div>
+</div>
+
+<script>
+const DIV_A=['Living on a Spare','Guttermouths','Bowl Durham','Hot Shotz','Valley of the Balls','Stinky Cheese','Fancy Pants','Lucky Strikes','Alley Oops','Gutterglory'];
+const DIV_B=['E-Bowla',"Grandma's Teeth",'Guttersnipes','Pin-Ups','HOT FUN','Sparadigm Shift','The Boom Kings','Smoke-a-Bowl','Thoughts and Spares','Wild Llamas'];
+const WEEKS=[
+ {week:1,split:true,dates:[{d:'Mon Jul 13',m:[['Living on a Spare','Guttermouths'],['Guttersnipes','Pin-Ups'],['Valley of the Balls','Alley Oops'],['E-Bowla',"Grandma's Teeth"],['Bowl Durham','Hot Shotz']]},{d:'Mon Jul 20',m:[['Stinky Cheese','Fancy Pants'],['The Boom Kings','Smoke-a-Bowl'],['Thoughts and Spares','Wild Llamas'],['HOT FUN','Sparadigm Shift'],['Lucky Strikes','Gutterglory']]}]},
+ {week:2,split:true,dates:[{d:'Mon Jul 27',m:[['E-Bowla','Guttersnipes'],['Bowl Durham','Valley of the Balls'],["Grandma's Teeth",'Thoughts and Spares'],['Pin-Ups','Wild Llamas'],['Hot Shotz','Alley Oops']]},{d:'Mon Aug 3',m:[['Fancy Pants','Gutterglory'],['Guttermouths','Lucky Strikes'],['Living on a Spare','Stinky Cheese'],['HOT FUN','The Boom Kings'],['Sparadigm Shift','Smoke-a-Bowl']]}]},
+ {week:3,split:true,dates:[{d:'Mon Aug 10',m:[['Hot Shotz','Valley of the Balls'],['Smoke-a-Bowl','Thoughts and Spares'],["Grandma's Teeth",'Guttersnipes'],['Bowl Durham','Alley Oops'],['E-Bowla','Pin-Ups']]},{d:'Mon Aug 17',m:[['Guttermouths','Gutterglory'],['HOT FUN','Wild Llamas'],['Sparadigm Shift','The Boom Kings'],['Stinky Cheese','Lucky Strikes'],['Living on a Spare','Fancy Pants']]}]},
+ {week:4,split:false,dates:[{d:'Mon Aug 24',m:[["Grandma's Teeth",'Pin-Ups'],['Fancy Pants','Lucky Strikes'],['Alley Oops','Gutterglory'],['Living on a Spare','Bowl Durham'],['Smoke-a-Bowl','Wild Llamas'],['The Boom Kings','Thoughts and Spares'],['Guttermouths','Hot Shotz'],['Valley of the Balls','Stinky Cheese'],['E-Bowla','HOT FUN'],['Guttersnipes','Sparadigm Shift']]}]},
+ {week:5,split:false,dates:[{d:'Mon Sep 7',m:[['Guttersnipes','Smoke-a-Bowl'],['Stinky Cheese','Gutterglory'],['E-Bowla','Sparadigm Shift'],['Pin-Ups','Thoughts and Spares'],['The Boom Kings','Wild Llamas'],["Grandma's Teeth",'HOT FUN'],['Guttermouths','Bowl Durham'],['Living on a Spare','Hot Shotz'],['Valley of the Balls','Fancy Pants'],['Lucky Strikes','Alley Oops']]}]},
+ {week:6,split:false,dates:[{d:'Mon Sep 21',m:[['HOT FUN','Thoughts and Spares'],["Grandma's Teeth",'Sparadigm Shift'],['Guttersnipes','Wild Llamas'],['Hot Shotz','Gutterglory'],['Guttermouths','Stinky Cheese'],['Fancy Pants','Alley Oops'],['Living on a Spare','Valley of the Balls'],['Bowl Durham','Lucky Strikes'],['Pin-Ups','Smoke-a-Bowl'],['E-Bowla','The Boom Kings']]}]},
+ {week:7,split:false,dates:[{d:'Mon Oct 5',m:[['Pin-Ups','HOT FUN'],['Hot Shotz','Fancy Pants'],['Living on a Spare','Lucky Strikes'],['Sparadigm Shift','Wild Llamas'],["Grandma's Teeth",'The Boom Kings'],['Stinky Cheese','Alley Oops'],['Guttersnipes','Thoughts and Spares'],['E-Bowla','Smoke-a-Bowl'],['Bowl Durham','Gutterglory'],['Guttermouths','Valley of the Balls']]}]},
+ {week:8,split:false,dates:[{d:'Mon Oct 19',m:[['Hot Shotz','Lucky Strikes'],['Living on a Spare','Alley Oops'],['HOT FUN','Smoke-a-Bowl'],['Guttermouths','Fancy Pants'],['Valley of the Balls','Gutterglory'],['Pin-Ups','Sparadigm Shift'],["Grandma's Teeth",'Wild Llamas'],['E-Bowla','Thoughts and Spares'],['Guttersnipes','The Boom Kings'],['Bowl Durham','Stinky Cheese']]}]},
+ {week:9,split:false,dates:[{d:'Mon Nov 2',m:[["Grandma's Teeth",'Smoke-a-Bowl'],['Sparadigm Shift','Thoughts and Spares'],['Bowl Durham','Fancy Pants'],['Guttermouths','Alley Oops'],['Guttersnipes','HOT FUN'],['Valley of the Balls','Lucky Strikes'],['E-Bowla','Wild Llamas'],['Pin-Ups','The Boom Kings'],['Living on a Spare','Gutterglory'],['Hot Shotz','Stinky Cheese']]}]},
+];
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const byName=(a,b)=>a.localeCompare(b);
+document.getElementById('divA').innerHTML=DIV_A.slice().sort(byName).map(t=>`<li>${esc(t)}</li>`).join('');
+document.getElementById('divB').innerHTML=DIV_B.slice().sort(byName).map(t=>`<li>${esc(t)}</li>`).join('');
+document.getElementById('sched').innerHTML=WEEKS.map(w=>{
+  const phaseLine=w.split?'<div class="phase"><span class="split-badge">Split night · A / B</span></div>':'';
+  const nights=w.dates.map(dt=>{
+    const rows=dt.m.map(([a,b],i)=>{const lane=`${2*i+1}–${2*i+2}`;return `<tr><td class="lane">${lane}<small> ln</small></td><td class="t1">${esc(a)}</td><td class="vs">vs</td><td class="t2">${esc(b)}</td></tr>`}).join('');
+    const head=w.split?`<div class="nighthead">${dt.d} · lanes 1–10</div>`:`<div class="nighthead">${dt.d} · lanes 1–20</div>`;
+    return `<div class="nightblock">${head}<table>${rows}</table></div>`;
+  }).join('');
+  return `<h2 class="wk">Week ${w.week}</h2>${phaseLine}${nights}`;
+}).join('');
+</script>
+</body>
+</html>
