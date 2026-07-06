@@ -174,15 +174,20 @@ const GET_ALL_TEAMS_DIRECTORY_SQL = `
     SELECT TOP 1 seasonID FROM seasons
     ORDER BY year DESC, CASE period WHEN 'Fall' THEN 2 ELSE 1 END DESC
   ),
+  latestSchedTeams AS (
+    SELECT team1ID AS teamID FROM schedule
+      WHERE seasonID = (SELECT seasonID FROM latestSeason) AND team1ID IS NOT NULL
+    UNION
+    SELECT team2ID AS teamID FROM schedule
+      WHERE seasonID = (SELECT seasonID FROM latestSeason) AND team2ID IS NOT NULL
+  ),
   teamAgg AS (
     SELECT sc.teamID,
       COUNT(DISTINCT sc.bowlerID) AS rosterCount,
       COUNT(DISTINCT sc.seasonID) AS seasonsActive,
       COUNT(sc.scoreID) * 3       AS totalGames,
-      SUM(sc.scratchSeries)       AS totalPins,
-      MAX(CASE WHEN sc.seasonID = ls.seasonID THEN 1 ELSE 0 END) AS activeInLatest
+      SUM(sc.scratchSeries)       AS totalPins
     FROM scores sc
-    CROSS JOIN latestSeason ls
     WHERE sc.isPenalty = 0
     GROUP BY sc.teamID
   ),
@@ -211,15 +216,16 @@ const GET_ALL_TEAMS_DIRECTORY_SQL = `
     ISNULL(ta.seasonsActive, 0) AS seasonsActive,
     ISNULL(ta.totalGames, 0)    AS totalGames,
     ta.totalPins               AS totalPins,
-    CAST(CASE WHEN t.teamID = 45 OR ta.activeInLatest = 1 THEN 1 ELSE 0 END AS BIT) AS isActive,
+    CAST(CASE WHEN t.teamID = 45 OR st.teamID IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS isActive,
     est.displayName            AS establishedSeason,
     ISNULL(ch.championships, 0) AS championships
   FROM teams t
-  LEFT JOIN teamAgg ta     ON ta.teamID  = t.teamID
-  LEFT JOIN established est ON est.teamID = t.teamID
-  LEFT JOIN champs ch      ON ch.teamID  = t.teamID
+  LEFT JOIN teamAgg ta          ON ta.teamID = t.teamID
+  LEFT JOIN latestSchedTeams st ON st.teamID = t.teamID
+  LEFT JOIN established est      ON est.teamID = t.teamID
+  LEFT JOIN champs ch           ON ch.teamID = t.teamID
   ORDER BY
-    CASE WHEN t.teamID = 45 OR ta.activeInLatest = 1 THEN 0 ELSE 1 END,
+    CASE WHEN t.teamID = 45 OR st.teamID IS NOT NULL THEN 0 ELSE 1 END,
     t.teamName ASC
 `;
 
@@ -228,7 +234,7 @@ export const getAllTeamsDirectory = cache(async (): Promise<DirectoryTeam[]> => 
     const db = await getDb();
     const result = await db.request().query<DirectoryTeam>(GET_ALL_TEAMS_DIRECTORY_SQL);
     return result.recordset;
-  }, [], { sql: GET_ALL_TEAMS_DIRECTORY_SQL, dependsOn: ['scores'] });
+  }, [], { sql: GET_ALL_TEAMS_DIRECTORY_SQL, dependsOn: ['scores', 'schedule'] });
 });
 
 const GET_TEAM_SEASON_PRESENCE_SQL = `
