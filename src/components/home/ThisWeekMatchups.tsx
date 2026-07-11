@@ -85,7 +85,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
       {isSplit ? (
         <div className="space-y-3">
           {dateGroups.map((g, gi) => (
-            <div key={g.date ?? 'tbd'} className={gi > 0 ? 'pt-3 border-t border-navy/10' : ''}>
+            <div key={g.date ?? 'tbd'} className={gi > 0 ? 'pt-3 border-t border-navy/25' : ''}>
               <div className="flex items-baseline gap-2 mb-1.5">
                 <h4 className="font-heading text-sm text-navy">
                   {formatMatchDate(g.date, { weekday: 'long', month: 'short', day: 'numeric' }) ?? 'Date TBD'}
