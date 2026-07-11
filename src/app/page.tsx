@@ -64,6 +64,7 @@ export default async function Home() {
   let countdownSchedule: { week: number; matchDate: string }[] = [];
 
   let nextWeekNumber = 0;
+  let seasonStarted = false;
   let latestWeekDate: string | null = null;
   let playoffsNextWeek: { divisionName: string; topSeed: { teamName: string; teamSlug: string }; secondSeed: { teamName: string; teamSlug: string } }[] = [];
   let playoffsRoundOneDate: string | null = null;
@@ -85,6 +86,7 @@ export default async function Home() {
 
       // Find the next upcoming week: first scheduled week with no match results
       const playedWeeks = new Set(allMatchResults.map(r => r.week));
+      seasonStarted = playedWeeks.size > 0;
       const scheduledWeeks = [...new Set(allSchedule.map(s => s.week))].sort((a, b) => a - b);
       nextWeekNumber = scheduledWeeks.find(w => !playedWeeks.has(w)) ?? 0;
 
@@ -226,10 +228,14 @@ export default async function Home() {
             ? `/playoffs/${championship.slug}/2`
             : playoffsActive
               ? `/playoffs/${seasonSnapshot.slug}/1`
-              : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
+              : !seasonStarted
+                ? `/season/${seasonSnapshot.slug}`
+                : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
           const heroTitle = playoffsActive || championship
             ? 'Playoff Results'
-            : `Week ${seasonSnapshot.weekNumber} Results`;
+            : !seasonStarted
+              ? 'Season Schedule'
+              : `Week ${seasonSnapshot.weekNumber} Results`;
           const heroSub = championship
             ? 'The Final'
             : playoffsActive
@@ -326,7 +332,7 @@ export default async function Home() {
             {/* Desktop: combined recap + snapshot card */}
             <div className="hidden md:block">
               <TrackVisibility section="recap-snapshot" page="home">
-                <RecapSnapshotCard post={latestPost} snapshot={seasonSnapshot} />
+                <RecapSnapshotCard post={latestPost} snapshot={seasonSnapshot} preseason={!seasonStarted} />
               </TrackVisibility>
             </div>
             {/* Mobile: standard season snapshot */}

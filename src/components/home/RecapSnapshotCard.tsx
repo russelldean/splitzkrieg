@@ -7,9 +7,11 @@ import type { SeasonSnapshot } from '@/lib/queries';
 interface Props {
   post: PostMeta;
   snapshot: SeasonSnapshot;
+  /** Preseason: no results yet, so show "Coming Soon" instead of empty highlights. */
+  preseason?: boolean;
 }
 
-export function RecapSnapshotCard({ post, snapshot }: Props) {
+export function RecapSnapshotCard({ post, snapshot, preseason = false }: Props) {
   const image = post.cardImage || post.heroImage;
 
   return (
@@ -43,6 +45,13 @@ export function RecapSnapshotCard({ post, snapshot }: Props) {
 
         {/* Right: snapshot data */}
         <div className="md:w-[55%] md:flex-shrink-0 px-6 pt-4 pb-4">
+          {preseason ? (
+          <div className="h-full flex flex-col justify-center py-6">
+            <h3 className="font-heading text-lg text-navy">Week {snapshot.weekNumber} Highlights</h3>
+            <p className="font-body text-sm text-navy/55 mt-1">Coming soon once the season starts.</p>
+          </div>
+          ) : (
+          <>
           <div className="flex items-baseline justify-between mb-3">
             <h3 className="font-heading text-lg text-navy">
               Week {snapshot.weekNumber} Highlights
@@ -104,6 +113,8 @@ export function RecapSnapshotCard({ post, snapshot }: Props) {
               )}
             </div>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { SeasonScheduleWeek, WeeklyMatchupResult } from '@/lib/queries';
 import { formatMatchDate } from '@/lib/bowling-time';
+import { groupByMatchDate } from '@/lib/week-utils';
 
 interface Props {
   matchups: SeasonScheduleWeek[];
@@ -20,28 +21,13 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
 
   const hasResults = matchResults.length > 0;
 
-  const matchDate = matchups[0]?.matchDate;
-  const dateStr = formatMatchDate(matchDate, { weekday: 'short', month: 'short', day: 'numeric' });
+  // A split week spans more than one date; group so each date's matchups show
+  // under their own date instead of all collapsing under the first date.
+  const dateGroups = groupByMatchDate(matchups, (m) => m.matchDate);
+  const isSplit = dateGroups.length > 1;
+  const headerDate = isSplit ? null : formatMatchDate(matchups[0]?.matchDate, { weekday: 'short', month: 'short', day: 'numeric' });
 
-  return (
-    <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-6 pt-4 pb-6">
-      <div className="flex items-baseline justify-between mb-5">
-        <div>
-          <h3 className="font-heading text-lg text-navy">Up Next</h3>
-          <p className="text-xs font-body text-navy/60">
-            Week {weekNumber}{dateStr && <> &middot; {dateStr}</>}
-          </p>
-        </div>
-        <Link
-          href={`/week/${seasonSlug}/${weekNumber}`}
-          className="text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
-        >
-          Details &rarr;
-        </Link>
-      </div>
-
-      <div className="space-y-1">
-        {matchups.map((m, i) => {
+  const renderMatchup = (m: SeasonScheduleWeek, i: number) => {
           const mr = mrIndex.get(`${weekNumber}-${m.homeTeamID}-${m.awayTeamID}`);
           const t1Pts = mr ? (mr.team1GamePts ?? 0) + (mr.team1BonusPts ?? 0) : null;
           const t2Pts = mr ? (mr.team2GamePts ?? 0) + (mr.team2BonusPts ?? 0) : null;
@@ -49,7 +35,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
           const awayWon = t1Pts != null && t2Pts != null && t2Pts > t1Pts;
 
           return (
-            <div key={i} className="flex items-center justify-between py-1 border-b border-navy/5 last:border-0">
+            <div key={`${m.homeTeamID}-${m.awayTeamID}`} className="flex items-center justify-between py-1 border-b border-navy/5 last:border-0">
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/team/${m.homeTeamSlug}`}
@@ -77,8 +63,43 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
               </div>
             </div>
           );
-        })}
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-navy/10 shadow-sm px-6 pt-4 pb-6">
+      <div className="flex items-baseline justify-between mb-5">
+        <div>
+          <h3 className="font-heading text-lg text-navy">Up Next</h3>
+          <p className="text-xs font-body text-navy/60">
+            Week {weekNumber}{headerDate && <> &middot; {headerDate}</>}
+          </p>
+        </div>
+        <Link
+          href={`/week/${seasonSlug}/${weekNumber}`}
+          className="text-xs font-body text-navy/60 hover:text-red-600 transition-colors"
+        >
+          Details &rarr;
+        </Link>
       </div>
+
+      {isSplit ? (
+        <div className="space-y-4">
+          {dateGroups.map((g) => (
+            <div key={g.date ?? 'tbd'}>
+              <p className="text-xs font-body font-semibold text-navy/70 uppercase tracking-wider mb-1">
+                {formatMatchDate(g.date, { weekday: 'short', month: 'short', day: 'numeric' }) ?? 'Date TBD'}
+              </p>
+              <div className="space-y-1">
+                {g.items.map((m, i) => renderMatchup(m, i))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {matchups.map((m, i) => renderMatchup(m, i))}
+        </div>
+      )}
     </div>
   );
 }
