@@ -16,7 +16,7 @@ export const ALL_TOP_LINEUPS: TopTeamData[] = [
     ],
   },
   {
-    name: "Bowl Durham",
+    name: "High Rollers",
     totalNights: 61,
     uniqueLineups: 30,
     lineups: [

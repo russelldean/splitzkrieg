@@ -4663,7 +4663,7 @@ const VID_CHAMPS: Record<number, number> = { 81:1, 184:1, 342:1, 492:1, 537:1, 6
 
 export const ALL_TEAMS_VIZ: TeamViz[] = [
   { title: "Alley Oops", bowlers: AO_BOWLERS, pairs: AO_PAIRS, nightsMap: AO_NIGHTS, champCounts: AO_CHAMPS, captainID: 582 },
-  { title: "Bowl Durham", bowlers: BD_BOWLERS, pairs: BD_PAIRS, nightsMap: BD_NIGHTS, champCounts: BD_CHAMPS, captainID: 419 },
+  { title: "High Rollers", bowlers: BD_BOWLERS, pairs: BD_PAIRS, nightsMap: BD_NIGHTS, champCounts: BD_CHAMPS, captainID: 419 },
   { title: "E-Bowla", bowlers: EB_BOWLERS, pairs: EB_PAIRS, nightsMap: EB_NIGHTS, champCounts: EB_CHAMPS, captainID: 271 },
   { title: "Fancy Pants", bowlers: FP_BOWLERS, pairs: FP_PAIRS, nightsMap: FP_NIGHTS, champCounts: FP_CHAMPS, captainID: 215 },
   { title: "Grandma's Teeth", bowlers: GTH_BOWLERS, pairs: GTH_PAIRS, nightsMap: GTH_NIGHTS, champCounts: GTH_CHAMPS, captainID: 479 },
@@ -4675,7 +4675,7 @@ export const ALL_TEAMS_VIZ: TeamViz[] = [
   { title: "Living on a Spare", bowlers: LOS_BOWLERS, pairs: LOS_PAIRS, nightsMap: LOS_NIGHTS, champCounts: LOS_CHAMPS, captainID: 191 },
   { title: "Lucky Strikes", bowlers: LS_BOWLERS, pairs: LS_PAIRS, nightsMap: LS_NIGHTS, champCounts: LS_CHAMPS, captainID: 548 },
   { title: "Pin-Ups", bowlers: PU_BOWLERS, pairs: PU_PAIRS, nightsMap: PU_NIGHTS, champCounts: PU_CHAMPS, captainID: 122 },
-  { title: "Smoke-a-Bowl", bowlers: SAB_BOWLERS, pairs: SAB_PAIRS, nightsMap: SAB_NIGHTS, champCounts: SAB_CHAMPS, captainID: 194 },
+  { title: "Smoke-a-Bowl", bowlers: SAB_BOWLERS, pairs: SAB_PAIRS, nightsMap: SAB_NIGHTS, champCounts: SAB_CHAMPS, captainID: 317 },
   { title: "Sparadigm Shift", bowlers: SPS_BOWLERS, pairs: SPS_PAIRS, nightsMap: SPS_NIGHTS, champCounts: SPS_CHAMPS, captainID: 299 },
   { title: "Stinky Cheese", bowlers: STC_BOWLERS, pairs: STC_PAIRS, nightsMap: STC_NIGHTS, champCounts: STC_CHAMPS, captainID: 262 },
   { title: "The Boom Kings", bowlers: BK_BOWLERS, pairs: BK_PAIRS, nightsMap: BK_NIGHTS, champCounts: BK_CHAMPS, captainID: 563 },

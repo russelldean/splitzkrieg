@@ -131,6 +131,21 @@ export default async function SeasonPage({
 
       <SeasonHero season={season} heroStats={heroStats} bracket={bracket} />
 
+      {isCurrentSeason && (
+        <a
+          href="/schedule.html"
+          className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10 hover:border-red-600/30 hover:bg-navy/[0.05] transition-colors group"
+        >
+          <span className="font-body text-sm text-navy/80">
+            <span className="font-semibold">Season {season.romanNumeral} schedule &amp; format</span>
+            <span className="text-navy/55"> · divisions, split weeks, payouts</span>
+          </span>
+          <svg className="w-4 h-4 text-navy/30 group-hover:text-red-600 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </a>
+      )}
+
       {/* Prev/next season navigation */}
       <SeasonNav current={season} allSeasons={allSeasons} />
 

@@ -16,15 +16,11 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.fbcdn.net' },
     ],
   },
-  // INTERIM (pre-season): serve the Season XXXVI schedule announcement as the
-  // front page and hide the season-dependent homepage until the season starts.
-  // To restore the normal homepage, delete this rewrites() block.
-  async rewrites() {
-    return {
-      beforeFiles: [{ source: '/', destination: '/schedule.html' }],
-      afterFiles: [],
-      fallback: [],
-    };
+  // Team renamed Bowl Durham -> High Rollers (2026-07-11); keep old shared links alive.
+  async redirects() {
+    return [
+      { source: '/team/bowl-durham', destination: '/team/high-rollers', permanent: true },
+    ];
   },
 };
 
