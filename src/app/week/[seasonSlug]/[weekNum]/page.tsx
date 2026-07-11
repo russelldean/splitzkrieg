@@ -207,7 +207,9 @@ export default async function WeekPage({
               </Link>
             ) : <span />}
           </div>
-          <span />
+          <span className="font-body text-base font-semibold text-navy">
+            Week {weekNum}
+          </span>
           <div>
             {nextWeek ? (
               <Link
