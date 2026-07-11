@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { requireAdmin } from '@/lib/admin/auth';
-import { getMatchupsForWeek, generateScoresheet } from '@/lib/admin/scoresheets';
+import { getMatchupsForWeek, generateScoresheet, getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +19,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { seasonID, week, source, to } = body as {
+    const { seasonID, week, source, to, date } = body as {
       seasonID: number;
       week: number;
       source?: 'lineups' | 'lastweek';
       to: string;
+      date?: string;
     };
 
     if (!seasonID || !week) {
@@ -48,7 +49,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const matches = await getMatchupsForWeek(seasonID, week, source || 'lineups');
+    const matchDate = date === 'all' ? null : (date ?? await getUpcomingMatchDate(seasonID, week));
+    const matches = await getMatchupsForWeek(seasonID, week, source || 'lineups', matchDate);
 
     if (matches.length === 0) {
       return NextResponse.json(

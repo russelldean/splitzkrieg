@@ -44,15 +44,25 @@ const dbConfig = {
   },
 };
 
-// ─── LP Config (Season 35) ──────────────────────────────────────────────────
+// ─── LP Config (Season 36+) ──────────────────────────────────────────────────
 
-const LP_LEAGUE_ID = '696e613d3d649815687f7823';
+// Split-phase seasons pull from the A/B events BY WEEK; combined phase pulls from C.
+// Pass --league=A|B|C (or a raw 24-hex league id) each run.
+// See memory/project_s36_setup.md for the week -> event calendar.
+const LP_LEAGUES = {
+  A: '69ff6a4b6f327c1e53b16b61',   // Event A: 7/13, 7/27, 8/10
+  B: '69ff6c824e0fec0b32dcbef8',   // Event B: 7/20, 8/3, 8/17
+  C: '69ff6fa7d824a6df6ec83597',   // Event C: combined phase, 8/24 onward
+  S35: '696e613d3d649815687f7823', // legacy Season 35
+};
+let LP_LEAGUE_ID = null; // resolved from --league= in the arg block below
 const LP_BASE = 'https://www.leaguepals.com';
 
 // LP team name → DB teamID (normalized LP names, lowercase for matching)
 const LP_TEAM_MAP = {
   'alley oops': 1,
   'bowl durham': 4,
+  'high rollers': 4, // S36 rename of Bowl Durham (LP event may still read "Bowl Durham")
   'e bowla': 7,
   'e-bowla': 7,
   'fancy pants': 8,
@@ -84,13 +94,24 @@ const args = rest;
 const getArg = (prefix) => args.find(a => a.startsWith(prefix))?.replace(prefix, '') ?? null;
 
 const weekNum = parseInt(getArg('--week='), 10);
-const seasonID = parseInt(getArg('--season=') ?? '35', 10);
+const seasonID = parseInt(getArg('--season=') ?? '36', 10);
 const dryRun = args.includes('--dry-run');
 const cookieVal = getArg('--cookie=');
+const leagueArg = getArg('--league=');
+
+// Resolve LeaguePals event/league: A|B|C shorthand or a raw 24-hex id.
+if (leagueArg) {
+  LP_LEAGUE_ID = LP_LEAGUES[leagueArg.toUpperCase()]
+    ?? (/^[a-f0-9]{24}$/i.test(leagueArg) ? leagueArg : null);
+  if (!LP_LEAGUE_ID) {
+    console.error(`ERROR: --league="${leagueArg}" not recognized. Use A, B, C, or a 24-hex league id.`);
+    process.exit(1);
+  }
+}
 
 if (!command || !['pull', 'import', 'show'].includes(command)) {
   console.error('Usage:');
-  console.error('  node scripts/import-week-scores.mjs pull --cookie="connect.sid=..." --week=N [--season=N]');
+  console.error('  node scripts/import-week-scores.mjs pull --cookie="connect.sid=..." --week=N --league=A|B|C [--season=N]');
   console.error('  node scripts/import-week-scores.mjs show --week=N [--season=N]');
   console.error('  node scripts/import-week-scores.mjs import --week=N [--season=N] [--dry-run]');
   process.exit(1);
@@ -98,6 +119,16 @@ if (!command || !['pull', 'import', 'show'].includes(command)) {
 
 if (!weekNum || isNaN(weekNum)) {
   console.error('ERROR: --week=N is required');
+  process.exit(1);
+}
+
+// `pull` hits LeaguePals, so it must know which event to read from.
+if (command === 'pull' && !LP_LEAGUE_ID) {
+  console.error('ERROR: pull requires --league=A|B|C (which LeaguePals event this week bowled in):');
+  console.error('  A = Event A  (7/13, 7/27, 8/10)');
+  console.error('  B = Event B  (7/20, 8/3, 8/17)');
+  console.error('  C = Event C  combined phase (8/24 onward)');
+  console.error('  ...or --league=<24-hex league id> for anything else.');
   process.exit(1);
 }
 

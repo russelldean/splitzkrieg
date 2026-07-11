@@ -78,21 +78,52 @@ function calcHandicap(avg: number | null): number | null {
  * Get matchups for a given week with bowler info.
  * Uses lineup submissions if available, otherwise falls back to previous week scores.
  */
+/**
+ * Split-phase weeks span more than one Monday (e.g. S36 week 1 = Event A on 7/13
+ * plus Event B on 7/20 under the same week number). Pick which night to print:
+ * the earliest match date on/after today (UTC), else the latest date in the week.
+ * Returns 'YYYY-MM-DD', or null if the week has no dated matches (caller then
+ * gets every match for the week, the pre-split-phase behavior).
+ */
+export async function getUpcomingMatchDate(
+  seasonID: number,
+  week: number,
+): Promise<string | null> {
+  const db = await getDb();
+  const res = await db
+    .request()
+    .input('seasonID', sql.Int, seasonID)
+    .input('week', sql.Int, week)
+    .query<{ d: string }>(
+      `SELECT DISTINCT CONVERT(varchar(10), sch.matchDate, 23) AS d
+       FROM schedule sch
+       WHERE sch.seasonID = @seasonID AND sch.week = @week AND sch.matchDate IS NOT NULL
+       ORDER BY d`,
+    );
+  const dates = res.recordset.map((r) => r.d).filter(Boolean);
+  if (dates.length <= 1) return dates[0] ?? null; // single-date week: no-op filter
+  const today = new Date().toISOString().slice(0, 10);
+  return dates.find((d) => d >= today) ?? dates[dates.length - 1];
+}
+
 export async function getMatchupsForWeek(
   seasonID: number,
   week: number,
   source: 'lineups' | 'lastweek' = 'lineups',
+  matchDate: string | null = null,
 ): Promise<ScoresheetMatch[]> {
   const db = await getDb();
 
   // Pre-calculate 27-game rolling averages for all bowlers (cross-season)
   const rollingAvgMap = await getRollingAverages(db, seasonID, week);
 
-  // Get schedule matchups for this week
-  const scheduleResult = await db
+  // Get schedule matchups for this week (optionally limited to one night)
+  const scheduleReq = db
     .request()
     .input('seasonID', sql.Int, seasonID)
-    .input('week', sql.Int, week)
+    .input('week', sql.Int, week);
+  if (matchDate) scheduleReq.input('matchDate', sql.VarChar, matchDate);
+  const scheduleResult = await scheduleReq
     .query<{
       scheduleID: number;
       matchNumber: number;
@@ -111,6 +142,7 @@ export async function getMatchupsForWeek(
        JOIN teams t1 ON sch.team1ID = t1.teamID
        JOIN teams t2 ON sch.team2ID = t2.teamID
        WHERE sch.seasonID = @seasonID AND sch.week = @week
+         ${matchDate ? 'AND CONVERT(date, sch.matchDate) = CONVERT(date, @matchDate)' : ''}
          AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
        ORDER BY sch.matchNumber`,
     );

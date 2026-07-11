@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
-import { getMatchupsForWeek, generateScoresheet } from '@/lib/admin/scoresheets';
+import { getMatchupsForWeek, generateScoresheet, getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +19,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { seasonID, week, source } = body as {
+    const { seasonID, week, source, date } = body as {
       seasonID: number;
       week: number;
       source?: 'lineups' | 'lastweek';
+      date?: string; // 'all' for every match, a 'YYYY-MM-DD' for one night, or omit for the upcoming night
     };
 
     if (!seasonID || !week) {
@@ -32,7 +33,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const matches = await getMatchupsForWeek(seasonID, week, source || 'lineups');
+    // Split-phase weeks span two Mondays; default to the upcoming night.
+    const matchDate = date === 'all' ? null : (date ?? await getUpcomingMatchDate(seasonID, week));
+    const matches = await getMatchupsForWeek(seasonID, week, source || 'lineups', matchDate);
 
     if (matches.length === 0) {
       return NextResponse.json(

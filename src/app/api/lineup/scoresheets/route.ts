@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { getCurrentLineupContext } from '@/lib/admin/lineups';
-import { getMatchupsForWeek, generateScoresheet } from '@/lib/admin/scoresheets';
+import { getMatchupsForWeek, generateScoresheet, getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,9 @@ export async function GET() {
     }
 
     const { seasonID, nextWeek: week } = context;
-    const matches = await getMatchupsForWeek(seasonID, week, 'lineups');
+    // Split-phase weeks span two Mondays; print only the upcoming night's matches.
+    const printDate = await getUpcomingMatchDate(seasonID, week);
+    const matches = await getMatchupsForWeek(seasonID, week, 'lineups', printDate);
 
     if (matches.length === 0) {
       return NextResponse.json(
@@ -37,7 +39,7 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="scoresheets-w${week}.pdf"`,
+        'Content-Disposition': `inline; filename="scoresheets-w${week}${printDate ? '-' + printDate : ''}.pdf"`,
         'Content-Length': String(pdfBuffer.length),
       },
     });
