@@ -28,6 +28,8 @@ interface Props {
   showDelta?: boolean;
   /** Race data for inline heatmap columns */
   raceData?: RaceChartData[];
+  /** Preseason: teams grouped by division with zeroed records, no matches bowled yet. */
+  preseason?: boolean;
 }
 
 /** Map 0-9 weekly points to a heat color. */
@@ -147,11 +149,11 @@ function StandingsTable({
                 <td className="px-2 py-1.5 text-right tabular-nums text-navy/70 sm:hidden">{row.wins}/{row.xp}</td>
                 <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
                   {row.teamScratchAvg?.toFixed(1) ?? '\u2014'}
-                  <span className="text-navy/65 text-xs ml-1">({row.scratchAvgRank})</span>
+                  {row.scratchAvgRank > 0 && <span className="text-navy/65 text-xs ml-1">({row.scratchAvgRank})</span>}
                 </td>
                 <td className="px-2 py-1.5 sm:py-2.5 text-right tabular-nums text-navy/70 hidden sm:table-cell">
                   {row.teamHcpAvg?.toFixed(1) ?? '\u2014'}
-                  <span className="text-navy/65 text-xs ml-1">({row.hcpAvgRank})</span>
+                  {row.hcpAvgRank > 0 && <span className="text-navy/65 text-xs ml-1">({row.hcpAvgRank})</span>}
                 </td>
                 {hasHeat && <td className="px-3 hidden md:table-cell"><div className="w-px h-4 bg-navy/30 mx-auto" /></td>}
                 {hasHeat && teamWeekPts?.map((pts, wi) => (
@@ -277,7 +279,7 @@ function CompactStandingsCard({
   );
 }
 
-export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber, compact, showDelta = true, raceData }: Props) {
+export function Standings({ standings, hasDivisions, playoffTeams, seasonID, weekNumber, compact, showDelta = true, raceData, preseason = false }: Props) {
   if (standings.length === 0) {
     return (
       <section id="standings">
@@ -303,8 +305,11 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
     }
   }
 
-  // Use actual playoff teams when available, fall back to computed positions
-  const playoffTeamIDs = playoffTeams ?? getPlayoffTeamIDs(standings, hasDivisions);
+  // Use actual playoff teams when available, fall back to computed positions.
+  // Preseason: nothing is decided yet, so highlight nothing.
+  const playoffTeamIDs = preseason
+    ? new Set<number>()
+    : playoffTeams ?? getPlayoffTeamIDs(standings, hasDivisions);
   const playoffLabel = playoffTeams
     ? 'Playoff team'
     : hasDivisions ? 'Playoff position (top 2 per division)' : 'Playoff position (top 8)';
@@ -312,6 +317,11 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
   return (
     <section id="standings">
       {!compact && <SectionHeading>Standings{weekNumber ? ` (after Wk ${weekNumber})` : ''}</SectionHeading>}
+      {!compact && preseason && (
+        <p className="font-body text-sm text-navy/65 italic -mt-2 mb-4">
+          The season hasn&apos;t started yet. Records update after week 1.
+        </p>
+      )}
       {hasDivisions ? (
         compact ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -363,7 +373,7 @@ export function Standings({ standings, hasDivisions, playoffTeams, seasonID, wee
       ) : (
         <StandingsTable rows={standings} startRank={1} playoffTeamIDs={playoffTeamIDs} showDelta={showDelta} />
       )}
-      {!compact && (
+      {!compact && !preseason && (
         <p className="text-xs font-body text-navy/65 mt-2 flex items-center gap-1.5">
           <span className="inline-block w-3 h-2 bg-amber-100 border-l-2 border-l-amber-400 rounded-sm" />
           {playoffLabel}

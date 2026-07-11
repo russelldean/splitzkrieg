@@ -235,6 +235,46 @@ export async function getSeasonStandings(seasonID: number): Promise<StandingsRow
   }, [], { sql: GET_SEASON_STANDINGS_SQL + GET_HEAD_TO_HEAD_SQL, seasonID });
 }
 
+const GET_SEASON_DIVISION_ROSTER_SQL = `
+  SELECT
+    t.teamID,
+    COALESCE(tnh.teamName, t.teamName) AS teamName,
+    t.slug                              AS teamSlug,
+    sd.divisionName,
+    0    AS wins,
+    0    AS xp,
+    0    AS totalPts,
+    NULL AS lastWeekPts,
+    NULL AS teamScratchAvg,
+    0    AS scratchAvgRank,
+    NULL AS teamHcpAvg,
+    0    AS hcpAvgRank
+  FROM seasonDivisions sd
+  JOIN teams t ON t.teamID = sd.teamID
+  LEFT JOIN teamNameHistory tnh
+    ON  tnh.seasonID = @seasonID
+    AND tnh.teamID   = sd.teamID
+  WHERE sd.seasonID = @seasonID
+  ORDER BY sd.divisionName, teamName
+`;
+
+/**
+ * Roster grouped by division with zeroed records. Used for the preseason
+ * standings view before any matches are bowled (getSeasonStandings is
+ * scores-driven and returns nothing until week 1). Kept as a separate query
+ * so the main standings SQL — and its all-season cache — stays untouched.
+ */
+export async function getSeasonDivisionRoster(seasonID: number): Promise<StandingsRow[]> {
+  return cachedQuery(`getSeasonDivisionRoster-${seasonID}`, async () => {
+    const db = await getDb();
+    const result = await db
+      .request()
+      .input('seasonID', seasonID)
+      .query<StandingsRow>(GET_SEASON_DIVISION_ROSTER_SQL);
+    return result.recordset;
+  }, [], { sql: GET_SEASON_DIVISION_ROSTER_SQL, seasonID });
+}
+
 const GET_PLAYOFF_TEAM_IDS_SQL = `
   SELECT DISTINCT teamID FROM (
     SELECT team1ID AS teamID FROM playoffResults WHERE seasonID = @seasonID

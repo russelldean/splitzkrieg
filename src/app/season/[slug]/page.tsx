@@ -15,6 +15,7 @@ import type { Metadata } from 'next';
 import {
   getSeasonBySlug,
   getSeasonStandings,
+  getSeasonDivisionRoster,
   getSeasonHeroStats,
   getSeasonPlayoffBracket,
   getPlayoffTeamIDs,
@@ -103,7 +104,16 @@ export default async function SeasonPage({
   ]);
 
   const isCurrentSeason = season.seasonID === currentSeasonID;
-  const hasDivisions = standings.some((row) => row.divisionName !== null);
+
+  // Preseason: standings are scores-driven and empty until week 1. Fall back to
+  // the division roster (zeroed records) so teams still show grouped by division.
+  const preseasonRoster = standings.length === 0
+    ? await getSeasonDivisionRoster(season.seasonID)
+    : [];
+  const usePreseason = standings.length === 0 && preseasonRoster.length > 0;
+  const displayStandings = usePreseason ? preseasonRoster : standings;
+
+  const hasDivisions = displayStandings.some((row) => row.divisionName !== null);
   const hasScheduleData = schedule.length > 0;
 
   // Determine total weeks from max week in scores or schedule
@@ -134,7 +144,7 @@ export default async function SeasonPage({
 
       <div className="mt-8 space-y-12">
         <TrackVisibility section="standings" page="season">
-          <Standings standings={standings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} raceData={raceData} />
+          <Standings standings={displayStandings} hasDivisions={hasDivisions} playoffTeams={playoffTeams} seasonID={season.seasonID} weekNumber={maxScoreWeek || null} showDelta={isCurrentSeason} raceData={raceData} preseason={usePreseason} />
         </TrackVisibility>
 
         {/* Compact week list — replaces full weekly results */}
