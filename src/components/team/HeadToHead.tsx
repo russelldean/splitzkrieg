@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { TeamH2HMatchup, TeamH2HActiveTeam } from '@/lib/queries';
 import { formatMatchDate } from '@/lib/bowling-time';
+import { countGames as countGameRecord } from '@/lib/game-record';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
@@ -20,19 +21,10 @@ interface H2HSummary {
 
 /** Count per-game W/L/T from a single matchup night */
 function countGames(m: TeamH2HMatchup): { w: number; l: number; t: number } {
-  let w = 0, l = 0, t = 0;
-  const pairs: [number | null, number | null][] = [
-    [m.ourGame1, m.theirGame1],
-    [m.ourGame2, m.theirGame2],
-    [m.ourGame3, m.theirGame3],
-  ];
-  for (const [ours, theirs] of pairs) {
-    if (ours == null || theirs == null) continue;
-    if (ours > theirs) w++;
-    else if (ours < theirs) l++;
-    else t++;
-  }
-  return { w, l, t };
+  return countGameRecord(
+    [m.ourGame1, m.ourGame2, m.ourGame3],
+    [m.theirGame1, m.theirGame2, m.theirGame3],
+  );
 }
 
 function nightRecordStr(m: TeamH2HMatchup): string {

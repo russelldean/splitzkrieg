@@ -12,11 +12,12 @@
  */
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getTeamBySlug, getGhostTeamH2H, getAllTeamSlugs, type GhostTeamMatchup } from '@/lib/queries';
+import { getTeamBySlug, getGhostTeamH2H, getAllTeamSlugs, getCurrentSeasonTeamIDs, getTeamCurrentSeasonSchedule, getCurrentSeasonID, type GhostTeamMatchup } from '@/lib/queries';
 import { getTeamPageView } from '@/lib/views/team-page';
 import { getTeamLeagueContext } from '@/lib/views/team-league-context';
 import { TeamHero } from '@/components/team/TeamHero';
 import { CurrentRoster } from '@/components/team/CurrentRoster';
+import { TeamSchedule } from '@/components/team/TeamSchedule';
 import { TeamSeasonByseason } from '@/components/team/TeamSeasonByseason';
 import { AllTimeRoster } from '@/components/team/AllTimeRoster';
 import { HeadToHead } from '@/components/team/HeadToHead';
@@ -145,6 +146,17 @@ export default async function TeamPage({
   // Ghost Team (teamID 45) uses a bespoke matchup query; unused for all other teams.
   const ghostH2H = isGhostTeam ? await getGhostTeamH2H() : [];
 
+  // Current-season schedule (schedule-based gate so it shows in preseason too).
+  const currentSeasonTeamIDs = await getCurrentSeasonTeamIDs();
+  const isCurrentSeasonTeam = !isGhostTeam && currentSeasonTeamIDs.has(team.teamID);
+  let teamSchedule: Awaited<ReturnType<typeof getTeamCurrentSeasonSchedule>> = [];
+  if (isCurrentSeasonTeam) {
+    const currentSeasonID = await getCurrentSeasonID();
+    if (currentSeasonID != null) {
+      teamSchedule = await getTeamCurrentSeasonSchedule(team.teamID, currentSeasonID);
+    }
+  }
+
   // Derive counts for hero
   const rosterCount = currentRoster.length;
   const seasonsActive = teamSeasons.length;
@@ -178,6 +190,10 @@ export default async function TeamPage({
       />
 
       <div className="mt-8 space-y-8">
+        {teamSchedule.length > 0 && currentSlug && (
+          <TeamSchedule schedule={teamSchedule} seasonSlug={currentSlug} />
+        )}
+
         {team.teamName === 'Ghost Team' && <GhostTeamExplainer />}
 
         {isGhostTeam && ghostH2H.length > 0 ? (
