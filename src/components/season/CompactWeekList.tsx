@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import type { WeekSummary, SeasonScheduleWeek } from '@/lib/queries';
 import { formatMatchDate } from '@/lib/bowling-time';
+import { toDateKey } from '@/lib/week-utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+
+const FULL_DATE: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 
 interface Props {
   weekSummaries: WeekSummary[];
@@ -12,13 +15,17 @@ interface Props {
 
 export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeeks }: Props) {
   const summaryMap = new Map(weekSummaries.map(w => [w.week, w]));
-  // Build a map of week -> matchDate from schedule for weeks without scores
-  const scheduleDateMap = new Map<number, string>();
+  // Build a map of week -> all distinct match dates (sorted). A split week spans
+  // more than one date, so we show every date rather than just the first.
+  const weekDateKeys = new Map<number, string[]>();
   for (const s of schedule) {
-    if (s.matchDate && !scheduleDateMap.has(s.week)) {
-      scheduleDateMap.set(s.week, s.matchDate);
-    }
+    const key = toDateKey(s.matchDate);
+    if (!key) continue;
+    const arr = weekDateKeys.get(s.week) ?? [];
+    if (!arr.includes(key)) arr.push(key);
+    weekDateKeys.set(s.week, arr);
   }
+  for (const arr of weekDateKeys.values()) arr.sort();
   const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
 
   return (
@@ -29,8 +36,12 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
           {weeks.map(week => {
             const summary = summaryMap.get(week);
             const hasScores = !!summary;
-            const rawDate = summary?.matchDate ?? scheduleDateMap.get(week) ?? null;
-            const dateStr = formatMatchDate(rawDate);
+            const dateKeys = weekDateKeys.get(week) ?? [];
+            // Split week -> show every date joined; otherwise the single date.
+            // Fall back to the summary date for older seasons with no schedule.
+            const dateStr = dateKeys.length > 1
+              ? dateKeys.map(d => formatMatchDate(d, FULL_DATE)).join(' & ')
+              : formatMatchDate(dateKeys[0] ?? summary?.matchDate ?? null, FULL_DATE);
             // A week with no scores that has later weeks with scores is missing data, not upcoming
             const maxScoreWeek = Math.max(...Array.from(summaryMap.keys()), 0);
             const isMissingData = !hasScores && week <= maxScoreWeek;
