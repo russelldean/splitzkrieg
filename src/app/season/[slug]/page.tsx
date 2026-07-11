@@ -134,15 +134,27 @@ export default async function SeasonPage({
       {isCurrentSeason && (
         <a
           href="/schedule.html"
-          className="mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-navy/[0.03] border border-navy/10 hover:border-red-600/30 hover:bg-navy/[0.05] transition-colors group"
+          className="group mt-4 flex items-center gap-4 rounded-xl border border-navy/10 bg-white px-5 py-4 shadow-sm transition-all hover:border-red-600/40 hover:shadow-md"
         >
-          <span className="font-body text-sm text-navy/80">
-            <span className="font-semibold">Season {season.romanNumeral} schedule &amp; format</span>
-            <span className="text-navy/55"> · divisions, split weeks, payouts</span>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-red-600/10 text-red-600 transition-colors group-hover:bg-red-600 group-hover:text-white">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
           </span>
-          <svg className="w-4 h-4 text-navy/30 group-hover:text-red-600 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
+          <div className="min-w-0 flex-1">
+            <div className="font-heading text-base text-navy transition-colors group-hover:text-red-600">
+              Season {season.romanNumeral} Schedule
+            </div>
+            <div className="font-body text-sm text-navy/55">
+              Divisions, weekly matchups &amp; how to pay
+            </div>
+          </div>
+          <span className="flex shrink-0 items-center gap-1 font-body text-sm font-medium text-navy/50 transition-colors group-hover:text-red-600">
+            <span className="hidden sm:inline">View</span>
+            <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </span>
         </a>
       )}
 
