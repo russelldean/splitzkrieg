@@ -248,9 +248,9 @@ const AO_PAIRS: BowlerPair[] = [
 
 const AO_CHAMPS: Record<number, number> = { 64:1, 152:2, 155:1, 372:1, 582:2, 600:1, 620:2 };
 
-const BD_NIGHTS: Record<number, number> = { 36:3, 41:1, 127:1, 161:1, 365:1, 533:1, 33:38, 107:26, 237:11, 266:24, 307:1, 419:47, 455:3, 458:1, 476:8, 497:1, 528:52, 618:22, 619:1 };
+const HR_NIGHTS: Record<number, number> = { 36:3, 41:1, 127:1, 161:1, 365:1, 533:1, 33:38, 107:26, 237:11, 266:24, 307:1, 419:47, 455:3, 458:1, 476:8, 497:1, 528:52, 618:22, 619:1 };
 
-const BD_BOWLERS: BowlerNode[] = [
+const HR_BOWLERS: BowlerNode[] = [
   { id: 33, name: "Anna Celander", active: true, firstSeason: 29 },
   { id: 107, name: "Charlotte Asmuth", active: true, firstSeason: 29 },
   { id: 161, name: "David Landes", active: false, firstSeason: 29 },
@@ -272,7 +272,7 @@ const BD_BOWLERS: BowlerNode[] = [
   { id: 619, name: "Vince Galgano", active: true, firstSeason: 35 },
 ];
 
-const BD_PAIRS: BowlerPair[] = [
+const HR_PAIRS: BowlerPair[] = [
   { id1: 419, id2: 528, coNights: 39 },
   { id1: 33, id2: 528, coNights: 31 },
   { id1: 33, id2: 419, coNights: 30 },
@@ -336,7 +336,7 @@ const BD_PAIRS: BowlerPair[] = [
   { id1: 36, id2: 41, coNights: 1 },
 ];
 
-const BD_CHAMPS: Record<number, number> = {  };
+const HR_CHAMPS: Record<number, number> = {  };
 
 const EB_NIGHTS: Record<number, number> = { 56:2, 64:1, 116:1, 135:17, 340:3, 442:5, 601:1, 602:2, 604:53, 605:1, 613:3, 24:300, 111:2, 230:5, 268:1, 271:246, 309:1, 419:2, 443:7, 575:301, 615:277 };
 
@@ -4663,7 +4663,7 @@ const VID_CHAMPS: Record<number, number> = { 81:1, 184:1, 342:1, 492:1, 537:1, 6
 
 export const ALL_TEAMS_VIZ: TeamViz[] = [
   { title: "Alley Oops", bowlers: AO_BOWLERS, pairs: AO_PAIRS, nightsMap: AO_NIGHTS, champCounts: AO_CHAMPS, captainID: 582 },
-  { title: "High Rollers", bowlers: BD_BOWLERS, pairs: BD_PAIRS, nightsMap: BD_NIGHTS, champCounts: BD_CHAMPS, captainID: 419 },
+  { title: "High Rollers", bowlers: HR_BOWLERS, pairs: HR_PAIRS, nightsMap: HR_NIGHTS, champCounts: HR_CHAMPS, captainID: 419 },
   { title: "E-Bowla", bowlers: EB_BOWLERS, pairs: EB_PAIRS, nightsMap: EB_NIGHTS, champCounts: EB_CHAMPS, captainID: 271 },
   { title: "Fancy Pants", bowlers: FP_BOWLERS, pairs: FP_PAIRS, nightsMap: FP_NIGHTS, champCounts: FP_CHAMPS, captainID: 215 },
   { title: "Grandma's Teeth", bowlers: GTH_BOWLERS, pairs: GTH_PAIRS, nightsMap: GTH_NIGHTS, champCounts: GTH_CHAMPS, captainID: 479 },

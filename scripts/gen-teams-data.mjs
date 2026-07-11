@@ -43,7 +43,7 @@ const HIST_PREFIX = {
 // Prefix map: team name -> variable prefix
 const PREFIX = {
   'Alley Oops': 'AO',
-  'Bowl Durham': 'BD',
+  'High Rollers': 'HR',
   'E-Bowla': 'EB',
   'Fancy Pants': 'FP',
   "Grandma's Teeth": 'GTH',
