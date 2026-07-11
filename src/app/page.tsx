@@ -229,7 +229,7 @@ export default async function Home() {
             : playoffsActive
               ? `/playoffs/${seasonSnapshot.slug}/1`
               : !seasonStarted
-                ? `/season/${seasonSnapshot.slug}`
+                ? `/schedule.html`
                 : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
           const heroTitle = playoffsActive || championship
             ? 'Playoff Results'

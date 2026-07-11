@@ -83,12 +83,15 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
       </div>
 
       {isSplit ? (
-        <div className="space-y-4">
-          {dateGroups.map((g) => (
-            <div key={g.date ?? 'tbd'}>
-              <p className="text-xs font-body font-semibold text-navy/70 uppercase tracking-wider mb-1">
-                {formatMatchDate(g.date, { weekday: 'short', month: 'short', day: 'numeric' }) ?? 'Date TBD'}
-              </p>
+        <div className="space-y-3">
+          {dateGroups.map((g, gi) => (
+            <div key={g.date ?? 'tbd'} className={gi > 0 ? 'pt-3 border-t border-navy/10' : ''}>
+              <div className="flex items-baseline gap-2 mb-1.5">
+                <h4 className="font-heading text-sm text-navy">
+                  {formatMatchDate(g.date, { weekday: 'long', month: 'short', day: 'numeric' }) ?? 'Date TBD'}
+                </h4>
+                <span className="text-[11px] font-body text-navy/50 tabular-nums">{g.items.length} matches</span>
+              </div>
               <div className="space-y-1">
                 {g.items.map((m, i) => renderMatchup(m, i))}
               </div>
