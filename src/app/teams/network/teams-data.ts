@@ -1985,7 +1985,7 @@ const SAB_BOWLERS: BowlerNode[] = [
   { id: 409, name: "Leslie Pierce", active: true, firstSeason: 32 },
   { id: 125, name: "Clark Brunner", active: true, firstSeason: 33 },
   { id: 7, name: "Ady Pratapa", active: true, firstSeason: 34 },
-  { id: 16, name: "Allan Fast", active: true, firstSeason: 34 },
+  { id: 16, name: "Alan Fast", active: true, firstSeason: 34 },
   { id: 171, name: "Derek Gude", active: true, firstSeason: 35 },
   { id: 251, name: "Ian McCarthy", active: true, firstSeason: 35 },
   { id: 502, name: "Norwood Cheek", active: true, firstSeason: 35 },

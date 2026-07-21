@@ -136,6 +136,22 @@ const stagingFile = resolve(STAGING_DIR, `s${seasonID}-week-${weekNum}.json`);
 
 // ─── Name matching ───────────────────────────────────────────────────────────
 
+// LeaguePals spells some bowlers differently than our DB. Resolve those here,
+// BEFORE the fuzzy matcher runs, because fuzzy matching gets two of these wrong:
+//   - "Jessa Witzel" silently matched Wayne Witzel via the last-name-only rule
+//   - "Nick Hicks" and "Clark B" matched nothing at all
+// Keys are normalized LP names; values are exact bowlerName values in our DB.
+const NAME_ALIAS = {
+  jessawitzel: 'Jessa Carpenter',       // name change
+  nickhicks: 'Daz Hicks',               // aka Dominick Hicks
+  clarkb: 'Clark Brunner',              // LP truncates the surname
+  anthonybennett: 'Anthony Bennet',     // LP double-T, ours single-T
+  emmarichardson: 'Emma Jane Richardson',
+  colinhenrahen: 'Colin Henrahan',
+  glennbooth: 'Glenn Boothe',
+  anniesegrest: 'Annie Seagrest',
+};
+
 function normalizeName(name) {
   return name.toLowerCase().replace(/[^a-z]/g, '');
 }
@@ -152,6 +168,14 @@ function levenshtein(a, b) {
 }
 
 function matchBowlerToDB(lpName, dbBowlers) {
+  // Known LP-vs-DB spelling differences win over every heuristic below.
+  const alias = NAME_ALIAS[normalizeName(lpName)];
+  if (alias) {
+    const aliased = dbBowlers.find(b => b.bowlerName === alias);
+    if (aliased) return aliased;
+    console.warn(`  WARNING: alias "${lpName}" -> "${alias}" but no such bowler in DB`);
+  }
+
   const target = normalizeName(lpName);
 
   // Exact normalized match
