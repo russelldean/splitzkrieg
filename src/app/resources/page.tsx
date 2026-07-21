@@ -36,7 +36,7 @@ const resources: ResourceCategory[] = [
       },
       {
         label: 'League Calendar',
-        href: 'https://calendar.google.com/calendar/u/0?cid=MzIzNDU0ZjVlYzM4MzljMGI3MmI4MTczYmFlZGNlMGExNzY3MzMzODM5NTJjNzQ0YjVkMmZmOTZlYWUzMjE2YUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t',
+        href: 'https://calendar.google.com/calendar?cid=MzIzNDU0ZjVlYzM4MzljMGI3MmI4MTczYmFlZGNlMGExNzY3MzMzODM5NTJjNzQ0YjVkMmZmOTZlYWUzMjE2YUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t',
         description: 'Bowling nights and league events',
       },
     ],
