@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react';
 
 interface Props {
   title: string;
+  subtitle?: React.ReactNode;
   defaultOpen?: boolean;
   children: React.ReactNode;
 }
 
-export function CollapsibleSection({ title, defaultOpen = false, children }: Props) {
+export function CollapsibleSection({ title, subtitle, defaultOpen = false, children }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   // Auto-open if URL hash starts with "match-"
   useEffect(() => {
@@ -47,7 +48,10 @@ export function CollapsibleSection({ title, defaultOpen = false, children }: Pro
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center px-4 py-3 bg-navy/[0.03] hover:bg-navy/[0.06] transition-colors"
       >
-        <span className="font-heading text-lg text-navy">{title}</span>
+        <span className="flex flex-col items-start">
+          <span className="font-heading text-lg text-navy">{title}</span>
+          {subtitle && <span className="text-navy/70 text-xs mt-0.5">{subtitle}</span>}
+        </span>
         <span className="text-navy/65 text-sm">{open ? '\u25B2' : '\u25BC'}</span>
       </button>
       {open && (
