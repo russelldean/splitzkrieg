@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { heatBin } from './score-map';
+import { heatBin, buildScoreMap, scoreMapTeaser, type ScoreMapRow } from './score-map';
 
 describe('heatBin', () => {
   it('returns 0 for no rolls', () => {
@@ -18,8 +18,6 @@ describe('heatBin', () => {
     expect(heatBin(99)).toBe(5);
   });
 });
-
-import { buildScoreMap, type ScoreMapRow } from './score-map';
 
 const row = (score: number, total: number, thisSeason = 0, isNew = 0): ScoreMapRow =>
   ({ score, total, thisSeason, isNew });
@@ -73,13 +71,20 @@ describe('buildScoreMap', () => {
     expect(buildScoreMap([row(150, 1)], true).hasPerfect).toBe(true);
     expect(buildScoreMap([row(150, 1)], false).hasPerfect).toBe(false);
   });
+
+  it('includes the boundary scores 60 and 299', () => {
+    const m = buildScoreMap([row(60, 1), row(299, 1)], false);
+    expect(m.minScore).toBe(60);
+    expect(m.maxScore).toBe(299);
+    expect(m.cells[60]).toMatchObject({ count: 1 });
+    expect(m.cells[299]).toMatchObject({ count: 1 });
+    expect(m.filledCount).toBe(2);
+  });
 });
 
-import { scoreMapTeaser } from './score-map';
-
 describe('scoreMapTeaser', () => {
-  const base = (over: Partial<Parameters<typeof scoreMapTeaser>[0]> = {}) =>
-    scoreMapTeaser({ filledCount: 134, seasonCount: 0, newCount: 0, ...over } as any);
+  const base = (over: Partial<{ filledCount: number; seasonCount: number; newCount: number }> = {}) =>
+    scoreMapTeaser({ filledCount: 134, seasonCount: 0, newCount: 0, ...over });
 
   it('shows scores rolled and the open hint', () => {
     expect(base()).toBe('134 scores rolled · tap to open');
