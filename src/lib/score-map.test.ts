@@ -86,16 +86,16 @@ describe('scoreMapTeaser', () => {
   const base = (over: Partial<{ filledCount: number; seasonCount: number; newCount: number }> = {}) =>
     scoreMapTeaser({ filledCount: 134, seasonCount: 0, newCount: 0, ...over });
 
-  it('shows scores rolled and the open hint', () => {
-    expect(base()).toBe('134 scores rolled · tap to open');
+  it('shows scores rolled', () => {
+    expect(base()).toBe('134 scores rolled');
   });
   it('adds this-season count when present', () => {
-    expect(base({ seasonCount: 3 })).toBe('134 scores rolled · 3 this season · tap to open');
+    expect(base({ seasonCount: 3 })).toBe('134 scores rolled · 3 this season');
   });
   it('calls out new squares only when there are any', () => {
     expect(base({ seasonCount: 3, newCount: 1 }))
-      .toBe('134 scores rolled · 3 this season · 1 new square! · tap to open');
+      .toBe('134 scores rolled · 3 this season · 1 new square!');
     expect(base({ seasonCount: 3, newCount: 2 }))
-      .toBe('134 scores rolled · 3 this season · 2 new squares! · tap to open');
+      .toBe('134 scores rolled · 3 this season · 2 new squares!');
   });
 });

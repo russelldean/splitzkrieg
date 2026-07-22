@@ -160,6 +160,20 @@ export default async function BowlerPage({
           />
         </TrackVisibility>
 
+        {scoreMap.hasData && (
+          <CollapsibleSection title="Your Score Map" subtitle={scoreMapTeaser(scoreMap)} defaultOpen>
+            <ScoreMap model={scoreMap} />
+          </CollapsibleSection>
+        )}
+
+        {rollingAvgHistory.length >= 6 && (
+          <TrackVisibility section="average-progression" page="bowler-profile">
+            <AverageProgressionChart history={rollingAvgHistory} bowlerName={bowler.bowlerName} />
+          </TrackVisibility>
+        )}
+
+        <SeasonStatsTable seasons={seasonStats} />
+
         {(gameProfile || bowlerFacts.length > 0) && (
           <div className="flex flex-col lg:flex-row lg:items-stretch gap-0">
             {gameProfile && (
@@ -178,20 +192,6 @@ export default async function BowlerPage({
               </div>
             )}
           </div>
-        )}
-
-        {rollingAvgHistory.length >= 6 && (
-          <TrackVisibility section="average-progression" page="bowler-profile">
-            <AverageProgressionChart history={rollingAvgHistory} bowlerName={bowler.bowlerName} />
-          </TrackVisibility>
-        )}
-
-        <SeasonStatsTable seasons={seasonStats} />
-
-        {scoreMap.hasData && (
-          <CollapsibleSection title="Your Score Map" subtitle={scoreMapTeaser(scoreMap)}>
-            <ScoreMap model={scoreMap} />
-          </CollapsibleSection>
         )}
 
         <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} patches={patches} />

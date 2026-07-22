@@ -113,6 +113,5 @@ export function scoreMapTeaser(m: Pick<ScoreMapModel, 'filledCount' | 'seasonCou
   const parts = [`${m.filledCount} scores rolled`];
   if (m.seasonCount > 0) parts.push(`${m.seasonCount} this season`);
   if (m.newCount > 0) parts.push(`${m.newCount} new square${m.newCount > 1 ? 's' : ''}!`);
-  parts.push('tap to open');
   return parts.join(dot);
 }
