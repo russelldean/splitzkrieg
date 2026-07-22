@@ -80,7 +80,8 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
         {Array.from({ length: 10 }, (_, d) => (
           <div
             key={`h${d}`}
-            className={`text-[10px] text-center tabular-nums pb-0.5 ${active?.one === d ? 'text-navy font-bold' : 'text-navy/60'}`}
+            className="text-navy/60 text-[10px] text-center tabular-nums rounded py-0.5"
+            style={active?.one === d ? { backgroundColor: '#1B2A4A', color: '#FFFBF2', fontWeight: 700 } : undefined}
           >
             {d}
           </div>
@@ -141,7 +142,12 @@ function Row({ decade, model, onCell, onLeave, activeDecade }: {
 }) {
   return (
     <>
-      <div className={`text-[11px] flex items-center justify-end pr-1.5 tabular-nums ${activeDecade === decade ? 'text-navy font-bold' : 'text-navy/60'}`}>{decade}</div>
+      <div
+        className="text-navy/60 text-[11px] flex items-center justify-end pr-1.5 tabular-nums rounded"
+        style={activeDecade === decade ? { backgroundColor: '#1B2A4A', color: '#FFFBF2', fontWeight: 700 } : undefined}
+      >
+        {decade}
+      </div>
       {Array.from({ length: 10 }, (_, one) => {
         const c = model.cells[decade + one];
         const isMost = c.score === model.mostRolled;
