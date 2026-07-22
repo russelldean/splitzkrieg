@@ -6,6 +6,7 @@ import {
   runMatchResults,
   runPatches,
   recordMilestones,
+  populateFacts,
   bumpCacheAndPublish,
 } from '@/lib/admin/scores';
 import type { StagedMatch } from '@/lib/admin/types';
@@ -55,7 +56,11 @@ export async function POST(request: NextRequest) {
     // 5. Record career milestones
     const milestoneCount = await recordMilestones(seasonID, week);
 
-    // 6. Bump cache versions
+    // 6. Populate progression + milestone facts (feeds the RecordProgression
+    //    charts). Runs after recordMilestones so it can mirror the milestones.
+    const factCount = await populateFacts(seasonID, week);
+
+    // 7. Bump cache versions
     await bumpCacheAndPublish(seasonID, week);
 
     return NextResponse.json({
@@ -65,6 +70,7 @@ export async function POST(request: NextRequest) {
       matchResultCount,
       patches,
       milestoneCount,
+      factCount,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

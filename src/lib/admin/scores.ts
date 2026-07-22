@@ -713,3 +713,184 @@ export async function recordMilestones(
 
   return inserted;
 }
+
+/**
+ * Populate the facts table for a specific week: high-game and high-series
+ * progressions plus milestone facts. This feeds the RecordProgression charts on
+ * bowler pages. Ported from the week-scoped path of scripts/populate-facts.mjs.
+ *
+ * Must run AFTER recordMilestones (it reads the bowlerMilestones that step wrote).
+ * Idempotent: deletes this week's facts first, so re-confirming a week is safe.
+ * Cache invalidation is handled downstream by the publish step (per-bowler bump).
+ * Returns the number of fact rows present for the week after population.
+ */
+export async function populateFacts(
+  seasonID: number,
+  week: number,
+): Promise<number> {
+  const db = await getDb();
+
+  // Resolve fact type ids by code so we do not hardcode them.
+  const ftRows = (
+    await withRetry(
+      () =>
+        db
+          .request()
+          .query<{ factTypeID: number; code: string }>(
+            'SELECT factTypeID, code FROM factTypes',
+          ),
+      'populateFacts:factTypes',
+    )
+  ).recordset;
+  const ftMap = new Map(ftRows.map((r) => [r.code, r.factTypeID]));
+  const highGameID = ftMap.get('high-game');
+  const highSeriesID = ftMap.get('high-series');
+  const milestoneID = ftMap.get('milestone');
+
+  // Idempotent: clear any facts already recorded for this exact week.
+  await withRetry(
+    () =>
+      db
+        .request()
+        .input('seasonID', sql.Int, seasonID)
+        .input('week', sql.Int, week)
+        .query('DELETE FROM facts WHERE seasonID = @seasonID AND week = @week'),
+    'populateFacts:deleteWeek',
+  );
+
+  // High-game progression: insert this week's best game only when it ties or
+  // beats the bowler's running best across all prior weeks.
+  if (highGameID != null) {
+    await withRetry(
+      () =>
+        db
+          .request()
+          .input('ftID', sql.Int, highGameID)
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .query(`
+            WITH weekBest AS (
+              SELECT s.bowlerID, s.seasonID, s.week,
+                (SELECT TOP 1 sc.matchDate FROM schedule sc WHERE sc.seasonID = s.seasonID AND sc.week = s.week) AS matchDate,
+                GREATEST(s.game1, s.game2, s.game3) AS bestGame
+              FROM scores s
+              WHERE s.isPenalty = 0
+                AND s.bowlerID IN (SELECT bowlerID FROM scores WHERE seasonID = @seasonID AND week = @week AND isPenalty = 0)
+            ),
+            ordered AS (
+              SELECT *, MAX(bestGame) OVER (
+                PARTITION BY bowlerID ORDER BY seasonID, week
+                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS prevBest
+              FROM weekBest
+            )
+            INSERT INTO facts (factTypeID, bowlerID, seasonID, week, referenceDate, value, previousValue)
+            SELECT @ftID, bowlerID, seasonID, week, matchDate, bestGame, prevBest
+            FROM ordered
+            WHERE bestGame >= prevBest AND prevBest IS NOT NULL
+              AND seasonID = @seasonID AND week = @week
+          `),
+      'populateFacts:highGame',
+    );
+  }
+
+  // High-series progression: same rule, on scratch series.
+  if (highSeriesID != null) {
+    await withRetry(
+      () =>
+        db
+          .request()
+          .input('ftID', sql.Int, highSeriesID)
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .query(`
+            WITH weekSeries AS (
+              SELECT s.bowlerID, s.seasonID, s.week,
+                (SELECT TOP 1 sc.matchDate FROM schedule sc WHERE sc.seasonID = s.seasonID AND sc.week = s.week) AS matchDate,
+                s.scratchSeries
+              FROM scores s
+              WHERE s.isPenalty = 0 AND s.scratchSeries IS NOT NULL
+                AND s.bowlerID IN (SELECT bowlerID FROM scores WHERE seasonID = @seasonID AND week = @week AND isPenalty = 0)
+            ),
+            ordered AS (
+              SELECT *, MAX(scratchSeries) OVER (
+                PARTITION BY bowlerID ORDER BY seasonID, week
+                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS prevBest
+              FROM weekSeries
+            )
+            INSERT INTO facts (factTypeID, bowlerID, seasonID, week, referenceDate, value, previousValue)
+            SELECT @ftID, bowlerID, seasonID, week, matchDate, scratchSeries, prevBest
+            FROM ordered
+            WHERE scratchSeries >= prevBest AND prevBest IS NOT NULL
+              AND seasonID = @seasonID AND week = @week
+          `),
+      'populateFacts:highSeries',
+    );
+  }
+
+  // Milestone facts: mirror the bowlerMilestones recorded for this week.
+  if (milestoneID != null) {
+    await withRetry(
+      () =>
+        db
+          .request()
+          .input('ftID', sql.Int, milestoneID)
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .query(`
+            INSERT INTO facts (factTypeID, bowlerID, seasonID, week, referenceDate, value)
+            SELECT @ftID, bm.bowlerID, bm.seasonID, bm.week,
+              (SELECT TOP 1 sc.matchDate FROM schedule sc WHERE sc.seasonID = bm.seasonID AND sc.week = bm.week),
+              bm.threshold
+            FROM bowlerMilestones bm
+            WHERE bm.seasonID = @seasonID AND bm.week = @week
+          `),
+      'populateFacts:milestones',
+    );
+  }
+
+  // Recompute isCareerHigh (types 1 & 2) for the bowlers who bowled this week.
+  if (highGameID != null && highSeriesID != null) {
+    await withRetry(
+      () =>
+        db
+          .request()
+          .input('hgID', sql.Int, highGameID)
+          .input('hsID', sql.Int, highSeriesID)
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .query(`
+            UPDATE facts SET isCareerHigh = 0
+            WHERE factTypeID IN (@hgID, @hsID) AND isCareerHigh = 1
+              AND bowlerID IN (SELECT bowlerID FROM scores WHERE seasonID = @seasonID AND week = @week AND isPenalty = 0);
+
+            WITH ranked AS (
+              SELECT factID, ROW_NUMBER() OVER (
+                PARTITION BY factTypeID, bowlerID
+                ORDER BY value DESC, seasonID DESC, week DESC) AS rn
+              FROM facts
+              WHERE factTypeID IN (@hgID, @hsID)
+                AND bowlerID IN (SELECT bowlerID FROM scores WHERE seasonID = @seasonID AND week = @week AND isPenalty = 0)
+            )
+            UPDATE f SET f.isCareerHigh = 1
+            FROM facts f JOIN ranked r ON r.factID = f.factID
+            WHERE r.rn = 1;
+          `),
+      'populateFacts:careerHigh',
+    );
+  }
+
+  const cnt = (
+    await withRetry(
+      () =>
+        db
+          .request()
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .query<{ c: number }>(
+            'SELECT COUNT(*) AS c FROM facts WHERE seasonID = @seasonID AND week = @week',
+          ),
+      'populateFacts:count',
+    )
+  ).recordset[0].c;
+  return cnt;
+}
