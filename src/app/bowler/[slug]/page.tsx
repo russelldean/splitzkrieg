@@ -92,12 +92,11 @@ export default async function BowlerPage({
 
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/bowler/${slug}`;
 
-  const [view, league] = await Promise.all([
+  const [view, league, scoreMap] = await Promise.all([
     getBowlerPageView(bowler.bowlerID),
     getLeagueContext(),
+    getScoreMap(bowler.bowlerID, slug),
   ]);
-
-  const scoreMap = await getScoreMap(bowler.bowlerID, slug);
 
   const { careerSummary, seasonStats, gameLog, rollingAvgHistory, patches, starStats, facts: bowlerFacts, teams, gameProfile } = view;
   const { botwIDs, currentSeasonID, currentSlug, leagueGameAvgs } = league;
