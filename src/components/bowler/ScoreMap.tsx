@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ScoreMapModel, ScoreCell } from '@/lib/score-map';
 
 // Navy heat ramp (career), light -> dark. Warm ramp (this season), light -> dark.
@@ -26,10 +26,32 @@ function readoutFor(c: ScoreCell, isMost: boolean): string {
   return isMost ? `${base} · your most-rolled` : base;
 }
 
-export function ScoreMap({ model }: { model: ScoreMapModel }) {
-  const [readout, setReadout] = useState<string>('Tap a square for its score');
+interface Tip { text: string; x: number; y: number; flip: boolean; }
 
-  const onPick = (c: ScoreCell) => setReadout(readoutFor(c, c.score === model.mostRolled));
+export function ScoreMap({ model }: { model: ScoreMapModel }) {
+  const [tip, setTip] = useState<Tip | null>(null);
+
+  // Anchor a small tooltip just above the tapped/hovered square (viewport coords),
+  // so the result is always next to the click on mobile and desktop.
+  const showTip = (c: ScoreCell, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const flip = r.top < 96; // near the top of the viewport (under the sticky bar) -> show below instead
+    setTip({
+      text: readoutFor(c, c.score === model.mostRolled),
+      x: r.left + r.width / 2,
+      y: flip ? r.bottom + 6 : r.top - 6,
+      flip,
+    });
+  };
+  const hideTip = () => setTip(null);
+
+  // A fixed tooltip is anchored to viewport coords, so it goes stale on scroll -> dismiss it.
+  useEffect(() => {
+    if (!tip) return;
+    const dismiss = () => setTip(null);
+    window.addEventListener('scroll', dismiss, { passive: true, capture: true });
+    return () => window.removeEventListener('scroll', dismiss, true);
+  }, [tip]);
 
   return (
     <div>
@@ -58,11 +80,9 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
 
         {/* one row per ten */}
         {model.decades.map((d) => (
-          <Row key={d} decade={d} model={model} onPick={onPick} />
+          <Row key={d} decade={d} model={model} onCell={showTip} onLeave={hideTip} />
         ))}
       </div>
-
-      <div className="text-center text-navy text-sm tabular-nums mt-4 min-h-[20px]">{readout}</div>
 
       {model.hasPerfect && (
         <div className="flex flex-col items-center mt-6">
@@ -82,11 +102,34 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
       )}
 
       <Legend />
+
+      {tip && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed z-50 pointer-events-none px-2 py-1 rounded-md text-xs shadow-md tabular-nums"
+          style={{
+            left: tip.x,
+            top: tip.y,
+            transform: tip.flip ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+            backgroundColor: '#1B2A4A',
+            color: '#FFFBF2',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tip.text}
+        </div>
+      )}
     </div>
   );
 }
 
-function Row({ decade, model, onPick }: { decade: number; model: ScoreMapModel; onPick: (c: ScoreCell) => void }) {
+function Row({ decade, model, onCell, onLeave }: {
+  decade: number;
+  model: ScoreMapModel;
+  onCell: (c: ScoreCell, el: HTMLElement) => void;
+  onLeave: () => void;
+}) {
   return (
     <>
       <div className="text-navy/60 text-[11px] flex items-center justify-end pr-1.5 tabular-nums">{decade}</div>
@@ -98,9 +141,11 @@ function Row({ decade, model, onPick }: { decade: number; model: ScoreMapModel; 
             key={c.score}
             type="button"
             aria-label={readoutFor(c, isMost)}
-            onClick={() => onPick(c)}
-            onMouseEnter={() => onPick(c)}
-            onFocus={() => onPick(c)}
+            onClick={(e) => onCell(c, e.currentTarget)}
+            onMouseEnter={(e) => onCell(c, e.currentTarget)}
+            onMouseLeave={onLeave}
+            onFocus={(e) => onCell(c, e.currentTarget)}
+            onBlur={onLeave}
             className="relative rounded-[3px]"
             style={{ aspectRatio: '1 / 1', ...cellStyle(c) }}
           >
