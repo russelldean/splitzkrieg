@@ -106,3 +106,13 @@ export function buildScoreMap(rows: ScoreMapRow[], hasPerfect: boolean): ScoreMa
     mostRolled, filledCount, seasonCount, newCount, hasPerfect,
   };
 }
+
+/** Collapsed-state teaser line. "new" is reserved for genuine first-time fills. */
+export function scoreMapTeaser(m: Pick<ScoreMapModel, 'filledCount' | 'seasonCount' | 'newCount'>): string {
+  const dot = ' · ';
+  const parts = [`${m.filledCount} scores rolled`];
+  if (m.seasonCount > 0) parts.push(`${m.seasonCount} this season`);
+  if (m.newCount > 0) parts.push(`${m.newCount} new square${m.newCount > 1 ? 's' : ''}!`);
+  parts.push('tap to open');
+  return parts.join(dot);
+}
