@@ -96,9 +96,11 @@ function Row({ decade, model, onPick }: { decade: number; model: ScoreMapModel; 
         return (
           <button
             key={c.score}
+            type="button"
             aria-label={readoutFor(c, isMost)}
             onClick={() => onPick(c)}
             onMouseEnter={() => onPick(c)}
+            onFocus={() => onPick(c)}
             className="relative rounded-[3px]"
             style={{ aspectRatio: '1 / 1', ...cellStyle(c) }}
           >
