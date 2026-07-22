@@ -31,6 +31,10 @@ import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { StickyContextBar } from '@/components/ui/StickyContextBar';
 import { computePersonalMilestones } from '@/lib/milestone-config';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { ScoreMap } from '@/components/bowler/ScoreMap';
+import { getScoreMap } from '@/lib/queries/score-map';
+import { scoreMapTeaser } from '@/lib/score-map';
 
 // Historical slugs render on demand; unknown slugs still 404 via the page body.
 export const dynamicParams = true;
@@ -92,6 +96,8 @@ export default async function BowlerPage({
     getBowlerPageView(bowler.bowlerID),
     getLeagueContext(),
   ]);
+
+  const scoreMap = await getScoreMap(bowler.bowlerID, slug);
 
   const { careerSummary, seasonStats, gameLog, rollingAvgHistory, patches, starStats, facts: bowlerFacts, teams, gameProfile } = view;
   const { botwIDs, currentSeasonID, currentSlug, leagueGameAvgs } = league;
@@ -182,6 +188,12 @@ export default async function BowlerPage({
         )}
 
         <SeasonStatsTable seasons={seasonStats} />
+
+        {scoreMap.hasData && (
+          <CollapsibleSection title="Your Score Map" subtitle={scoreMapTeaser(scoreMap)}>
+            <ScoreMap model={scoreMap} />
+          </CollapsibleSection>
+        )}
 
         <GameLog gameLog={gameLog} highGame={careerSummary?.highGame} highSeries={careerSummary?.highSeries} patches={patches} />
       </div>
