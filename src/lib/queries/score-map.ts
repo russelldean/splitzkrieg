@@ -16,17 +16,16 @@ export const SCORE_MAP_SQL = `
   SELECT
     g.score,
     COUNT(*) AS total,
-    MAX(CASE WHEN g.seasonID = cur.seasonID THEN 1 ELSE 0 END) AS thisSeason,
-    CASE WHEN MIN(g.seasonID) = cur.seasonID THEN 1 ELSE 0 END AS isNew
-  FROM (
-    SELECT game1 AS score, seasonID FROM scores WHERE bowlerID = @bowlerID AND isPenalty = 0 AND game1 IS NOT NULL
-    UNION ALL
-    SELECT game2 AS score, seasonID FROM scores WHERE bowlerID = @bowlerID AND isPenalty = 0 AND game2 IS NOT NULL
-    UNION ALL
-    SELECT game3 AS score, seasonID FROM scores WHERE bowlerID = @bowlerID AND isPenalty = 0 AND game3 IS NOT NULL
-  ) g
-  CROSS JOIN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1) cur
-  WHERE g.score BETWEEN 60 AND 299
+    -- 1 if the bowler rolled this score at least once in the current season
+    MAX(CASE WHEN sc.seasonID = cur.seasonID THEN 1 ELSE 0 END) AS thisSeason,
+    -- 1 if the score's first-ever roll is the current season (a newly-filled square)
+    CASE WHEN MIN(sc.seasonID) = cur.seasonID THEN 1 ELSE 0 END AS isNew
+  FROM scores sc
+  CROSS APPLY (VALUES (sc.game1), (sc.game2), (sc.game3)) AS g(score)
+  OUTER APPLY (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1) AS cur(seasonID)
+  WHERE sc.bowlerID = @bowlerID
+    AND sc.isPenalty = 0
+    AND g.score BETWEEN 60 AND 299
   GROUP BY g.score, cur.seasonID
   ORDER BY g.score
 `;
