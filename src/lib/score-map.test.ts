@@ -18,3 +18,59 @@ describe('heatBin', () => {
     expect(heatBin(99)).toBe(5);
   });
 });
+
+import { buildScoreMap, type ScoreMapRow } from './score-map';
+
+const row = (score: number, total: number, thisSeason = 0, isNew = 0): ScoreMapRow =>
+  ({ score, total, thisSeason, isNew });
+
+describe('buildScoreMap', () => {
+  it('returns hasData=false for no rows', () => {
+    const m = buildScoreMap([], false);
+    expect(m.hasData).toBe(false);
+    expect(m.decades).toEqual([]);
+    expect(m.mostRolled).toBeNull();
+  });
+
+  it('clips decades to the bowler range and fills gaps', () => {
+    const m = buildScoreMap([row(148, 3), row(159, 5), row(162, 1)], false);
+    expect(m.minScore).toBe(148);
+    expect(m.maxScore).toBe(162);
+    expect(m.minDecade).toBe(140);
+    expect(m.maxDecade).toBe(160);
+    expect(m.decades).toEqual([140, 150, 160]);
+    expect(m.cells[159]).toMatchObject({ count: 5, bin: 3, thisSeason: false });
+    expect(m.cells[150]).toMatchObject({ count: 0, bin: 0, aboveMax: false });
+    expect(m.cells[169]).toMatchObject({ count: 0, aboveMax: true });
+    expect(m.filledCount).toBe(3);
+  });
+
+  it('excludes scores below 60 and the 300', () => {
+    const m = buildScoreMap([row(55, 2), row(140, 1), row(300, 1)], false);
+    expect(m.minScore).toBe(140);
+    expect(m.maxScore).toBe(140);
+    expect(m.cells[55]).toBeUndefined();
+    expect(m.cells[300]).toBeUndefined();
+    expect(m.filledCount).toBe(1);
+  });
+
+  it('picks most-rolled by highest count, ties broken by lowest score', () => {
+    const m = buildScoreMap([row(150, 4), row(160, 4), row(170, 2)], false);
+    expect(m.mostRolled).toBe(150);
+  });
+
+  it('counts this-season and new squares', () => {
+    const m = buildScoreMap(
+      [row(150, 8, 1, 0), row(160, 1, 1, 1), row(170, 3, 0, 0)],
+      false,
+    );
+    expect(m.seasonCount).toBe(2);
+    expect(m.newCount).toBe(1);
+    expect(m.cells[160]).toMatchObject({ thisSeason: true, isNew: true });
+  });
+
+  it('passes hasPerfect through', () => {
+    expect(buildScoreMap([row(150, 1)], true).hasPerfect).toBe(true);
+    expect(buildScoreMap([row(150, 1)], false).hasPerfect).toBe(false);
+  });
+});

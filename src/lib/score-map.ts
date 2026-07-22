@@ -50,3 +50,59 @@ export function heatBin(count: number): HeatBin {
   if (count <= 10) return 4;
   return 5;
 }
+
+export function buildScoreMap(rows: ScoreMapRow[], hasPerfect: boolean): ScoreMapModel {
+  const filled = rows.filter((r) => r.total > 0 && r.score >= 60 && r.score <= 299);
+  if (filled.length === 0) {
+    return {
+      hasData: false, minScore: 0, maxScore: 0, minDecade: 0, maxDecade: 0,
+      decades: [], cells: {}, mostRolled: null,
+      filledCount: 0, seasonCount: 0, newCount: 0, hasPerfect,
+    };
+  }
+
+  const byScore = new Map<number, ScoreMapRow>();
+  for (const r of filled) byScore.set(r.score, r);
+
+  const scores = [...byScore.keys()].sort((a, b) => a - b);
+  const minScore = scores[0];
+  const maxScore = scores[scores.length - 1];
+  const minDecade = Math.floor(minScore / 10) * 10;
+  const maxDecade = Math.floor(maxScore / 10) * 10;
+
+  const decades: number[] = [];
+  for (let d = minDecade; d <= maxDecade; d += 10) decades.push(d);
+
+  const cells: Record<number, ScoreCell> = {};
+  for (const d of decades) {
+    for (let one = 0; one < 10; one++) {
+      const s = d + one;
+      const r = byScore.get(s);
+      const count = r?.total ?? 0;
+      cells[s] = {
+        score: s,
+        count,
+        bin: heatBin(count),
+        thisSeason: !!r && r.thisSeason === 1,
+        isNew: !!r && r.isNew === 1,
+        aboveMax: count === 0 && s > maxScore,
+      };
+    }
+  }
+
+  let mostRolled: number | null = null;
+  let best = -1;
+  for (const s of scores) {
+    const c = byScore.get(s)!.total;
+    if (c > best) { best = c; mostRolled = s; }
+  }
+
+  const filledCount = scores.length;
+  const seasonCount = filled.filter((r) => r.thisSeason === 1).length;
+  const newCount = filled.filter((r) => r.isNew === 1).length;
+
+  return {
+    hasData: true, minScore, maxScore, minDecade, maxDecade, decades, cells,
+    mostRolled, filledCount, seasonCount, newCount, hasPerfect,
+  };
+}
