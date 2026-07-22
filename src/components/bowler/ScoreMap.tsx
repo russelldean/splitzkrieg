@@ -30,6 +30,8 @@ interface Tip { text: string; x: number; y: number; flip: boolean; }
 
 export function ScoreMap({ model }: { model: ScoreMapModel }) {
   const [tip, setTip] = useState<Tip | null>(null);
+  // The picked square's tens row and ones column, so we can highlight both axis labels.
+  const [active, setActive] = useState<{ decade: number; one: number } | null>(null);
 
   // Anchor a small tooltip just above the tapped/hovered square (viewport coords),
   // so the result is always next to the click on mobile and desktop.
@@ -42,8 +44,9 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
       y: flip ? r.bottom + 6 : r.top - 6,
       flip,
     });
+    setActive({ decade: c.score - (c.score % 10), one: c.score % 10 });
   };
-  const hideTip = () => setTip(null);
+  const hideTip = () => { setTip(null); setActive(null); };
 
   // A fixed tooltip is anchored to viewport coords, so it goes stale on scroll -> dismiss it.
   useEffect(() => {
@@ -75,12 +78,17 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
         {/* header row: corner + ones digits */}
         <div />
         {Array.from({ length: 10 }, (_, d) => (
-          <div key={`h${d}`} className="text-navy/60 text-[10px] text-center tabular-nums pb-0.5">{d}</div>
+          <div
+            key={`h${d}`}
+            className={`text-[10px] text-center tabular-nums pb-0.5 ${active?.one === d ? 'text-navy font-bold' : 'text-navy/60'}`}
+          >
+            {d}
+          </div>
         ))}
 
         {/* one row per ten */}
         {model.decades.map((d) => (
-          <Row key={d} decade={d} model={model} onCell={showTip} onLeave={hideTip} />
+          <Row key={d} decade={d} model={model} onCell={showTip} onLeave={hideTip} activeDecade={active?.decade ?? null} />
         ))}
       </div>
 
@@ -124,15 +132,16 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
   );
 }
 
-function Row({ decade, model, onCell, onLeave }: {
+function Row({ decade, model, onCell, onLeave, activeDecade }: {
   decade: number;
   model: ScoreMapModel;
   onCell: (c: ScoreCell, el: HTMLElement) => void;
   onLeave: () => void;
+  activeDecade: number | null;
 }) {
   return (
     <>
-      <div className="text-navy/60 text-[11px] flex items-center justify-end pr-1.5 tabular-nums">{decade}</div>
+      <div className={`text-[11px] flex items-center justify-end pr-1.5 tabular-nums ${activeDecade === decade ? 'text-navy font-bold' : 'text-navy/60'}`}>{decade}</div>
       {Array.from({ length: 10 }, (_, one) => {
         const c = model.cells[decade + one];
         const isMost = c.score === model.mostRolled;
