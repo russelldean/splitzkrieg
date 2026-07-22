@@ -40,7 +40,7 @@ export const getScoreMap = cache(async (bowlerID: number, slug: string): Promise
       return result.recordset;
     },
     [],
-    { sql: SCORE_MAP_SQL, bowlerID, dependsOn: ['scores'] },
+    { sql: SCORE_MAP_SQL, bowlerID },
   );
   return buildScoreMap(rows, PERFECT_GAME_SLUGS.has(slug));
 });
