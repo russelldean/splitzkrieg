@@ -70,20 +70,23 @@ export function ScoreMap({ model }: { model: ScoreMapModel }) {
         className="mx-auto"
         style={{
           display: 'grid',
-          gridTemplateColumns: '26px repeat(10, 1fr)',
+          gridTemplateColumns: '34px repeat(10, 1fr)',
           gap: 3,
-          maxWidth: 372,
+          maxWidth: 380,
         }}
       >
         {/* header row: corner + ones digits */}
         <div />
         {Array.from({ length: 10 }, (_, d) => (
-          <div
-            key={`h${d}`}
-            className="text-navy/60 text-[10px] text-center tabular-nums rounded py-0.5"
-            style={active?.one === d ? { backgroundColor: '#1B2A4A', color: '#FFFBF2', fontWeight: 700 } : undefined}
-          >
-            {d}
+          <div key={`h${d}`} className="text-[10px] text-center tabular-nums pb-0.5">
+            <span
+              className="inline-block rounded px-1 py-0.5"
+              style={active?.one === d
+                ? { backgroundColor: '#1B2A4A', color: '#FFFBF2', fontWeight: 700 }
+                : { color: 'rgba(27,42,74,0.6)' }}
+            >
+              {d}
+            </span>
           </div>
         ))}
 
@@ -142,11 +145,15 @@ function Row({ decade, model, onCell, onLeave, activeDecade }: {
 }) {
   return (
     <>
-      <div
-        className="text-navy/60 text-[11px] flex items-center justify-end pr-1.5 tabular-nums rounded"
-        style={activeDecade === decade ? { backgroundColor: '#1B2A4A', color: '#FFFBF2', fontWeight: 700 } : undefined}
-      >
-        {decade}
+      <div className="text-[11px] flex items-center justify-end pr-1 tabular-nums">
+        <span
+          className="inline-block rounded px-1 py-0.5"
+          style={activeDecade === decade
+            ? { backgroundColor: '#1B2A4A', color: '#FFFBF2', fontWeight: 700 }
+            : { color: 'rgba(27,42,74,0.6)' }}
+        >
+          {decade}
+        </span>
       </div>
       {Array.from({ length: 10 }, (_, one) => {
         const c = model.cells[decade + one];
@@ -157,8 +164,6 @@ function Row({ decade, model, onCell, onLeave, activeDecade }: {
             type="button"
             aria-label={readoutFor(c, isMost)}
             onClick={(e) => onCell(c, e.currentTarget)}
-            onMouseEnter={(e) => onCell(c, e.currentTarget)}
-            onMouseLeave={onLeave}
             onFocus={(e) => onCell(c, e.currentTarget)}
             onBlur={onLeave}
             className="relative rounded-[3px]"
