@@ -278,7 +278,10 @@ async function main() {
     // Only update for bowlers who bowled this week (if scoped), otherwise all
     let bowlerScope = '';
     if (targetSeasonID && targetWeek) {
-      bowlerScope = `AND f.bowlerID IN (SELECT bowlerID FROM scores WHERE seasonID = ${parseInt(targetSeasonID)} AND week = ${parseInt(targetWeek)} AND isPenalty = 0)`;
+      // NOTE: both interpolation sites below target `facts` UNALIASED (a bare
+      // `UPDATE facts` and a `FROM facts` inside the CTE), so this must not carry
+      // an `f.` prefix or SQL Server throws 4104 "could not be bound".
+      bowlerScope = `AND bowlerID IN (SELECT bowlerID FROM scores WHERE seasonID = ${parseInt(targetSeasonID)} AND week = ${parseInt(targetWeek)} AND isPenalty = 0)`;
     }
 
     // Clear existing flags (scoped to affected bowlers)

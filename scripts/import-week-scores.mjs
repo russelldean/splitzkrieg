@@ -98,6 +98,17 @@ const seasonID = parseInt(getArg('--season=') ?? '36', 10);
 const dryRun = args.includes('--dry-run');
 const cookieVal = getArg('--cookie=');
 const leagueArg = getArg('--league=');
+// Split-phase nights: one of our "weeks" spans two Mondays in two different events, and
+// LeaguePals files EVERY night of an event under weekIdx=0. So --week alone cannot pick a
+// night. Pass --date=YYYY-MM-DD to keep only that Monday's matches, and --weekidx=N to
+// override the weekIdx guess. Verified 2026-08-04: Event A weekIdx=0 holds BOTH 7/13 and
+// 7/27, so an unfiltered week-2 pull would re-import week 1's five matches as week 2.
+const matchDateArg = getArg('--date=');
+const weekIdxArg = getArg('--weekidx=');
+if (matchDateArg && !/^\d{4}-\d{2}-\d{2}$/.test(matchDateArg)) {
+  console.error(`ERROR: --date must be YYYY-MM-DD, got "${matchDateArg}"`);
+  process.exit(1);
+}
 
 // Resolve LeaguePals event/league: A|B|C shorthand or a raw 24-hex id.
 if (leagueArg) {
@@ -132,7 +143,14 @@ if (command === 'pull' && !LP_LEAGUE_ID) {
   process.exit(1);
 }
 
-const stagingFile = resolve(STAGING_DIR, `s${seasonID}-week-${weekNum}.json`);
+// A split "week" has two nights, so its staging must not collide. Date-scoped pulls get
+// their own file; combined-phase weeks keep the original name.
+const stagingFile = resolve(
+  STAGING_DIR,
+  matchDateArg
+    ? `s${seasonID}-week-${weekNum}-${matchDateArg}.json`
+    : `s${seasonID}-week-${weekNum}.json`,
+);
 
 // ─── Name matching ───────────────────────────────────────────────────────────
 
@@ -150,6 +168,10 @@ const NAME_ALIAS = {
   colinhenrahen: 'Colin Henrahan',
   glennbooth: 'Glenn Boothe',
   anniesegrest: 'Annie Seagrest',
+  // His LP account still reads "Ben Price"; "Ben Rice" is correct and our DB was
+  // renamed to match (bowlerID 637, 2026-08-04). Without this the fuzzy matcher
+  // would score Price/Rice as a 1-edit distance against the wrong candidates.
+  benprice: 'Ben Rice',
 };
 
 function normalizeName(name) {
@@ -237,8 +259,10 @@ async function pullScores() {
   const latestDate = latestData.data?.date;
   console.log(`LP latest: weekIdx=${latestWeekIdx}, date=${latestDate}`);
 
-  // weekIdx is 0-based in LP, our weeks are 1-based
-  const targetWeekIdx = weekNum - 1;
+  // weekIdx is 0-based in LP, our weeks are 1-based. But the split-phase A/B events file
+  // every night under weekIdx=0, so --weekidx= overrides this and --date= does the real
+  // narrowing. See the note at the top of the arg block.
+  const targetWeekIdx = weekIdxArg != null ? parseInt(weekIdxArg, 10) : weekNum - 1;
 
   // 2. Get scores — use a wide date range to capture the target week
   const maxDate = new Date('2027-01-01').getTime();
@@ -247,10 +271,28 @@ async function pullScores() {
   const scoresRes = await fetch(scoresUrl, { headers });
   if (!scoresRes.ok) throw new Error(`recentScores failed: ${scoresRes.status}`);
   const scoresData = await scoresRes.json();
-  const matches = scoresData.data;
+  let matches = scoresData.data;
 
   if (!matches || matches.length === 0) {
     console.error('No matches found for this week!');
+    console.error(`(weekIdx=${targetWeekIdx}. Split-phase events file every night under`);
+    console.error(' weekIdx=0 — try --weekidx=0 --date=YYYY-MM-DD.)');
+    process.exit(1);
+  }
+
+  const allDates = [...new Set(matches.map(m => String(m.date).slice(0, 10)))].sort();
+  if (matchDateArg) {
+    const before = matches.length;
+    matches = matches.filter(m => String(m.date).slice(0, 10) === matchDateArg);
+    if (matches.length === 0) {
+      console.error(`No matches on ${matchDateArg}. Dates present: ${allDates.join(', ')}`);
+      process.exit(1);
+    }
+    console.log(`Filtered to ${matchDateArg}: ${matches.length} of ${before} matches`);
+  } else if (allDates.length > 1) {
+    // Refuse to silently mix two nights into one week.
+    console.error(`ERROR: weekIdx=${targetWeekIdx} spans ${allDates.length} dates: ${allDates.join(', ')}`);
+    console.error('Pass --date=YYYY-MM-DD to pick one night, or these would import together.');
     process.exit(1);
   }
   console.log(`Found ${matches.length} matches\n`);
@@ -335,7 +377,32 @@ async function pullScores() {
       const teamName = isHome ? homeTeamName : awayTeamName;
 
       for (const p of team.players) {
-        const lpName = p.bowler?.name || p.subName || 'Unknown';
+        // SUBSTITUTIONS LIVE ON THE GAME OBJECT, NOT THE PLAYER OBJECT.
+        // LeaguePals keeps the rostered bowler in `p.bowler.name` with `p.isSubstitute`
+        // false and `p.subName` undefined, and records the actual sub per game as
+        // `p.games[i].subName` + `p.games[i].isSubstitute`. Reading only the player level
+        // silently files the sub's scores under the rostered bowler AND gives them that
+        // bowler's handicap. Found 2026-08-04: Norwood Cheek (avg 151, hcp 70) bowled as
+        // Lillith Fallon (avg 64, hcp 147) and the 231-pin difference flipped a match.
+        const gameSubs = (p.games ?? [])
+          .filter(g => g.isSubstitute && g.subName)
+          .map(g => g.subName);
+        const distinctSubs = [...new Set(gameSubs)];
+        const subbedAllGames = gameSubs.length === (p.games?.length ?? 0);
+
+        let lpName = p.bowler?.name || p.subName || 'Unknown';
+        let subFlag = null;
+        if (distinctSubs.length === 1 && subbedAllGames) {
+          // Clean case: one sub bowled the whole set. The row belongs to them.
+          subFlag = `SUB:${distinctSubs[0]} for ${lpName}`;
+          lpName = distinctSubs[0];
+        } else if (distinctSubs.length > 0) {
+          // Partial or multi-sub. Our `scores` schema is one row per bowler per week,
+          // so this cannot be represented automatically — surface it for manual entry.
+          subFlag = `PARTIAL_SUB:${distinctSubs.join('/')} on game(s) ` +
+            (p.games ?? []).map((g, i) => (g.isSubstitute ? i + 1 : null)).filter(Boolean).join(',') +
+            ` for ${lpName} — NEEDS MANUAL SPLIT`;
+        }
         const isBlind = p.games?.some(g => g.isBlind) || false;
         const isVacant = p.isVacant || p.games?.some(g => g.isVacant) || false;
         const isSub = p.isSubstitute || false;
@@ -366,6 +433,10 @@ async function pullScores() {
 
         if (isPenalty) bowlerEntry.flags.push('PENALTY');
         if (isSub) bowlerEntry.flags.push('SUB');
+        if (subFlag) {
+          bowlerEntry.flags.push(subFlag);
+          warnings.push(`${teamName}: ${subFlag}`);
+        }
         if (!dbMatch && !isPenalty) {
           bowlerEntry.flags.push('UNMATCHED');
           warnings.push(`Could not match "${lpName}" (${teamName}) to any DB bowler`);
@@ -491,15 +562,31 @@ async function importScores() {
 
   const pool = await new sql.ConnectionPool(dbConfig).connect();
 
-  // Check for existing scores this week
+  // Check for existing scores this week — but scope the check to THIS night's teams.
+  // A split-phase week spans two Mondays with two disjoint sets of ten teams, both
+  // stored as the same `week`. A blanket week-level guard would let the first night
+  // in and then permanently block the second. Scoping by teamID still catches a true
+  // double-import (same teams, same week) while allowing the other half through.
+  const teamIDs = [...new Set(allBowlers.map(b => b.teamID))];
   const existing = await pool.request().query(
-    `SELECT COUNT(*) AS cnt FROM scores WHERE seasonID = ${staged.seasonID} AND week = ${staged.week}`
+    `SELECT COUNT(*) AS cnt FROM scores
+     WHERE seasonID = ${staged.seasonID} AND week = ${staged.week}
+       AND teamID IN (${teamIDs.join(',')})`
   );
   if (existing.recordset[0].cnt > 0) {
-    console.error(`ERROR: ${existing.recordset[0].cnt} scores already exist for S${staged.seasonID} Week ${staged.week}`);
-    console.error('Delete existing scores first if re-importing.');
+    console.error(`ERROR: ${existing.recordset[0].cnt} scores already exist for S${staged.seasonID} Week ${staged.week} for these teams.`);
+    console.error(`Teams in this file: ${teamIDs.join(', ')}`);
+    console.error('This night appears to be imported already. Delete those rows first if re-importing.');
     await pool.close();
     process.exit(1);
+  }
+  const otherHalf = await pool.request().query(
+    `SELECT COUNT(*) AS cnt FROM scores
+     WHERE seasonID = ${staged.seasonID} AND week = ${staged.week}
+       AND teamID NOT IN (${teamIDs.join(',')})`
+  );
+  if (otherHalf.recordset[0].cnt > 0) {
+    console.log(`Note: ${otherHalf.recordset[0].cnt} rows already in for week ${staged.week} from the other night. This is the split-phase second half.\n`);
   }
 
   let inserted = 0;
