@@ -512,7 +512,7 @@ export async function runPatches(
     'highGame',
     `SELECT x.bowlerID, x.seasonID, x.week FROM (
       SELECT sc.seasonID, sc.week, sc.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY
+        RANK() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY
           CASE WHEN sc.game1 >= ISNULL(sc.game2,0) AND sc.game1 >= ISNULL(sc.game3,0) THEN sc.game1
                WHEN sc.game2 >= ISNULL(sc.game3,0) THEN sc.game2
                ELSE sc.game3 END DESC) AS rn
@@ -527,7 +527,7 @@ export async function runPatches(
     'highSeries',
     `SELECT x.bowlerID, x.seasonID, x.week FROM (
       SELECT sc.seasonID, sc.week, sc.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn
+        RANK() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn
       FROM scores sc
       WHERE sc.isPenalty = 0${weeklyFilter}
     ) x WHERE x.rn = 1`,
@@ -539,7 +539,7 @@ export async function runPatches(
     'aboveAvg',
     `SELECT sc.bowlerID, sc.seasonID, sc.week FROM scores sc
      WHERE sc.isPenalty = 0 AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-       AND sc.game1 > sc.incomingAvg AND sc.game2 > sc.incomingAvg AND sc.game3 > sc.incomingAvg${weeklyFilter}`,
+       AND sc.game1 >= sc.incomingAvg AND sc.game2 >= sc.incomingAvg AND sc.game3 >= sc.incomingAvg${weeklyFilter}`,
     'Above Average',
   );
 

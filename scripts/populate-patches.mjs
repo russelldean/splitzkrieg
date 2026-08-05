@@ -181,7 +181,8 @@ async function main() {
     SELECT x.bowlerID, x.seasonID, x.week
     FROM (
       SELECT sc.seasonID, sc.week, sc.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY
+        -- RANK, not ROW_NUMBER: a tied high game awards BOTH bowlers, same as BOTW.
+        RANK() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY
           CASE WHEN sc.game1 >= ISNULL(sc.game2,0) AND sc.game1 >= ISNULL(sc.game3,0) THEN sc.game1
                WHEN sc.game2 >= ISNULL(sc.game3,0) THEN sc.game2
                ELSE sc.game3 END DESC) AS rn
@@ -196,7 +197,8 @@ async function main() {
     SELECT x.bowlerID, x.seasonID, x.week
     FROM (
       SELECT sc.seasonID, sc.week, sc.bowlerID,
-        ROW_NUMBER() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn
+        -- RANK, not ROW_NUMBER: a tied high series awards BOTH bowlers.
+        RANK() OVER (PARTITION BY sc.seasonID, sc.week ORDER BY sc.scratchSeries DESC) AS rn
       FROM scores sc
       WHERE sc.isPenalty = 0
         ${weeklyAnd}
@@ -209,9 +211,11 @@ async function main() {
     FROM scores sc
     WHERE sc.isPenalty = 0
       AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-      AND sc.game1 > sc.incomingAvg
-      AND sc.game2 > sc.incomingAvg
-      AND sc.game3 > sc.incomingAvg
+      -- Matching the average COUNTS (Russ, 2026-08-04: "we give above average even if
+      -- you tie it"). This was ">" until then, which withheld 343 patches league-wide.
+      AND sc.game1 >= sc.incomingAvg
+      AND sc.game2 >= sc.incomingAvg
+      AND sc.game3 >= sc.incomingAvg
       ${weeklyAnd}
   `, 'Above Average All 3 Games');
 
