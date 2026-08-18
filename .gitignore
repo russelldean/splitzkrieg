@@ -71,3 +71,6 @@ scripts/playoff-scenarios.mjs
 scripts/playoff-enumerate*.mjs
 docs/playoff-scenarios-*.json
 docs/playoff-scenarios-*.md
+
+# Runtime logs (instagram token refresh cron)
+logs/

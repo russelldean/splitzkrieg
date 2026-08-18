@@ -172,6 +172,10 @@ const NAME_ALIAS = {
   // renamed to match (bowlerID 637, 2026-08-04). Without this the fuzzy matcher
   // would score Price/Rice as a 1-edit distance against the wrong candidates.
   benprice: 'Ben Rice',
+  // Entered at the lanes on 8/10 as the placeholder "Arvis Nolast". His name is
+  // Arvis Fair (bowlerID 640, renamed 2026-08-18); LP still carries the old string,
+  // and the fuzzy matcher would not get from "Nolast" to "Fair" on its own.
+  arvisnolast: 'Arvis Fair',
 };
 
 function normalizeName(name) {
