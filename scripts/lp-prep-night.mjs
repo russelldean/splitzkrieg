@@ -406,7 +406,17 @@ async function main() {
       if (roster.some(b => bkey(b.name) === bkey(n))) continue;
       const found = await findOnLp(n);
       if (found) { roster.push(found); notes.added.push(`${n} -> ${t.name}`); }
-      else notes.needsInvite.push(`${n} (${t.name})`);
+      else {
+        // Not on LP at all. Seat them anyway on a placeholder address: Team Import
+        // CREATES the user (proven on Jack Marone, 8/03), and the fake domain means
+        // nothing is deliverable even if a disable-email box gets missed. Dropping
+        // them instead is worse than it looks -- everyone below shifts up a slot and
+        // a non-lineup bowler lands in the top four, which is what LP computes the
+        // team average and handicap from.
+        const email = `${norm(n).replace(/ /g, '.')}@splitzkrieg.placeholder`;
+        roster.push({ name: n, email });
+        notes.needsInvite.push(`${n} (${t.name}) -> seated as ${email}`);
+      }
     }
     final.set(t.teamID, roster);
   }
@@ -501,7 +511,7 @@ async function main() {
     ['auto-added to roster (found on LP)', notes.added],
     ['double-seat resolved', notes.dropped],
     ['SAME BOWLER IN TWO LINEUPS - needs your call', notes.conflict],
-    ['IN LINEUP BUT NOT ON LP AT ALL - needs a placeholder invite', notes.needsInvite],
+    ['NOT ON LP - seated on a placeholder address, the import creates the account', notes.needsInvite],
     ['not matched to our bowlers table', notes.unmatched],
     ['blank Entering Average', notes.noAvg],
   ];
