@@ -374,6 +374,10 @@ export type LeaderboardCategory = 'avg' | 'highSeries' | 'hcpAvg';
 /**
  * Season leaderboard filtered to scores through a given week.
  * Returns top 10 for a category/gender combination, a snapshot in time.
+ *
+ * `minGames` is the eligibility floor for average-based categories. Pass
+ * `getMinGamesForWeek(week)` so the snapshot uses the same ramp /stats does;
+ * a flat floor disagrees with /stats in both directions as the season runs.
  */
 export async function getLeaderboardSnapshot(
   seasonID: number,
@@ -381,9 +385,11 @@ export async function getLeaderboardSnapshot(
   gender: 'M' | 'F' | null,
   category: LeaderboardCategory,
   limit = 10,
+  minGames?: number,
 ): Promise<SeasonLeaderEntry[]> {
   const genderFilter = gender !== null ? 'AND b.gender = @gender' : '';
-  const minNights = 3;
+  // Same conversion getSeasonLeaderboard uses: a night is 3 games.
+  const minNights = minGames ? Math.ceil(minGames / 3) : 3;
 
   let selectExpr: string;
   let havingClause = '';

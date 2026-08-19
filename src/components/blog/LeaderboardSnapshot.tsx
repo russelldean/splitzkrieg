@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { getSeasonBySlug } from '@/lib/queries';
+import { getSeasonBySlug, getMinGamesForWeek } from '@/lib/queries';
 import { getLeaderboardSnapshot } from '@/lib/queries/blog';
+import { cutoffIndex, playoffQualifiers } from '@/lib/leaderboard-cutoff';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 
 interface Props {
@@ -11,14 +12,7 @@ interface Props {
 function LeaderCard({ title, leaders, playoffCutoff, isAvg = false }: { title: string; leaders: SeasonLeaderEntry[]; playoffCutoff: number; isAvg?: boolean }) {
   if (leaders.length === 0) return null;
 
-  // Expand ties at the cutoff
-  let cutoffIdx = playoffCutoff;
-  if (leaders.length > playoffCutoff) {
-    const cutoffValue = leaders[playoffCutoff - 1].value;
-    while (cutoffIdx < leaders.length && leaders[cutoffIdx].value === cutoffValue) cutoffIdx++;
-  } else {
-    cutoffIdx = leaders.length;
-  }
+  const cutoffIdx = cutoffIndex(leaders.map(l => l.value), playoffCutoff);
 
   const topValue = leaders[0].value;
   return (
@@ -62,17 +56,23 @@ export async function LeaderboardSnapshot({ seasonSlug, week }: Props) {
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData || isNaN(weekNum)) return null;
 
+  // Eligibility floor ramps with the week, matching /stats. This is a snapshot,
+  // so it keys off the week being viewed, not the season's latest played week.
+  const minGames = getMinGamesForWeek(weekNum);
+
   const [mensScratch, womensScratch, hcpAvgRaw] = await Promise.all([
-    getLeaderboardSnapshot(seasonData.seasonID, weekNum, 'M', 'avg'),
-    getLeaderboardSnapshot(seasonData.seasonID, weekNum, 'F', 'avg'),
+    getLeaderboardSnapshot(seasonData.seasonID, weekNum, 'M', 'avg', 10, minGames),
+    getLeaderboardSnapshot(seasonData.seasonID, weekNum, 'F', 'avg', 10, minGames),
     // Fetch extra rows so we have 10 eligible after filtering scratch qualifiers
-    getLeaderboardSnapshot(seasonData.seasonID, weekNum, null, 'hcpAvg', 30),
+    getLeaderboardSnapshot(seasonData.seasonID, weekNum, null, 'hcpAvg', 30, minGames),
   ]);
 
-  // Scratch playoff qualifiers (top 8 men's + top 8 women's) are ineligible for handicap playoffs
+  // Scratch playoff qualifiers are ineligible for handicap playoffs. Ties at the
+  // 8th value qualify too, so the exclusion has to expand them the same way the
+  // highlight does, or the card marks 9 men qualified while excluding only 8.
   const scratchPlayoffIDs = new Set([
-    ...mensScratch.slice(0, 8).map(e => e.bowlerID),
-    ...womensScratch.slice(0, 8).map(e => e.bowlerID),
+    ...playoffQualifiers(mensScratch),
+    ...playoffQualifiers(womensScratch),
   ]);
   const hcpAvg = hcpAvgRaw
     .filter(e => !scratchPlayoffIDs.has(e.bowlerID))
