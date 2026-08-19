@@ -1,5 +1,6 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { mdxComponents } from '@/lib/mdx-components';
+import { excerptWorthShowing } from '@/lib/week-writeup';
 
 interface Props {
   /** Raw MDX body of the post. */
@@ -8,7 +9,7 @@ interface Props {
   title: string;
   /** Week number, used in the summary line. */
   weekNum: number;
-  /** Short excerpt, shown under the label so a collapsed block advertises itself. */
+  /** Short excerpt, shown under the label when it says more than the title does. */
   excerpt: string;
   /** Whether the block starts open. */
   defaultOpen: boolean;
@@ -26,6 +27,7 @@ interface Props {
  * that component is neutralised here rather than edited out of stored content.
  */
 export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: Props) {
+  const teaser = excerptWorthShowing(excerpt, title);
   const components = {
     ...mdxComponents,
     WeekRecap: () => null,
@@ -52,9 +54,9 @@ export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: P
             <span className="block font-heading text-base sm:text-lg text-navy">
               Week {weekNum} Recap
             </span>
-            {excerpt && (
+            {teaser && (
               <span className="block font-body text-sm text-navy/70 line-clamp-2 group-open:hidden">
-                {excerpt}
+                {teaser}
               </span>
             )}
             <span className="sr-only">{title}</span>

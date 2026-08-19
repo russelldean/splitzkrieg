@@ -41,3 +41,28 @@ export function weekPathForPost(post: PostMeta): string | null {
 export function postHref(post: PostMeta): string {
   return weekPathForPost(post) ?? `/blog/${post.slug}`;
 }
+
+/** Lowercase alphanumerics only, so punctuation and spacing stop mattering. */
+function normalize(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * The excerpt to show under a collapsed writeup label, or null to show nothing.
+ *
+ * The collapsed block is meant to advertise itself, but in practice the stored
+ * excerpt for a recap restates the title ("Season XXXVI Week 3 recap" under a
+ * label reading "Week 3 Recap"), which reads as a duplicated heading. Seven of
+ * the eight recaps in the table are exactly that, so suppress an excerpt whose
+ * words are already in the title and keep the ones that say something new.
+ */
+export function excerptWorthShowing(
+  excerpt: string | null | undefined,
+  title: string,
+): string | null {
+  if (!excerpt) return null;
+  const trimmed = excerpt.trim();
+  const normalized = normalize(trimmed);
+  if (!normalized) return null;
+  return normalize(title).includes(normalized) ? null : trimmed;
+}

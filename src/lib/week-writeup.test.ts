@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldExpandWriteup, weekPathForPost, postHref } from './week-writeup';
+import { shouldExpandWriteup, weekPathForPost, postHref, excerptWorthShowing } from './week-writeup';
 import type { PostMeta } from './blog';
 
 const post = (over: Partial<PostMeta> = {}): PostMeta => ({
@@ -71,5 +71,41 @@ describe('postHref', () => {
     expect(
       postHref(post({ type: 'announcement', seasonSlug: undefined, week: undefined, slug: 'some-post' })),
     ).toBe('/blog/some-post');
+  });
+});
+
+describe('excerptWorthShowing', () => {
+  it('drops an excerpt that just restates the title', () => {
+    expect(
+      excerptWorthShowing('Season XXXVI Week 3 recap', 'Season XXXVI - Week 3 Recap')
+    ).toBe(null);
+  });
+
+  it('drops the restatement regardless of punctuation and case', () => {
+    expect(excerptWorthShowing('season xxxv week 9 RECAP!', 'Season XXXV - Week 9 Recap')).toBe(null);
+  });
+
+  it('drops a null excerpt', () => {
+    expect(excerptWorthShowing(null, 'Season XXXV - Week 5 Recap')).toBe(null);
+  });
+
+  it('drops a whitespace-only excerpt', () => {
+    expect(excerptWorthShowing('   ', 'Season XXXV - Week 5 Recap')).toBe(null);
+  });
+
+  it('keeps an excerpt that says something the title does not', () => {
+    expect(
+      excerptWorthShowing('We have a website - splitzkrieg.com! ', 'This Site Built Entirely on a Brunswick 2000')
+    ).toBe('We have a website - splitzkrieg.com!');
+  });
+
+  it('keeps an excerpt that extends the title rather than repeating it', () => {
+    expect(
+      excerptWorthShowing('Week 3 Recap: the night the Alley Cats collapsed', 'Season XXXVI - Week 3 Recap')
+    ).toBe('Week 3 Recap: the night the Alley Cats collapsed');
+  });
+
+  it('drops an excerpt that is a fragment of the title', () => {
+    expect(excerptWorthShowing('Week 3 Recap', 'Season XXXVI - Week 3 Recap')).toBe(null);
   });
 });
