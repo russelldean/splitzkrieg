@@ -373,7 +373,7 @@ export type LeaderboardCategory = 'avg' | 'highSeries' | 'hcpAvg';
 
 /**
  * Season leaderboard filtered to scores through a given week.
- * Returns top 10 for a category/gender combination — a snapshot in time.
+ * Returns top 10 for a category/gender combination, a snapshot in time.
  */
 export async function getLeaderboardSnapshot(
   seasonID: number,
