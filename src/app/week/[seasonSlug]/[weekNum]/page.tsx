@@ -20,10 +20,13 @@ import {
   getSeasonStandings,
   getCurrentSeasonSlug,
 } from '@/lib/queries';
+import { getStandingsSnapshot } from '@/lib/queries/blog';
 import { WeekMatchSummary } from '@/components/season/WeekMatchSummary';
 import { WeekSchedulePreview } from '@/components/season/WeekSchedulePreview';
 import { WeekStats } from '@/components/season/WeekStats';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
+import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
 import { strikeX } from '@/components/ui/StrikeX';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
@@ -97,13 +100,16 @@ export default async function WeekPage({
   const season = await getSeasonBySlug(seasonSlug);
   if (!season || isNaN(weekNum)) notFound();
 
-  const [weekScores, scoreWeeks, allSchedule, allMatchResults, allSeasons, playoffRounds] = await Promise.all([
+  const [weekScores, scoreWeeks, allSchedule, allMatchResults, allSeasons, playoffRounds, weekStandings] = await Promise.all([
     getWeekScores(season.seasonID, weekNum),
     getSeasonWeekNumbers(season.seasonID),
     getSeasonSchedule(season.seasonID),
     getSeasonMatchResults(season.seasonID),
     getAllSeasonNavList(),
     getSeasonsWithPlayoffData(),
+    // Standings frozen as of this week (NOT current/cumulative getSeasonStandings,
+    // which has no week param and would show the same totals on every week page).
+    getStandingsSnapshot(season.seasonID, weekNum),
   ]);
   const hasPlayoffR1 = playoffRounds.some(p => p.seasonID === season.seasonID && p.round === 1);
 
@@ -319,10 +325,46 @@ export default async function WeekPage({
           <TrackVisibility section="highlights" page="week">
             <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} exclude={['awards', 'xp']} />
           </TrackVisibility>
+
+          {/* Standings as of this week */}
+          <TrackVisibility section="standings-snapshot" page="week">
+            <div className="mt-6">
+              <SectionHeading>Standings</SectionHeading>
+              <p className="font-body text-sm text-navy/65 mb-2">
+                If the season ended today, playoff teams are:
+              </p>
+              <CompactStandingsPreview standings={weekStandings} weekNumber={weekNum} />
+            </div>
+          </TrackVisibility>
+
+          {/* Leaderboards as of this week */}
+          <TrackVisibility section="leaderboards-snapshot" page="week">
+            <div className="mt-6">
+              <SectionHeading>Leaderboards</SectionHeading>
+              <LeaderboardSnapshot seasonSlug={seasonSlug} week={weekNum} />
+            </div>
+          </TrackVisibility>
         </>
       )}
 
       <NextStopNudge currentPage="week" seasonSlug={seasonSlug} />
+
+      {(() => {
+        const nextWeekSchedule = allSchedule.find((s) => s.week === weekNum + 1);
+        if (!nextWeekSchedule?.matchDate) return null;
+        const date = new Date(nextWeekSchedule.matchDate);
+        const formatted = date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'UTC',
+        });
+        return (
+          <p className="font-body text-navy/80 text-center text-lg mt-6">
+            Next League Night is {formatted}.
+          </p>
+        );
+      })()}
     </main>
   );
 }
