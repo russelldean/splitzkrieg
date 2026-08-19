@@ -2,38 +2,13 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { draftMode } from 'next/headers';
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent } from '@/lib/blog';
+import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent, getDraftPostBySlug } from '@/lib/blog';
 import { weekPathForPost } from '@/lib/week-writeup';
-import { getBlogPostBySlug } from '@/lib/admin/blog-db';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
 import { mdxComponents } from '@/lib/mdx-components';
 import { getSiteUpdates } from '@/lib/queries/updates';
-import type { PostMeta } from '@/lib/blog';
 
 export const dynamicParams = true;
-
-/** Load an unpublished post from DB for draft preview */
-async function getPreviewPost(slug: string): Promise<{ meta: PostMeta; content: string } | null> {
-  const post = await getBlogPostBySlug(slug);
-  if (!post || !post.content) return null;
-  return {
-    meta: {
-      title: post.title,
-      date: post.publishedAt?.split('T')[0] ?? new Date().toISOString().split('T')[0],
-      slug: post.slug,
-      excerpt: post.excerpt ?? '',
-      type: post.type ?? 'announcement',
-      ...(post.seasonRomanNumeral ? { season: post.seasonRomanNumeral } : {}),
-      ...(post.seasonSlug ? { seasonSlug: post.seasonSlug } : {}),
-      ...(post.week != null ? { week: post.week } : {}),
-      ...(post.heroImage ? { heroImage: post.heroImage } : {}),
-      ...(post.heroFocalY != null ? { heroFocalY: post.heroFocalY } : {}),
-      ...(post.cardImage ? { cardImage: post.cardImage } : {}),
-      ...(post.cardFocalY != null ? { cardFocalY: post.cardFocalY } : {}),
-    },
-    content: post.content,
-  };
-}
 
 export async function generateStaticParams() {
   const posts = await getAllPosts();
@@ -70,7 +45,7 @@ export default async function BlogPostPage({
   // If not published and draft mode is on, try preview from DB
   if ((!meta || !content) && isDraft) {
     try {
-      const preview = await getPreviewPost(slug);
+      const preview = await getDraftPostBySlug(slug);
       if (!preview) notFound();
       meta = preview.meta;
       content = preview.content;

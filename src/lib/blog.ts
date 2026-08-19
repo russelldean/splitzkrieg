@@ -110,3 +110,33 @@ export async function getPostContentForWeek(
   );
   return hit?.content ?? undefined;
 }
+
+/**
+ * A post by slug regardless of publish state, for draft preview.
+ *
+ * Deliberately NOT cached: it must reflect the row as it is right now, and it
+ * must never populate a cache key that a published page could later read.
+ */
+export async function getDraftPostBySlug(
+  slug: string,
+): Promise<{ meta: PostMeta; content: string } | null> {
+  const post = await getBlogPostBySlug(slug);
+  if (!post || !post.content) return null;
+  return {
+    meta: {
+      title: post.title,
+      date: post.publishedAt?.split('T')[0] ?? new Date().toISOString().split('T')[0],
+      slug: post.slug,
+      excerpt: post.excerpt ?? '',
+      type: post.type ?? 'announcement',
+      ...(post.seasonRomanNumeral ? { season: post.seasonRomanNumeral } : {}),
+      ...(post.seasonSlug ? { seasonSlug: post.seasonSlug } : {}),
+      ...(post.week != null ? { week: post.week } : {}),
+      ...(post.heroImage ? { heroImage: post.heroImage } : {}),
+      ...(post.heroFocalY != null ? { heroFocalY: post.heroFocalY } : {}),
+      ...(post.cardImage ? { cardImage: post.cardImage } : {}),
+      ...(post.cardFocalY != null ? { cardFocalY: post.cardFocalY } : {}),
+    },
+    content: post.content,
+  };
+}
