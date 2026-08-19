@@ -94,3 +94,19 @@ export async function getPostForWeek(
   const posts = await getAllPosts();
   return posts.find((p) => p.season === season && p.week === week);
 }
+
+/**
+ * Raw MDX body for a season+week post, read from the same fetch that backs
+ * getPostForWeek. Avoids a second round trip for content the request already
+ * has: getPublishedBlogPosts selects the content column and PostMeta drops it.
+ */
+export async function getPostContentForWeek(
+  season: string,
+  week: number,
+): Promise<string | undefined> {
+  const posts = await getPublishedBlogPosts();
+  const hit = posts.find(
+    (p) => p.seasonRomanNumeral === season && p.week === week,
+  );
+  return hit?.content ?? undefined;
+}

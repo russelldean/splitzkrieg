@@ -5,6 +5,7 @@
  */
 
 import sql from 'mssql';
+import { cache } from 'react';
 import { getDb, withRetry } from '@/lib/db';
 import type { BlogPost } from './types';
 
@@ -63,8 +64,11 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 
 /**
  * Get published blog posts, ordered by publishedDate DESC.
+ * Wrapped in React cache() so all calls within one request (e.g. multiple
+ * week-page reads of getPostForWeek / getPostContentForWeek) share a single
+ * query instead of re-fetching the same rows.
  */
-export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
+export const getPublishedBlogPosts = cache(async (): Promise<BlogPost[]> => {
   const db = await getDb();
   const result = await withRetry(
     () =>
@@ -76,7 +80,7 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
     'getPublishedBlogPosts',
   );
   return result.recordset.map(rowToPost);
-}
+});
 
 /**
  * Get a single blog post by slug (for public pages).

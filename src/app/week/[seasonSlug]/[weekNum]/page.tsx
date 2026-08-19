@@ -29,7 +29,7 @@ import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { toDateKey } from '@/lib/week-utils';
-import { getPostForWeek, getPostContent } from '@/lib/blog';
+import { getPostForWeek, getPostContentForWeek } from '@/lib/blog';
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { WeekWriteup } from '@/components/week/WeekWriteup';
@@ -163,7 +163,9 @@ export default async function WeekPage({
 
   // Check for blog post cross-link
   const blogPost = await getPostForWeek(season.romanNumeral, weekNum);
-  const writeupContent = blogPost ? await getPostContent(blogPost.slug) : undefined;
+  const writeupContent = blogPost
+    ? await getPostContentForWeek(season.romanNumeral, weekNum)
+    : undefined;
   const currentSeasonSlug = await getCurrentSeasonSlug();
 
   // Cross-season prev/next: if at first/last week, link to adjacent season
@@ -251,10 +253,10 @@ export default async function WeekPage({
       </div>
 
       {/* Hero photo from the week's post */}
-      {blogPost?.heroImage && (
+      {(blogPost?.heroImage ?? blogPost?.cardImage) && (
         <div className="relative mb-4 h-40 sm:h-52 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
           <Image
-            src={blogPost.heroImage}
+            src={(blogPost.heroImage ?? blogPost.cardImage)!}
             alt=""
             fill
             className="object-cover"
@@ -271,7 +273,7 @@ export default async function WeekPage({
           title={blogPost.title}
           excerpt={blogPost.excerpt}
           weekNum={weekNum}
-          defaultOpen={shouldExpandWriteup(blogPost.seasonSlug, currentSeasonSlug)}
+          defaultOpen={shouldExpandWriteup(seasonSlug, currentSeasonSlug)}
         />
       )}
 
