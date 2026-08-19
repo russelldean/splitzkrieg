@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { requireAdmin } from '@/lib/admin/auth';
+import { getAllSeasonNavList } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,7 +139,14 @@ export async function POST(request: NextRequest) {
     const slug =
       body.blogSlug ||
       `season-${seasonRoman.toLowerCase()}-week-${week}-recap`;
-    const blogUrl = `https://splitzkrieg.com/blog/${slug}`;
+    // Recaps live on the week page now. Fall back to the blog URL if the season
+    // slug cannot be resolved; that path redirects anyway, so the link still works.
+    const seasonSlug = (await getAllSeasonNavList()).find(
+      (s) => s.seasonID === seasonID,
+    )?.slug;
+    const blogUrl = seasonSlug
+      ? `https://splitzkrieg.com/week/${seasonSlug}/${week}`
+      : `https://splitzkrieg.com/blog/${slug}`;
 
     const html = buildEmailHTML(subject, teaser, blogUrl);
 
