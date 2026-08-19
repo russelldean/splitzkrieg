@@ -120,31 +120,18 @@ async function _resolvePublishedContext(): Promise<PublishedContext | null> {
   const season = seasonResult.recordset[0];
   if (!season) return null;
 
-  let week: number | null = null;
-  try {
-    const lsResult = await db.request().query<{ settingKey: string; settingValue: string }>(
-      `SELECT settingKey, settingValue FROM leagueSettings WHERE settingKey IN ('publishedWeek', 'publishedSeasonID')`
+  // Derived from the scores table, never from leagueSettings.publishedWeek.
+  // The site is prebuilt, so a week reaches the public when the site is
+  // deployed, not when a setting flips. Deriving it also removes the
+  // season-changeover leak the old gate had to guard against: publishedWeek
+  // holds the PRIOR season's last week until it is reset, whereas MAX(week)
+  // is already scoped to this season and cannot carry over.
+  const maxResult = await db.request()
+    .input('seasonID', season.seasonID)
+    .query<{ maxWeek: number }>(
+      `SELECT MAX(week) AS maxWeek FROM scores WHERE seasonID = @seasonID AND isPenalty = 0`
     );
-    const settings = Object.fromEntries(lsResult.recordset.map(r => [r.settingKey, r.settingValue]));
-    const publishedSeasonID = settings.publishedSeasonID != null ? parseInt(settings.publishedSeasonID, 10) : null;
-    // Only trust publishedWeek when it belongs to the current season. After a
-    // season changeover this setting still holds the PRIOR season's last week
-    // (e.g. 9); it must not leak onto the new, not-yet-started season.
-    if (settings.publishedWeek != null && (publishedSeasonID == null || publishedSeasonID === season.seasonID)) {
-      week = parseInt(settings.publishedWeek, 10);
-    }
-  } catch {
-    // table doesn't exist yet — fall through
-  }
-
-  if (week == null) {
-    const maxResult = await db.request()
-      .input('seasonID', season.seasonID)
-      .query<{ maxWeek: number }>(
-        `SELECT MAX(week) AS maxWeek FROM scores WHERE seasonID = @seasonID AND isPenalty = 0`
-      );
-    week = maxResult.recordset[0]?.maxWeek ?? 0;
-  }
+  let week: number = maxResult.recordset[0]?.maxWeek ?? 0;
 
   // Pre-season (no games played yet): "this week" is week 1, the first night.
   if (week < 1) week = 1;
