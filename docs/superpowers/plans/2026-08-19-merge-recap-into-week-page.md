@@ -54,7 +54,6 @@ export interface PostMeta {
 - `src/lib/week-writeup.ts` - pure decisions: should the writeup open expanded, and what week path does a post map to
 - `src/lib/week-writeup.test.ts` - vitest coverage for the above
 - `src/components/week/WeekWriteup.tsx` - the collapsible writeup block, renders post MDX with `WeekRecap` neutralised
-- `src/components/week/WeekLeaderboards.tsx` - week-scoped leaderboards at full depth (server component)
 
 **Modify:**
 - `src/lib/queries/blog.ts` - season-scope the two snapshot queries (Task 0, ships first)
@@ -445,7 +444,10 @@ it directly in the body keeps the styled NEW box available inside the writeup."
 
 ### Task 3: Put the hero and writeup on the week page
 
+**Amended after Task 2 review.** The collapsed summary as built shows only "Week 3 Recap", which on roughly 300 archived week pages is the only visible trace of the writing, and is redundant with the page's own "Week 3" heading. The reviewer's verdict was to add the excerpt. So this task also extends `WeekWriteup` with an `excerpt` prop before wiring the caller.
+
 **Files:**
+- Modify: `src/components/week/WeekWriteup.tsx` (add the `excerpt` prop)
 - Modify: `src/app/week/[seasonSlug]/[weekNum]/page.tsx`
 
 The block being replaced is the "Blog cross-link" card - the `{blogPost && (<Link href={`/blog/${blogPost.slug}`} ...>)}` JSX that renders a teaser reading "Read the full Week N recap". Locate it by searching for `Blog cross-link`.
@@ -534,82 +536,22 @@ Russ's call: **drop Cloud 9** (all matches are on this page anyway, so the highl
 
 Do **not** reuse `src/components/season/SeasonLeaderboards.tsx`. It is a client component whose props demand `mensScratchPlayoffIDs`, `hcpIneligibleIDs`, `champions` and similar season-level concepts. Playoff qualification and champions are meaningless "as of week 3", and passing empty sets to satisfy the types would render misleading furniture.
 
-- [ ] **Step 1: Build the full week-scoped leaderboards component**
+**Amended after investigation.** Two components already exist and are currently DEAD CODE, registered in the MDX map but rendered nowhere and used in zero stored posts:
 
-Create `src/components/week/WeekLeaderboards.tsx`:
+- `src/components/blog/LeaderboardSnapshot.tsx` - `({ seasonSlug, week })`. Full-depth week-scoped leaderboards with playoff-cutoff markers and tie expansion at the cutoff. Uses `getLeaderboardSnapshot`, which Task 0 already season-scoped. **Use this instead of building anything new.** Do NOT create `WeekLeaderboards`.
+- `src/components/blog/StandingsSnapshot.tsx` - `({ season, week })`, with rank-movement arrows. **DO NOT USE.** Its inline `getRankedSnapshot` calls `cachedQuery` with only `{ sql }` - no `seasonID`, no `dependsOn`, no `stable` - which `src/lib/db.ts` treats as the legacy always-invalidate bucket. On 325 week pages that would invalidate every page on every publish. It also holds raw SQL inside a component file, violating the CLAUDE.md rule that all SQL lives in `src/lib/queries/`. Fixing it is out of scope here and tracked separately.
 
-```tsx
-import Link from 'next/link';
-import { getLeaderboardSnapshot } from '@/lib/queries/blog';
-import type { SeasonLeaderEntry } from '@/lib/queries';
+**Correction made during implementation.** An earlier draft of this task claimed the page's existing `standings` variable could feed `CompactStandingsPreview` for free. That was wrong on two counts: `standings` is only populated inside the `isFutureWeek` branch (it is `[[], []]` otherwise), and it comes from `getSeasonStandings(seasonID)`, which takes no week parameter and sums the whole season. Using it would have rendered identical standings on every week page.
 
-interface Props {
-  seasonID: number;
-  week: number;
-}
+Use `getStandingsSnapshot(seasonID, weekNum)` from `src/lib/queries/blog.ts`, added to the page's existing `Promise.all`, and feed its result to `CompactStandingsPreview`. That is the same query `WeekRecap` already uses, it returns the `StandingsRow[]` shape the component wants, and Task 0 season-scoped it precisely so it could move here.
 
-/**
- * Season leaderboards as of a given week, at full depth.
- *
- * Deliberately not SeasonLeaderboards from /stats: that is a client component
- * requiring playoff-qualification sets and champions, which are meaningless
- * partway through a season. This is a server component reading the same
- * week-scoped snapshot query the blog recap used, without the top-3 truncation.
- */
-export async function WeekLeaderboards({ seasonID, week }: Props) {
-  const [mensAvg, mensSeries, womensAvg, womensSeries, hcpAvg] = await Promise.all([
-    getLeaderboardSnapshot(seasonID, week, 'M', 'avg'),
-    getLeaderboardSnapshot(seasonID, week, 'M', 'highSeries'),
-    getLeaderboardSnapshot(seasonID, week, 'F', 'avg'),
-    getLeaderboardSnapshot(seasonID, week, 'F', 'highSeries'),
-    getLeaderboardSnapshot(seasonID, week, null, 'hcpAvg'),
-  ]);
-
-  if (mensAvg.length === 0 && womensAvg.length === 0) return null;
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Board title="Men's Scratch Average" entries={mensAvg} />
-      <Board title="Women's Scratch Average" entries={womensAvg} />
-      <Board title="Handicap Average" entries={hcpAvg} />
-      <Board title="Men's High Series" entries={mensSeries} />
-      <Board title="Women's High Series" entries={womensSeries} />
-    </div>
-  );
-}
-
-function Board({ title, entries }: { title: string; entries: SeasonLeaderEntry[] }) {
-  if (entries.length === 0) return null;
-
-  return (
-    <div className="bg-white border border-navy/10 rounded-lg shadow-sm p-3">
-      <h4 className="font-heading text-sm text-navy/70 mb-2">{title}</h4>
-      <ol className="space-y-1">
-        {entries.map((e, i) => (
-          <li key={e.slug} className="flex items-baseline gap-2 font-body text-sm">
-            <span className="w-5 shrink-0 tabular-nums text-navy/40">{i + 1}</span>
-            <Link
-              href={`/bowler/${e.slug}`}
-              className="flex-1 min-w-0 truncate text-navy hover:text-red-600 transition-colors"
-            >
-              {e.bowlerName}
-            </Link>
-            <span className="tabular-nums font-semibold text-navy shrink-0">{e.value}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-```
-
-`getLeaderboardSnapshot` defaults to `limit = 10`, so each board shows up to 10 without passing anything.
+Net new queries per week page: **4** - three inside `LeaderboardSnapshot` plus one `getStandingsSnapshot`.
 
 - [ ] **Step 2: Add the imports to the week page**
 
 ```tsx
 import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
-import { WeekLeaderboards } from '@/components/week/WeekLeaderboards';
+import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
 ```
 
 - [ ] **Step 3: Insert the sections**
@@ -632,7 +574,7 @@ Inside the non-future-week fragment, immediately **after** the `<TrackVisibility
           <TrackVisibility section="leaderboards-snapshot" page="week">
             <div className="mt-6">
               <SectionHeading>Leaderboards</SectionHeading>
-              <WeekLeaderboards seasonID={season.seasonID} week={weekNum} />
+              <LeaderboardSnapshot seasonSlug={seasonSlug} week={weekNum} />
             </div>
           </TrackVisibility>
 ```
@@ -673,7 +615,7 @@ Run: `npm run dev`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "src/app/week/[seasonSlug]/[weekNum]/page.tsx" src/components/week/WeekLeaderboards.tsx
+git add "src/app/week/[seasonSlug]/[weekNum]/page.tsx"
 git commit -m "feat(week): add standings and full leaderboards snapshots and next league night"
 ```
 
@@ -780,6 +722,103 @@ Run: `npm run dev`
 ```bash
 git add src/app/blog/page.tsx
 git commit -m "feat(blog): index links recaps straight to their week page"
+```
+
+---
+
+### Task 5 decisions taken during review
+
+**Keep `redirect()` (307), do NOT switch to `permanentRedirect()` (308).** A reviewer recommended 308 on SEO grounds, calling the move final. It is not obviously final: the merge structure was decided in a single conversation and Russ expressed real uncertainty about it. A 308 is cached hard by browsers and cannot be cleared remotely, so a reversal would keep bouncing anyone who visited once. The SEO gain across 9 URLs on a league site does not outweigh that while the structure is new. Revisit after a few weeks of living with it; it is a one-word change.
+
+**Do NOT hoist the redirect above the content fetch.** Saves 9 DB queries per build and would mean restructuring the `notFound` guard the draft-preview branch depends on. Bad trade.
+
+---
+
+### Task 6b: Extract postHref and point every internal link at week pages
+
+Task 6 fixed the blog index, but four other internal link sites still point at `/blog/<slug>` and now bounce through the Task 5 redirect. Two are on the homepage, the highest-traffic page on the site.
+
+That would put the `weekPathForPost(x) ?? \`/blog/${x.slug}\`` expression in 6 places, so extract it first. A reviewer suggested migrating only the 4 new sites and leaving the 2 existing ones on the explicit pattern; that is rejected. Those 2 are on this same unmerged branch, not shipped, and a codebase where 4 call sites use a helper and 2 do not is harder to read than either consistent option.
+
+**Files:**
+- Modify: `src/lib/week-writeup.ts` and `src/lib/week-writeup.test.ts`
+- Modify: `src/app/blog/page.tsx` (migrate the 2 existing sites)
+- Modify: `src/components/home/PromotedBlogCard.tsx`, `src/components/home/RecapSnapshotCard.tsx`, `src/components/blog/BlogPostLayout.tsx`
+
+- [ ] **Step 1: Write the failing test**
+
+Append to `src/lib/week-writeup.test.ts`:
+
+```ts
+describe('postHref', () => {
+  it('sends a recap to its week page', () => {
+    expect(postHref(post())).toBe('/week/fall-2026/3');
+  });
+
+  it('falls back to the blog URL for a post with no week', () => {
+    expect(
+      postHref(post({ type: 'announcement', seasonSlug: undefined, week: undefined, slug: 'some-post' })),
+    ).toBe('/blog/some-post');
+  });
+});
+```
+
+and add `postHref` to the existing import from `./week-writeup`.
+
+- [ ] **Step 2: Run it and confirm it fails**
+
+`npx vitest run src/lib/week-writeup.test.ts` - expect a failure on `postHref` not being exported.
+
+- [ ] **Step 3: Implement**
+
+In `src/lib/week-writeup.ts`:
+
+```ts
+/**
+ * The canonical link for displaying a post: its week page when it has one,
+ * otherwise its own blog URL. Distinct from weekPathForPost, which returns
+ * null so the redirect in /blog/[slug] can decide whether to redirect at all.
+ */
+export function postHref(post: PostMeta): string {
+  return weekPathForPost(post) ?? `/blog/${post.slug}`;
+}
+```
+
+- [ ] **Step 4: Confirm the tests pass**
+
+`npx vitest run src/lib/week-writeup.test.ts` - expect 11 passing.
+
+- [ ] **Step 5: Use it at all six sites**
+
+Add `import { postHref } from '@/lib/week-writeup';` to each file and replace:
+
+```tsx
+// src/app/blog/page.tsx, both the featured card and the list card
+href={postHref(featured)}
+href={postHref(post)}
+
+// src/components/home/PromotedBlogCard.tsx
+href={postHref(post)}
+
+// src/components/home/RecapSnapshotCard.tsx
+href={postHref(post)}
+
+// src/components/blog/BlogPostLayout.tsx, prev and next
+href={postHref(next)}
+href={postHref(prev)}
+```
+
+In `blog/page.tsx` remove the now-unused `weekPathForPost` import if nothing else uses it. In `BlogPostLayout.tsx`, `prev` and `next` are `PostMeta | null` and are already inside null guards - confirm that before wiring.
+
+- [ ] **Step 6: Verify**
+
+`npx tsc --noEmit`, `npm run test` (expect 79 passing), then load the homepage and confirm the promoted card and recap snapshot link to `/week/...`.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/lib/week-writeup.ts src/lib/week-writeup.test.ts src/app/blog/page.tsx src/components/home/PromotedBlogCard.tsx src/components/home/RecapSnapshotCard.tsx src/components/blog/BlogPostLayout.tsx
+git commit -m "feat(blog): extract postHref and point every internal link at week pages"
 ```
 
 ---
