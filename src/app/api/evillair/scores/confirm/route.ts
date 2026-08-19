@@ -8,6 +8,7 @@ import {
   recordMilestones,
   populateFacts,
   bumpCacheAndPublish,
+  recordWeekCompleted,
 } from '@/lib/admin/scores';
 import type { StagedMatch } from '@/lib/admin/types';
 
@@ -63,6 +64,11 @@ export async function POST(request: NextRequest) {
     // 7. Bump cache versions
     await bumpCacheAndPublish(seasonID, week);
 
+    // 8. Move the league's "latest completed week" pointer. Last, so a run that
+    //    fails partway never advances it. This does NOT make anything public;
+    //    the site goes live when it is deployed.
+    const weekPointer = await recordWeekCompleted(seasonID, week);
+
     return NextResponse.json({
       deleted,
       inserted,
@@ -71,6 +77,7 @@ export async function POST(request: NextRequest) {
       patches,
       milestoneCount,
       factCount,
+      weekPointer,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

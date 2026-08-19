@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
+import { nextWeekPointer } from './week-pointer';
 import type { StagedMatch, PersonalBest } from './types';
 
 export type { PersonalBest };
@@ -553,6 +554,64 @@ export async function runPatches(
   );
 
   return awarded;
+}
+
+/**
+ * Move the league's "latest completed week" pointer to this week.
+ *
+ * Runs at the END of the confirm pipeline so a half-finished run never advances
+ * it. Confirm owns this now, not the deploy step: a week is complete when its
+ * scores, match results, patches, milestones and facts are all written, which
+ * has nothing to do with whether the site has been rebuilt yet.
+ */
+export async function recordWeekCompleted(
+  seasonID: number,
+  week: number,
+): Promise<{ seasonID: number; week: number }> {
+  const db = await getDb();
+  const existing = await withRetry(
+    () =>
+      db.request().query<{ settingKey: string; settingValue: string }>(
+        `SELECT settingKey, settingValue FROM leagueSettings
+         WHERE settingKey IN ('publishedWeek', 'publishedSeasonID')`,
+      ),
+    'recordWeekCompleted:read',
+  );
+  const settings = Object.fromEntries(
+    existing.recordset.map((r) => [r.settingKey, r.settingValue]),
+  );
+  const currentWeek = settings.publishedWeek != null ? parseInt(settings.publishedWeek, 10) : NaN;
+  const currentSeason =
+    settings.publishedSeasonID != null ? parseInt(settings.publishedSeasonID, 10) : NaN;
+
+  const next = nextWeekPointer(
+    Number.isNaN(currentWeek)
+      ? null
+      : { seasonID: Number.isNaN(currentSeason) ? null : currentSeason, week: currentWeek },
+    seasonID,
+    week,
+  );
+
+  await withRetry(
+    () =>
+      db
+        .request()
+        .input('val', sql.VarChar(255), String(next.week))
+        .query(`UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedWeek'`),
+    'recordWeekCompleted:week',
+  );
+  await withRetry(
+    () =>
+      db
+        .request()
+        .input('val', sql.VarChar(255), String(next.seasonID))
+        .query(
+          `UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedSeasonID'`,
+        ),
+    'recordWeekCompleted:season',
+  );
+
+  return next;
 }
 
 /**
