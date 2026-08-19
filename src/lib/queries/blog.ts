@@ -360,7 +360,11 @@ export async function getStandingsSnapshot(seasonID: number, week: number): Prom
       .input('seasonID', seasonID).input('week', week)
       .query<import('./seasons').StandingsRow>(STANDINGS_SNAPSHOT_SQL);
     return result.recordset;
-  }, [], { sql: STANDINGS_SNAPSHOT_SQL + params, dependsOn: ['schedule'] });
+  // Season-scoped, not channel-scoped: a week-N snapshot depends only on this
+  // season's data, and the season tag already folds in every channel version for
+  // that season. Channel scoping would invalidate all 325 week pages on any
+  // publish once this query moves onto the week page.
+  }, [], { sql: STANDINGS_SNAPSHOT_SQL + params, seasonID });
 }
 
 // ── Leaderboard Snapshot (through week N) ───────────────────
@@ -443,5 +447,6 @@ export async function getLeaderboardSnapshot(
     if (gender !== null) request.input('gender', gender);
     const result = await request.query<SeasonLeaderEntry>(sql);
     return result.recordset;
-  }, [], { sql: sql + params, dependsOn: ['scores'] });
+  // Season-scoped for the same reason as getStandingsSnapshot above.
+  }, [], { sql: sql + params, seasonID });
 }
