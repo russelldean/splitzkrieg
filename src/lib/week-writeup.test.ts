@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldExpandWriteup, weekPathForPost } from './week-writeup';
+import { shouldExpandWriteup, weekPathForPost, postHref } from './week-writeup';
 import type { PostMeta } from './blog';
 
 const post = (over: Partial<PostMeta> = {}): PostMeta => ({
@@ -59,5 +59,17 @@ describe('weekPathForPost', () => {
 
   it('treats week 0 as a real week', () => {
     expect(weekPathForPost(post({ week: 0 }))).toBe('/week/fall-2026/0');
+  });
+});
+
+describe('postHref', () => {
+  it('sends a recap to its week page', () => {
+    expect(postHref(post())).toBe('/week/fall-2026/3');
+  });
+
+  it('falls back to the blog URL for a post with no week', () => {
+    expect(
+      postHref(post({ type: 'announcement', seasonSlug: undefined, week: undefined, slug: 'some-post' })),
+    ).toBe('/blog/some-post');
   });
 });

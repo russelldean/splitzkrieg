@@ -4,7 +4,7 @@ import { getAllPosts } from '@/lib/blog';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
 import { getSiteUpdates } from '@/lib/queries/updates';
-import { weekPathForPost } from '@/lib/week-writeup';
+import { postHref } from '@/lib/week-writeup';
 
 export const metadata: Metadata = {
   title: 'Blog | Splitzkrieg',
@@ -59,7 +59,7 @@ export default async function BlogPage() {
           <div className="space-y-6">
             {/* Featured latest post */}
             <Link
-              href={weekPathForPost(featured) ?? `/blog/${featured.slug}`}
+              href={postHref(featured)}
               className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md active:scale-[0.98] active:shadow-none transition-all border border-navy/10 hover:border-navy/20"
             >
               {(featured.cardImage || featured.heroImage) ? (
@@ -106,7 +106,7 @@ export default async function BlogPage() {
             {rest.map((post) => (
               <Link
                 key={post.slug}
-                href={weekPathForPost(post) ?? `/blog/${post.slug}`}
+                href={postHref(post)}
                 className="group block bg-white rounded-xl border border-navy/10 shadow-sm hover:shadow-md hover:border-navy/20 active:scale-[0.98] active:shadow-none transition-all overflow-hidden"
               >
                 <div className="p-5 flex items-start gap-4">

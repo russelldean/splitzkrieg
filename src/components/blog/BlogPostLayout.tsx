@@ -4,6 +4,7 @@ import type { SiteUpdateEntry } from '@/lib/queries/updates';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SiteUpdates } from '@/components/resources/SiteUpdates';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
+import { postHref } from '@/lib/week-writeup';
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
@@ -129,7 +130,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
         <nav className="flex flex-col gap-4 sm:flex-row sm:justify-between my-8">
           {next ? (
             <Link
-              href={`/blog/${next.slug}`}
+              href={postHref(next)}
               className="group sm:flex-1 sm:min-w-0"
             >
               <div className="flex items-center gap-3">
@@ -158,7 +159,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
 
           {prev ? (
             <Link
-              href={`/blog/${prev.slug}`}
+              href={postHref(prev)}
               className="group self-end sm:self-auto sm:flex-1 sm:min-w-0"
             >
               <div className="flex items-center gap-3 justify-end">

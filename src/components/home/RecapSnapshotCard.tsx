@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { MiniHeatCheck } from '@/components/season/MiniHeatCheck';
 import type { PostMeta } from '@/lib/blog';
 import type { SeasonSnapshot } from '@/lib/queries';
+import { postHref } from '@/lib/week-writeup';
 
 interface Props {
   post: PostMeta;
@@ -20,7 +21,7 @@ export function RecapSnapshotCard({ post, snapshot, preseason = false }: Props) 
         {/* Left: recap image + link */}
         {image && (
           <Link
-            href={`/blog/${post.slug}`}
+            href={postHref(post)}
             className="relative block md:flex-1 h-40 md:h-auto md:min-h-[180px] overflow-hidden group"
           >
             <Image

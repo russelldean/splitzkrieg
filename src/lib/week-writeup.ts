@@ -28,3 +28,12 @@ export function weekPathForPost(post: PostMeta): string | null {
   if (!post.seasonSlug || post.week == null) return null;
   return `/week/${post.seasonSlug}/${post.week}`;
 }
+
+/**
+ * The canonical link for displaying a post: its week page when it has one,
+ * otherwise its own blog URL. Distinct from weekPathForPost, which returns
+ * null so the redirect in /blog/[slug] can decide whether to redirect at all.
+ */
+export function postHref(post: PostMeta): string {
+  return weekPathForPost(post) ?? `/blog/${post.slug}`;
+}

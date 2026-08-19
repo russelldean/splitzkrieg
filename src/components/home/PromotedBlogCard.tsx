@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { PostMeta } from '@/lib/blog';
+import { postHref } from '@/lib/week-writeup';
 
 interface Props {
   post: PostMeta;
@@ -11,7 +12,7 @@ export function PromotedBlogCard({ post }: Props) {
 
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={postHref(post)}
       className="group block h-full rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
     >
       {/* Mobile: image with overlay text */}
