@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { WeekStatusBoard } from '@/components/admin/WeekStatusBoard';
 
 interface DashboardData {
   season: { seasonID: number; displayName: string } | null;
@@ -292,12 +293,23 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto overflow-x-hidden">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="font-heading text-3xl text-navy mb-1">Dashboard</h1>
         <p className="font-body text-sm text-navy/60">
-          {seasonLabel}, Week {data?.publishedWeek || 0} published
+          {seasonLabel}, week {data?.publishedWeek || 0} complete
         </p>
       </div>
+
+      {/* Where the current week actually stands. Derived, never recorded. */}
+      {data?.season && (
+        <div className="mb-6">
+          <WeekStatusBoard
+            seasonID={data.season.seasonID}
+            week={data.publishedWeek || 1}
+            seasonLabel={seasonLabel}
+          />
+        </div>
+      )}
 
       {/* Pre-Bowling Night */}
       <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden mb-6">
