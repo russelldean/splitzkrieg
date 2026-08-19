@@ -7,7 +7,7 @@ import { MatchResultsSummary } from '@/components/blog/MatchResultsSummary';
 import { StandingsSnapshot } from '@/components/blog/StandingsSnapshot';
 import { WeekRecap } from '@/components/blog/WeekRecap';
 import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
-import { RecapCallout } from '@/components/blog/RecapCallout';
+import { RecapCallout, type CalloutData } from '@/components/blog/RecapCallout';
 
 function toSlug(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-');
@@ -30,18 +30,8 @@ function Team({ children }: { children: ReactNode }) {
  * flat attributes. Lives in the shared map so it works on the week page (inside
  * the collapsible writeup) and on standalone blog posts alike.
  */
-function Callout({
-  headline,
-  description,
-  href,
-  linkText,
-}: {
-  headline: string;
-  description: string;
-  href?: string;
-  linkText?: string;
-}) {
-  return <RecapCallout callout={{ headline, description, href, linkText }} />;
+function Callout(props: CalloutData) {
+  return <RecapCallout callout={props} />;
 }
 
 export const mdxComponents: MDXComponents = {

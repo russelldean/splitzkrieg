@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-interface CalloutData {
+export interface CalloutData {
   headline: string;
   description: string;
   href?: string;
