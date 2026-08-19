@@ -24,14 +24,12 @@ interface Props {
  *
  * Recap bodies end with <WeekRecap ... />, which used to render the condensed
  * stats inside the blog post. The week page renders the real stats itself, so
- * that component is neutralised here rather than edited out of stored content.
+ * that tag now renders nothing: it is registered as a no-op in the shared MDX
+ * component map rather than edited out of every stored recap body.
  */
 export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: Props) {
   const teaser = excerptWorthShowing(excerpt, title);
-  const components = {
-    ...mdxComponents,
-    WeekRecap: () => null,
-  };
+  const components = mdxComponents;
 
   return (
     <details
