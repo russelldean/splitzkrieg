@@ -140,7 +140,8 @@ export async function POST(request: NextRequest) {
       body.blogSlug ||
       `season-${seasonRoman.toLowerCase()}-week-${week}-recap`;
     // Recaps live on the week page now. Fall back to the blog URL if the season
-    // slug cannot be resolved; that path redirects anyway, so the link still works.
+    // slug cannot be resolved. That path redirects to the week page, but only for
+    // a post published with both seasonSlug and week set; a recap always has them.
     const seasonSlug = (await getAllSeasonNavList()).find(
       (s) => s.seasonID === seasonID,
     )?.slug;
