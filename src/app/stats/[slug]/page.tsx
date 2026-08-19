@@ -17,6 +17,7 @@ import {
   getCurrentSeasonSlug,
   getAllSeasonSlugs,
 } from '@/lib/queries';
+import { playoffQualifiers } from '@/lib/leaderboard-cutoff';
 import type { SeasonLeaderEntry } from '@/lib/queries';
 import { SeasonLeaderboards } from '@/components/season/SeasonLeaderboards';
 import { SeasonNav } from '@/components/season/SeasonNav';
@@ -52,18 +53,6 @@ export async function generateMetadata({
     title: `Stats - Season ${season.romanNumeral} | Splitzkrieg`,
     description: `Leaderboards and full stats for ${season.period} ${season.year} (Season ${season.romanNumeral}). Splitzkrieg Bowling League.`,
   };
-}
-
-/** Return IDs of the top 8 entries plus any tied at the 8th value. */
-function playoffQualifiers(entries: SeasonLeaderEntry[]): Set<number> {
-  if (entries.length <= 8) return new Set(entries.map(e => e.bowlerID));
-  const cutoffValue = entries[7].value;
-  const ids = new Set<number>();
-  for (const e of entries) {
-    if (e.value >= cutoffValue) ids.add(e.bowlerID);
-    else break;
-  }
-  return ids;
 }
 
 function buildHcpLeaderboard(
