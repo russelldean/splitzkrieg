@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldExpandWriteup, weekPathForPost, postHref, excerptWorthShowing } from './week-writeup';
+import { shouldExpandWriteup, weekPathForPost, postHref, excerptWorthShowing, draftDestinationForPost } from './week-writeup';
 import type { PostMeta } from './blog';
 
 const post = (over: Partial<PostMeta> = {}): PostMeta => ({
@@ -107,5 +107,52 @@ describe('excerptWorthShowing', () => {
 
   it('drops an excerpt that is a fragment of the title', () => {
     expect(excerptWorthShowing('Week 3 Recap', 'Season XXXVI - Week 3 Recap')).toBe(null);
+  });
+});
+
+describe('draftDestinationForPost', () => {
+  const recap: PostMeta = {
+    title: 'Season XXXVI - Week 3 Recap',
+    date: '2026-08-17',
+    slug: 'season-xxxvi-week-3-recap',
+    excerpt: '',
+    type: 'recap',
+    seasonSlug: 'fall-2026',
+    week: 3,
+  };
+
+  it('sends a week-scoped draft to the admin preview route', () => {
+    expect(draftDestinationForPost(recap)).toBe(
+      '/evillair/preview/week/fall-2026/3?slug=season-xxxvi-week-3-recap'
+    );
+  });
+
+  it('encodes a slug that needs escaping', () => {
+    expect(draftDestinationForPost({ ...recap, slug: 'week 3 & 4' })).toBe(
+      '/evillair/preview/week/fall-2026/3?slug=week%203%20%26%204'
+    );
+  });
+
+  it('sends an announcement to its own blog page', () => {
+    const announcement: PostMeta = {
+      title: "Some lines shouldn't be crossed.",
+      date: '2026-05-01',
+      slug: 'some-lines',
+      excerpt: '',
+      type: 'announcement',
+    };
+    expect(draftDestinationForPost(announcement)).toBe('/blog/some-lines');
+  });
+
+  it('falls back to the blog page when the week is missing', () => {
+    expect(draftDestinationForPost({ ...recap, week: undefined })).toBe(
+      '/blog/season-xxxvi-week-3-recap'
+    );
+  });
+
+  it('falls back to the blog page when the season slug is missing', () => {
+    expect(draftDestinationForPost({ ...recap, seasonSlug: undefined })).toBe(
+      '/blog/season-xxxvi-week-3-recap'
+    );
   });
 });

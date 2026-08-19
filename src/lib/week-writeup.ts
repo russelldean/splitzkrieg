@@ -66,3 +66,20 @@ export function excerptWorthShowing(
   if (!normalized) return null;
   return normalize(title).includes(normalized) ? null : trimmed;
 }
+
+/**
+ * Where the editor's Preview button should land for a given post.
+ *
+ * Week-scoped posts preview on the week page, because that is what readers get
+ * once the post is published. Announcements have no week page, so they keep
+ * previewing on their own blog URL.
+ *
+ * The slug rides along as a query param: the preview route is keyed on season
+ * and week, and looking up "the post for this week" would find the PUBLISHED
+ * one, which is exactly the thing a draft is replacing.
+ */
+export function draftDestinationForPost(post: PostMeta): string {
+  const weekPath = weekPathForPost(post);
+  if (!weekPath) return `/blog/${post.slug}`;
+  return `/evillair/preview${weekPath}?slug=${encodeURIComponent(post.slug)}`;
+}
