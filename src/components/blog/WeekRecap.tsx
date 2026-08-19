@@ -7,8 +7,7 @@
  *   4. Standings (CompactStandingsPreview + ExitRamp)
  *   5. Leaderboards (CompactLeaderboardPreview + ExitRamp)
  *   6. Milestones & Personal Bests (WeekStats records + ExitRamp)
- *   7. DiscoverySection (replaces Keep Exploring)
- *   8. Next League Night
+ *   7. Next League Night
  */
 import {
   getSeasonBySlug,
@@ -22,9 +21,6 @@ import { WeekStats } from '@/components/season/WeekStats';
 import { ExitRamp } from '@/components/tracking/ExitRamp';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { RecapCallout } from '@/components/blog/RecapCallout';
-import { DiscoverySection } from '@/components/blog/DiscoverySection';
-import { getSiteUpdates } from '@/lib/queries/updates';
-import { getDb } from '@/lib/db';
 import { CompactStandingsPreview } from '@/components/blog/CompactStandingsPreview';
 import { CompactLeaderboardPreview } from '@/components/blog/CompactLeaderboardPreview';
 import Link from 'next/link';
@@ -41,32 +37,16 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
   const seasonData = await getSeasonBySlug(seasonSlug);
   if (!seasonData || isNaN(weekNum)) return null;
 
-  const [weekScores, allSchedule, allMatchResults, standings, careerMilestones, siteUpdates, weekMatchDetails] = await Promise.all([
+  const [weekScores, allSchedule, allMatchResults, standings, careerMilestones, weekMatchDetails] = await Promise.all([
     getWeekScores(seasonData.seasonID, weekNum),
     getSeasonSchedule(seasonData.seasonID),
     getSeasonMatchResults(seasonData.seasonID),
     getStandingsSnapshot(seasonData.seasonID, weekNum),
     getWeekCareerMilestones(seasonData.seasonID, weekNum),
-    getSiteUpdates(),
     getMatchResultsSummary(seasonData.seasonID, weekNum),
   ]);
 
   const weekMatchResults = allMatchResults.filter(r => r.week === weekNum);
-
-  // Fetch custom discovery link overrides for this post — no isPublished filter
-  // so draft previews reflect in-progress edits. Posts are unique per (seasonSlug, week).
-  let discoveryOverrides: Array<{ text: string; href: string; description?: string }> | null = null;
-  try {
-    const db = await getDb();
-    const dlResult = await db.request()
-      .input('seasonSlug', seasonSlug)
-      .input('week', weekNum)
-      .query<{ discoveryLinks: string | null }>(`SELECT TOP 1 discoveryLinks FROM blogPosts WHERE seasonSlug = @seasonSlug AND week = @week ORDER BY isPublished DESC, postID DESC`);
-    const raw = dlResult.recordset[0]?.discoveryLinks;
-    if (raw) discoveryOverrides = JSON.parse(raw);
-  } catch (err) {
-    console.warn('WeekRecap: failed to load discoveryLinks', err);
-  }
 
   // Find Cloud 9 matches (one team won all 9 available points)
   const cloud9Matches = weekMatchDetails.filter(r => r.team1TotalPts === 9 || r.team2TotalPts === 9);
@@ -185,11 +165,6 @@ export async function WeekRecap({ season, seasonSlug, week, callout }: WeekRecap
             <ExitRamp href="/milestones" section="milestones" linkText="All milestones and personal bests" />
           </div>
         </div>
-      </TrackVisibility>
-
-      {/* Discover more of the site */}
-      <TrackVisibility section="recap-discovery" page="blog-recap">
-        <DiscoverySection seasonSlug={seasonSlug} updates={siteUpdates} asOfDate={allSchedule.find(s => s.week === weekNum)?.matchDate ?? undefined} overrides={discoveryOverrides} />
       </TrackVisibility>
 
       {/* Next League Night */}
