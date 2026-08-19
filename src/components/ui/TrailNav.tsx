@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getCurrentSeasonSnapshot } from '@/lib/queries';
+import { DESTINATION_LABELS } from '@/lib/nav-labels';
 
 function getTrail(seasonSlug?: string, weekNumber?: number, weekFallbackAnchor?: string, seasonRoman?: string) {
   const s = seasonRoman ? ` ${seasonRoman}` : '';
@@ -10,8 +11,8 @@ function getTrail(seasonSlug?: string, weekNumber?: number, weekFallbackAnchor?:
       : '/week';
   return [
     { label: seasonSlug && weekNumber ? `Week ${weekNumber} Results` : 'Week Results', href: weekHref, key: '/week' },
-    { label: 'Standings & Highlights', href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
-    { label: 'Leaderboards & Stats', href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
+    { label: DESTINATION_LABELS.season, href: seasonSlug ? `/season/${seasonSlug}` : '/seasons', key: '/seasons' },
+    { label: DESTINATION_LABELS.stats, href: seasonSlug ? `/stats/${seasonSlug}` : '/stats', key: '/stats' },
   ];
 }
 

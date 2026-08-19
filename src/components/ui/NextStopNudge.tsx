@@ -2,37 +2,11 @@
 
 import Link from 'next/link';
 import { usePostHog } from 'posthog-js/react';
+import { getNextStop } from '@/lib/nav-labels';
 
 interface NextStopNudgeProps {
   currentPage: 'week' | 'season' | 'stats' | 'milestones';
   seasonSlug?: string;
-}
-
-function getNextStop(currentPage: string, seasonSlug?: string) {
-  const stops: Record<string, { href: string; title: string; description: string }> = {
-    week: {
-      href: seasonSlug ? `/season/${seasonSlug}` : '/seasons',
-      title: 'Season Standings',
-      description: 'See where every team stands after this week',
-    },
-    season: {
-      href: seasonSlug ? `/stats/${seasonSlug}` : '/stats',
-      title: 'Season Leaderboards',
-      description: 'Who leads the averages, high games, and series',
-    },
-    stats: {
-      href: '/milestones',
-      title: 'Milestones',
-      description: 'Career landmarks hit this season',
-    },
-    milestones: {
-      href: '/stats/all-time',
-      title: 'All-Time Records',
-      description: 'The best across 35 seasons of Splitzkrieg',
-    },
-  };
-
-  return stops[currentPage] ?? null;
 }
 
 export function NextStopNudge({ currentPage, seasonSlug }: NextStopNudgeProps) {
