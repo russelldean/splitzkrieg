@@ -1,8 +1,20 @@
 /**
  * POST /api/evillair/publish
- * Publish a week: update leagueSettings, then commit .published-week and
- * .data-versions.json to GitHub via the Git Data API (single commit) which
- * triggers a Vercel deploy automatically.
+ *
+ * Deploy the site with this week's data. Commits .data-versions.json and
+ * .published-week to GitHub via the Git Data API (single commit), which
+ * triggers one Vercel build.
+ *
+ * This is NOT a visibility gate. It used to also set leagueSettings
+ * publishedWeek, which the public site read to decide what to show; the site
+ * now derives that from the scores table and the confirm pipeline owns the
+ * pointer. What is left here is the deploy: bumping cache versions in the repo
+ * so the next build re-queries, and triggering that build.
+ *
+ * The bump has to reach the REPO rather than the filesystem: confirm's
+ * bumpCacheAndPublish writes .data-versions.json locally, and on Vercel that
+ * write silently fails on a read-only filesystem. If you run confirm locally
+ * and push yourself, this route is redundant.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -53,15 +65,7 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb();
 
-    // 1. Update publishedWeek + publishedSeasonID in leagueSettings
-    await db.request()
-      .input('val', sql.VarChar(255), String(week))
-      .query(`UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedWeek'`);
-    await db.request()
-      .input('val', sql.VarChar(255), String(seasonID))
-      .query(`UPDATE leagueSettings SET settingValue = @val WHERE settingKey = 'publishedSeasonID'`);
-
-    // 2. Find which bowlers bowled this week (to bump per-bowler cache versions)
+    // 1. Find which bowlers bowled this week (to bump per-bowler cache versions)
     const bowlerResult = await db.request()
       .input('seasonID', sql.Int, seasonID)
       .input('week', sql.Int, week)
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
       );
     const bowlerIDs = bowlerResult.recordset.map(r => r.bowlerID);
 
-    // 3. Fetch current .data-versions.json from GitHub
+    // 2. Fetch current .data-versions.json from GitHub
     const tag = `s${seasonID}-w${week}`;
     const repo = `repos/${GH_OWNER}/${GH_REPO}`;
 
@@ -79,19 +83,19 @@ export async function POST(request: NextRequest) {
       Buffer.from(dvFile.content as string, 'base64').toString('utf-8')
     );
 
-    // 4. Bump scores channel version for this season (busts season-scoped pages)
+    // 3. Bump scores channel version for this season (busts season-scoped pages)
     if (!versions.scores) versions.scores = {};
     const sKey = String(seasonID);
     versions.scores[sKey] = (versions.scores[sKey] ?? 1) + 1;
 
-    // 5. Bump per-bowler versions (only bowlers who bowled this week)
+    // 4. Bump per-bowler versions (only bowlers who bowled this week)
     if (!versions.bowlers) versions.bowlers = {};
     for (const id of bowlerIDs) {
       const k = String(id);
       versions.bowlers[k] = (versions.bowlers[k] ?? 1) + 1;
     }
 
-    // 6. Commit both files in a single Git commit via the Data API
+    // 5. Commit both files in a single Git commit via the Data API
     //    so only one Vercel deploy fires.
     const refData = await ghFetch(`/${repo}/git/refs/heads/main`);
     const headSha: string = refData.object.sha;
