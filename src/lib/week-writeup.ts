@@ -21,6 +21,10 @@ export function shouldExpandWriteup(
 
 /**
  * The week page a post belongs to, or null if it is not week-scoped.
+ *
+ * Used by the redirect in /blog/[slug] to decide WHETHER to redirect at all.
+ * Do not swap in postHref there: it never returns null, so every post would
+ * redirect, and an announcement would redirect to the URL it is already on.
  * Keyed on seasonSlug + week rather than `type`, because at least one recap
  * (postID 1) carries a custom slug and a title that does not look like a recap.
  */
