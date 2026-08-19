@@ -38,7 +38,7 @@ function LeaderCard({ title, leaders, playoffCutoff, isAvg = false }: { title: s
               }`}
             >
               <span className="truncate mr-2">
-                <span className="text-navy/50 tabular-nums mr-1.5">{i + 1}.</span>
+                <span className="text-navy/60 tabular-nums mr-1.5">{i + 1}.</span>
                 <Link
                   href={`/bowler/${entry.slug}`}
                   className={`text-navy hover:text-red-600 transition-colors ${isTop ? 'font-bold' : ''}`}

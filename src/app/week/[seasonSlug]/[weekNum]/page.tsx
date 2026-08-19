@@ -100,16 +100,13 @@ export default async function WeekPage({
   const season = await getSeasonBySlug(seasonSlug);
   if (!season || isNaN(weekNum)) notFound();
 
-  const [weekScores, scoreWeeks, allSchedule, allMatchResults, allSeasons, playoffRounds, weekStandings] = await Promise.all([
+  const [weekScores, scoreWeeks, allSchedule, allMatchResults, allSeasons, playoffRounds] = await Promise.all([
     getWeekScores(season.seasonID, weekNum),
     getSeasonWeekNumbers(season.seasonID),
     getSeasonSchedule(season.seasonID),
     getSeasonMatchResults(season.seasonID),
     getAllSeasonNavList(),
     getSeasonsWithPlayoffData(),
-    // Standings frozen as of this week (NOT current/cumulative getSeasonStandings,
-    // which has no week param and would show the same totals on every week page).
-    getStandingsSnapshot(season.seasonID, weekNum),
   ]);
   const hasPlayoffR1 = playoffRounds.some(p => p.seasonID === season.seasonID && p.round === 1);
 
@@ -151,6 +148,11 @@ export default async function WeekPage({
 
   // Fetch career milestones achieved this week (e.g., 50,000 career pins)
   const careerMilestones = isFutureWeek ? [] : await getWeekCareerMilestones(season.seasonID, weekNum);
+
+  // Standings frozen as of this week (NOT current/cumulative getSeasonStandings, which
+  // has no week param). Only rendered in the non-future branch below, so gated the same
+  // way as the neighbouring conditional fetches on this page.
+  const weekStandings = isFutureWeek ? [] : await getStandingsSnapshot(season.seasonID, weekNum);
 
   // Fetch H2H summaries and standings for future week matchups
   const [h2hSummaries, standings] = isFutureWeek
