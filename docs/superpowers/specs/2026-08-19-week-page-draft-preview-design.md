@@ -66,10 +66,20 @@ call to `<WeekPage seasonSlug weekNum />` with no `draftPost`. It never reads
 
 ### 2. Admin preview route
 
-New `src/app/evillair/(dashboard)/preview/week/[seasonSlug]/[weekNum]/page.tsx`
-with `export const dynamic = 'force-dynamic'`. It inherits admin auth from the
-existing `(dashboard)/layout.tsx`, which verifies the cookie token and redirects
-to `/evillair/login` otherwise, so no separate auth check is needed.
+New `src/app/evillair/preview/week/[seasonSlug]/[weekNum]/page.tsx` with
+`export const dynamic = 'force-dynamic'`.
+
+It sits OUTSIDE the `(dashboard)` route group on purpose. That group's layout
+wraps every child in `<AdminShell>`, the admin nav chrome, and a preview wearing
+admin chrome is not a preview of what readers see. Route groups do not affect
+URLs, so the path is `/evillair/preview/week/...` either way; the only thing
+being avoided is the layout.
+
+The cost of leaving the group is losing its auth. So the token check moves into
+a shared `requireAdminOrWriterPage()` in `src/lib/admin/auth.ts`, used by both
+`(dashboard)/layout.tsx` and this route. It reads the `admin-token` cookie,
+verifies it, and redirects to `/evillair/login` for a missing or non-admin
+token, exactly as the layout does today.
 
 It loads the post with `getBlogPostBySlug` (no `isPublished` filter) and renders
 `<WeekPage seasonSlug weekNum draftPost={...} />`.
