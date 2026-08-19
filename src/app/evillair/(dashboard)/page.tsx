@@ -23,14 +23,6 @@ const PRE_NIGHT_STEPS = [
   { key: 'print', label: 'Scoresheets', page: '/evillair/scoresheets' },
 ];
 
-const POST_NIGHT_STEPS = [
-  { key: 'pull', label: 'Pull', page: '/evillair/scores' },
-  { key: 'review', label: 'Review', page: '/evillair/scores' },
-  { key: 'confirm', label: 'Confirm', page: '/evillair/scores' },
-  { key: 'blog', label: 'Recap', page: '/evillair/blog' },
-  { key: 'publish', label: 'Publish', page: '' },
-  { key: 'email', label: 'Email', page: '' },
-];
 
 /* Shared pipeline renderer with clickable toggleable steps */
 function Pipeline({
@@ -289,7 +281,6 @@ export default function AdminDashboardPage() {
     : 0;
 
   const preNightDone = new Set(data?.preNightDone ?? []);
-  const postNightDone = new Set(data?.postNightDone ?? []);
 
   return (
     <div className="max-w-5xl mx-auto overflow-x-hidden">
@@ -405,12 +396,6 @@ export default function AdminDashboardPage() {
           <p className="font-body text-xs text-navy/40 mt-0.5">Week {nextWeek} results</p>
         </div>
         <div className="p-5">
-          <Pipeline
-            steps={POST_NIGHT_STEPS}
-            doneKeys={postNightDone}
-            onToggle={(key) => toggleStep('post', key)}
-          />
-
           {/* Action buttons */}
           <div className="flex flex-wrap gap-3 mb-3">
             <button
@@ -419,11 +404,11 @@ export default function AdminDashboardPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
             >
               <PublishIcon className="w-4 h-4" />
-              {publishLoading ? 'Publishing...' : `Publish Week ${nextWeek}`}
+              {publishLoading ? 'Deploying...' : `Deploy Week ${nextWeek}`}
             </button>
             <button
               onClick={handleEmail}
-              disabled={emailLoading || !data?.publishedWeek}
+              disabled={emailLoading}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-navy/20 font-body text-xs text-navy hover:bg-navy/5 transition-colors disabled:opacity-50"
             >
               <EmailIcon className="w-4 h-4" />

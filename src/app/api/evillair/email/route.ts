@@ -6,7 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import sql from 'mssql';
 import { requireAdmin } from '@/lib/admin/auth';
+import { getDb } from '@/lib/db';
 import { getAllSeasonNavList } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
@@ -180,6 +182,28 @@ export async function POST(request: NextRequest) {
       errors.push(
         sendErr instanceof Error ? sendErr.message : 'Unknown send error',
       );
+    }
+
+    // Record the send so the weekly board can DERIVE that the email went out
+    // rather than relying on a checkbox. Only on success, and never fatal: a
+    // logging failure must not report a sent email as failed.
+    if (sent > 0) {
+      try {
+        const db = await getDb();
+        await db
+          .request()
+          .input('key', sql.VarChar(50), `emailSent-s${seasonID}-w${week}`)
+          .input('value', sql.VarChar(255), new Date().toISOString())
+          .query(`
+            MERGE leagueSettings AS target
+            USING (SELECT @key AS settingKey) AS source
+            ON target.settingKey = source.settingKey
+            WHEN MATCHED THEN UPDATE SET settingValue = @value
+            WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
+          `);
+      } catch (logErr) {
+        console.error('[EMAIL_LOG] send succeeded but recording it failed:', logErr);
+      }
     }
 
     return NextResponse.json({ sent, errors });

@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
             heroImage: string | null;
             // LEN() comes back as a string over tedious, so coerce below.
             writeupChars: number | string | null;
+            emailSentAt: string | null;
           }>(`
             SELECT
               (SELECT COUNT(*) FROM scores
@@ -96,7 +97,9 @@ export async function GET(request: NextRequest) {
                  WHERE week = @week
                    AND (seasonID = @seasonID
                         OR seasonRomanNumeral = (SELECT romanNumeral FROM seasons
-                                                   WHERE seasonID = @seasonID)))     AS writeupChars
+                                                   WHERE seasonID = @seasonID)))     AS writeupChars,
+              (SELECT TOP 1 settingValue FROM leagueSettings
+                 WHERE settingKey = CONCAT('emailSent-s', @seasonID, '-w', @week)) AS emailSentAt
           `),
       'week-status',
     );
@@ -111,6 +114,7 @@ export async function GET(request: NextRequest) {
       facts: row?.facts ?? 0,
       heroImage: row?.heroImage ?? null,
       writeupChars: Number(row?.writeupChars ?? 0) || 0,
+      emailSentAt: row?.emailSentAt ?? null,
       commitsAhead: await commitsAhead(),
     };
 

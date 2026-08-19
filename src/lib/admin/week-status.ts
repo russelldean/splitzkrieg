@@ -31,6 +31,8 @@ export interface WeekCounts {
   writeupChars: number;
   /** Commits on main not yet pushed. Null when there is no working tree. */
   commitsAhead: number | null;
+  /** ISO timestamp recorded when the weekly email went out, else null. */
+  emailSentAt: string | null;
 }
 
 export interface WeekStatusStep {
@@ -116,5 +118,15 @@ export function deriveWeekStatus(counts: WeekCounts): WeekStatusStep[] {
       detail: counts.writeupChars > 0 ? `${counts.writeupChars} characters` : 'none written',
     },
     { key: 'deploy', label: 'Deployed', state: deployState, detail: deployDetail },
+    {
+      key: 'email',
+      label: 'Email sent',
+      // Recorded by the email route on a successful send, so this is derived
+      // like everything else rather than being the one row you tick yourself.
+      state: counts.emailSentAt ? 'done' : 'pending',
+      detail: counts.emailSentAt
+        ? new Date(counts.emailSentAt).toLocaleString('en-US', { timeZone: 'America/New_York' })
+        : 'not sent yet',
+    },
   ];
 }
