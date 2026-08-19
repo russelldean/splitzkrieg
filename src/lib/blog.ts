@@ -18,6 +18,12 @@ export interface PostMeta {
   cardFocalY?: number;
 }
 
+/** A post plus its body, used to render a draft INSTEAD of the published post. */
+export interface DraftPostOverride {
+  meta: PostMeta;
+  content: string;
+}
+
 /**
  * Get all published blog posts, sorted by date descending (newest first).
  * Now reads from DB instead of filesystem.
@@ -119,7 +125,7 @@ export async function getPostContentForWeek(
  */
 export async function getDraftPostBySlug(
   slug: string,
-): Promise<{ meta: PostMeta; content: string } | null> {
+): Promise<DraftPostOverride | null> {
   const post = await getBlogPostBySlug(slug);
   if (!post || !post.content) return null;
   return {

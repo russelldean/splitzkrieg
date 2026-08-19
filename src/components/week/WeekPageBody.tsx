@@ -25,26 +25,19 @@ import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { toDateKey } from '@/lib/week-utils';
-import { getPostForWeek, getPostContentForWeek } from '@/lib/blog';
-import type { PostMeta } from '@/lib/blog';
+import { getPostForWeek, getPostContentForWeek, type DraftPostOverride, type PostMeta } from '@/lib/blog';
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { WeekWriteup } from '@/components/week/WeekWriteup';
 import { shouldExpandWriteup } from '@/lib/week-writeup';
-
-/** A draft post to render INSTEAD of the published post for this week. */
-export interface DraftPostOverride {
-  meta: PostMeta;
-  content: string;
-}
 
 /**
  * Everything the week page renders.
  *
  * Lives here rather than in the route so two routes can render it: the public
  * week page (static, published data) and the admin draft preview (dynamic,
- * unpublished data). The public route must never read draftMode(), which is a
- * dynamic API and would deopt all ~325 week pages to per-request rendering.
+ * unpublished data). The public route must never read Next's draft mode API,
+ * which is dynamic and would deopt all ~325 week pages to per-request rendering.
  */
 export async function WeekPageBody({
   seasonSlug,
@@ -127,15 +120,21 @@ export async function WeekPageBody({
   const prevWeek = weekIdx > 0 ? sortedWeeks[weekIdx - 1] : null;
   const nextWeek = weekIdx < sortedWeeks.length - 1 ? sortedWeeks[weekIdx + 1] : null;
 
-  // Check for blog post cross-link
   // A draft override replaces the published post entirely, so the preview shows
   // the draft's hero image and writeup rather than whatever is already live.
-  const blogPost = draftPost?.meta ?? await getPostForWeek(season.romanNumeral, weekNum);
-  const writeupContent = draftPost
-    ? draftPost.content
-    : blogPost
+  // Both values come from one branch, so a draft can never pair its own meta
+  // with the published writeup, and the draft path issues no blog query at all.
+  let blogPost: PostMeta | undefined;
+  let writeupContent: string | undefined;
+  if (draftPost) {
+    blogPost = draftPost.meta;
+    writeupContent = draftPost.content;
+  } else {
+    blogPost = await getPostForWeek(season.romanNumeral, weekNum);
+    writeupContent = blogPost
       ? await getPostContentForWeek(season.romanNumeral, weekNum)
       : undefined;
+  }
   const currentSeasonSlug = await getCurrentSeasonSlug();
 
   // Cross-season prev/next: if at first/last week, link to adjacent season

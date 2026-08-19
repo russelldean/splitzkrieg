@@ -1,8 +1,14 @@
 /**
- * Individual week detail page.
- * Shows full matchup scores, box scores, and week stats.
- * Only the current season's weeks are pre-rendered at build time; historical
- * weeks render on demand (dynamicParams = true), with prev/next week navigation.
+ * Public route for an individual week.
+ *
+ * This file owns only the prerender contract: which weeks are built ahead of
+ * time and the page metadata. By default just the current season's weeks are
+ * pre-rendered, and historical weeks render on demand (dynamicParams = true);
+ * BUILD_ALL=1 pre-renders every season's weeks instead.
+ *
+ * Everything the page actually renders lives in WeekPageBody, which the admin
+ * draft preview route also renders. Keep this route free of dynamic APIs: one
+ * would deopt all ~325 week pages to per-request rendering.
  */
 import type { Metadata } from 'next';
 import {
