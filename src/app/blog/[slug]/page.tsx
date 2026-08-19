@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { draftMode } from 'next/headers';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent } from '@/lib/blog';
+import { weekPathForPost } from '@/lib/week-writeup';
 import { getBlogPostBySlug } from '@/lib/admin/blog-db';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
 import { mdxComponents } from '@/lib/mdx-components';
@@ -80,6 +81,12 @@ export default async function BlogPostPage({
   }
 
   if (!meta || !content) notFound();
+
+  // Weekly recaps now live on the week page. Old /blog/<slug> links are in every
+  // weekly email ever sent, so they must keep resolving.
+  // Draft previews are exempt: Russ needs to proof an unpublished recap in place.
+  const weekPath = weekPathForPost(meta);
+  if (weekPath && !isDraft) redirect(weekPath);
 
   const [{ prev, next }, siteUpdates] = await Promise.all([
     getAdjacentPosts(slug),
