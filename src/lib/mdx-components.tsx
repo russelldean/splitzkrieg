@@ -7,6 +7,7 @@ import { MatchResultsSummary } from '@/components/blog/MatchResultsSummary';
 import { StandingsSnapshot } from '@/components/blog/StandingsSnapshot';
 import { WeekRecap } from '@/components/blog/WeekRecap';
 import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
+import { RecapCallout } from '@/components/blog/RecapCallout';
 
 function toSlug(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-');
@@ -20,6 +21,27 @@ function Bowler({ children }: { children: ReactNode }) {
 function Team({ children }: { children: ReactNode }) {
   const name = typeof children === 'string' ? children : String(children);
   return <Link href={`/team/${toSlug(name)}`} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
+}
+
+/**
+ * Feature callout, written directly in a post body:
+ *   <Callout headline="..." description="..." href="/x" linkText="Take a look" />
+ * Wraps RecapCallout, which takes a single `callout` object, so MDX can pass
+ * flat attributes. Lives in the shared map so it works on the week page (inside
+ * the collapsible writeup) and on standalone blog posts alike.
+ */
+function Callout({
+  headline,
+  description,
+  href,
+  linkText,
+}: {
+  headline: string;
+  description: string;
+  href?: string;
+  linkText?: string;
+}) {
+  return <RecapCallout callout={{ headline, description, href, linkText }} />;
 }
 
 export const mdxComponents: MDXComponents = {
@@ -46,4 +68,5 @@ export const mdxComponents: MDXComponents = {
   LeaderboardSnapshot,
   Bowler,
   Team,
+  Callout,
 } as MDXComponents;
