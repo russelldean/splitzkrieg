@@ -8,14 +8,21 @@ interface TrackVisibilityProps {
   page: string;
   children: React.ReactNode;
   className?: string;
+  /**
+   * Set false to render the same markup but capture nothing. Used by the admin
+   * draft preview, which reuses the real page body and would otherwise inflate
+   * the section-engagement baseline every time Russ proofreads a recap.
+   */
+  enabled?: boolean;
 }
 
-export function TrackVisibility({ section, page, children, className }: TrackVisibilityProps) {
+export function TrackVisibility({ section, page, children, className, enabled = true }: TrackVisibilityProps) {
   const ref = useRef<HTMLDivElement>(null);
   const tracked = useRef<boolean>(false);
   const posthog = usePostHog();
 
   useEffect(() => {
+    if (!enabled) return;
     const el = ref.current;
     if (!el || tracked.current) return;
 
@@ -37,7 +44,7 @@ export function TrackVisibility({ section, page, children, className }: TrackVis
     return () => {
       observer.disconnect();
     };
-  }, [section, page, posthog]);
+  }, [section, page, posthog, enabled]);
 
   return (
     <div ref={ref} className={className}>

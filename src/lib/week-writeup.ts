@@ -85,3 +85,21 @@ export function draftDestinationForPost(post: PostMeta): string {
   if (!weekPath) return postHref(post);
   return `/evillair/preview${weekPath}?slug=${encodeURIComponent(post.slug)}`;
 }
+
+/**
+ * Does this draft actually belong to the week the preview route is rendering?
+ *
+ * The preview takes its season and week from the path but its post from ?slug=,
+ * so nothing otherwise ties the two together. A wrong or stale slug would render
+ * one week's scores, standings and match results underneath another week's
+ * writeup and hero image, and it would look entirely correct. A post missing
+ * either field is false: an announcement has no week page to preview on.
+ */
+export function draftMatchesWeek(
+  meta: PostMeta,
+  seasonSlug: string,
+  weekNum: number,
+): boolean {
+  if (!meta.seasonSlug || meta.week == null) return false;
+  return meta.seasonSlug === seasonSlug && meta.week === weekNum;
+}

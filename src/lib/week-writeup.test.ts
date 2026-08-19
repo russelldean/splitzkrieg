@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldExpandWriteup, weekPathForPost, postHref, excerptWorthShowing, draftDestinationForPost } from './week-writeup';
+import { shouldExpandWriteup, weekPathForPost, postHref, excerptWorthShowing, draftDestinationForPost, draftMatchesWeek } from './week-writeup';
 import type { PostMeta } from './blog';
 
 const post = (over: Partial<PostMeta> = {}): PostMeta => ({
@@ -141,5 +141,41 @@ describe('draftDestinationForPost', () => {
     expect(draftDestinationForPost(post({ seasonSlug: undefined }))).toBe(
       '/blog/season-xxxvi-week-3-recap'
     );
+  });
+});
+
+describe('draftMatchesWeek', () => {
+  it('accepts a draft whose own season and week match the route', () => {
+    expect(draftMatchesWeek(post(), 'fall-2026', 3)).toBe(true);
+  });
+
+  it('rejects a draft written for a different week', () => {
+    expect(draftMatchesWeek(post(), 'fall-2026', 4)).toBe(false);
+  });
+
+  it('rejects a draft written for a different season', () => {
+    expect(draftMatchesWeek(post(), 'spring-2026', 3)).toBe(false);
+  });
+
+  it('rejects a post with no week, because it has no week page to preview on', () => {
+    expect(draftMatchesWeek(post({ week: undefined }), 'fall-2026', 3)).toBe(false);
+  });
+
+  it('rejects a post with no season slug', () => {
+    expect(draftMatchesWeek(post({ seasonSlug: undefined }), 'fall-2026', 3)).toBe(false);
+  });
+
+  it('accepts week 0, which is a real week rather than a missing one', () => {
+    expect(draftMatchesWeek(post({ week: 0 }), 'fall-2026', 0)).toBe(true);
+  });
+
+  it('rejects an announcement outright', () => {
+    expect(
+      draftMatchesWeek(
+        post({ type: 'announcement', season: undefined, seasonSlug: undefined, week: undefined }),
+        'fall-2026',
+        3,
+      ),
+    ).toBe(false);
   });
 });

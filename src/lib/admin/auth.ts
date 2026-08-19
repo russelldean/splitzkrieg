@@ -4,6 +4,8 @@
  */
 
 import { SignJWT, jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { NextRequest } from 'next/server';
 import type { TokenPayload } from './types';
 
@@ -75,6 +77,26 @@ export async function requireAdminOrWriter(
   const payload = await verifyToken(token);
   if (!payload || (payload.role !== 'admin' && payload.role !== 'writer')) {
     throw new Error('Not authorized');
+  }
+
+  return payload;
+}
+
+/**
+ * Require an authenticated admin or writer for a PAGE (not an API route).
+ *
+ * The API guards above take a NextRequest; a server component has to read
+ * cookies() instead. Shared so a page outside the (dashboard) route group can
+ * be gated without inheriting that group's AdminShell chrome.
+ */
+export async function requireAdminOrWriterPage(): Promise<TokenPayload> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin-token')?.value;
+  if (!token) redirect('/evillair/login');
+
+  const payload = await verifyToken(token);
+  if (!payload || (payload.role !== 'admin' && payload.role !== 'writer')) {
+    redirect('/evillair/login');
   }
 
   return payload;
