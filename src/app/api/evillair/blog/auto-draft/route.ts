@@ -74,13 +74,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build draft content using the WeekRecap component (same as existing blog)
+    // Draft body is prose only. The week's stats render on the week page itself
+    // now, so embedding <WeekRecap /> here would show a block in draft preview
+    // that never appears once published: the published post redirects to
+    // /week/<seasonSlug>/<week>, where that component is deliberately a no-op.
     const title = `Season ${romanNumeral} - Week ${week} Recap`;
     const slug = `season-${romanNumeral.toLowerCase()}-week-${week}-recap`;
 
-    const content = `{/* Write your recap here */}
-
-<WeekRecap season="${romanNumeral}" seasonSlug="${seasonSlug}" week="${week}" />
+    const content = `{/* Write your recap here. The week's results, standings,
+    leaderboards and milestones render automatically at /week/${seasonSlug}/${week}
+    - you do not need to embed anything for them. */}
 `;
 
     return NextResponse.json({
