@@ -2,24 +2,21 @@
 
 import { useEffect, useRef } from 'react';
 import { usePostHog } from 'posthog-js/react';
+import { useTrackingEnabled } from './TrackingScope';
 
 interface TrackVisibilityProps {
   section: string;
   page: string;
   children: React.ReactNode;
   className?: string;
-  /**
-   * Set false to render the same markup but capture nothing. Used by the admin
-   * draft preview, which reuses the real page body and would otherwise inflate
-   * the section-engagement baseline every time Russ proofreads a recap.
-   */
-  enabled?: boolean;
 }
 
-export function TrackVisibility({ section, page, children, className, enabled = true }: TrackVisibilityProps) {
+export function TrackVisibility({ section, page, children, className }: TrackVisibilityProps) {
   const ref = useRef<HTMLDivElement>(null);
   const tracked = useRef<boolean>(false);
   const posthog = usePostHog();
+  // Off inside the admin draft preview. See TrackingScope.
+  const enabled = useTrackingEnabled();
 
   useEffect(() => {
     if (!enabled) return;

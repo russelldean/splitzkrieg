@@ -92,14 +92,22 @@ export function draftDestinationForPost(post: PostMeta): string {
  * The preview takes its season and week from the path but its post from ?slug=,
  * so nothing otherwise ties the two together. A wrong or stale slug would render
  * one week's scores, standings and match results underneath another week's
- * writeup and hero image, and it would look entirely correct. A post missing
- * either field is false: an announcement has no week page to preview on.
+ * writeup and hero image, and it would look entirely correct.
+ *
+ * Answered by asking weekPathForPost where the post belongs and comparing that
+ * to where we are, rather than re-testing seasonSlug and week here. Those two
+ * fields are the same keying the preview LINK is built from, and a validator
+ * that reimplemented the rule could drift from the builder, at which point
+ * every preview 404s. A post with no week page at all yields null and so is
+ * false: an announcement has no week page to preview on.
+ *
+ * Keyed on the fields, deliberately NOT on `type`. A week-tagged announcement
+ * has a week page and previews on it.
  */
 export function draftMatchesWeek(
-  meta: PostMeta,
+  post: PostMeta,
   seasonSlug: string,
   weekNum: number,
 ): boolean {
-  if (!meta.seasonSlug || meta.week == null) return false;
-  return meta.seasonSlug === seasonSlug && meta.week === weekNum;
+  return weekPathForPost(post) === `/week/${seasonSlug}/${weekNum}`;
 }

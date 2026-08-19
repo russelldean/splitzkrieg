@@ -1,4 +1,4 @@
-import { requireAdminOrWriterPage } from '@/lib/admin/auth';
+import { requireAdminOrWriterPage } from '@/lib/admin/auth-page';
 import { AdminShell } from '../AdminShell';
 
 export const dynamic = 'force-dynamic';

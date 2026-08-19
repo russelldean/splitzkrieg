@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePostHog } from 'posthog-js/react';
 import { getNextStop } from '@/lib/nav-labels';
+import { useTrackingEnabled } from '@/components/tracking/TrackingScope';
 
 interface NextStopNudgeProps {
   currentPage: 'week' | 'season' | 'stats' | 'milestones';
@@ -11,11 +12,15 @@ interface NextStopNudgeProps {
 
 export function NextStopNudge({ currentPage, seasonSlug }: NextStopNudgeProps) {
   const posthog = usePostHog();
+  // Off inside the admin draft preview. currentPage is hardcoded per call site,
+  // so a preview click would otherwise be indistinguishable from a reader's.
+  const trackingEnabled = useTrackingEnabled();
   const nextStop = getNextStop(currentPage, seasonSlug);
 
   if (!nextStop) return null;
 
   function handleClick() {
+    if (!trackingEnabled) return;
     posthog.capture('next_stop_clicked', {
       current_page: currentPage,
       destination: nextStop!.href,

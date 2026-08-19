@@ -169,7 +169,13 @@ describe('draftMatchesWeek', () => {
     expect(draftMatchesWeek(post({ week: 0 }), 'fall-2026', 0)).toBe(true);
   });
 
-  it('rejects an announcement outright', () => {
+  it('accepts a week-tagged announcement, because it keys on the fields and not on type', () => {
+    // Deliberate: an announcement carrying a season and week has a week page,
+    // so it previews on it. Do not "fix" this by adding a type === 'recap' check.
+    expect(draftMatchesWeek(post({ type: 'announcement' }), 'fall-2026', 3)).toBe(true);
+  });
+
+  it('rejects an announcement with no season or week', () => {
     expect(
       draftMatchesWeek(
         post({ type: 'announcement', season: undefined, seasonSlug: undefined, week: undefined }),

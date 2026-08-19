@@ -43,17 +43,10 @@ export async function WeekPageBody({
   seasonSlug,
   weekNum,
   draftPost,
-  trackingEnabled = true,
 }: {
   seasonSlug: string;
   weekNum: number;
   draftPost?: DraftPostOverride;
-  /**
-   * Looks unused because only the admin draft preview passes it. Do not delete:
-   * without it, every proofread of a draft fires the same section_viewed events
-   * the live site is measured by, polluting the engagement baseline.
-   */
-  trackingEnabled?: boolean;
 }) {
   const season = await getSeasonBySlug(seasonSlug);
   if (!season || isNaN(weekNum)) notFound();
@@ -265,14 +258,14 @@ export async function WeekPageBody({
       ) : (
         <>
           {/* Bowler & Team of the Week, top-level awards */}
-          <TrackVisibility section="awards" page="week" enabled={trackingEnabled}>
+          <TrackVisibility section="awards" page="week">
             <div className="mb-6">
               <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['awards']} bare />
             </div>
           </TrackVisibility>
 
           {/* Match Results */}
-          <TrackVisibility section="match-results" page="week" enabled={trackingEnabled}>
+          <TrackVisibility section="match-results" page="week">
             <SectionHeading>Match Results</SectionHeading>
 
             {/* Match cards, click to expand individual match details */}
@@ -285,19 +278,19 @@ export async function WeekPageBody({
           </TrackVisibility>
 
           {/* XP Rankings, below match details */}
-          <TrackVisibility section="xp-rankings" page="week" enabled={trackingEnabled}>
+          <TrackVisibility section="xp-rankings" page="week">
             <div className="mt-6">
               <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} only={['xp']} bare />
             </div>
           </TrackVisibility>
 
           {/* Weekly Highlights, starts with Milestones & Personal Bests */}
-          <TrackVisibility section="highlights" page="week" enabled={trackingEnabled}>
+          <TrackVisibility section="highlights" page="week">
             <WeekStats weekScores={weekScores} matchResults={weekMatchResults} careerMilestones={careerMilestones} exclude={['awards', 'xp']} />
           </TrackVisibility>
 
           {/* Standings as of this week */}
-          <TrackVisibility section="standings-snapshot" page="week" enabled={trackingEnabled}>
+          <TrackVisibility section="standings-snapshot" page="week">
             <div className="mt-6">
               <SectionHeading>Standings</SectionHeading>
               <p className="font-body text-sm text-navy/65 mb-2">
@@ -308,7 +301,7 @@ export async function WeekPageBody({
           </TrackVisibility>
 
           {/* Leaderboards as of this week */}
-          <TrackVisibility section="leaderboards-snapshot" page="week" enabled={trackingEnabled}>
+          <TrackVisibility section="leaderboards-snapshot" page="week">
             <div className="mt-6">
               <SectionHeading>Leaderboards</SectionHeading>
               <LeaderboardSnapshot seasonSlug={seasonSlug} week={weekNum} />
