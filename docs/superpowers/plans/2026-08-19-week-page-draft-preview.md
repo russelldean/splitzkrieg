@@ -339,11 +339,17 @@ Expected: all tests pass.
 
 With `npm run dev` running:
 
-```bash
-curl -s http://localhost:3000/week/fall-2026/3 | grep -c 'Leaderboards'
-```
+WARNING: do NOT compare pages with `sed 's/<script[^>]*>.*<\/script>//g'`. That
+pattern is greedy on a single-line document, so it deletes everything from the
+FIRST `<script>` to the LAST `</script>`, and where that window falls shifts with
+React's Suspense streaming boundaries. It reports differences between two runs of
+IDENTICAL code. To compare rendered output before and after a refactor, capture
+the raw HTML, `git stash` the change, capture a true baseline from the same dev
+server, `git stash pop`, then strip script blocks NON-greedily and remove React
+streaming scaffolding (`<!--$-->`, `<!--/$-->`, `<template id="P:N">`,
+`<div hidden id="S:N">`) from both before diffing.
 
-Expected: at least 1. Also confirm HTTP 200 for weeks 1, 2, and 3:
+Confirm HTTP 200 for weeks 1, 2, and 3:
 
 ```bash
 for w in 1 2 3; do curl -s -o /dev/null -w "week $w: %{http_code}\n" "http://localhost:3000/week/fall-2026/$w"; done
@@ -354,10 +360,14 @@ Expected: `200` for all three.
 - [ ] **Step 6: Confirm the public route stays static-safe**
 
 ```bash
+grep -rn "next/headers" 'src/app/week/[seasonSlug]/[weekNum]/page.tsx' src/components/week/WeekPageBody.tsx
 grep -rn "draftMode" 'src/app/week/[seasonSlug]/[weekNum]/page.tsx' src/components/week/WeekPageBody.tsx
 ```
 
-Expected: NO output. Any hit is a build-model regression and must be removed.
+Expected: NO output from either. Any hit is a build-model regression and must be
+removed. Note the doc comment in `WeekPageBody.tsx` must therefore NOT contain
+the literal token `draftMode`; word it as "Next's draft mode API" so this guard
+stays free of false positives.
 
 - [ ] **Step 7: Commit**
 
@@ -459,6 +469,24 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" http://localhost:300
 ```
 
 Expected: a 307 or 308 to `/evillair/login`. A `200` means the guard broke and you must stop and fix it before continuing.
+
+**Two requirements added after the Task 3 quality review. Both are mandatory.**
+
+**A. The draft must match the week in the URL.** Season and week come from the
+path, the draft comes from `?slug=`. Nothing currently ties them together, so a
+wrong or stale slug renders one week's scores, standings, and match results
+underneath another week's writeup and hero image, with no visible signal that
+anything is wrong. A preview that looks correct while being wrong is the exact
+failure this whole change exists to remove. The route MUST compare the draft's
+own week and season against its params and `notFound()` on a mismatch.
+
+**B. The preview must not pollute analytics.** `WeekPageBody` contains six
+`TrackVisibility` wrappers that fire `section_viewed` with `page: 'week'` into
+PostHog. Reusing the body means every proofread inflates the same
+section-engagement baseline the site is measured against. The preview route MUST
+render with tracking suppressed. Check how `TrackVisibility`
+(`src/components/tracking/TrackVisibility.tsx`) decides to capture and pick the
+least invasive suppression that does not alter the public page's behavior.
 
 - [ ] **Step 4: Create the preview route**
 
@@ -705,10 +733,11 @@ Expected: all tests pass, all pre-push checks pass, no type errors.
 - [ ] **Step 2: Confirm the static invariant holds**
 
 ```bash
+grep -rn "next/headers" src/app/week/ src/components/week/
 grep -rn "draftMode" src/app/week/ src/components/week/
 ```
 
-Expected: NO output.
+Expected: NO output from either.
 
 - [ ] **Step 3: Manual check (requires Russ, admin login needed)**
 
@@ -727,6 +756,27 @@ Agents cannot log in; do not attempt to type the admin password.
 The preview flow changed and `/blog/<slug>` draft behavior changed. Both are user-visible to the admin.
 
 ---
+
+## Follow-ups recorded, do NOT do these during this plan
+
+From the Task 3 quality review, all deliberately deferred so the mechanical move
+stayed easy to verify:
+
+- `WeekPageBody` mixes altitudes: roughly its first 90 lines are fetch and derive,
+  the rest is markup. Sibling routes (`team/[slug]`, `bowler/[slug]`) push
+  aggregation into `src/lib/views/`. A `getWeekPageView()` in
+  `src/lib/views/week-page.ts` would match that pattern.
+- `WeekNav` is worth extracting: about 62 lines, five branches, with the chevron
+  SVG and an identical 4-class string repeated five times.
+- The next-league-night IIFE hand-rolls `toLocaleDateString` with the exact
+  options `formatMatchDate` already provides, and that helper is imported in the
+  same file.
+- `parseInt` happens in the route while `isNaN` is checked in the component, so a
+  prop typed `number` can be `NaN` and every caller has to know it. Validate in
+  the route, or take a string and own the parse.
+- `generateMetadata` derives its title from the season only, so the preview route
+  will show the generic week title in the browser tab rather than the draft's
+  headline. Decide deliberately rather than by accident.
 
 ## Notes for the implementer
 
