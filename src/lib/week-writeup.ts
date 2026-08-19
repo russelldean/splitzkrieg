@@ -80,6 +80,8 @@ export function excerptWorthShowing(
  */
 export function draftDestinationForPost(post: PostMeta): string {
   const weekPath = weekPathForPost(post);
-  if (!weekPath) return `/blog/${post.slug}`;
+  // No week page: postHref already falls back to the blog URL for exactly
+  // this case, so reuse it instead of rebuilding the same string here.
+  if (!weekPath) return postHref(post);
   return `/evillair/preview${weekPath}?slug=${encodeURIComponent(post.slug)}`;
 }

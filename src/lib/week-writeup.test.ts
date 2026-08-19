@@ -111,47 +111,34 @@ describe('excerptWorthShowing', () => {
 });
 
 describe('draftDestinationForPost', () => {
-  const recap: PostMeta = {
-    title: 'Season XXXVI - Week 3 Recap',
-    date: '2026-08-17',
-    slug: 'season-xxxvi-week-3-recap',
-    excerpt: '',
-    type: 'recap',
-    seasonSlug: 'fall-2026',
-    week: 3,
-  };
-
   it('sends a week-scoped draft to the admin preview route', () => {
-    expect(draftDestinationForPost(recap)).toBe(
+    expect(draftDestinationForPost(post())).toBe(
       '/evillair/preview/week/fall-2026/3?slug=season-xxxvi-week-3-recap'
     );
   });
 
   it('encodes a slug that needs escaping', () => {
-    expect(draftDestinationForPost({ ...recap, slug: 'week 3 & 4' })).toBe(
+    expect(draftDestinationForPost(post({ slug: 'week 3 & 4' }))).toBe(
       '/evillair/preview/week/fall-2026/3?slug=week%203%20%26%204'
     );
   });
 
   it('sends an announcement to its own blog page', () => {
-    const announcement: PostMeta = {
-      title: "Some lines shouldn't be crossed.",
-      date: '2026-05-01',
-      slug: 'some-lines',
-      excerpt: '',
-      type: 'announcement',
-    };
-    expect(draftDestinationForPost(announcement)).toBe('/blog/some-lines');
+    expect(
+      draftDestinationForPost(
+        post({ type: 'announcement', season: undefined, seasonSlug: undefined, week: undefined, slug: 'some-lines' }),
+      ),
+    ).toBe('/blog/some-lines');
   });
 
   it('falls back to the blog page when the week is missing', () => {
-    expect(draftDestinationForPost({ ...recap, week: undefined })).toBe(
+    expect(draftDestinationForPost(post({ week: undefined }))).toBe(
       '/blog/season-xxxvi-week-3-recap'
     );
   });
 
   it('falls back to the blog page when the season slug is missing', () => {
-    expect(draftDestinationForPost({ ...recap, seasonSlug: undefined })).toBe(
+    expect(draftDestinationForPost(post({ seasonSlug: undefined }))).toBe(
       '/blog/season-xxxvi-week-3-recap'
     );
   });
