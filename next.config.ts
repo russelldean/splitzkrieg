@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import { fetchRecapRedirects } from "./src/lib/recap-redirects";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -16,10 +17,16 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.fbcdn.net' },
     ],
   },
-  // Team renamed Bowl Durham -> High Rollers (2026-07-11); keep old shared links alive.
   async redirects() {
     return [
+      // Team renamed Bowl Durham -> High Rollers (2026-07-11); keep old shared
+      // links alive.
       { source: '/team/bowl-durham', destination: '/team/high-rollers', permanent: true },
+      // Weekly recaps live on their week page now. These give the old blog URLs
+      // a real 307 instead of the one-second meta refresh a prerendered
+      // redirect() produces. Built from the database, so a recap with a custom
+      // slug is covered too. Empty if the DB is unreachable at build.
+      ...(await fetchRecapRedirects()),
     ];
   },
 };
