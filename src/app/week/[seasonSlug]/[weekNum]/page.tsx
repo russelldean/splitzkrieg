@@ -29,9 +29,11 @@ import { TrailNav } from '@/components/ui/TrailNav';
 import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { formatMatchDate } from '@/lib/bowling-time';
 import { toDateKey } from '@/lib/week-utils';
-import { getPostForWeek } from '@/lib/blog';
+import { getPostForWeek, getPostContent } from '@/lib/blog';
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
+import { WeekWriteup } from '@/components/week/WeekWriteup';
+import { shouldExpandWriteup } from '@/lib/week-writeup';
 
 export const dynamicParams = true;
 
@@ -161,6 +163,8 @@ export default async function WeekPage({
 
   // Check for blog post cross-link
   const blogPost = await getPostForWeek(season.romanNumeral, weekNum);
+  const writeupContent = blogPost ? await getPostContent(blogPost.slug) : undefined;
+  const currentSeasonSlug = await getCurrentSeasonSlug();
 
   // Cross-season prev/next: if at first/last week, link to adjacent season
   const seasonIdx = allSeasons.findIndex(s => s.seasonID === season.seasonID);
@@ -246,41 +250,29 @@ export default async function WeekPage({
         </div>
       </div>
 
-      {/* Blog cross-link */}
-      {blogPost && (
-        <Link
-          href={`/blog/${blogPost.slug}`}
-          className="group block mb-4 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10 hover:shadow-lg transition-shadow"
-        >
-          <div className="relative h-36 sm:h-44">
-            {(blogPost.cardImage || blogPost.heroImage) ? (
-              <Image
-                src={(blogPost.cardImage || blogPost.heroImage)!}
-                alt={blogPost.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                style={{ objectPosition: `center ${(Math.min(1, (blogPost.cardFocalY ?? blogPost.heroFocalY ?? 0.5) + 0.1) * 100)}%` }}
-                sizes="(max-width: 1024px) 100vw, 960px"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-navy" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-              <p className="text-xs uppercase tracking-wide font-semibold text-red-400 font-body mb-1">
-                The Weekly Email
-              </p>
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-lg sm:text-xl font-heading text-white group-hover:text-red-300 transition-colors">
-                  Read the full Week {weekNum} recap
-                </p>
-                <span className="font-body text-sm text-white/70 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">
-                  &rarr;
-                </span>
-              </div>
-            </div>
-          </div>
-        </Link>
+      {/* Hero photo from the week's post */}
+      {blogPost?.heroImage && (
+        <div className="relative mb-4 h-40 sm:h-52 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
+          <Image
+            src={blogPost.heroImage}
+            alt=""
+            fill
+            className="object-cover"
+            style={{ objectPosition: `center ${(blogPost.heroFocalY ?? 0.5) * 100}%` }}
+            sizes="(max-width: 1024px) 100vw, 960px"
+          />
+        </div>
+      )}
+
+      {/* Russ's writeup for the night */}
+      {blogPost && writeupContent && (
+        <WeekWriteup
+          content={writeupContent}
+          title={blogPost.title}
+          excerpt={blogPost.excerpt}
+          weekNum={weekNum}
+          defaultOpen={shouldExpandWriteup(blogPost.seasonSlug, currentSeasonSlug)}
+        />
       )}
 
       {isMissingData ? (

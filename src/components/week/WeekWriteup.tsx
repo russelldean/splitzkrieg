@@ -8,6 +8,8 @@ interface Props {
   title: string;
   /** Week number, used in the summary line. */
   weekNum: number;
+  /** Short excerpt, shown under the label so a collapsed block advertises itself. */
+  excerpt: string;
   /** Whether the block starts open. */
   defaultOpen: boolean;
 }
@@ -23,7 +25,7 @@ interface Props {
  * stats inside the blog post. The week page renders the real stats itself, so
  * that component is neutralised here rather than edited out of stored content.
  */
-export function WeekWriteup({ content, title, weekNum, defaultOpen }: Props) {
+export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: Props) {
   const components = {
     ...mdxComponents,
     WeekRecap: () => null,
@@ -35,9 +37,9 @@ export function WeekWriteup({ content, title, weekNum, defaultOpen }: Props) {
       className="group mb-6 rounded-xl border border-navy/10 bg-white shadow-sm overflow-hidden"
     >
       <summary className="cursor-pointer list-none px-4 py-3 sm:px-5 hover:bg-navy/[0.02] transition-colors">
-        <span className="flex items-center gap-2">
+        <span className="flex items-start gap-2">
           <svg
-            className="w-4 h-4 shrink-0 text-navy/50 transition-transform group-open:rotate-90"
+            className="w-4 h-4 shrink-0 mt-1 text-navy/60 transition-transform group-open:rotate-90"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={2}
@@ -46,10 +48,17 @@ export function WeekWriteup({ content, title, weekNum, defaultOpen }: Props) {
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
-          <span className="font-heading text-base sm:text-lg text-navy">
-            Week {weekNum} Recap
+          <span className="min-w-0">
+            <span className="block font-heading text-base sm:text-lg text-navy">
+              Week {weekNum} Recap
+            </span>
+            {excerpt && (
+              <span className="block font-body text-sm text-navy/70 line-clamp-2 group-open:hidden">
+                {excerpt}
+              </span>
+            )}
+            <span className="sr-only">{title}</span>
           </span>
-          <span className="sr-only">{title}</span>
         </span>
       </summary>
       <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-1 border-t border-navy/10">
