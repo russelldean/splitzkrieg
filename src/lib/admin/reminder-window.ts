@@ -51,6 +51,15 @@ export function reminderPlan(input: ReminderPlanInput): ReminderPlanResult {
   }
 
   const days = daysUntil(nowET, matchDate);
+
+  // Belt and braces: todayET() is hardened against this (see clock.ts), but an
+  // unreadable date must never fall through to eligible. NaN < 0 and
+  // NaN > MAX_DAYS_AHEAD are both false, so without this guard a broken date
+  // string would sail past every bound check below and mail everyone.
+  if (!Number.isFinite(days)) {
+    return { eligible: false, pass: 'reminder', days: null, reason: 'unreadable match date' };
+  }
+
   // Derived from the date, not from which cron fired, so the copy always
   // matches real urgency even if a holiday shifts the night.
   const pass: ReminderPass = days === 0 ? 'lastcall' : 'reminder';

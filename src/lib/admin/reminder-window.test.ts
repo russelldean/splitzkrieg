@@ -19,6 +19,10 @@ describe('daysUntil', () => {
     // count. DST ends 2026-11-01 and Nov 2 is week 9.
     expect(daysUntil('2026-10-30', '2026-11-02')).toBe(3);
   });
+
+  it('is NaN for an unparseable date, since Date.parse cannot read it', () => {
+    expect(daysUntil('not-a-date', '2026-08-24')).toBeNaN();
+  });
 });
 
 describe('reminderPlan', () => {
@@ -78,6 +82,22 @@ describe('reminderPlan', () => {
     // The caller labels the skip reason with the pass, so it must be right
     // even when nothing is sent.
     expect(reminderPlan({ ...base, nowET: '2026-08-24', enabled: false }).pass).toBe('lastcall');
+  });
+
+  // An unreadable date must never fall through to eligible: NaN fails every
+  // comparison (NaN < 0 and NaN > MAX_DAYS_AHEAD are both false), so without
+  // an explicit guard a broken date string would sail past every bound check
+  // and the cron would judge itself eligible on every run.
+  it('is not eligible when nowET is unreadable', () => {
+    const p = reminderPlan({ ...base, nowET: 'not-a-date' });
+    expect(p.eligible).toBe(false);
+    expect(p.reason).toMatch(/unreadable/i);
+  });
+
+  it('is not eligible when matchDate is unreadable', () => {
+    const p = reminderPlan({ ...base, matchDate: 'not-a-date' });
+    expect(p.eligible).toBe(false);
+    expect(p.reason).toMatch(/unreadable/i);
   });
 });
 

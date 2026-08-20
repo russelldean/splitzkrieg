@@ -15,18 +15,9 @@ import { getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 import { reminderPlan, isDuplicate } from '@/lib/admin/reminder-window';
 import { actionKeys, automationEnabled, readSettings, recordAction } from '@/lib/admin/action-log';
 import { findMissingLineups, sendReminders } from '@/lib/admin/lineup-reminders';
+import { todayET } from '@/lib/admin/clock';
 
 export const dynamic = 'force-dynamic';
-
-/** Today's date in league time, as 'YYYY-MM-DD'. */
-function todayET(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
 
 export async function GET(request: NextRequest) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -102,15 +93,24 @@ export async function GET(request: NextRequest) {
       `Cron lineup-reminder: week ${week}, pass ${plan.pass}, sent ${outcome.sent}, skipped ${outcome.skipped}, errors ${outcome.errors.length}`,
     );
 
-    return NextResponse.json({
-      season: season.displayName,
-      week,
-      pass: plan.pass,
-      sent: outcome.sent,
-      skipped: outcome.skipped,
-      noEmail: outcome.noEmail,
-      errors: outcome.errors.length > 0 ? outcome.errors : undefined,
-    });
+    // Every recipient failed, so report it as an error status. A 200 here would
+    // make a total outage indistinguishable from a deliberate skip to anything
+    // watching the cron.
+    const status = outcome.sent === 0 && outcome.errors.length > 0 ? 502 : 200;
+
+    return NextResponse.json(
+      {
+        season: season.displayName,
+        week,
+        pass: plan.pass,
+        sent: outcome.sent,
+        skipped: outcome.skipped,
+        noEmail: outcome.noEmail,
+        errors: outcome.errors.length > 0 ? outcome.errors : undefined,
+        message: outcome.sent > 0 ? `Sent ${outcome.sent} for week ${week}` : 'Attempted, nothing sent',
+      },
+      { status },
+    );
   } catch (err) {
     console.error('Cron lineup-reminder error:', err);
     return NextResponse.json(
