@@ -20,10 +20,6 @@ export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [showAutoDraft, setShowAutoDraft] = useState(false);
-  const [autoDraftSeasonID, setAutoDraftSeasonID] = useState('35');
-  const [autoDraftWeek, setAutoDraftWeek] = useState('');
-  const [autoDraftLoading, setAutoDraftLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
@@ -66,43 +62,6 @@ export default function AdminBlogPage() {
     }
   }
 
-  async function handleAutoDraft() {
-    if (!autoDraftWeek) return;
-    setAutoDraftLoading(true);
-    setError(null);
-    try {
-      // Generate draft content
-      const draftRes = await fetch('/api/evillair/blog/auto-draft', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          seasonID: parseInt(autoDraftSeasonID, 10),
-          week: parseInt(autoDraftWeek, 10),
-        }),
-      });
-      if (!draftRes.ok) {
-        const data = await draftRes.json();
-        throw new Error(data.error || 'Failed to generate draft');
-      }
-      const draft = await draftRes.json();
-
-      // Create the post
-      const createRes = await fetch('/api/evillair/blog', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...draft,
-          excerpt: `Season ${draft.seasonRomanNumeral} Week ${draft.week} recap`,
-        }),
-      });
-      if (!createRes.ok) throw new Error('Failed to create post');
-      const { id } = await createRes.json();
-      router.push(`/evillair/blog/${id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to auto-draft');
-      setAutoDraftLoading(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -117,12 +76,6 @@ export default function AdminBlogPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl text-navy">Blog Posts</h1>
         <div className="flex gap-3">
-          <button
-            onClick={() => setShowAutoDraft(!showAutoDraft)}
-            className="px-4 py-2 rounded-lg font-body text-sm bg-navy/10 text-navy hover:bg-navy/20 transition-colors"
-          >
-            Auto-Draft from Scores
-          </button>
           <button
             onClick={handleNewPost}
             disabled={creating}
@@ -140,50 +93,6 @@ export default function AdminBlogPage() {
       )}
 
       {/* Auto-Draft Modal */}
-      {showAutoDraft && (
-        <div className="mb-6 p-4 rounded-lg border border-navy/10 bg-white shadow-sm">
-          <h3 className="font-heading text-lg text-navy mb-3">
-            Auto-Draft from Confirmed Scores
-          </h3>
-          <div className="flex gap-4 items-end">
-            <div>
-              <label className="block font-body text-xs text-navy/60 mb-1">
-                Season ID
-              </label>
-              <input
-                type="number"
-                value={autoDraftSeasonID}
-                onChange={(e) => setAutoDraftSeasonID(e.target.value)}
-                className="px-3 py-2 rounded-md border border-navy/20 font-body text-sm w-24"
-              />
-            </div>
-            <div>
-              <label className="block font-body text-xs text-navy/60 mb-1">
-                Week
-              </label>
-              <input
-                type="number"
-                value={autoDraftWeek}
-                onChange={(e) => setAutoDraftWeek(e.target.value)}
-                className="px-3 py-2 rounded-md border border-navy/20 font-body text-sm w-24"
-              />
-            </div>
-            <button
-              onClick={handleAutoDraft}
-              disabled={autoDraftLoading || !autoDraftWeek}
-              className="px-4 py-2 rounded-lg font-body text-sm bg-navy text-cream hover:bg-navy/90 transition-colors disabled:opacity-50"
-            >
-              {autoDraftLoading ? 'Generating...' : 'Generate Draft'}
-            </button>
-            <button
-              onClick={() => setShowAutoDraft(false)}
-              className="px-4 py-2 rounded-lg font-body text-sm text-navy/50 hover:text-navy transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Posts List */}
       {posts.length === 0 ? (

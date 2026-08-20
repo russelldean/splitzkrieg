@@ -110,6 +110,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Unknown season slug: ${seasonSlug}` }, { status: 400 });
     }
 
+    // Refuse to create a recap for a week that has not been bowled. Inherited
+    // from the auto-draft route this replaces: without it, one stray click on a
+    // future week leaves an empty post attached to nothing.
+    const db = await getDb();
+    const scored = await withRetry(
+      () =>
+        db
+          .request()
+          .input('roman', sql.VarChar(10), roman)
+          .input('week', sql.Int, week)
+          .query<{ cnt: number }>(`
+            SELECT COUNT(*) AS cnt FROM scores sc
+            JOIN seasons se ON se.seasonID = sc.seasonID
+            WHERE se.romanNumeral = @roman AND sc.week = @week
+          `),
+      'week-writeup:scoreCheck',
+    );
+    if ((scored.recordset[0]?.cnt ?? 0) === 0) {
+      return NextResponse.json(
+        { error: `No scores yet for week ${week}. Confirm the scores first.` },
+        { status: 400 },
+      );
+    }
     // Empty content on purpose: every stat on the week page comes from the page
     // itself, so a template would only be something to delete.
     const postID = await createBlogPost({
