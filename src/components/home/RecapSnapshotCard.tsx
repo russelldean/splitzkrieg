@@ -4,6 +4,7 @@ import { MiniHeatCheck } from '@/components/season/MiniHeatCheck';
 import type { PostMeta } from '@/lib/blog';
 import type { SeasonSnapshot } from '@/lib/queries';
 import { postHref } from '@/lib/week-writeup';
+import { cardLabels, postImage } from '@/lib/home-cards';
 
 interface Props {
   post: PostMeta;
@@ -13,36 +14,36 @@ interface Props {
 }
 
 export function RecapSnapshotCard({ post, snapshot, preseason = false }: Props) {
-  const image = post.cardImage || post.heroImage;
+  const image = postImage(post);
+  const labels = cardLabels(post);
 
   return (
     <div className="bg-white rounded-xl border border-navy/10 shadow-sm overflow-hidden">
       <div className="md:flex">
-        {/* Left: recap image + link */}
-        {image && (
-          <Link
-            href={postHref(post)}
-            className="relative block md:flex-1 h-40 md:h-auto md:min-h-[180px] overflow-hidden group"
-          >
-            <Image
-              src={image}
-              alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              style={post.cardFocalY != null ? { objectPosition: `center ${Math.min(1, post.cardFocalY + 0.1) * 100}%` } : undefined}
-              sizes="(max-width: 768px) 100vw, 45vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-black/10" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-3 md:bottom-0">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-body uppercase tracking-wider bg-red-600 text-white mb-1">
-                Week {post.week} Recap
-              </span>
-              <div className="font-heading text-sm text-white group-hover:text-red-300 transition-colors">
-                Read the full recap &rarr;
-              </div>
+        {/* Left: post image + link. Not gated on an image existing: postImage()
+            always resolves, and this panel carries the card's only link. */}
+        <Link
+          href={postHref(post)}
+          className="relative block md:flex-1 h-40 md:h-auto md:min-h-[180px] overflow-hidden group"
+        >
+          <Image
+            src={image}
+            alt={post.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            style={post.cardFocalY != null ? { objectPosition: `center ${Math.min(1, post.cardFocalY + 0.1) * 100}%` } : undefined}
+            sizes="(max-width: 768px) 100vw, 45vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-black/10" />
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-3 md:bottom-0">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-body uppercase tracking-wider bg-red-600 text-white mb-1">
+              {labels.badge}
+            </span>
+            <div className="font-heading text-sm text-white group-hover:text-red-300 transition-colors">
+              {labels.cta} &rarr;
             </div>
-          </Link>
-        )}
+          </div>
+        </Link>
 
         {/* Right: snapshot data */}
         <div className="md:w-[55%] md:flex-shrink-0 px-6 pt-4 pb-4">
