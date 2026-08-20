@@ -6,6 +6,7 @@ import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent, getDraftP
 import { weekPathForPost } from '@/lib/week-writeup';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
 import { mdxComponents } from '@/lib/mdx-components';
+import { normalizeInlineTags } from '@/lib/mdx-source';
 import { getSiteUpdates } from '@/lib/queries/updates';
 
 export const dynamicParams = true;
@@ -71,7 +72,7 @@ export default async function BlogPostPage({
   return (
     <BlogPostLayout meta={meta} prev={prev} next={next} updates={siteUpdates}>
       {!meta.title ? null : (
-        <MDXRemote source={content.replace(/<(\/?)bowler>/gi, '<$1Bowler>').replace(/<(\/?)team>/gi, '<$1Team>')} components={mdxComponents} />
+        <MDXRemote source={normalizeInlineTags(content)} components={mdxComponents} />
       )}
     </BlogPostLayout>
   );

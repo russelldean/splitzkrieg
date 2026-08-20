@@ -1,6 +1,7 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { mdxComponents } from '@/lib/mdx-components';
 import { excerptWorthShowing } from '@/lib/week-writeup';
+import { normalizeInlineTags } from '@/lib/mdx-source';
 
 interface Props {
   /** Raw MDX body of the post. */
@@ -66,7 +67,7 @@ export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: P
           text, which is what happened when the recap moved off the blog page
           and lost BlogPostLayout's <article className="blog-prose"> wrapper. */}
       <div className="blog-prose px-4 pb-4 sm:px-5 sm:pb-5 pt-1 border-t border-navy/10">
-        <MDXRemote source={content} components={components} />
+        <MDXRemote source={normalizeInlineTags(content)} components={components} />
       </div>
     </details>
   );
