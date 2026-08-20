@@ -53,7 +53,7 @@ export const mdxComponents: MDXComponents = {
   MilestonesBlock,
   MatchResultsSummary,
   StandingsSnapshot,
-  // Every stored recap body ends with <WeekRecap />. The week page renders the
+  // Older stored bodies may still contain <WeekRecap />. The week page renders the
   // real stats itself, so the tag is a no-op, but the NAME must stay registered:
   // MDX throws on an unknown component and every recap page would break.
   WeekRecap: () => null,

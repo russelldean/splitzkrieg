@@ -22,7 +22,7 @@ interface Props {
  * client-state default risks a hydration mismatch. <details open> is resolved
  * at render time, needs no JS, and is keyboard accessible for free.
  *
- * Recap bodies end with <WeekRecap ... />, which used to render the condensed
+ * Older recap bodies may still contain a <WeekRecap ... /> tag, which used to render the condensed
  * stats inside the blog post. The week page renders the real stats itself, so
  * that tag now renders nothing: it is registered as a no-op in the shared MDX
  * component map rather than edited out of every stored recap body.

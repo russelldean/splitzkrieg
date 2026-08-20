@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic';
  * POST: Generate an auto-draft blog post from confirmed scores for a given season/week.
  * Returns { title, slug, content, type, seasonRomanNumeral, seasonSlug, week }.
  *
- * The draft content uses the <WeekRecap> MDX component to render live stat blocks,
- * matching the existing blog post pattern. Narrative sections are left as placeholders.
+ * The draft is narrative only. Every stat on the week page comes from the page
+ * itself, so a draft that embeds stat blocks would duplicate what the reader
+ * already sees. The old <WeekRecap> component was deleted for that reason.
  */
 export async function POST(request: NextRequest) {
   try {

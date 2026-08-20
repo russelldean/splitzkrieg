@@ -53,7 +53,7 @@ const checks = [
   {
     name: 'Week 6 blog post',
     url: `${baseUrl}/blog/season-xxxv-week-${week}-recap`,
-    description: 'Blog post page renders WeekRecap with current week data',
+    description: 'Recap URL still resolves (it now redirects to the week page)',
     test: (html) => {
       // Should contain the week number and not 404
       return !html.includes('Post Not Found') && html.length > 5000;

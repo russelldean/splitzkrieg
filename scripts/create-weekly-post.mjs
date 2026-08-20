@@ -97,8 +97,6 @@ type: "recap"
 ---
 
 Words needed for Week ${week}, stats ready.
-
-<WeekRecap season="${season.romanNumeral}" seasonSlug="${seasonSlug}" week="${week}" />
 `;
 
 writeFileSync(filePath, content, 'utf8');

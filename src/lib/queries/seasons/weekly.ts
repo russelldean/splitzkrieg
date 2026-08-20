@@ -172,7 +172,7 @@ export async function getSeasonWeeklyScoresLite(seasonID: number): Promise<Weekl
 // correlated subqueries scanning history per row (the old shape, ~1.7s cold).
 // isFirstNight = no prior non-penalty night = bowler absent from priorAgg. Verified
 // row-for-row identical to the old correlated version across seasons/weeks incl.
-// penalty rows. The week page + WeekRecap use this; playoffs/stats only need
+// penalty rows. The week page uses this; playoffs/stats only need
 // max(week) and use getSeasonWeekNumbers.
 const GET_WEEK_SCORES_SQL = `
   WITH priorAgg AS (
