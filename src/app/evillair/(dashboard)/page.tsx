@@ -216,7 +216,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Pre-Bowling Night */}
+      {/* Lineups: who has submitted, and the manual remind controls. */}
       <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-navy/10 flex items-center justify-between">
           <div>

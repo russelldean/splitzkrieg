@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import sql from 'mssql';
-import { requireAdminOrWriter } from '@/lib/admin/auth';
+import { requireAdmin, requireAdminOrWriter } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
 import { todayET } from '@/lib/admin/clock';
 import { getUpcomingMatchDate } from '@/lib/admin/scoresheets';
@@ -79,7 +79,10 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    await requireAdminOrWriter(request);
+    // requireAdmin, not requireAdminOrWriter. Reading the board is harmless,
+    // but this flag turns on unattended recurring email to every captain in
+    // the league, and every other sending route here is admin only.
+    await requireAdmin(request);
   } catch {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
