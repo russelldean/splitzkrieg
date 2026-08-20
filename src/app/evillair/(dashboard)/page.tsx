@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { WeekStatusBoard } from '@/components/admin/WeekStatusBoard';
+import { PreNightStatusBoard } from '@/components/admin/PreNightStatusBoard';
 
 interface DashboardData {
   season: { seasonID: number; displayName: string } | null;
@@ -13,67 +14,6 @@ interface DashboardData {
     total: number;
     teams: Array<{ teamID: number; teamName: string; submitted: boolean }>;
   } | null;
-  preNightDone: string[];
-  postNightDone: string[];
-}
-
-const PRE_NIGHT_STEPS = [
-  { key: 'remind', label: 'Remind', page: '/evillair/lineups' },
-  { key: 'push', label: 'Push LP', page: '/evillair/lineups' },
-  { key: 'print', label: 'Scoresheets', page: '/evillair/scoresheets' },
-];
-
-
-/* Shared pipeline renderer with clickable toggleable steps */
-function Pipeline({
-  steps,
-  doneKeys,
-  onToggle,
-}: {
-  steps: { key: string; label: string; page: string }[];
-  doneKeys: Set<string>;
-  onToggle: (key: string) => void;
-}) {
-  return (
-    <div className="flex items-start justify-center mb-5 overflow-x-auto pb-2">
-      {steps.map((step, idx) => {
-        const done = doneKeys.has(step.key);
-        return (
-          <div key={step.key} className="flex items-start shrink-0">
-            <div className="flex flex-col items-center w-16">
-              <button
-                onClick={() => onToggle(step.key)}
-                className={`flex items-center justify-center w-9 h-9 rounded-full text-xs font-body font-semibold transition-colors cursor-pointer ${
-                  done
-                    ? 'bg-green-500 text-white hover:bg-green-600'
-                    : 'bg-navy/10 text-navy/40 hover:bg-navy/20 hover:text-navy/60'
-                }`}
-                title={done ? `Mark ${step.label} undone` : `Mark ${step.label} done`}
-              >
-                {done ? '\u2713' : idx + 1}
-              </button>
-              <span
-                className={`font-body text-[10px] mt-1.5 text-center leading-tight ${
-                  done ? 'text-green-600 font-semibold' : 'text-navy/40'
-                }`}
-              >
-                {step.label}
-              </span>
-            </div>
-            {idx < steps.length - 1 && (
-              <div
-                className={`w-6 h-0.5 mt-[18px] -mx-1 ${
-                  done && doneKeys.has(steps[idx + 1].key)
-                    ? 'bg-green-500'
-                    : 'bg-navy/10'
-                }`}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 export default function AdminDashboardPage() {
@@ -113,37 +53,6 @@ export default function AdminDashboardPage() {
     }
     load();
   }, []);
-
-  const toggleStep = useCallback(
-    async (pipeline: 'pre' | 'post', stepKey: string) => {
-      if (!data) return;
-      const week = (data.publishedWeek || 0) + 1;
-
-      // Optimistic update
-      const field = pipeline === 'pre' ? 'preNightDone' : 'postNightDone';
-      const current = data[field];
-      const next = current.includes(stepKey)
-        ? current.filter((k) => k !== stepKey)
-        : [...current, stepKey];
-      setData((prev) => (prev ? { ...prev, [field]: next } : prev));
-
-      try {
-        const res = await fetch('/api/evillair/dashboard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pipeline, stepKey, week }),
-        });
-        const json = await res.json();
-        if (res.ok) {
-          setData((prev) => (prev ? { ...prev, [field]: json.done } : prev));
-        }
-      } catch {
-        // Revert on error
-        setData((prev) => (prev ? { ...prev, [field]: current } : prev));
-      }
-    },
-    [data],
-  );
 
   const toggleTeamSelection = useCallback((teamID: number) => {
     setSelectedTeamIDs((prev) => {
@@ -280,8 +189,6 @@ export default function AdminDashboardPage() {
     ? data.lineupStatus.teams.filter((t) => !t.submitted).length
     : 0;
 
-  const preNightDone = new Set(data?.preNightDone ?? []);
-
   return (
     <div className="max-w-5xl mx-auto overflow-x-hidden">
       <div className="mb-6">
@@ -302,12 +209,19 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* The coming night. Derived, never recorded. */}
+      {data?.season && (
+        <div className="mb-6">
+          <PreNightStatusBoard seasonID={data.season.seasonID} week={nextWeek} />
+        </div>
+      )}
+
       {/* Pre-Bowling Night */}
       <div className="bg-white rounded-lg shadow-sm border border-navy/10 overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-navy/10 flex items-center justify-between">
           <div>
-            <h2 className="font-heading text-sm text-navy">Pre-Bowling Night</h2>
-            <p className="font-body text-xs text-navy/40 mt-0.5">Week {data?.lineupStatus?.week ?? nextWeek} prep</p>
+            <h2 className="font-heading text-sm text-navy">Lineups</h2>
+            <p className="font-body text-xs text-navy/60 mt-0.5">Week {data?.lineupStatus?.week ?? nextWeek}, remind whoever is missing</p>
           </div>
           {data?.lineupStatus && (
             <span className="font-body text-xs text-navy/50">
@@ -316,12 +230,6 @@ export default function AdminDashboardPage() {
           )}
         </div>
         <div className="p-5">
-          <Pipeline
-            steps={PRE_NIGHT_STEPS}
-            doneKeys={preNightDone}
-            onToggle={(key) => toggleStep('pre', key)}
-          />
-
           {/* Lineup team grid */}
           {data?.lineupStatus && data.lineupStatus.teams.length > 0 && (
             <div className="flex gap-2 mb-2">
