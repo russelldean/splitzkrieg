@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { cachedQuery } from './db';
+import { cachedQuery, seasonDataVersionTag } from './db';
 
 // A query that fails with a non-timeout error so withRetry rethrows immediately
 // (no backoff delay), simulating a DB failure after retries are exhausted.
@@ -44,5 +44,44 @@ describe('cachedQuery failure handling', () => {
     expect(logged).toContain('[QUERY_FAIL]');
     expect(logged).toContain('unit-telemetry-fail');
     spy.mockRestore();
+  });
+});
+
+describe('seasonDataVersionTag', () => {
+  // Shaped like .data-versions.json: three season-keyed channels plus `bowlers`,
+  // which is keyed by bowlerID. Bowler 24 collides with season 24.
+  const versions = {
+    scores: { '24': 2, '36': 4 },
+    schedule: { '24': 2, '36': 6 },
+    bowlers: { '24': 6, '640': 3 },
+    playoffScores: { '35': 30 },
+  };
+
+  it('ignores the bowler-keyed channel, so bumping bowler #24 cannot invalidate season 24', () => {
+    const before = seasonDataVersionTag(24, versions);
+    const after = seasonDataVersionTag(24, {
+      ...versions,
+      bowlers: { ...versions.bowlers, '24': 7 },
+    });
+    expect(after).toBe(before);
+  });
+
+  it('still tracks every season-keyed channel', () => {
+    const bumped = seasonDataVersionTag(36, {
+      ...versions,
+      scores: { ...versions.scores, '36': 5 },
+    });
+    expect(bumped).not.toBe(seasonDataVersionTag(36, versions));
+  });
+
+  it('pins rather than drops the segment, so seasons with no colliding bowlerID keep their existing tag', () => {
+    // The pre-fix expression for a season with no matching bowlerID: `?? 1`
+    // already produced `bowlers1`, so those tags must be byte-identical or the
+    // fix rehashes every season-scoped query on the site instead of just the
+    // seasons that were already wrong.
+    const legacy = Object.entries(versions)
+      .map(([ch, v]) => `${ch}${(v as Record<string, number>)['36'] ?? 1}`)
+      .join('-');
+    expect(seasonDataVersionTag(36, versions)).toBe(legacy);
   });
 });

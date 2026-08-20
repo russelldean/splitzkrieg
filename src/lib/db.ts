@@ -153,6 +153,37 @@ const ALL_VERSIONS_HASH = crypto
   .digest('hex')
   .slice(0, 8);
 
+/**
+ * Cache-tag fragment for a season-scoped query: every SEASON-KEYED channel
+ * version for that season.
+ *
+ * Exported for the unit test. `bowlers` is the one channel keyed by bowlerID
+ * rather than seasonID, so indexing it with a season number read the wrong
+ * thing entirely: bowler #24's version landed in SEASON 24's tag. Every publish
+ * bumps the version of each bowler who bowled, so historical seasons whose
+ * number happened to match an active bowler's ID were invalidated every publish
+ * for data that had not changed. As of 2026-08-20 that was 8 seasons, about 96
+ * pages a week, and it grows: each new season pulls one more bowlerID into range.
+ *
+ * The segment is PINNED rather than deleted on purpose. Seasons with no matching
+ * bowlerID already resolved to `bowlers1` through the `?? 1`, so pinning leaves
+ * their tags byte-identical and rehashes only the seasons that were already
+ * wrong (11 of 33 at the time of the fix). Dropping the segment would change the
+ * tag for every season and rehash every season-scoped query on the site. Do not
+ * tidy this into a .filter() without planning for that bust.
+ */
+export function seasonDataVersionTag(
+  seasonID: number,
+  versionsByChannel: Record<string, Record<string, number>>,
+): string {
+  const parts = Object.entries(versionsByChannel)
+    .map(([ch, versions]) =>
+      ch === 'bowlers' ? 'bowlers1' : `${ch}${versions[String(seasonID)] ?? 1}`,
+    )
+    .join('-');
+  return parts || 'dv1';
+}
+
 const VERSIONED_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', `v${CACHE_VERSION}`);
 const STABLE_CACHE_DIR = path.join(process.cwd(), '.next', 'cache', 'sql', 'stable');
 
@@ -323,11 +354,7 @@ export async function cachedQuery<T>(
       // Legacy fallback: hash of ALL versions
       dataVersionTag = ALL_VERSIONS_HASH;
     } else if (options?.seasonID != null) {
-      // Season-scoped: combine all channel versions for this season
-      const parts = Object.entries(DATA_VERSIONS)
-        .map(([ch, versions]) => `${ch}${versions[String(options.seasonID)] ?? 1}`)
-        .join('-');
-      dataVersionTag = parts || `dv1`;
+      dataVersionTag = seasonDataVersionTag(options.seasonID, DATA_VERSIONS);
     }
   }
 
