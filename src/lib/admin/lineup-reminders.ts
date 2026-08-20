@@ -135,6 +135,7 @@ export async function sendReminders(
   const from = process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <noreply@splitzkrieg.com>';
 
   const outcome: SendOutcome = { sent: 0, skipped: 0, noEmail: [], errors: [] };
+  let attempts = 0;
 
   for (const team of recipients) {
     if (!team.email) {
@@ -143,8 +144,12 @@ export async function sendReminders(
       continue;
     }
 
-    // Resend free tier caps at 2 emails a second, so pace the loop.
-    if (outcome.sent > 0) await new Promise((r) => setTimeout(r, 600));
+    // Resend's free tier caps at 2 emails a second. Paced on ATTEMPTS rather
+    // than successes: gating on successes meant a failed send left the counter
+    // at zero, so the next send fired with no delay and a run of failures
+    // defeated the limit entirely.
+    if (attempts > 0) await new Promise((r) => setTimeout(r, 600));
+    attempts++;
 
     const { subject, html } = reminderEmail({
       pass,
