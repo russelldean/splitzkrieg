@@ -11,8 +11,8 @@ export function targetIdFromHash(hash: string): string | null {
   if (!raw) return null;
   try {
     // A hash can arrive percent encoded. getElementById wants the real id.
-    const decoded = decodeURIComponent(raw);
-    return decoded.length > 0 ? decoded : null;
+    // raw is already known non-empty, and decoding cannot empty it.
+    return decodeURIComponent(raw);
   } catch {
     // Malformed escape sequence. Fall back to the raw value rather than
     // throwing inside an effect, where it would break hydration.

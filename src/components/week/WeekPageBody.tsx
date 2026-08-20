@@ -148,8 +148,10 @@ export async function WeekPageBody({
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       {/* Holds a #results deep link on target while the rest of this page
           renders. Without it the router scrolls once, too early, and the
-          content above the anchor then pushes the anchor out of view. */}
-      <ScrollToHash />
+          content above the anchor then pushes the anchor out of view. Named
+          explicitly so it leaves #match-N to WeekMatchSummary, which does its
+          own expand-and-scroll for shareable match links. */}
+      <ScrollToHash id="results" />
 
       <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} position="top" />
 
