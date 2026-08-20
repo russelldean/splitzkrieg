@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
       sheets: actionKeys.scoresheets(seasonID, week),
     };
     const settings = await readSettings([...Object.values(keys), AUTOMATION_KEY]);
+    const automationEnabled = settings[AUTOMATION_KEY] === 'on';
 
     const steps = derivePreNightStatus({
       lineupsIn: submitted.recordset[0]?.n ?? 0,
@@ -63,10 +64,10 @@ export async function GET(request: NextRequest) {
       scoresheetsAt: settings[keys.sheets],
       matchDate: await getUpcomingMatchDate(seasonID, week),
       nowET: todayET(),
-      automationEnabled: settings[AUTOMATION_KEY] === 'on',
+      automationEnabled,
     });
 
-    return NextResponse.json({ steps, automationEnabled: settings[AUTOMATION_KEY] === 'on' });
+    return NextResponse.json({ steps, automationEnabled });
   } catch (err) {
     console.error('Pre-night status error:', err);
     return NextResponse.json(
@@ -91,6 +92,7 @@ export async function PATCH(request: NextRequest) {
     await setAutomationEnabled(enabled);
     return NextResponse.json({ automationEnabled: enabled });
   } catch (err) {
+    console.error('Pre-night automation toggle error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to update' },
       { status: 500 },
