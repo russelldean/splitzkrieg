@@ -28,10 +28,17 @@ Vercel log and mail nobody. This is the failure mode that motivates recording se
 ### 2. The recipient query has no week filter
 
 The query selects from `schedule WHERE seasonID = @seasonID` with no `AND sch.week =
-@week`, so it returns every team in the season minus those who submitted for the target
-week. It is accidentally correct while all 20 teams bowl every week, but it would have
-mailed both nights' captains during split weeks 1 through 3, and it will misfire on any
-bye or playoff structure.
+@week`, so it collects every team appearing anywhere in the season's schedule, then
+subtracts this week's submitters. A team not playing this week is still mailed.
+
+Verified against live data on 2026-08-20 (season 36, weeks 3 to 5): the fix is currently
+a **no-op**, because all 20 teams are scheduled every week, and it never ADDS a recipient.
+It matters the first time a team has a bye.
+
+An earlier draft of this spec claimed the missing filter would have mailed both nights
+during split weeks 1 to 3. That was wrong. A split week carries all 20 teams under a
+single week number and differs only by `matchDate`, so both nights share one `week` and
+the old query was never mailing the wrong night.
 
 ## Decisions
 

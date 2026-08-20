@@ -20,9 +20,10 @@ Two bugs in `src/app/api/cron/lineup-reminder/route.ts` are the reason this work
    `daysUntilMatch < 0`. `matchDate` is midnight, so a 10am match-day run computes about
    `-0.58` and returns `"skipping"`. It would report success and mail nobody.
 2. The recipient query filters `WHERE sch.seasonID = @seasonID` with no
-   `AND sch.week = @week`, so it returns every team in the season minus those who
-   submitted. Accidentally correct while all 20 teams bowl weekly, wrong on byes or split
-   weeks.
+   `AND sch.week = @week`, so it collects every team appearing anywhere in the season's
+   schedule minus this week's submitters. Verified 2026-08-20 to be a no-op on current
+   data (all 20 teams are scheduled every week) and it never adds a recipient. It matters
+   on a bye. Split weeks are NOT affected: both nights share one week number.
 
 `vercel.json` currently has `"crons": []`, so none of this has ever run in production.
 
@@ -430,10 +431,15 @@ export interface ReminderRecipient {
 /**
  * Teams scheduled in this week that have not submitted a lineup.
  *
- * `AND sch.week = @week` is the fix: without it this returned every team in the
- * SEASON minus the submitters, which was accidentally right while all 20 teams
- * bowled every week and wrong during the split weeks 1 to 3, where it would
- * have mailed both nights.
+ * `AND sch.week = @week` is the fix. Without it the query collected every team
+ * appearing anywhere in the season's schedule, then subtracted this week's
+ * submitters, so a team not playing this week was still mailed.
+ *
+ * Verified against season 36 weeks 3 to 5 on 2026-08-20: the filter changes
+ * nothing today, because all 20 teams are scheduled every week, and it never
+ * ADDS a recipient. It matters the first time a team has a bye. Note that a
+ * split week is not such a case: both nights share one week number and differ
+ * only by matchDate, so the old query was never mailing the wrong night.
  */
 export async function findMissingLineups(
   seasonID: number,
