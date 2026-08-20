@@ -296,7 +296,16 @@ export async function getWeekCareerMilestones(seasonID: number, week: number): P
       }));
     },
     [],
-    { sql: WEEK_MILESTONES_SQL + params, dependsOn: ['scores'] },
+    {
+      // Season-scoped, not channel-scoped. This runs on every one of the ~325
+      // week pages, and dependsOn hashes the scores channel across ALL seasons,
+      // so a publish (which bumps only the current season) was missing cache on
+      // every page. The rows come straight out of bowlerMilestones filtered to
+      // this season and week, and the season tag already folds in every channel
+      // version for that season, so nothing is lost.
+      sql: WEEK_MILESTONES_SQL + params,
+      seasonID,
+    },
   );
 }
 

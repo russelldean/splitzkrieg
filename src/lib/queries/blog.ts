@@ -93,7 +93,10 @@ export async function getTopPerformers(seasonID: number, week: number): Promise<
       scratchGame: [...gameRes.recordset],
       hcpSeries: [...hcpRes.recordset],
     };
-  }, { scratchSeries: [], scratchGame: [], hcpSeries: [] }, { sql: allSQL + params, dependsOn: ['scores'] });
+  // Season-scoped for the same reason as getStandingsSnapshot below: every
+  // sub-query is filtered to this season and week, so the season tag covers it,
+  // and channel scoping would invalidate all 325 week pages on any publish.
+  }, { scratchSeries: [], scratchGame: [], hcpSeries: [] }, { sql: allSQL + params, seasonID });
 }
 
 // ── Week Milestones ─────────────────────────────────────────
@@ -233,6 +236,12 @@ export async function getWeekMilestones(seasonID: number, week: number): Promise
     }
 
     return milestones;
+  // DELIBERATELY channel-scoped, unlike every other query in this file. Do NOT
+  // "fix" this to seasonID to match its siblings. All four sub-queries decide
+  // "career high" and "first ever" with a correlated subquery over the bowler's
+  // ENTIRE history (sp.seasonID < sc.seasonID), so the answer depends on every
+  // prior season. Season scoping would mean a score correction in S20 never
+  // invalidates the S36 page whose "first career 600" it just falsified.
   }, [], { sql: allSQL + params, dependsOn: ['scores'] });
 }
 
@@ -299,7 +308,9 @@ export async function getMatchResultsSummary(seasonID: number, week: number): Pr
       .input('seasonID', seasonID).input('week', week)
       .query<MatchResultRow>(MATCH_RESULTS_SQL);
     return result.recordset;
-  }, [], { sql: MATCH_RESULTS_SQL + params, dependsOn: ['schedule'] });
+  // Season-scoped: every table here is filtered to this season and week, and
+  // the season tag folds in the schedule channel version for that season too.
+  }, [], { sql: MATCH_RESULTS_SQL + params, seasonID });
 }
 
 // ── Standings Snapshot ──────────────────────────────────────
