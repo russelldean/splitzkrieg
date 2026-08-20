@@ -35,6 +35,7 @@ split weeks by choosing the next upcoming date. Four routes already use it.
 
 | File | Responsibility |
 | --- | --- |
+| `src/lib/admin/clock.ts` (create) | The impure edge that reads the wall clock. `todayET()`. |
 | `src/lib/admin/reminder-window.ts` (create) | Pure. Should a reminder go out, and which pass is it. |
 | `src/lib/admin/reminder-window.test.ts` (create) | Unit tests for the above. |
 | `src/lib/admin/action-log.ts` (create) | Key naming plus read/write of the `leagueSettings` action records. |
@@ -782,25 +783,18 @@ Replace the file's imports with:
 ```ts
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
+import { todayET } from '@/lib/admin/clock';
 import { getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 import { reminderPlan } from '@/lib/admin/reminder-window';
 import { actionKeys, recordAction } from '@/lib/admin/action-log';
 import { findMissingLineups, sendReminders } from '@/lib/admin/lineup-reminders';
 ```
 
-Add this helper just below the imports, above `export async function POST`:
-
-```ts
-/** Today's date in league time, as 'YYYY-MM-DD'. */
-function todayET(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
-```
+Do NOT declare a local `todayET`. It now lives in `src/lib/admin/clock.ts`, built
+from `formatToParts`, and the import above already pulls it in. An earlier draft of this
+plan told you to paste a local copy that used `.format()`; that form could silently drift
+to slashes on a locale-data change, which would make `Date.parse` return NaN downstream
+and, because NaN fails every comparison, make the cron judge itself eligible on every run.
 
 `enabled: true` is deliberate. The off switch pauses the **cron**, not your own button.
 
@@ -1154,17 +1148,9 @@ import {
 } from '@/lib/admin/action-log';
 import { countScheduledTeams, findMissingLineups } from '@/lib/admin/lineup-reminders';
 import { derivePreNightStatus } from '@/lib/admin/pre-night-status';
+import { todayET } from '@/lib/admin/clock';
 
 export const dynamic = 'force-dynamic';
-
-function todayET(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
 
 export async function GET(request: NextRequest) {
   try {
