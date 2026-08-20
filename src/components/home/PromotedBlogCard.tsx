@@ -61,7 +61,7 @@ export function PromotedBlogCard({ post }: Props) {
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
               New Post
             </span>
-            <span className="font-body text-xs text-navy/50">
+            <span className="font-body text-xs text-navy/65">
               {new Date(post.date + 'T12:00:00').toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',

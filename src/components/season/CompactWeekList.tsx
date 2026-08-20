@@ -60,7 +60,7 @@ export function CompactWeekList({ weekSummaries, schedule, seasonSlug, totalWeek
                     <span className="text-xs font-body text-navy/65">{dateStr}</span>
                   )}
                   {isMissingData && (
-                    <span className="text-xs font-body text-navy/45 italic">Data missing from archive</span>
+                    <span className="text-xs font-body text-navy/65 italic">Data missing from archive</span>
                   )}
                   {!hasScores && !isMissingData && !dateStr && (
                     <span className="text-xs font-body text-navy/60 italic">Upcoming</span>

@@ -63,7 +63,7 @@ function MilestoneGroup({
               {m.bowlerName}
             </Link>
             <div className="flex items-center gap-3 text-sm font-body tabular-nums">
-              <span className="text-navy/50">{m.current.toLocaleString()}</span>
+              <span className="text-navy/65">{m.current.toLocaleString()}</span>
               <span className={`font-semibold ${colors.text}`}>
                 {m.needed.toLocaleString()} to go
               </span>

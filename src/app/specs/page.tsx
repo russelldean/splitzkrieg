@@ -62,7 +62,7 @@ export default function SpecsPage() {
             <TechItem name="DM Serif Display" desc="Headings. A sharp, editorial serif that gives the stats pages a newspaper-scoreboard feel." />
             <TechItem name="Inter" desc="Body text. Clean and highly legible at small sizes for dense stat tables." />
             <TechItem name="Orbitron" desc="Digital/accent elements. Used sparingly for a tech-scoreboard vibe." />
-            <p className="text-sm text-navy/50 mt-2">All loaded via next/font with font-display: swap for zero layout shift.</p>
+            <p className="text-sm text-navy/65 mt-2">All loaded via next/font with font-display: swap for zero layout shift.</p>
           </Section>
 
           {/* Search */}
@@ -112,7 +112,7 @@ export default function SpecsPage() {
 
           {/* Built with */}
           <div className="border-t border-navy/10 pt-8 mt-12">
-            <p className="text-sm text-navy/40">
+            <p className="text-sm text-navy/65">
               Built by Russ Dean with Claude Code. Deployed on Vercel. Data goes
               back to Season I (Spring 2007).
             </p>
@@ -136,7 +136,7 @@ function TechItem({ name, desc }: { name: string; desc: string }) {
   return (
     <div className="pl-4 border-l-2 border-red/30">
       <span className="font-semibold text-navy">{name}</span>
-      <span className="text-navy/50"> · </span>
+      <span className="text-navy/65"> · </span>
       <span>{desc}</span>
     </div>
   );
@@ -146,7 +146,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="text-center p-3 bg-navy/5 rounded-lg">
       <div className="font-heading text-2xl text-navy">{value}</div>
-      <div className="text-xs text-navy/50 mt-1">{label}</div>
+      <div className="text-xs text-navy/65 mt-1">{label}</div>
     </div>
   );
 }

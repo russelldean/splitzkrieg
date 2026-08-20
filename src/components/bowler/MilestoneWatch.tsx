@@ -40,7 +40,7 @@ export function MilestoneWatch({ milestones }: Props) {
                   <span className={`text-xs font-semibold font-body px-1.5 py-0.5 rounded-full ${colors.text} ${colors.bg}`}>
                     {m.label}
                   </span>
-                  <span className="text-sm text-navy/50 font-body">
+                  <span className="text-sm text-navy/65 font-body">
                     {formatNumber(m.needed)} to go
                   </span>
                 </div>

@@ -26,7 +26,7 @@ export function TeamHeatmapRow({
 
   return (
     <div>
-      <p className="font-body text-xs text-navy/55 mb-2">Points earned each week (0-9). Red = hot.</p>
+      <p className="font-body text-xs text-navy/65 mb-2">Points earned each week (0-9). Red = hot.</p>
       <div className="flex gap-1 overflow-x-auto pb-1">
         {played.map((r) => (
           <Link
@@ -41,7 +41,7 @@ export function TeamHeatmapRow({
             >
               {r.total}
             </div>
-            <span className="text-[10px] font-body text-navy/50 tabular-nums leading-none">{r.week}</span>
+            <span className="text-[10px] font-body text-navy/65 tabular-nums leading-none">{r.week}</span>
           </Link>
         ))}
       </div>

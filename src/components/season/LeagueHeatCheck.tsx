@@ -91,7 +91,7 @@ export function LeagueHeatCheck({ pinsOverPerGame, leagueAvg, expectedAvg }: Pro
           <span className="text-sm">{tier.emoji}</span>
           {tier.label}
         </span>
-        <span className="text-xs font-body text-navy/50">
+        <span className="text-xs font-body text-navy/65">
           {leagueAvg.toFixed(1)} avg vs {expectedAvg.toFixed(1)} expected
         </span>
       </div>
@@ -146,7 +146,7 @@ export function LeagueHeatCheck({ pinsOverPerGame, leagueAvg, expectedAvg }: Pro
       </div>
 
       {/* Scale labels */}
-      <div className="relative h-4 mt-1 text-[10px] font-body text-navy/40">
+      <div className="relative h-4 mt-1 text-[10px] font-body text-navy/65">
         <span className="absolute left-0">⛄ Frozen</span>
         <span
           className="absolute -translate-x-1/2"

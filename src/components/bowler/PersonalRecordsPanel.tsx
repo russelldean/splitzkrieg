@@ -110,7 +110,7 @@ function RecordCard({
   // Show X (bowling strike symbol) for zero counts
   const isStrike = value === 0;
   const display = value === null ? '--' : isStrike ? 'X' : value;
-  const strikeClass = isStrike ? 'text-red-600/50 font-bold' : '';
+  const strikeClass = isStrike ? 'text-red-600/60 font-bold' : '';
 
   const deltaColors = {
     positive: 'text-green-600',

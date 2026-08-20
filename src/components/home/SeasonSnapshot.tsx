@@ -47,7 +47,7 @@ export function SeasonSnapshot({ snapshot }: SeasonSnapshotProps) {
       <div className="flex items-baseline justify-between mb-3">
         <h3 className="font-heading text-lg text-navy">
           Season {strikeX(snapshot.romanNumeral)}
-          <span className="text-navy/40 mx-1.5">&middot;</span>
+          <span className="text-navy/65 mx-1.5">&middot;</span>
           <span className="text-navy">Week {snapshot.weekNumber}</span>
         </h3>
         <Link

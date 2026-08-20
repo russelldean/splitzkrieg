@@ -58,7 +58,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                     <Link href={`/bowler/${b.slug}`} className="text-navy hover:text-red-600 transition-colors">
                       {b.name}
                     </Link>
-                    {i < bowlersOfWeek.length - 1 && <span className="text-navy/40"> &amp; </span>}
+                    {i < bowlersOfWeek.length - 1 && <span className="text-navy/65"> &amp; </span>}
                   </span>
                 ))}
               </div>

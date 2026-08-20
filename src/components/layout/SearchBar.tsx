@@ -108,7 +108,7 @@ export function SearchBar({ variant = 'light', onNavigate }: { variant?: 'light'
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
         <svg
-          className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${variant === 'dark' ? 'text-cream/40' : 'text-navy/30'}`}
+          className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${variant === 'dark' ? 'text-cream/70' : 'text-navy/30'}`}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2}
@@ -126,8 +126,8 @@ export function SearchBar({ variant = 'light', onNavigate }: { variant?: 'light'
           placeholder="Find a bowler or team..."
           className={`w-full rounded-lg pl-9 pr-4 py-2 text-base sm:text-sm font-body focus:outline-none focus:ring-2 transition-colors ${
             variant === 'dark'
-              ? 'bg-navy border border-navy shadow-lg text-cream placeholder:text-cream/40 focus:ring-red/40 focus:border-red/40'
-              : 'bg-white border border-navy/25 text-navy placeholder:text-navy/55 focus:ring-red/30 focus:border-red/30 shadow-sm animate-search-glow'
+              ? 'bg-navy border border-navy shadow-lg text-cream placeholder:text-cream/70 focus:ring-red/40 focus:border-red/40'
+              : 'bg-white border border-navy/25 text-navy placeholder:text-navy/65 focus:ring-red/30 focus:border-red/30 shadow-sm animate-search-glow'
           }`}
           role="combobox"
           aria-expanded={isDropdownOpen}

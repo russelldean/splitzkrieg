@@ -58,12 +58,12 @@ function MatchCard({
             {matchup.homeTeamID === GHOST_TEAM_ID && ' 👻'}
           </Link>
           {homeRank != null && (
-            <div className="text-xs text-navy/50 tabular-nums font-body mt-0.5">
+            <div className="text-xs text-navy/65 tabular-nums font-body mt-0.5">
               #{homeRank} &middot; {homeStanding?.totalPts ?? 0} pts
             </div>
           )}
         </div>
-        <div className="text-sm text-navy/50 px-3 shrink-0">vs</div>
+        <div className="text-sm text-navy/65 px-3 shrink-0">vs</div>
         <div className="flex-1 min-w-0 text-right">
           <Link
             href={`/team/${matchup.awayTeamSlug}`}
@@ -73,7 +73,7 @@ function MatchCard({
             {matchup.awayTeamID === GHOST_TEAM_ID && ' 👻'}
           </Link>
           {awayRank != null && (
-            <div className="text-xs text-navy/50 tabular-nums font-body mt-0.5">
+            <div className="text-xs text-navy/65 tabular-nums font-body mt-0.5">
               #{awayRank} &middot; {awayStanding?.totalPts ?? 0} pts
             </div>
           )}
@@ -86,7 +86,7 @@ function MatchCard({
             <span className="italic">First Time Matchup</span>
           ) : (
             <>
-              <span className="text-navy/50">H2H</span>{' '}
+              <span className="text-navy/65">H2H</span>{' '}
               <span className="tabular-nums font-medium text-navy">{record}</span>
             </>
           )}

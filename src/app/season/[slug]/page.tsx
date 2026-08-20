@@ -145,11 +145,11 @@ export default async function SeasonPage({
             <div className="font-heading text-base text-navy transition-colors group-hover:text-red-600">
               Season {season.romanNumeral} Schedule
             </div>
-            <div className="font-body text-sm text-navy/55">
+            <div className="font-body text-sm text-navy/65">
               Divisions, weekly matchups &amp; how to pay
             </div>
           </div>
-          <span className="flex shrink-0 items-center gap-1 font-body text-sm font-medium text-navy/50 transition-colors group-hover:text-red-600">
+          <span className="flex shrink-0 items-center gap-1 font-body text-sm font-medium text-navy/65 transition-colors group-hover:text-red-600">
             <span className="hidden sm:inline">View</span>
             <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

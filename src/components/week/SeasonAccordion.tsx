@@ -63,12 +63,12 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
                   >
                     {season.displayName}
                   </Link>
-                  <span className="font-body text-sm text-navy/50">
+                  <span className="font-body text-sm text-navy/65">
                     {season.romanNumeral}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-body text-xs text-navy/45 tabular-nums">
+                  <span className="font-body text-xs text-navy/65 tabular-nums">
                     {season.summaries.length} {season.summaries.length === 1 ? 'week' : 'weeks'}
                   </span>
                   <span className="text-navy/30">
@@ -100,31 +100,31 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
                               </span>
                             )}
                             {dateStr && (
-                              <span className="text-xs font-body text-navy/50">{dateStr}</span>
+                              <span className="text-xs font-body text-navy/65">{dateStr}</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-xs font-body text-navy/55">
+                          <div className="flex items-center gap-4 text-xs font-body text-navy/65">
                             {week.leagueAvg != null && week.expectedAvg != null && (() => {
                               const delta = week.leagueAvg - week.expectedAvg;
                               const sign = delta >= 0 ? '+' : '';
                               const colorClass = delta >= 0 ? 'text-green-600' : 'text-red-600';
                               return (
                                 <span className="hidden sm:inline">
-                                  <span className="text-navy/55">Avg </span>
+                                  <span className="text-navy/65">Avg </span>
                                   <span className="tabular-nums font-semibold text-navy/70">{week.leagueAvg}</span>
                                   <span className="text-navy/25"> / </span>
-                                  <span className="text-navy/55">Expected </span>
-                                  <span className="tabular-nums text-navy/55">{week.expectedAvg}</span>
+                                  <span className="text-navy/65">Expected </span>
+                                  <span className="tabular-nums text-navy/65">{week.expectedAvg}</span>
                                   <span className={`tabular-nums font-semibold ml-1.5 ${colorClass}`}>{sign}{delta.toFixed(1)}</span>
                                 </span>
                               );
                             })()}
                             {week.botwNames.length > 0 && (
                               <span>
-                                <span className="text-navy/55 text-xs">BOTW </span>
+                                <span className="text-navy/65 text-xs">BOTW </span>
                                 <span className="font-semibold text-navy/70">{week.botwNames.join(' & ')}</span>
                                 {week.botwHandSeries != null && (
-                                  <span className="hidden sm:inline tabular-nums text-navy/55 ml-1">{week.botwHandSeries}</span>
+                                  <span className="hidden sm:inline tabular-nums text-navy/65 ml-1">{week.botwHandSeries}</span>
                                 )}
                               </span>
                             )}
@@ -137,7 +137,7 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
                     })}
                   </div>
                 ) : (
-                  <p className="font-body text-sm text-navy/50 italic px-5 py-3">No weekly data available.</p>
+                  <p className="font-body text-sm text-navy/65 italic px-5 py-3">No weekly data available.</p>
                 )
               )}
             </div>

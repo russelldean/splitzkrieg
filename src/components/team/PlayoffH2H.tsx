@@ -125,7 +125,7 @@ function PlayoffSummaryRow({
       >
         <td className="px-4 py-2.5">
           <span className="flex items-center gap-2">
-            <span className="text-navy/55 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
+            <span className="text-navy/65 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
             <Link
               href={`/team/${s.opponentSlug}`}
               onClick={(e) => e.stopPropagation()}
@@ -159,7 +159,7 @@ function PlayoffDrillDown({ details }: { details: PlayoffH2HMatchup[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm font-body">
           <thead>
-            <tr className="border-b border-navy/8 text-navy/50">
+            <tr className="border-b border-navy/8 text-navy/65">
               <th className="text-left px-4 py-1.5 font-normal">Season</th>
               <th className="text-left px-3 py-1.5 font-normal">Round</th>
               <th className="text-center px-3 py-1.5 font-normal">Result</th>

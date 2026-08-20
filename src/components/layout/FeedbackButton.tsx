@@ -112,7 +112,7 @@ export function FeedbackButton() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-navy/40 hover:text-navy transition-colors p-1"
+                className="text-navy/65 hover:text-navy transition-colors p-1"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -139,7 +139,7 @@ export function FeedbackButton() {
                   placeholder="Name (optional)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-[16px] sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
+                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-[16px] sm:text-sm font-body text-navy placeholder:text-navy/65 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
                   maxLength={100}
                 />
                 <input
@@ -147,7 +147,7 @@ export function FeedbackButton() {
                   placeholder="Email (optional)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-[16px] sm:text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
+                  className="bg-white border border-navy/15 rounded-lg px-3 py-2 text-[16px] sm:text-sm font-body text-navy placeholder:text-navy/65 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30"
                   maxLength={255}
                 />
               </div>
@@ -159,7 +159,7 @@ export function FeedbackButton() {
                 required
                 maxLength={2000}
                 rows={4}
-                className="w-full bg-white border border-navy/15 rounded-lg px-3 py-2 text-sm font-body text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 resize-none"
+                className="w-full bg-white border border-navy/15 rounded-lg px-3 py-2 text-sm font-body text-navy placeholder:text-navy/65 focus:outline-none focus:ring-2 focus:ring-red/30 focus:border-red/30 resize-none"
               />
             </div>
 

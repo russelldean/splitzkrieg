@@ -92,7 +92,7 @@ export default async function BlogPage() {
                   <h2 className="font-heading text-2xl text-navy group-hover:text-red transition-colors mb-2">
                     {featured.title}
                   </h2>
-                  <p className="font-body text-sm text-navy/50 mb-2">
+                  <p className="font-body text-sm text-navy/65 mb-2">
                     {formatDate(featured.date)}
                   </p>
                   <p className="font-body text-sm text-navy/70 leading-relaxed">
@@ -121,7 +121,7 @@ export default async function BlogPage() {
                       >
                         {post.type === 'recap' ? 'Recap' : 'Announcement'}
                       </span>
-                      <span className="font-body text-xs text-navy/50">
+                      <span className="font-body text-xs text-navy/65">
                         {formatDate(post.date)}
                       </span>
                     </div>

@@ -343,7 +343,7 @@ export default function LineupPage() {
           <p className="font-body text-sm text-navy/70">
             Select your team to submit or update your lineup.
           </p>
-          <span className="font-body text-xs text-navy/40 shrink-0 ml-3">
+          <span className="font-body text-xs text-navy/65 shrink-0 ml-3">
             {submittedCount}/{totalCount} submitted
           </span>
         </div>
@@ -354,7 +354,7 @@ export default function LineupPage() {
               onClick={() => handleTeamSelect(team.teamID)}
               className={`w-full text-left px-4 py-3 rounded-lg border transition-all flex items-center justify-between ${
                 team.submitted
-                  ? 'bg-navy/[0.02] border-navy/5 text-navy/40'
+                  ? 'bg-navy/[0.02] border-navy/5 text-navy/65'
                   : 'bg-white border-navy/10 hover:border-navy/20 hover:shadow-sm text-navy'
               }`}
             >
@@ -410,7 +410,7 @@ export default function LineupPage() {
           <p className="font-body text-navy/70 mb-1">
             {teamName} - Week {context?.week}
           </p>
-          <p className="font-body text-sm text-navy/50 mb-6">
+          <p className="font-body text-sm text-navy/65 mb-6">
             You can update it any time before league night.
           </p>
           <div className="flex gap-4 justify-center">
@@ -442,7 +442,7 @@ export default function LineupPage() {
       <div className="mb-6">
         <button
           onClick={handleBackToTeams}
-          className="font-body text-xs text-navy/40 hover:text-navy mb-2 flex items-center gap-1"
+          className="font-body text-xs text-navy/65 hover:text-navy mb-2 flex items-center gap-1"
         >
           <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -468,7 +468,7 @@ export default function LineupPage() {
             className="bg-white rounded-lg border border-navy/10 p-4"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="font-body text-xs text-navy/40 uppercase tracking-wide">
+              <span className="font-body text-xs text-navy/65 uppercase tracking-wide">
                 Position {slot.position}
               </span>
               <div className="flex items-center gap-1">
@@ -507,7 +507,7 @@ export default function LineupPage() {
                   />
                   <button
                     onClick={() => toggleNewBowler(index)}
-                    className="font-body text-xs text-navy/50 hover:text-navy whitespace-nowrap"
+                    className="font-body text-xs text-navy/65 hover:text-navy whitespace-nowrap"
                   >
                     Pick existing
                   </button>
@@ -545,7 +545,7 @@ export default function LineupPage() {
                 </span>
                 <button
                   onClick={() => clearSlot(index)}
-                  className="font-body text-xs text-navy/40 hover:text-navy"
+                  className="font-body text-xs text-navy/65 hover:text-navy"
                 >
                   Change
                 </button>
@@ -583,11 +583,11 @@ export default function LineupPage() {
                                 >
                                   <span>{bowler.firstName} {bowler.lastName}</span>
                                   {recentSet.has(bowler.bowlerID) && (
-                                    <span className="text-xs text-navy/40">your team</span>
+                                    <span className="text-xs text-navy/65">your team</span>
                                   )}
                                 </button>
                               )) : (
-                                <p className="px-3 py-2 font-body text-sm text-navy/40">
+                                <p className="px-3 py-2 font-body text-sm text-navy/65">
                                   No bowlers found
                                 </p>
                               )}
@@ -599,7 +599,7 @@ export default function LineupPage() {
                           <>
                             {teamBowlers.length > 0 ? (
                               <>
-                                <div className="px-3 py-1.5 bg-navy/[0.03] font-body text-xs text-navy/40 uppercase tracking-wide">
+                                <div className="px-3 py-1.5 bg-navy/[0.03] font-body text-xs text-navy/65 uppercase tracking-wide">
                                   Your team
                                 </div>
                                 {teamBowlers.map((bowler) => (
@@ -613,7 +613,7 @@ export default function LineupPage() {
                                 ))}
                               </>
                             ) : (
-                              <p className="px-3 py-2 font-body text-sm text-navy/40">
+                              <p className="px-3 py-2 font-body text-sm text-navy/65">
                                 Type to search all bowlers
                               </p>
                             )}
@@ -624,13 +624,13 @@ export default function LineupPage() {
                     <div className="mt-2 flex gap-2">
                       <button
                         onClick={() => { setActiveSlot(null); setSearchQuery(''); }}
-                        className="font-body text-xs text-navy/40 hover:text-navy"
+                        className="font-body text-xs text-navy/65 hover:text-navy"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => toggleNewBowler(index)}
-                        className="font-body text-xs text-navy/50 hover:text-navy"
+                        className="font-body text-xs text-navy/65 hover:text-navy"
                       >
                         New bowler instead
                       </button>
@@ -640,13 +640,13 @@ export default function LineupPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setActiveSlot(index)}
-                      className="font-body text-sm text-navy/50 hover:text-navy border border-dashed border-navy/20 rounded-md px-3 py-2 flex-1 text-left"
+                      className="font-body text-sm text-navy/65 hover:text-navy border border-dashed border-navy/20 rounded-md px-3 py-2 flex-1 text-left"
                     >
                       Select bowler...
                     </button>
                     <button
                       onClick={() => toggleNewBowler(index)}
-                      className="font-body text-xs text-navy/50 hover:text-navy whitespace-nowrap px-2"
+                      className="font-body text-xs text-navy/65 hover:text-navy whitespace-nowrap px-2"
                     >
                       New bowler
                     </button>

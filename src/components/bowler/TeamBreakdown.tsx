@@ -28,7 +28,7 @@ export function TeamBreakdown({ teams }: Props) {
       >
         <span className="text-navy/65">Teams</span>
         <span className="font-bold font-heading">{teams.length}</span>
-        <span className="text-navy/50 text-xs ml-0.5">{open ? '▲' : '▼'}</span>
+        <span className="text-navy/65 text-xs ml-0.5">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (

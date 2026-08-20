@@ -121,12 +121,12 @@ export function PlayoffsNextWeek({ matchups, matchDate, seasonSlug, final, final
       <div className="space-y-3 mt-4">
         {matchups.map((m) => (
           <div key={m.divisionName} className="border-t border-navy/5 pt-3 first:border-t-0 first:pt-0">
-            <div className="text-[11px] font-body uppercase tracking-wider text-navy/50 mb-1">
+            <div className="text-[11px] font-body uppercase tracking-wider text-navy/65 mb-1">
               {m.divisionName}
             </div>
             <div className="flex items-center justify-between py-1">
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-body text-navy/40 mr-1.5 tabular-nums">#1</span>
+                <span className="text-[10px] font-body text-navy/65 mr-1.5 tabular-nums">#1</span>
                 <Link href={`/team/${m.topSeed.teamSlug}`} className="text-sm text-navy hover:text-red-600 transition-colors">
                   {m.topSeed.teamName}
                 </Link>
@@ -136,7 +136,7 @@ export function PlayoffsNextWeek({ matchups, matchDate, seasonSlug, final, final
                 <Link href={`/team/${m.secondSeed.teamSlug}`} className="text-sm text-navy hover:text-red-600 transition-colors">
                   {m.secondSeed.teamName}
                 </Link>
-                <span className="text-[10px] font-body text-navy/40 ml-1.5 tabular-nums">#2</span>
+                <span className="text-[10px] font-body text-navy/65 ml-1.5 tabular-nums">#2</span>
               </div>
             </div>
           </div>

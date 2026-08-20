@@ -24,14 +24,14 @@ export function TeamsDirectory({ teams }: { teams: DirectoryTeam[] }) {
       <div className="flex gap-3 mb-8">
         <button
           onClick={() => setShowCurrent(true)}
-          className={`text-sm font-body transition-colors ${showCurrent ? 'text-navy font-semibold' : 'text-navy/40 hover:text-red-600'}`}
+          className={`text-sm font-body transition-colors ${showCurrent ? 'text-navy font-semibold' : 'text-navy/65 hover:text-red-600'}`}
         >
           Current
         </button>
         <span className="text-navy/20">|</span>
         <button
           onClick={() => setShowCurrent(false)}
-          className={`text-sm font-body transition-colors ${!showCurrent ? 'text-navy font-semibold' : 'text-navy/40 hover:text-red-600'}`}
+          className={`text-sm font-body transition-colors ${!showCurrent ? 'text-navy font-semibold' : 'text-navy/65 hover:text-red-600'}`}
         >
           All Teams
         </button>

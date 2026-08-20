@@ -246,7 +246,7 @@ export function RecordProgression({ facts, bowlerName }: Props) {
         </div>
         <button
           onClick={() => { setAnimPhase(-1); setAnimKey(k => k + 1); setTimeout(() => setAnimPhase(0), 100); }}
-          className="text-[11px] text-navy/40 hover:text-navy/70 font-body flex items-center gap-1 transition-colors cursor-pointer mb-0.5"
+          className="text-[11px] text-navy/65 hover:text-navy/70 font-body flex items-center gap-1 transition-colors cursor-pointer mb-0.5"
         >
           <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 1v5h5" />

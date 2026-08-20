@@ -181,7 +181,7 @@ export function StandingsRaceChart({ raceData, standings, playoffTeamIDs, hasDiv
                     {sorted.map((entry) => (
                       <div key={entry.dataKey as string} className="flex items-center gap-1.5 py-0.5">
                         <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: entry.color }} />
-                        <span className="text-navy/50">#{entry.value}</span>
+                        <span className="text-navy/65">#{entry.value}</span>
                         <span className="text-navy" style={{ color: entry.color }}>{entry.dataKey}</span>
                       </div>
                     ))}

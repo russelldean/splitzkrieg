@@ -145,7 +145,7 @@ export default async function SeasonStatsPage({
         <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
           Season {strikeX(season.romanNumeral)}
         </h1>
-        <p className="font-body text-sm text-navy/55 mt-1">
+        <p className="font-body text-sm text-navy/65 mt-1">
           Stats &middot; {season.period} {season.year}
         </p>
       </div>

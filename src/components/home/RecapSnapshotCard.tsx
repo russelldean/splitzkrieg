@@ -50,7 +50,7 @@ export function RecapSnapshotCard({ post, snapshot, preseason = false }: Props) 
           {preseason ? (
           <div className="h-full flex flex-col justify-center py-6">
             <h3 className="font-heading text-lg text-navy">Week {snapshot.weekNumber} Highlights</h3>
-            <p className="font-body text-sm text-navy/55 mt-1">Coming soon</p>
+            <p className="font-body text-sm text-navy/65 mt-1">Coming soon</p>
           </div>
           ) : (
           <>

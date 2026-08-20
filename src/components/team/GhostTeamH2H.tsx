@@ -128,7 +128,7 @@ export function GhostTeamH2H({ matchups }: Props) {
   return (
     <section>
       <SectionHeading>Ghost Team Records</SectionHeading>
-      <p className="font-body text-sm text-navy/55 mb-3">
+      <p className="font-body text-sm text-navy/65 mb-3">
         Ghost wins when the opponent doesn&rsquo;t get within {GHOST_THRESHOLD} pins of their team scratch average.
       </p>
 
@@ -182,7 +182,7 @@ function GhostSummaryRow({
       >
         <td className="px-4 py-2.5">
           <span className="flex items-center gap-2">
-            <span className="text-navy/55 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
+            <span className="text-navy/65 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
             <Link
               href={`/team/${s.opponentSlug}`}
               onClick={(e) => e.stopPropagation()}
@@ -217,7 +217,7 @@ function GhostDrillDown({ details }: { details: GhostTeamMatchup[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm font-body">
           <thead>
-            <tr className="border-b border-navy/8 text-navy/50">
+            <tr className="border-b border-navy/8 text-navy/65">
               <th className="text-left px-4 py-1.5 font-normal">Date</th>
               <th className="text-left px-3 py-1.5 font-normal">Season</th>
               <th className="text-right px-3 py-1.5 font-normal">Wk</th>
@@ -268,7 +268,7 @@ function GhostDrillDown({ details }: { details: GhostTeamMatchup[] }) {
                     {m.scratchGame3}
                     <span className="text-navy/30 text-xs">/{threshold}</span>
                   </td>
-                  <td className="text-right px-3 py-1.5 tabular-nums text-navy/55">
+                  <td className="text-right px-3 py-1.5 tabular-nums text-navy/65">
                     {m.teamAvg}
                   </td>
                 </tr>

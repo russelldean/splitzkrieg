@@ -30,7 +30,7 @@ export default function HeatCheckPreview() {
           <div className="space-y-4">
             {SAMPLES.map((s) => (
               <div key={s.label}>
-                <div className="text-xs font-body text-navy/40 mb-1 ml-1">{s.label}</div>
+                <div className="text-xs font-body text-navy/65 mb-1 ml-1">{s.label}</div>
                 <LeagueHeatCheck
                   pinsOverPerGame={s.pinsOver}
                   leagueAvg={s.avg}
@@ -47,7 +47,7 @@ export default function HeatCheckPreview() {
           <div className="space-y-6">
             {SAMPLES.map((s) => (
               <div key={s.label} className="bg-white border border-navy/10 rounded-lg p-4 shadow-sm">
-                <div className="text-xs font-body text-navy/40 mb-3">{s.label}</div>
+                <div className="text-xs font-body text-navy/65 mb-3">{s.label}</div>
                 <MiniHeatCheck
                   pinsOverPerGame={s.pinsOver}
                   leagueAvg={s.avg}

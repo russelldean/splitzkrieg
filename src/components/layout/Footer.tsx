@@ -59,7 +59,7 @@ function LogoBlock({ className }: { className?: string }) {
           unoptimized
         />
       </Link>
-      <p className="font-body text-sm text-cream/50 tracking-wide -mt-1">
+      <p className="font-body text-sm text-cream/70 tracking-wide -mt-1">
         Durham, NC &middot; Since 2007
       </p>
       <div className="flex items-center gap-4 mt-1">
@@ -68,7 +68,7 @@ function LogoBlock({ className }: { className?: string }) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Splitzkrieg on Instagram"
-          className="text-cream/40 hover:text-red transition-colors"
+          className="text-cream/70 hover:text-red transition-colors"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -83,7 +83,7 @@ function LogoBlock({ className }: { className?: string }) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Splitzkrieg on Facebook"
-          className="text-cream/40 hover:text-red transition-colors"
+          className="text-cream/70 hover:text-red transition-colors"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path

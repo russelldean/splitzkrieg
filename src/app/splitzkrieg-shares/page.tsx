@@ -99,7 +99,7 @@ export default function SplitzkriegSharesPage() {
                   July 2021
                 </div>
               </div>
-              <figcaption className="text-center font-body text-sm text-navy/50 italic">
+              <figcaption className="text-center font-body text-sm text-navy/65 italic">
                 Monday, July 26, 2021. The inaugural Splitzkrieg Shares table.
               </figcaption>
             </figure>
@@ -125,7 +125,7 @@ export default function SplitzkriegSharesPage() {
                   Now
                 </div>
               </div>
-              <figcaption className="text-center font-body text-sm text-navy/50 italic">
+              <figcaption className="text-center font-body text-sm text-navy/65 italic">
                 Things have escalated.
               </figcaption>
             </figure>

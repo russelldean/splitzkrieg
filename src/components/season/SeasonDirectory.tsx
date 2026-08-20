@@ -115,11 +115,11 @@ export function SeasonDirectory({ seasons, currentSlug, trailCurrent, heading, s
                         >
                           {season.period} {season.year}
                         </Link>
-                        <span className="font-body text-sm text-navy/50">
+                        <span className="font-body text-sm text-navy/65">
                           {season.romanNumeral}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-body text-navy/55 mt-0.5">
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-body text-navy/65 mt-0.5">
                         <span className="tabular-nums">{season.teamCount} teams</span>
                         <span className="tabular-nums">{season.bowlerCount} bowlers</span>
                         {season.champion && (

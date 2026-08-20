@@ -17,7 +17,7 @@ function TeamNameLabel({ name }: { name: string }) {
 
 function GhostTeamLink({ className }: { className?: string }) {
   return (
-    <Link href={`/team/${GHOST_TEAM_SLUG}`} className={`hover:text-red-600 transition-colors ${className ?? 'text-navy/50'}`}>
+    <Link href={`/team/${GHOST_TEAM_SLUG}`} className={`hover:text-red-600 transition-colors ${className ?? 'text-navy/65'}`}>
       Ghost Team {'👻'}
     </Link>
   );
@@ -167,7 +167,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                 <div className="flex items-center justify-between font-body px-3 py-2">
                   <div className={`flex-1 min-w-0 truncate ${leftWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                     {leftForfeit ? (
-                      <span className="text-navy/50">Ghost Team {'👻'}</span>
+                      <span className="text-navy/65">Ghost Team {'👻'}</span>
                     ) : (
                       <TeamNameLabel name={leftName} />
                     )}
@@ -179,18 +179,18 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
                   </div>
                   <div className={`flex-1 min-w-0 truncate text-right ${rightWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
                     {rightForfeit ? (
-                      <span className="text-navy/50">Ghost Team {'👻'}</span>
+                      <span className="text-navy/65">Ghost Team {'👻'}</span>
                     ) : (
                       <TeamNameLabel name={rightName} />
                     )}
                   </div>
-                  <span className="text-navy/40 text-xs ml-2 shrink-0">
+                  <span className="text-navy/65 text-xs ml-2 shrink-0">
                     {isOpen ? '\u25B2' : '\u25BC'}
                   </span>
                 </div>
                 {!isOpen && mvpBowler && (
                   <div className="px-3 py-1 border-t border-navy/5 bg-navy/[0.02] text-xs font-body text-amber-800">
-                    <span className="text-navy/50">Bowler of the Match</span>{' '}
+                    <span className="text-navy/65">Bowler of the Match</span>{' '}
                     {mvpBowler.bowlerName}
                     <span className="text-navy/65 ml-1">{mvpBowler.handSeries}</span>
                   </div>
@@ -250,7 +250,7 @@ export function WeekMatchSummary({ weekScores, schedule, matchResults, week }: P
       </div>
 
       {forfeitTeamNames.length > 0 && (
-        <div className="mt-2 px-3 py-2 bg-navy/[0.02] rounded-lg text-xs font-body text-navy/55">
+        <div className="mt-2 px-3 py-2 bg-navy/[0.02] rounded-lg text-xs font-body text-navy/65">
           {'👻'} Forfeit -{' '}
           {forfeitTeamNames.map((name, i) => (
             <span key={i}>

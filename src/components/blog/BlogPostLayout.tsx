@@ -64,7 +64,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
                     className="font-body text-sm text-white/70 hover:text-white transition-colors"
                   >
                     Season {meta.season} &middot; Week {meta.week}
-                    <span className="text-white/40 ml-1">(jump to results)</span>
+                    <span className="text-white/70 ml-1">(jump to results)</span>
                   </Link>
                 </>
               )}
@@ -79,7 +79,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
           <>
             <Link
               href="/blog"
-              className="inline-flex items-center gap-1 font-body text-sm text-navy/50 hover:text-navy transition-colors mb-6"
+              className="inline-flex items-center gap-1 font-body text-sm text-navy/65 hover:text-navy transition-colors mb-6"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -97,7 +97,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
                 >
                   {meta.type === 'recap' ? 'Recap' : 'Announcement'}
                 </span>
-                <span className="font-body text-sm text-navy/50">
+                <span className="font-body text-sm text-navy/65">
                   {formatDate(meta.date)}
                 </span>
               </div>
@@ -107,7 +107,7 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
               {meta.season && meta.week != null && meta.seasonSlug && (
                 <Link
                   href={`/week/${meta.seasonSlug}/${meta.week}`}
-                  className="text-sm font-heading text-navy/50 uppercase tracking-wider hover:text-red-600 transition-colors"
+                  className="text-sm font-heading text-navy/65 uppercase tracking-wider hover:text-red-600 transition-colors"
                 >
                   Season {meta.season} &middot; Week {meta.week}
                   <span className="font-body normal-case tracking-normal text-navy/35 ml-1">(jump to results)</span>

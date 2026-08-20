@@ -165,7 +165,7 @@ export function PlayoffHistoryTable({ playoffs }: { playoffs: PlayoffSeason[] })
             <th className="py-2 pr-4 font-heading text-navy/60 text-sm uppercase tracking-wider">
               Season
             </th>
-            <th className="py-2 pr-4 font-heading text-amber-700/50 text-sm uppercase tracking-wider">
+            <th className="py-2 pr-4 font-heading text-amber-700/70 text-sm uppercase tracking-wider">
               Champion
             </th>
             <th className="py-2 pr-4 font-heading text-slate-400 text-sm uppercase tracking-wider">

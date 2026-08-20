@@ -47,7 +47,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
               {hasResults ? (
                 <div className="text-center px-2 tabular-nums text-sm shrink-0">
                   <span className={homeWon ? 'font-semibold text-navy' : 'text-navy/60'}>{t1Pts ?? '-'}</span>
-                  <span className="text-navy/40 mx-1">-</span>
+                  <span className="text-navy/65 mx-1">-</span>
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/60'}>{t2Pts ?? '-'}</span>
                 </div>
               ) : (
@@ -90,7 +90,7 @@ export function ThisWeekMatchups({ matchups, matchResults, seasonSlug, weekNumbe
                 <h4 className="font-heading text-sm text-navy">
                   {formatMatchDate(g.date, { weekday: 'long', month: 'short', day: 'numeric' }) ?? 'Date TBD'}
                 </h4>
-                <span className="text-[11px] font-body text-navy/50 tabular-nums">{g.items.length} matches</span>
+                <span className="text-[11px] font-body text-navy/65 tabular-nums">{g.items.length} matches</span>
               </div>
               <div className="space-y-1">
                 {g.items.map((m, i) => renderMatchup(m, i))}

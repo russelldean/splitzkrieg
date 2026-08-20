@@ -57,7 +57,7 @@ function GhostTeamAllTime({ ghostH2H, ghostWinPct }: { ghostH2H: GhostTeamMatchu
               <span className="text-navy/65">{losses}L</span>
               {ties > 0 && <>{' \u2013 '}<span className="text-amber-600">{ties}T</span></>}
             </div>
-            <div className="font-body text-xs text-navy/55 mt-1">
+            <div className="font-body text-xs text-navy/65 mt-1">
               {totalNights} matchup {totalNights === 1 ? 'night' : 'nights'} &middot; {wins + losses + ties} games
             </div>
           </div>

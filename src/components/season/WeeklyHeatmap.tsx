@@ -77,7 +77,7 @@ export function WeeklyHeatmap({ raceData, standings }: Props) {
           {teamWeekPts.map((t, i) => (
             <tr key={t.teamID} className="border-b border-navy/5">
               <td className="px-3 py-1 whitespace-nowrap sticky left-0 bg-white z-10">
-                <span className="text-navy/50 tabular-nums mr-2">{i + 1}</span>
+                <span className="text-navy/65 tabular-nums mr-2">{i + 1}</span>
                 <Link href={`/team/${t.teamSlug}`} className="text-navy hover:text-red-600 transition-colors text-xs sm:text-sm">
                   {t.teamName}
                 </Link>
@@ -99,7 +99,7 @@ export function WeeklyHeatmap({ raceData, standings }: Props) {
       </table>
       {/* Legend */}
       <div className="flex items-center justify-center gap-1 px-3 py-2 border-t border-navy/5">
-        <span className="text-[10px] text-navy/40 mr-1">0</span>
+        <span className="text-[10px] text-navy/65 mr-1">0</span>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
           <div
             key={n}
@@ -107,7 +107,7 @@ export function WeeklyHeatmap({ raceData, standings }: Props) {
             style={{ backgroundColor: heatColor(n) }}
           />
         ))}
-        <span className="text-[10px] text-navy/40 ml-1">9</span>
+        <span className="text-[10px] text-navy/65 ml-1">9</span>
       </div>
     </div>
     </div>

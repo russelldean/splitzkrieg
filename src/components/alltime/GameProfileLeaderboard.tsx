@@ -88,7 +88,7 @@ export function GameProfileLeaderboard({ title, subtitle, bowlers, sortLabel, in
                   >
                     {b.bowlerName}
                   </Link>
-                  <span className="text-[10px] text-navy/50 font-body tabular-nums">{b.games}g</span>
+                  <span className="text-[10px] text-navy/65 font-body tabular-nums">{b.games}g</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {pcts.map((pct, gi) => {

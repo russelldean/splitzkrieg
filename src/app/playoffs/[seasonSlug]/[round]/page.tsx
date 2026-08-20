@@ -161,7 +161,7 @@ export default async function PlayoffRoundPage({
           <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
             Season {strikeX(season.romanNumeral)}
           </h1>
-          <p className="font-body text-sm text-navy/55 mt-1">
+          <p className="font-body text-sm text-navy/65 mt-1">
             {ROUND_LABEL[round]} &middot; {season.period} {season.year}
           </p>
         </div>
@@ -349,7 +349,7 @@ function TeamMatchCard({
     : 'bg-white border border-navy/10 rounded-lg shadow-sm overflow-hidden';
   const headerCls = featured ? 'px-5 py-4 bg-amber-50/60 border-b border-amber-200' : 'px-3 py-2 bg-navy/[0.02] border-b border-navy/10';
   const teamNameCls = featured ? 'font-heading text-lg md:text-xl' : '';
-  const vsCls = featured ? 'text-amber-700 text-sm uppercase tracking-wider font-heading' : 'text-navy/40 text-xs uppercase tracking-wide';
+  const vsCls = featured ? 'text-amber-700 text-sm uppercase tracking-wider font-heading' : 'text-navy/65 text-xs uppercase tracking-wide';
 
   return (
     <div className={outerCls}>
@@ -384,14 +384,14 @@ function TeamMatchCard({
                 </tr>
               </thead>
               <tbody>
-                <tr className="text-navy/45">
+                <tr className="text-navy/65">
                   <td className="py-0.5 truncate">{match.team1Name}</td>
                   <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
                   <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
                   <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
                   <td className="text-right tabular-nums py-0.5 pl-3 pr-2">-</td>
                 </tr>
-                <tr className="text-navy/45">
+                <tr className="text-navy/65">
                   <td className="py-0.5 truncate">{match.team2Name}</td>
                   <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
                   <td className="text-right tabular-nums py-0.5 pl-3 pr-2 border-l border-navy/10">-</td>
@@ -401,7 +401,7 @@ function TeamMatchCard({
               </tbody>
             </table>
           </div>
-          <div className="px-3 py-2 border-t border-navy/5 text-center text-[11px] font-body text-navy/50 italic">
+          <div className="px-3 py-2 border-t border-navy/5 text-center text-[11px] font-body text-navy/65 italic">
             Bowling tonight at 7:15 PM &middot; scores update after each game
           </div>
         </>
@@ -466,7 +466,7 @@ function TeamMatchCard({
 
           {mvpBowler && (
             <div className="px-3 py-1.5 border-t border-navy/5 bg-navy/[0.02] text-xs font-body text-amber-800">
-              <span className="text-navy/50">Bowler of the Match</span>{' '}
+              <span className="text-navy/65">Bowler of the Match</span>{' '}
               <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
                 {mvpBowler.bowlerName}
               </Link>
@@ -536,7 +536,7 @@ function BracketSection({
     return (
       <div className={`bg-white border ${cardBorder} rounded-lg shadow-sm p-4`}>
         <h3 className="font-heading text-base text-navy mb-2">{title}</h3>
-        <p className="font-body text-xs text-navy/50 italic">Field not yet set.</p>
+        <p className="font-body text-xs text-navy/65 italic">Field not yet set.</p>
       </div>
     );
   }
@@ -615,7 +615,7 @@ function BracketSection({
       <h3 className="font-heading text-base text-navy px-4 py-2 border-b border-navy/10 bg-navy/[0.02]">{title}</h3>
       <table className="w-full text-xs font-body tabular-nums">
         <thead>
-          <tr className="text-navy/40 border-b border-navy/10">
+          <tr className="text-navy/65 border-b border-navy/10">
             <th className="text-left py-1 px-3">Bowler</th>
             <th className="text-center py-1 px-1 w-10">G1</th>
             <th className="text-center py-1 px-1 w-10">G2</th>
@@ -665,7 +665,7 @@ function BracketSection({
                     </span>
                   )}
                   {row.isAlternate && (
-                    <span className="ml-1 text-[10px] text-navy/40 italic">(alt)</span>
+                    <span className="ml-1 text-[10px] text-navy/65 italic">(alt)</span>
                   )}
                 </td>
                 <td className={`text-center py-1 px-1 ${isChampion ? 'text-amber-900 font-semibold' : 'text-navy/80'}`}>{row.result?.game1 ?? '-'}</td>

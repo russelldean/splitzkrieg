@@ -118,14 +118,14 @@ export function AverageProgressionChart({ history, bowlerName }: Props) {
       <div className="flex items-start justify-between mb-6">
         <div>
           {bowlerName && (
-            <p className="text-sm font-body text-navy/50 mb-0.5">{bowlerName}</p>
+            <p className="text-sm font-body text-navy/65 mb-0.5">{bowlerName}</p>
           )}
           <SectionHeading className="mb-0">Average Progression</SectionHeading>
         </div>
         <button
           onClick={handleShare}
           disabled={sharing}
-          className="inline-flex items-center gap-1.5 text-sm font-body text-navy/50 hover:text-navy transition-colors disabled:opacity-50 mt-1"
+          className="inline-flex items-center gap-1.5 text-sm font-body text-navy/65 hover:text-navy transition-colors disabled:opacity-50 mt-1"
           aria-label="Share chart"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">

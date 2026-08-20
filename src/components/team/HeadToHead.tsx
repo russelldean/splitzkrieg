@@ -40,7 +40,7 @@ function nightResultClass(m: TeamH2HMatchup): string {
 }
 
 function gameResultClass(ours: number | null, theirs: number | null): string {
-  if (ours == null || theirs == null) return 'text-navy/50';
+  if (ours == null || theirs == null) return 'text-navy/65';
   if (ours > theirs) return 'text-green-600 font-semibold';
   if (ours < theirs) return 'text-navy/65';
   return 'text-amber-600';
@@ -169,7 +169,7 @@ export function HeadToHead({ matchups, activeTeams, currentTeamID, isActive = tr
       </div>
 
       {isActive && notYetFaced.length > 0 && (
-        <p className="mt-4 text-sm font-body text-navy/55">
+        <p className="mt-4 text-sm font-body text-navy/65">
           <span className="font-medium text-navy/70">Have not yet faced: </span>
           {notYetFaced.map((t, i) => (
             <span key={t.teamID}>
@@ -205,7 +205,7 @@ function SummaryRow({
       >
         <td className="px-4 py-2.5">
           <span className="flex items-center gap-2">
-            <span className="text-navy/55 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
+            <span className="text-navy/65 text-xs">{isOpen ? '\u25BC' : '\u25B6'}</span>
             <Link
               href={`/team/${s.opponentSlug}`}
               onClick={(e) => e.stopPropagation()}
@@ -240,7 +240,7 @@ function DrillDown({ details }: { details: TeamH2HMatchup[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm font-body">
           <thead>
-            <tr className="border-b border-navy/8 text-navy/50">
+            <tr className="border-b border-navy/8 text-navy/65">
               <th className="text-left px-4 py-1.5 font-normal">Date</th>
               <th className="text-left px-3 py-1.5 font-normal">Season</th>
               <th className="text-right px-3 py-1.5 font-normal">Wk</th>

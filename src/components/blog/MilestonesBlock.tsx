@@ -17,7 +17,7 @@ export async function MilestonesBlock({ season, week }: MilestonesBlockProps) {
     <div className="bg-white rounded-lg border border-navy/10 shadow-sm p-5 my-6">
       <h3 className="font-heading text-lg text-navy mb-4">Milestones &amp; Personal Bests</h3>
       {milestones.length === 0 ? (
-        <p className="font-body text-sm text-navy/50 italic">No new milestones this week.</p>
+        <p className="font-body text-sm text-navy/65 italic">No new milestones this week.</p>
       ) : (
         <ul className="space-y-2">
           {milestones.map((m, i) => (
