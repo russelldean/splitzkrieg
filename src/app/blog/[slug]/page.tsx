@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { draftMode } from 'next/headers';
-import { MDXRemote } from 'next-mdx-remote/rsc';
+import { SafeMDX } from '@/components/mdx/SafeMDX';
 import { getAllPosts, getPostBySlug, getAdjacentPosts, getPostContent, getDraftPostBySlug } from '@/lib/blog';
 import { weekPathForPost } from '@/lib/week-writeup';
 import { BlogPostLayout } from '@/components/blog/BlogPostLayout';
-import { mdxComponents } from '@/lib/mdx-components';
-import { normalizeInlineTags } from '@/lib/mdx-source';
 import { getSiteUpdates } from '@/lib/queries/updates';
 
 export const dynamicParams = true;
@@ -72,7 +70,7 @@ export default async function BlogPostPage({
   return (
     <BlogPostLayout meta={meta} prev={prev} next={next} updates={siteUpdates}>
       {!meta.title ? null : (
-        <MDXRemote source={normalizeInlineTags(content)} components={mdxComponents} />
+        <SafeMDX source={content} label={`blog-${slug}`} />
       )}
     </BlogPostLayout>
   );

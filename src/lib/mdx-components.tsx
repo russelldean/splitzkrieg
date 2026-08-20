@@ -33,11 +33,13 @@ function Callout(props: CalloutData) {
 }
 
 /**
- * The complete set of tags a stored post body may use. MDXRemote is rendered
- * bare at both call sites (WeekWriteup and /blog/[slug]) with no error
- * boundary, so a capitalized tag that is NOT in this map throws during render
- * and fails the build for the week page as well as the post. Adding a name
- * here is the only thing that makes it safe to write in the editor.
+ * The set of tags a stored post body can render. A capitalized tag that is NOT
+ * in this map used to throw during render and fail the build for the week page
+ * as well as the post; SafeMDX now neutralizes unregistered names into a
+ * visible marker, so a typo degrades to one chip instead of a dead deploy.
+ *
+ * That is a safety net, not a licence: a name only RENDERS if it is registered
+ * here. Add the component to the map to make a tag usable in the editor.
  */
 export const mdxComponents: MDXComponents = {
   h1: ({ children }) => <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-4">{children}</h1>,

@@ -1,7 +1,5 @@
-import { MDXRemote } from 'next-mdx-remote/rsc';
-import { mdxComponents } from '@/lib/mdx-components';
+import { SafeMDX } from '@/components/mdx/SafeMDX';
 import { excerptWorthShowing } from '@/lib/week-writeup';
-import { normalizeInlineTags } from '@/lib/mdx-source';
 
 interface Props {
   /** Raw MDX body of the post. */
@@ -23,14 +21,12 @@ interface Props {
  * client-state default risks a hydration mismatch. <details open> is resolved
  * at render time, needs no JS, and is keyboard accessible for free.
  *
- * MDXRemote is rendered bare here, with no error boundary: a capitalized tag
- * that is not registered in mdxComponents throws and takes the whole week page
- * down at build. Stored bodies are prose plus <Bowler> today, so nothing is
- * exercising that edge, but the editor has no validation to stop it.
+ * The body is rendered through SafeMDX rather than MDXRemote directly. Post
+ * bodies are authored in an editor with no validation and read at build time,
+ * so a stray tag used to fail the prerender and take this page down with it.
  */
 export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: Props) {
   const teaser = excerptWorthShowing(excerpt, title);
-  const components = mdxComponents;
 
   return (
     <details
@@ -67,7 +63,7 @@ export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: P
           text, which is what happened when the recap moved off the blog page
           and lost BlogPostLayout's <article className="blog-prose"> wrapper. */}
       <div className="blog-prose px-4 pb-4 sm:px-5 sm:pb-5 pt-1 border-t border-navy/10">
-        <MDXRemote source={normalizeInlineTags(content)} components={components} />
+        <SafeMDX source={content} label={`week-writeup-${weekNum}`} />
       </div>
     </details>
   );
