@@ -11,6 +11,8 @@ const counts = (over: Partial<WeekCounts> = {}): WeekCounts => ({
   heroImage: null,
   writeupChars: 0,
   commitsAhead: null,
+  deployedBehindBy: null,
+  deployedSha: null,
   emailSentAt: null,
   ...over,
 });
@@ -91,8 +93,30 @@ describe('deriveWeekStatus', () => {
     expect(step(s, 'email').detail).toMatch(/2026/);
   });
 
-  it('marks deploy unknown when git state could not be read', () => {
-    // Running on Vercel, where there is no working tree to compare.
-    expect(step(deriveWeekStatus(counts({ commitsAhead: null })), 'deploy').state).toBe('unknown');
+  it('says the live build is current when it matches main', () => {
+    // On Vercel there is no working tree, so the question becomes "is what is
+    // deployed actually current", which the build SHA can answer.
+    const s = deriveWeekStatus(counts({ commitsAhead: null, deployedBehindBy: 0, deployedSha: '812995f' }));
+    expect(step(s, 'deploy').state).toBe('done');
+    expect(step(s, 'deploy').detail).toMatch(/812995f/);
+  });
+
+  it('flags a live build that is behind main', () => {
+    const s = deriveWeekStatus(counts({ commitsAhead: null, deployedBehindBy: 4, deployedSha: 'abc1234' }));
+    expect(step(s, 'deploy').state).toBe('attention');
+    expect(step(s, 'deploy').detail).toMatch(/4/);
+  });
+
+  it('prefers local git state over the deployed comparison when both exist', () => {
+    // On a laptop the unpushed count is the more actionable number.
+    const s = deriveWeekStatus(counts({ commitsAhead: 2, deployedBehindBy: 0, deployedSha: 'abc1234' }));
+    expect(step(s, 'deploy').state).toBe('attention');
+    expect(step(s, 'deploy').detail).toMatch(/2 commits not pushed/);
+  });
+
+  it('marks deploy unknown only when neither source could answer', () => {
+    expect(
+      step(deriveWeekStatus(counts({ commitsAhead: null, deployedBehindBy: null })), 'deploy').state,
+    ).toBe('unknown');
   });
 });

@@ -31,6 +31,42 @@ async function commitsAhead(): Promise<number | null> {
 }
 
 /**
+ * How far the LIVE build is behind main, using the commit Vercel built from.
+ *
+ * This is the question the deployed site can actually answer. There is no
+ * working tree there, so the unpushed-commit count is unknowable, and reporting
+ * "unknown" is honest but tells the reader nothing they can act on.
+ *
+ * Returns nulls rather than throwing: a GitHub hiccup must not break the board.
+ */
+async function deployedState(): Promise<{ behindBy: number | null; sha: string | null }> {
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA;
+  const token = process.env.GITHUB_TOKEN;
+  if (!sha || !token) return { behindBy: null, sha: sha ? sha.slice(0, 7) : null };
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/russelldean/splitzkrieg/compare/${sha}...main`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        // Never serve a stale answer to a freshness question.
+        cache: 'no-store',
+      },
+    );
+    if (!res.ok) return { behindBy: null, sha: sha.slice(0, 7) };
+    const data = (await res.json()) as { ahead_by?: number };
+    // ahead_by counts commits main has that the deployed commit does not.
+    return { behindBy: typeof data.ahead_by === 'number' ? data.ahead_by : null, sha: sha.slice(0, 7) };
+  } catch {
+    return { behindBy: null, sha: sha.slice(0, 7) };
+  }
+}
+
+/**
  * GET /api/evillair/week-status?seasonID=36&week=4
  *
  * Everything here is read back out of the system rather than recorded when a
@@ -105,6 +141,9 @@ export async function GET(request: NextRequest) {
     );
 
     const row = result.recordset[0];
+    // Local git first, the deployed comparison as the fallback for Vercel.
+    const ahead = await commitsAhead();
+    const deployed = ahead == null ? await deployedState() : { behindBy: null, sha: null };
     const counts: WeekCounts = {
       scores: row?.scores ?? 0,
       turkeys: row?.turkeys ?? 0,
@@ -115,7 +154,9 @@ export async function GET(request: NextRequest) {
       heroImage: row?.heroImage ?? null,
       writeupChars: Number(row?.writeupChars ?? 0) || 0,
       emailSentAt: row?.emailSentAt ?? null,
-      commitsAhead: await commitsAhead(),
+      commitsAhead: ahead,
+      deployedBehindBy: deployed.behindBy,
+      deployedSha: deployed.sha,
     };
 
     return NextResponse.json({ seasonID, week, counts, steps: deriveWeekStatus(counts) });

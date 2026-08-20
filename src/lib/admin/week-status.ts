@@ -31,6 +31,14 @@ export interface WeekCounts {
   writeupChars: number;
   /** Commits on main not yet pushed. Null when there is no working tree. */
   commitsAhead: number | null;
+  /**
+   * How many commits main has that the live build does not. Null when it could
+   * not be determined. Only consulted when there is no working tree, since on a
+   * laptop the unpushed count is the more actionable number.
+   */
+  deployedBehindBy: number | null;
+  /** Short SHA the live build was made from, for the detail line. */
+  deployedSha: string | null;
   /** ISO timestamp recorded when the weekly email went out, else null. */
   emailSentAt: string | null;
 }
@@ -78,9 +86,20 @@ export function deriveWeekStatus(counts: WeekCounts): WeekStatusStep[] {
 
   let deployState: StepState;
   let deployDetail: string;
-  if (counts.commitsAhead == null) {
+  if (counts.commitsAhead == null && counts.deployedBehindBy != null) {
+    // No working tree, so answer the question the live site CAN answer: is what
+    // is deployed actually current? "Unknown" is honest but useless.
+    const sha = counts.deployedSha ? ` (${counts.deployedSha})` : '';
+    if (counts.deployedBehindBy > 0) {
+      deployState = 'attention';
+      deployDetail = `live build is ${counts.deployedBehindBy} commit${counts.deployedBehindBy === 1 ? '' : 's'} behind main${sha}`;
+    } else {
+      deployState = 'done';
+      deployDetail = `live build is current${sha}`;
+    }
+  } else if (counts.commitsAhead == null) {
     deployState = 'unknown';
-    deployDetail = 'no working tree here, check locally';
+    deployDetail = 'could not read git or the deployed build';
   } else if (counts.commitsAhead > 0) {
     deployState = 'attention';
     deployDetail = `${counts.commitsAhead} commit${counts.commitsAhead === 1 ? '' : 's'} not pushed`;
