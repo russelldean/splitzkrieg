@@ -30,6 +30,7 @@ import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { WeekWriteup } from '@/components/week/WeekWriteup';
 import { WeekAdminBar } from '@/components/week/WeekAdminBar';
+import { ScrollToHash } from '@/components/ui/ScrollToHash';
 import { shouldExpandWriteup } from '@/lib/week-writeup';
 
 /**
@@ -145,6 +146,11 @@ export async function WeekPageBody({
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Holds a #results deep link on target while the rest of this page
+          renders. Without it the router scrolls once, too early, and the
+          content above the anchor then pushes the anchor out of view. */}
+      <ScrollToHash />
+
       <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} position="top" />
 
       {/* Admin shortcut to this week's writeup. Current season only: nobody is
