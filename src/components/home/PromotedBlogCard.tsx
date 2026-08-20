@@ -2,13 +2,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { PostMeta } from '@/lib/blog';
 import { postHref } from '@/lib/week-writeup';
+import { postImage } from '@/lib/home-cards';
 
 interface Props {
   post: PostMeta;
 }
 
 export function PromotedBlogCard({ post }: Props) {
-  const image = post.cardImage || post.heroImage;
+  const image = postImage(post);
 
   return (
     <Link
@@ -17,48 +18,44 @@ export function PromotedBlogCard({ post }: Props) {
     >
       {/* Mobile: image with overlay text */}
       <div className="relative sm:hidden">
-        {image && (
-          <div className="relative w-full h-32 overflow-hidden">
-            <Image
-              src={image}
-              alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
-                  New Post
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="font-heading text-base text-white group-hover:text-red-300 transition-colors line-clamp-1">
-                  {post.title.replace(/^Season\s+/, '')}
-                </h3>
-                <span className="font-body text-xs text-white/70 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">
-                  Read &rarr;
-                </span>
-              </div>
+        <div className="relative w-full h-32 overflow-hidden">
+          <Image
+            src={image}
+            alt={post.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
+                New Post
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="font-heading text-base text-white group-hover:text-red-300 transition-colors line-clamp-1">
+                {post.title.replace(/^Season\s+/, '')}
+              </h3>
+              <span className="font-body text-xs text-white/70 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">
+                Read &rarr;
+              </span>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Desktop: side-by-side layout */}
       <div className="hidden sm:flex flex-row bg-white h-full">
-        {image && (
-          <div className="relative w-48 flex-shrink-0 overflow-hidden">
-            <Image
-              src={image}
-              alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="192px"
-            />
-          </div>
-        )}
+        <div className="relative w-48 flex-shrink-0 overflow-hidden">
+          <Image
+            src={image}
+            alt={post.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="192px"
+          />
+        </div>
         <div className="p-5 flex flex-col justify-end min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-heading uppercase tracking-wider bg-red-600 text-white">
