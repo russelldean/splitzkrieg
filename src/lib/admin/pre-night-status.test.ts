@@ -39,7 +39,9 @@ describe('lineups row', () => {
   });
 
   it('mentions captains with no email address', () => {
-    expect(row(counts({ captainsWithoutEmail: 2 }), 'lineups').detail).toContain('2');
+    expect(row(counts({ captainsWithoutEmail: 2 }), 'lineups').detail).toContain(
+      '2 captains with no email on file',
+    );
   });
 });
 
@@ -56,6 +58,12 @@ describe('reminder row', () => {
 
   it('is optional once every lineup is in', () => {
     expect(row(counts({ lineupsIn: 20 }), 'reminder').state).toBe('optional');
+  });
+
+  it('reports how many days out it is scheduled while still pending', () => {
+    const r = row(counts(), 'reminder');
+    expect(r.state).toBe('pending');
+    expect(r.detail).toBe('scheduled, 3 day(s) out');
   });
 });
 
@@ -101,6 +109,13 @@ describe('no scheduled match', () => {
   it('reports every row as unknown rather than inventing urgency', () => {
     const rows = derivePreNightStatus(counts({ matchDate: null }));
     expect(rows.every((r) => r.state === 'unknown')).toBe(true);
+    expect(rows.map((r) => r.key)).toEqual([
+      'lineups',
+      'reminder',
+      'lastcall',
+      'lppush',
+      'scoresheets',
+    ]);
   });
 });
 
@@ -116,7 +131,7 @@ describe('match already in the past', () => {
   it('keeps the no-email note alongside the past-match note', () => {
     const r = row(past({ captainsWithoutEmail: 2 }), 'lineups');
     expect(r.detail).toMatch(/match was 3 day\(s\) ago/);
-    expect(r.detail).toContain('2 captain(s) have no email on file');
+    expect(r.detail).toContain('2 captains with no email on file');
   });
 
   it('flags a never-sent reminder as attention, not pending', () => {
@@ -144,5 +159,12 @@ describe('match already in the past', () => {
     });
     const rows = derivePreNightStatus(c);
     expect(rows.some((r) => r.state === 'attention')).toBe(false);
+    expect(rows.map((r) => r.key)).toEqual([
+      'lineups',
+      'reminder',
+      'lastcall',
+      'lppush',
+      'scoresheets',
+    ]);
   });
 });

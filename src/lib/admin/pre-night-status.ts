@@ -52,7 +52,7 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
 
   const noEmailNote =
     counts.captainsWithoutEmail > 0
-      ? `, ${counts.captainsWithoutEmail} captain(s) have no email on file`
+      ? `, ${counts.captainsWithoutEmail} captain${counts.captainsWithoutEmail === 1 ? '' : 's'} with no email on file`
       : '';
   const lineupsDetail =
     `${counts.lineupsIn}/${counts.teamsScheduled} in` +
@@ -108,25 +108,22 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
     label: string,
     at: string | null,
     missingDetail: string,
-    pastMissingDetail: string,
   ): WeekStatusStep => ({
     key,
     label,
     state: at ? 'done' : isMatchDay || isPast ? 'attention' : 'pending',
-    detail: at ? when(at) : isPast ? pastMissingDetail : missingDetail,
+    detail: at
+      ? when(at)
+      : isPast
+        ? `${missingDetail}, match has passed`
+        : missingDetail,
   });
 
   return [
     { key: 'lineups', label: 'Lineups in', state: lineupsState, detail: lineupsDetail },
     { key: 'reminder', label: 'Reminder', state: reminderState, detail: reminderDetail },
     { key: 'lastcall', label: 'Last call', state: lastCallState, detail: lastCallDetail },
-    actionRow('lppush', 'LP push', counts.lpPushedAt, 'not recorded', 'not recorded, match has passed'),
-    actionRow(
-      'scoresheets',
-      'Scoresheets',
-      counts.scoresheetsAt,
-      'not recorded',
-      'not recorded, match has passed',
-    ),
+    actionRow('lppush', 'LP push', counts.lpPushedAt, 'not recorded'),
+    actionRow('scoresheets', 'Scoresheets', counts.scoresheetsAt, 'not recorded'),
   ];
 }
