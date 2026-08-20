@@ -42,17 +42,24 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
 
   const days = daysUntil(counts.nowET, counts.matchDate);
   const isMatchDay = days === 0;
+  // Past, not merely "not yet". The board is fed publishedWeek + 1, and that
+  // pointer does not advance until the week is published, so between the
+  // bowling night and the publish this function is routinely asked about a
+  // match that already happened. Reporting those rows as "pending" would tell
+  // Russ a night that is over is still comfortably ahead of him.
+  const isPast = days < 0;
   const allIn = counts.teamsScheduled > 0 && counts.lineupsIn >= counts.teamsScheduled;
 
-  const lineupsDetail =
-    `${counts.lineupsIn}/${counts.teamsScheduled} in` +
-    (counts.captainsWithoutEmail > 0
-      ? `, ${counts.captainsWithoutEmail} captain(s) have no email on file`
-      : '');
+  const lineupsDetail = isPast
+    ? `${counts.lineupsIn}/${counts.teamsScheduled} in, match was ${-days} day(s) ago`
+    : `${counts.lineupsIn}/${counts.teamsScheduled} in` +
+      (counts.captainsWithoutEmail > 0
+        ? `, ${counts.captainsWithoutEmail} captain(s) have no email on file`
+        : '');
 
   let lineupsState: StepState = 'pending';
   if (allIn) lineupsState = 'done';
-  else if (isMatchDay) lineupsState = 'attention';
+  else if (isMatchDay || isPast) lineupsState = 'attention';
 
   let reminderState: StepState;
   let reminderDetail: string;
@@ -64,6 +71,9 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
     // the cron being off is not a problem worth flagging.
     reminderState = 'optional';
     reminderDetail = 'not needed, all lineups in';
+  } else if (isPast) {
+    reminderState = 'attention';
+    reminderDetail = 'match has passed, never sent';
   } else if (!counts.automationEnabled) {
     reminderState = 'attention';
     reminderDetail = 'automation is off, nothing will send';
@@ -80,6 +90,9 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
   } else if (allIn) {
     lastCallState = 'optional';
     lastCallDetail = 'not needed, all lineups in';
+  } else if (isPast) {
+    lastCallState = 'attention';
+    lastCallDetail = 'match has passed, never sent';
   } else if (isMatchDay) {
     lastCallState = 'attention';
     lastCallDetail = 'match day and lineups are still missing';
@@ -93,18 +106,25 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
     label: string,
     at: string | null,
     missingDetail: string,
+    pastMissingDetail: string,
   ): WeekStatusStep => ({
     key,
     label,
-    state: at ? 'done' : isMatchDay ? 'attention' : 'pending',
-    detail: at ? when(at) : missingDetail,
+    state: at ? 'done' : isMatchDay || isPast ? 'attention' : 'pending',
+    detail: at ? when(at) : isPast ? pastMissingDetail : missingDetail,
   });
 
   return [
     { key: 'lineups', label: 'Lineups in', state: lineupsState, detail: lineupsDetail },
     { key: 'reminder', label: 'Reminder', state: reminderState, detail: reminderDetail },
     { key: 'lastcall', label: 'Last call', state: lastCallState, detail: lastCallDetail },
-    actionRow('lppush', 'LP push', counts.lpPushedAt, 'not recorded'),
-    actionRow('scoresheets', 'Scoresheets', counts.scoresheetsAt, 'not recorded'),
+    actionRow('lppush', 'LP push', counts.lpPushedAt, 'not recorded', 'not recorded, match has passed'),
+    actionRow(
+      'scoresheets',
+      'Scoresheets',
+      counts.scoresheetsAt,
+      'not recorded',
+      'not recorded, match has passed',
+    ),
   ];
 }

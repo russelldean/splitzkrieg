@@ -103,3 +103,40 @@ describe('no scheduled match', () => {
     expect(rows.every((r) => r.state === 'unknown')).toBe(true);
   });
 });
+
+describe('match already in the past', () => {
+  const past = (over: Partial<PreNightCounts> = {}) => counts({ nowET: '2026-08-27', ...over });
+
+  it('flags missing lineups as attention and says the match has passed', () => {
+    const r = row(past(), 'lineups');
+    expect(r.state).toBe('attention');
+    expect(r.detail).toMatch(/match was 3 day\(s\) ago/);
+  });
+
+  it('flags a never-sent reminder as attention, not pending', () => {
+    expect(row(past(), 'reminder').state).toBe('attention');
+  });
+
+  it('flags a never-sent last call as attention, and drops the "not yet needed" copy', () => {
+    const r = row(past(), 'lastcall');
+    expect(r.state).toBe('attention');
+    expect(r.detail).not.toContain('not yet needed');
+  });
+
+  it('flags an unrecorded LP push and scoresheets as attention', () => {
+    expect(row(past(), 'lppush').state).toBe('attention');
+    expect(row(past(), 'scoresheets').state).toBe('attention');
+  });
+
+  it('stays calm for a finished week that was fully handled', () => {
+    const c = past({
+      lineupsIn: 20,
+      remindSentAt: '2026-08-21T14:00:00.000Z',
+      lastCallSentAt: '2026-08-24T14:00:00.000Z',
+      lpPushedAt: '2026-08-23T18:00:00.000Z',
+      scoresheetsAt: '2026-08-24T19:00:00.000Z',
+    });
+    const rows = derivePreNightStatus(c);
+    expect(rows.some((r) => r.state === 'attention')).toBe(false);
+  });
+});
