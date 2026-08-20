@@ -15,7 +15,8 @@ describe('daysUntil', () => {
   });
 
   it('does not drift across a DST boundary', () => {
-    // DST ends 2026-11-01. Nov 2 is week 9.
+    // UTC-anchored arithmetic means ET's DST transition cannot affect the
+    // count. DST ends 2026-11-01 and Nov 2 is week 9.
     expect(daysUntil('2026-10-30', '2026-11-02')).toBe(3);
   });
 });
@@ -45,6 +46,18 @@ describe('reminderPlan', () => {
 
   it('skips when the match is too far out', () => {
     const p = reminderPlan({ ...base, nowET: '2026-08-18' });
+    expect(p.eligible).toBe(false);
+    expect(p.reason).toMatch(/early/i);
+  });
+
+  it('is still eligible exactly at the far edge of the window (4 days out)', () => {
+    const p = reminderPlan({ ...base, nowET: '2026-08-20', matchDate: '2026-08-24' });
+    expect(p.eligible).toBe(true);
+    expect(p.pass).toBe('reminder');
+  });
+
+  it('is not eligible one day past the far edge (5 days out)', () => {
+    const p = reminderPlan({ ...base, nowET: '2026-08-19', matchDate: '2026-08-24' });
     expect(p.eligible).toBe(false);
     expect(p.reason).toMatch(/early/i);
   });
@@ -88,5 +101,20 @@ describe('isDuplicate', () => {
     const outside = new Date(Date.parse(now) - (DEDUPE_HOURS + 1) * 3600_000).toISOString();
     expect(isDuplicate(inside, now)).toBe(true);
     expect(isDuplicate(outside, now)).toBe(false);
+  });
+
+  it('is false at the exact boundary, since the comparison is strict less-than', () => {
+    const exact = new Date(Date.parse(now) - DEDUPE_HOURS * 3600_000).toISOString();
+    expect(isDuplicate(exact, now)).toBe(false);
+  });
+
+  // These two bad-input cases resolve to opposite polarities on purpose.
+  it('is false for an unparseable lastSentAt, failing OPEN toward a resend (same bias as the bug this module fixes: better a duplicate than silently mailing nobody)', () => {
+    expect(isDuplicate('not-a-date', now)).toBe(false);
+  });
+
+  it('is true for a lastSentAt in the future (clock skew), failing CLOSED to suppress the send', () => {
+    const future = new Date(Date.parse(now) + 3600_000).toISOString();
+    expect(isDuplicate(future, now)).toBe(true);
   });
 });
