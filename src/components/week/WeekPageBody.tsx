@@ -29,6 +29,7 @@ import { getPostForWeek, getPostContentForWeek, type DraftPostOverride, type Pos
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
 import { WeekWriteup } from '@/components/week/WeekWriteup';
+import { WeekAdminBar } from '@/components/week/WeekAdminBar';
 import { shouldExpandWriteup } from '@/lib/week-writeup';
 
 /**
@@ -145,6 +146,14 @@ export async function WeekPageBody({
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <TrailNav current="/week" seasonSlug={seasonSlug} seasonRoman={season.romanNumeral} position="top" />
+
+      {/* Admin shortcut to this week's writeup. Current season only: nobody is
+          going back to write a recap for a season that finished years ago.
+          Renders nothing for a normal visitor, and nothing on the server, so
+          the static build for all ~325 week pages is unaffected. */}
+      {seasonSlug === currentSeasonSlug && !draftPost && (
+        <WeekAdminBar seasonSlug={seasonSlug} week={weekNum} />
+      )}
       <div className="mb-6">
         {/* Week header */}
         <div className="pb-5 border-b border-red-600/20">
