@@ -15,7 +15,8 @@ import {
   getSeasonChampionsCard,
 } from '@/lib/queries';
 import type { SeasonChampionsCardData } from '@/lib/queries';
-import { getPostBySlug, getAllPosts } from '@/lib/blog';
+import { getAllPosts } from '@/lib/blog';
+import { selectCardPost } from '@/lib/home-cards';
 import { MilestoneTicker } from '@/components/home/MilestoneTicker';
 import { SeasonSnapshot } from '@/components/home/SeasonSnapshot';
 import { MiniStandings } from '@/components/home/MiniStandings';
@@ -49,10 +50,12 @@ export default async function Home() {
     getRandomFacts(),
   ]);
 
-  // Latest blog post for desktop sidebar; promoted post if badge active
-  const latestPost = allPosts[0] ?? null;
+  // The post the NEW badge points at, if the badge is live. getNewBlogBadgeId
+  // returns "slug|timestamp" and already applies the 14 day expiry.
   const promotedSlug = blogBadgeId?.split('|')[0] ?? null;
-  const promotedPost = promotedSlug ? await getPostBySlug(promotedSlug) : undefined;
+  const promotedPost = promotedSlug
+    ? allPosts.find((p) => p.slug === promotedSlug) ?? null
+    : null;
 
   // Merge milestone achievements into the ticker, sorted alphabetically by name
   const allTickerItems = [...weeklyHighlights, ...milestoneTickerItems(leagueMilestones)]
@@ -185,7 +188,17 @@ export default async function Home() {
     }
   }
 
-  const showPromotedPost = promotedPost && promotedPost.type !== 'recap';
+  // The hero always points at the results. The card points at the promoted post
+  // when that is somewhere other than this same week page. See
+  // docs/superpowers/specs/2026-08-19-homepage-hero-card-destinations-design.md
+  const weekHref = seasonSnapshot
+    ? `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`
+    : null;
+  const cardPost = selectCardPost({ posts: allPosts, promoted: promotedPost, weekHref });
+  // Mobile only surfaces the card when it is NOT the weekly recap: the mobile
+  // hero bar already links to the week page, so a recap card there is a third
+  // door to the same room. A non-recap post has no other entry point.
+  const mobilePromoted = cardPost && cardPost.type !== 'recap' ? cardPost : null;
 
   return (
     <div className="min-h-screen bg-cream">
@@ -230,7 +243,7 @@ export default async function Home() {
               ? `/playoffs/${seasonSnapshot.slug}/1`
               : !seasonStarted
                 ? `/schedule.html`
-                : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}`;
+                : `/week/${seasonSnapshot.slug}/${seasonSnapshot.weekNumber}#results`;
           const heroTitle = playoffsActive || championship
             ? 'Playoff Results'
             : !seasonStarted
@@ -327,34 +340,30 @@ export default async function Home() {
         </div>
 
         {/* === Blog + Snapshot === */}
-        {latestPost?.type === 'recap' && seasonSnapshot ? (
+        {cardPost && seasonSnapshot ? (
           <>
-            {/* Desktop: combined recap + snapshot card */}
+            {/* Desktop: combined post + snapshot card */}
             <div className="hidden md:block">
               <TrackVisibility section="recap-snapshot" page="home">
-                <RecapSnapshotCard post={latestPost} snapshot={seasonSnapshot} preseason={!seasonStarted} />
+                <RecapSnapshotCard post={cardPost} snapshot={seasonSnapshot} preseason={!seasonStarted} />
               </TrackVisibility>
             </div>
-            {/* Mobile: standard season snapshot */}
-            <div className="md:hidden">
+            {/* Mobile: snapshot, plus the promoted post when it is not the recap */}
+            <div className="md:hidden space-y-5">
+              {mobilePromoted && (
+                <TrackVisibility section="promoted-blog" page="home">
+                  <PromotedBlogCard post={mobilePromoted} />
+                </TrackVisibility>
+              )}
               <TrackVisibility section="season-snapshot" page="home">
                 <SeasonSnapshot snapshot={seasonSnapshot} />
               </TrackVisibility>
             </div>
           </>
         ) : (
-          <div className="md:grid md:grid-cols-2 md:gap-6 space-y-5 md:space-y-0">
-            {latestPost && (
-              <div className="hidden md:block h-full">
-                <TrackVisibility section="promoted-blog" page="home" className="h-full">
-                  <PromotedBlogCard post={latestPost} />
-                </TrackVisibility>
-              </div>
-            )}
-            <TrackVisibility section="season-snapshot" page="home">
-              <SeasonSnapshot snapshot={seasonSnapshot} />
-            </TrackVisibility>
-          </div>
+          <TrackVisibility section="season-snapshot" page="home">
+            <SeasonSnapshot snapshot={seasonSnapshot} />
+          </TrackVisibility>
         )}
 
         {/* === FULL WIDTH: Instagram strip (visual break) === */}
