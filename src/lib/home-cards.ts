@@ -1,5 +1,5 @@
 import type { PostMeta } from './blog';
-import { postHref } from './week-writeup';
+import { postHref, weekPathForPost } from './week-writeup';
 
 /**
  * Fallback picture for a post with no cardImage and no heroImage.
@@ -25,8 +25,17 @@ export function postImage(post: PostMeta): string {
  * this week's recap, the two would be the same link, so the card falls back to
  * recap behaviour and the anchor on the hero keeps them distinct instead.
  *
- * The fallback is the latest RECAP, not the latest post of any type. Using
- * `posts[0]` let an unpromoted announcement evict the recap card entirely.
+ * The fallback is the first RECAP in `posts` that actually has a week page,
+ * not the latest post of any type. Using `posts[0]` let an unpromoted
+ * announcement evict the recap card entirely. "First" only means "newest"
+ * because this assumes `posts` is already sorted newest first, which is what
+ * `getAllPosts()` returns; this function does not sort.
+ *
+ * Checked with `weekPathForPost` rather than a raw `week != null` check so the
+ * guard matches how the link is actually built: a recap missing `seasonSlug`
+ * has no week page, `postHref` would send it to `/blog/...`, and picking it
+ * here would leave `cardLabels` promising "Week N Recap" over a link that
+ * does not go to a week page.
  */
 export function selectCardPost(opts: {
   posts: PostMeta[];
@@ -37,7 +46,7 @@ export function selectCardPost(opts: {
   if (promoted && (weekHref === null || postHref(promoted) !== weekHref)) {
     return promoted;
   }
-  return posts.find((p) => p.type === 'recap' && p.week != null) ?? null;
+  return posts.find((p) => p.type === 'recap' && weekPathForPost(p) !== null) ?? null;
 }
 
 /**

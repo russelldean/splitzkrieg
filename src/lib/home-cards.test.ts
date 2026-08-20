@@ -53,10 +53,12 @@ describe('selectCardPost', () => {
     expect(selectCardPost({ posts, promoted: null, weekHref: WEEK_HREF })).toBe(r);
   });
 
-  it('returns the newest recap when several exist', () => {
-    const newer = recap({ slug: 'wk3', week: 3 });
-    const older = recap({ slug: 'wk2', week: 2 });
-    expect(selectCardPost({ posts: [newer, older], promoted: null, weekHref: WEEK_HREF })).toBe(newer);
+  it('returns the first recap in the given order', () => {
+    // Newest-first ordering is a caller precondition (getAllPosts() guarantees
+    // it); selectCardPost does not sort, it just takes the first match.
+    const first = recap({ slug: 'wk3', week: 3 });
+    const second = recap({ slug: 'wk2', week: 2 });
+    expect(selectCardPost({ posts: [first, second], promoted: null, weekHref: WEEK_HREF })).toBe(first);
   });
 
   it('returns null when there is no recap and nothing promoted', () => {
@@ -66,6 +68,24 @@ describe('selectCardPost', () => {
   it('returns the promoted post when there is no week page at all', () => {
     const a = announcement();
     expect(selectCardPost({ posts: [a], promoted: a, weekHref: null })).toBe(a);
+  });
+
+  it('skips a recap that has a week but no seasonSlug, since it has no week page', () => {
+    // weekPathForPost requires BOTH seasonSlug and week; postHref would send
+    // this one to /blog/..., so cardLabels must not be allowed to badge it
+    // "Week N Recap" by picking it here.
+    const noSeasonSlug = recap({ slug: 'orphan', week: 3, seasonSlug: undefined });
+    const valid = recap({ slug: 'wk2', week: 2 });
+    expect(
+      selectCardPost({ posts: [noSeasonSlug, valid], promoted: null, weekHref: WEEK_HREF }),
+    ).toBe(valid);
+  });
+
+  it('returns null when the only recap has no week page', () => {
+    const noSeasonSlug = recap({ slug: 'orphan', week: 3, seasonSlug: undefined });
+    expect(
+      selectCardPost({ posts: [noSeasonSlug], promoted: null, weekHref: WEEK_HREF }),
+    ).toBeNull();
   });
 });
 
