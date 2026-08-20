@@ -273,18 +273,22 @@ export async function WeekPageBody({
             </div>
           </TrackVisibility>
 
-          {/* Match Results */}
-          <TrackVisibility section="match-results" page="week">
-            <SectionHeading>Match Results</SectionHeading>
+          {/* Match Results. The id is the homepage hero's deep-link target: the
+              writeup sits above this block, so an unanchored link would land the
+              reader on the prose under a heading that says "Results". */}
+          <div id="results" className="scroll-mt-20">
+            <TrackVisibility section="match-results" page="week">
+              <SectionHeading>Match Results</SectionHeading>
 
-            {/* Match cards, click to expand individual match details */}
-            <WeekMatchSummary
-              weekScores={weekScores}
-              schedule={weekSchedule}
-              matchResults={weekMatchResults}
-              week={weekNum}
-            />
-          </TrackVisibility>
+              {/* Match cards, click to expand individual match details */}
+              <WeekMatchSummary
+                weekScores={weekScores}
+                schedule={weekSchedule}
+                matchResults={weekMatchResults}
+                week={weekNum}
+              />
+            </TrackVisibility>
+          </div>
 
           {/* XP Rankings, below match details */}
           <TrackVisibility section="xp-rankings" page="week">
