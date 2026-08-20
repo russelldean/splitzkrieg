@@ -18,8 +18,9 @@ import type { ReminderPass } from './reminder-window';
 export const AUTOMATION_KEY = 'lineupAutomation';
 
 /**
- * Keys stay under leagueSettings.settingKey's varchar(50).
- * Longest is remindSent-s36-w4-reminder at 26 characters.
+ * Well under leagueSettings.settingKey's varchar(50) even at the worst case:
+ * a 3-digit season with a 2-digit week is 28 characters
+ * (remindSent-s136-w14-lastcall).
  */
 export const actionKeys = {
   remind: (seasonID: number, week: number, pass: ReminderPass) =>
@@ -28,27 +29,37 @@ export const actionKeys = {
   scoresheets: (seasonID: number, week: number) => `scoresheets-s${seasonID}-w${week}`,
 };
 
+/** Upsert one setting. Throws on failure; callers decide whether that matters. */
+async function upsertSetting(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  await db
+    .request()
+    .input('key', sql.VarChar(50), key)
+    .input('value', sql.VarChar(255), value)
+    .query(`
+      MERGE leagueSettings AS target
+      USING (SELECT @key AS settingKey) AS source
+      ON target.settingKey = source.settingKey
+      WHEN MATCHED THEN UPDATE SET settingValue = @value
+      WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
+    `);
+}
+
 /** Stamp an action as done now. Never throws: recording must not fail the action. */
 export async function recordAction(key: string): Promise<void> {
   try {
-    const db = await getDb();
-    await db
-      .request()
-      .input('key', sql.VarChar(50), key)
-      .input('value', sql.VarChar(255), new Date().toISOString())
-      .query(`
-        MERGE leagueSettings AS target
-        USING (SELECT @key AS settingKey) AS source
-        ON target.settingKey = source.settingKey
-        WHEN MATCHED THEN UPDATE SET settingValue = @value
-        WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
-      `);
+    await upsertSetting(key, new Date().toISOString());
   } catch (err) {
     console.error(`[ACTION_LOG] action succeeded but recording "${key}" failed:`, err);
   }
 }
 
-/** Read several settings at once. Missing keys come back as null. */
+/**
+ * Read several settings at once. Missing keys come back as null - and so does
+ * a key present in the table with a NULL settingValue. Every current caller
+ * only asks "has this happened yet", so the collapse is fine; a future caller
+ * needing to tell "never recorded" apart from "recorded empty" cannot use this.
+ */
 export async function readSettings(keys: string[]): Promise<Record<string, string | null>> {
   const out: Record<string, string | null> = {};
   for (const k of keys) out[k] = null;
@@ -80,16 +91,5 @@ export async function automationEnabled(): Promise<boolean> {
 
 /** Turn the cron on or off without a deploy. */
 export async function setAutomationEnabled(on: boolean): Promise<void> {
-  const db = await getDb();
-  await db
-    .request()
-    .input('key', sql.VarChar(50), AUTOMATION_KEY)
-    .input('value', sql.VarChar(255), on ? 'on' : 'off')
-    .query(`
-      MERGE leagueSettings AS target
-      USING (SELECT @key AS settingKey) AS source
-      ON target.settingKey = source.settingKey
-      WHEN MATCHED THEN UPDATE SET settingValue = @value
-      WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
-    `);
+  await upsertSetting(AUTOMATION_KEY, on ? 'on' : 'off');
 }
