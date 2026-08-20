@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { TopPerformers } from '@/components/blog/TopPerformers';
 import { MilestonesBlock } from '@/components/blog/MilestonesBlock';
 import { MatchResultsSummary } from '@/components/blog/MatchResultsSummary';
-import { StandingsSnapshot } from '@/components/blog/StandingsSnapshot';
 import { LeaderboardSnapshot } from '@/components/blog/LeaderboardSnapshot';
 import { RecapCallout, type CalloutData } from '@/components/blog/RecapCallout';
 
@@ -52,7 +51,6 @@ export const mdxComponents: MDXComponents = {
   TopPerformers,
   MilestonesBlock,
   MatchResultsSummary,
-  StandingsSnapshot,
   // Older stored bodies may still contain <WeekRecap />. The week page renders the
   // real stats itself, so the tag is a no-op, but the NAME must stay registered:
   // MDX throws on an unknown component and every recap page would break.
