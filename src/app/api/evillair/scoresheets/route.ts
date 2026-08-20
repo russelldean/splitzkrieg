@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getMatchupsForWeek, generateScoresheet, getUpcomingMatchDate } from '@/lib/admin/scoresheets';
+import { actionKeys, recordAction } from '@/lib/admin/action-log';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
 
     const doc = await generateScoresheet(matches);
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+
+    await recordAction(actionKeys.scoresheets(seasonID, week));
 
     return new NextResponse(pdfBuffer, {
       status: 200,

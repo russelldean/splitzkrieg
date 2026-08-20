@@ -5,10 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import sql from 'mssql';
-import { Resend } from 'resend';
 import { requireAdmin } from '@/lib/admin/auth';
-import { getDb } from '@/lib/db';
+import { todayET } from '@/lib/admin/clock';
+import { getUpcomingMatchDate } from '@/lib/admin/scoresheets';
+import { reminderPlan } from '@/lib/admin/reminder-window';
+import { actionKeys, recordAction } from '@/lib/admin/action-log';
+import { findMissingLineups, sendReminders } from '@/lib/admin/lineup-reminders';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,96 +36,22 @@ export async function POST(request: NextRequest) {
         ? new Set(teamIDs as number[])
         : null;
 
-    const db = await getDb();
-
-    // Teams that haven't submitted, with captain email from bowlers table
-    const result = await db
-      .request()
-      .input('seasonID', sql.Int, seasonID)
-      .input('week', sql.Int, week)
-      .query<{
-        teamID: number;
-        teamName: string;
-        bowlerName: string | null;
-        email: string | null;
-      }>(`
-        SELECT DISTINCT t.teamID, t.teamName, b.bowlerName, b.email
-        FROM schedule sch
-        JOIN teams t ON t.teamID = sch.team1ID OR t.teamID = sch.team2ID
-        LEFT JOIN bowlers b ON t.captainBowlerID = b.bowlerID
-        WHERE sch.seasonID = @seasonID
-          AND sch.team1ID IS NOT NULL AND sch.team2ID IS NOT NULL
-          AND t.teamID NOT IN (
-            SELECT teamID FROM lineupSubmissions
-            WHERE seasonID = @seasonID AND week = @week
-          )
-        ORDER BY t.teamName
-      `);
-
-    // Apply team filter if provided
-    const teams = teamIDFilter
-      ? result.recordset.filter((t) => teamIDFilter.has(t.teamID))
-      : result.recordset;
+    const all = await findMissingLineups(seasonID, week);
+    const teams = teamIDFilter ? all.filter((t) => teamIDFilter.has(t.teamID)) : all;
 
     if (teams.length === 0) {
       return NextResponse.json({ sent: 0, skipped: 0, message: 'All teams have submitted!' });
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'RESEND_API_KEY not configured' },
-        { status: 500 },
-      );
-    }
+    // Same pass the cron would choose right now, so a manual send suppresses
+    // the scheduled one for this week through the shared record.
+    const matchDate = await getUpcomingMatchDate(seasonID, week);
+    const { pass } = reminderPlan({ nowET: todayET(), matchDate, enabled: true });
 
-    const resend = new Resend(apiKey);
-    const fromAddress =
-      process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <noreply@splitzkrieg.com>';
+    const outcome = await sendReminders(teams, pass, week);
+    if (outcome.sent > 0) await recordAction(actionKeys.remind(seasonID, week, pass));
 
-    let sent = 0;
-    let skipped = 0;
-    const noEmail: string[] = [];
-    const errors: string[] = [];
-
-    for (const team of teams) {
-      if (!team.email) {
-        noEmail.push(team.teamName);
-        skipped++;
-        continue;
-      }
-
-      const name = team.bowlerName || 'Captain';
-
-      // Resend free tier: max 2 emails/second — pace sends
-      if (sent > 0) await new Promise(r => setTimeout(r, 600));
-
-      try {
-        await resend.emails.send({
-          from: fromAddress,
-          to: team.email,
-          subject: `Lineup Reminder - Week ${week}`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px;">
-              <h2 style="color: #1a2744; margin-bottom: 16px;">Hey ${name}!</h2>
-              <p style="color: #333; line-height: 1.6; margin-bottom: 24px;">
-                Please submit your Week ${week} lineup for <strong>${team.teamName}</strong> as soon as you are able. After submitted, you will still be able to edit your lineup on the site until we print scoresheets Monday afternoon.
-              </p>
-              <a href="https://splitzkrieg.com/lineup"
-                 style="display: inline-block; background-color: #c83232; color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: 600; font-size: 16px;">
-                Submit Lineup
-              </a>
-              <p style="color: #999; font-size: 13px; margin-top: 24px;">
-                If you've already submitted, you can ignore this.
-              </p>
-            </div>
-          `,
-        });
-        sent++;
-      } catch (err) {
-        errors.push(`${team.teamName}: ${err instanceof Error ? err.message : 'send failed'}`);
-      }
-    }
+    const { sent, skipped, noEmail, errors } = outcome;
 
     return NextResponse.json({
       sent,
