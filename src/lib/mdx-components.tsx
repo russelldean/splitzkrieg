@@ -32,6 +32,13 @@ function Callout(props: CalloutData) {
   return <RecapCallout callout={props} />;
 }
 
+/**
+ * The complete set of tags a stored post body may use. MDXRemote is rendered
+ * bare at both call sites (WeekWriteup and /blog/[slug]) with no error
+ * boundary, so a capitalized tag that is NOT in this map throws during render
+ * and fails the build for the week page as well as the post. Adding a name
+ * here is the only thing that makes it safe to write in the editor.
+ */
 export const mdxComponents: MDXComponents = {
   h1: ({ children }) => <h1 className="font-heading text-3xl sm:text-4xl text-navy mb-4">{children}</h1>,
   h2: ({ children }) => <h2 className="font-heading text-2xl text-navy mt-8 mb-3">{children}</h2>,
@@ -51,10 +58,6 @@ export const mdxComponents: MDXComponents = {
   TopPerformers,
   MilestonesBlock,
   MatchResultsSummary,
-  // Older stored bodies may still contain <WeekRecap />. The week page renders the
-  // real stats itself, so the tag is a no-op, but the NAME must stay registered:
-  // MDX throws on an unknown component and every recap page would break.
-  WeekRecap: () => null,
   LeaderboardSnapshot,
   Bowler,
   Team,

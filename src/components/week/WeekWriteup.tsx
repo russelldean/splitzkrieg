@@ -23,10 +23,10 @@ interface Props {
  * client-state default risks a hydration mismatch. <details open> is resolved
  * at render time, needs no JS, and is keyboard accessible for free.
  *
- * Older recap bodies may still contain a <WeekRecap ... /> tag, which used to render the condensed
- * stats inside the blog post. The week page renders the real stats itself, so
- * that tag now renders nothing: it is registered as a no-op in the shared MDX
- * component map rather than edited out of every stored recap body.
+ * MDXRemote is rendered bare here, with no error boundary: a capitalized tag
+ * that is not registered in mdxComponents throws and takes the whole week page
+ * down at build. Stored bodies are prose plus <Bowler> today, so nothing is
+ * exercising that edge, but the editor has no validation to stop it.
  */
 export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: Props) {
   const teaser = excerptWorthShowing(excerpt, title);
