@@ -113,6 +113,12 @@ describe('match already in the past', () => {
     expect(r.detail).toMatch(/match was 3 day\(s\) ago/);
   });
 
+  it('keeps the no-email note alongside the past-match note', () => {
+    const r = row(past({ captainsWithoutEmail: 2 }), 'lineups');
+    expect(r.detail).toMatch(/match was 3 day\(s\) ago/);
+    expect(r.detail).toContain('2 captain(s) have no email on file');
+  });
+
   it('flags a never-sent reminder as attention, not pending', () => {
     expect(row(past(), 'reminder').state).toBe('attention');
   });

@@ -50,12 +50,14 @@ export function derivePreNightStatus(counts: PreNightCounts): WeekStatusStep[] {
   const isPast = days < 0;
   const allIn = counts.teamsScheduled > 0 && counts.lineupsIn >= counts.teamsScheduled;
 
-  const lineupsDetail = isPast
-    ? `${counts.lineupsIn}/${counts.teamsScheduled} in, match was ${-days} day(s) ago`
-    : `${counts.lineupsIn}/${counts.teamsScheduled} in` +
-      (counts.captainsWithoutEmail > 0
-        ? `, ${counts.captainsWithoutEmail} captain(s) have no email on file`
-        : '');
+  const noEmailNote =
+    counts.captainsWithoutEmail > 0
+      ? `, ${counts.captainsWithoutEmail} captain(s) have no email on file`
+      : '';
+  const lineupsDetail =
+    `${counts.lineupsIn}/${counts.teamsScheduled} in` +
+    (isPast ? `, match was ${-days} day(s) ago` : '') +
+    noEmailNote;
 
   let lineupsState: StepState = 'pending';
   if (allIn) lineupsState = 'done';
