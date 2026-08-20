@@ -1,21 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { StepState, WeekStatusStep } from '@/lib/admin/week-status';
+import type { WeekStatusStep } from '@/lib/admin/week-status';
+import { STATE_STYLE } from '@/components/admin/status-style';
 
 interface Props {
   seasonID: number;
   week: number;
 }
-
-/** Same legend as WeekStatusBoard so the two boards cannot drift apart. */
-const STATE_STYLE: Record<StepState, { mark: string; className: string }> = {
-  done: { mark: 'DONE', className: 'text-green-700 bg-green-50 border-green-200' },
-  pending: { mark: 'WAITING', className: 'text-navy/70 bg-navy/[0.03] border-navy/15' },
-  attention: { mark: 'ACTION', className: 'text-red-700 bg-red-50 border-red-300' },
-  optional: { mark: 'OPTIONAL', className: 'text-navy/70 bg-navy/[0.03] border-navy/15' },
-  unknown: { mark: 'UNKNOWN', className: 'text-navy/70 bg-navy/[0.03] border-navy/15' },
-};
 
 /**
  * Where the coming bowling night stands.
@@ -78,33 +70,48 @@ export function PreNightStatusBoard({ seasonID, week }: Props) {
           <h2 className="font-heading text-sm text-navy">Pre-Bowling Night</h2>
           <p className="font-body text-xs text-navy/60 mt-0.5">Week {week} prep</p>
         </div>
-        <button
-          onClick={toggleAutomation}
-          className="font-body text-xs text-navy/60 hover:text-navy underline underline-offset-2"
-        >
-          Reminder emails: {enabled ? 'on' : 'off'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={load}
+            disabled={loading}
+            className="font-body text-sm text-navy/70 hover:text-red-600 transition-colors disabled:opacity-60"
+          >
+            {loading ? 'Checking...' : 'Refresh'}
+          </button>
+          <button
+            onClick={toggleAutomation}
+            disabled={loading}
+            aria-pressed={enabled}
+            className="font-body text-xs text-navy/60 hover:text-navy underline underline-offset-2 disabled:opacity-60"
+          >
+            Reminder emails: {enabled ? 'on' : 'off'}
+          </button>
+        </div>
       </div>
 
-      <div className="p-5 space-y-2">
-        {loading && !steps && <p className="font-body text-xs text-navy/60">Loading...</p>}
-        {error && <p className="font-body text-xs text-red-700">{error}</p>}
-        {steps?.map((s) => {
-          const style = STATE_STYLE[s.state];
-          return (
-            <div
-              key={s.key}
-              className={`flex items-baseline justify-between gap-3 border rounded px-3 py-2 ${style.className}`}
-            >
-              <span className="font-heading text-sm">{s.label}</span>
-              <span className="font-body text-xs text-right">
-                {s.detail}
-                <span className="ml-3 font-heading">{style.mark}</span>
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      {loading && !steps && <p className="px-4 py-3 font-body text-sm text-navy/60">Loading...</p>}
+      {error && <p className="px-4 py-3 font-body text-sm text-red-700">{error}</p>}
+
+      {steps && (
+        <ul className="divide-y divide-navy/5">
+          {steps.map((s) => {
+            const style = STATE_STYLE[s.state];
+            return (
+              <li key={s.key} className="flex items-start gap-3 px-4 py-2.5">
+                <span
+                  className={`font-body text-[11px] tracking-wide px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${style.className}`}
+                >
+                  {style.mark}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-body text-sm text-navy">{s.label}</span>
+                  <span className="block font-body text-sm text-navy/65">{s.detail}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

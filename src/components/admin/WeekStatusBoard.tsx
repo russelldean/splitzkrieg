@@ -1,22 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { WeekStatusStep, StepState } from '@/lib/admin/week-status';
+import type { WeekStatusStep } from '@/lib/admin/week-status';
+import { STATE_STYLE } from '@/components/admin/status-style';
 
 interface Props {
   seasonID: number;
   week: number;
   seasonLabel?: string;
 }
-
-/** Marker, colour and meaning for each state. Kept in one place so the legend cannot drift. */
-const STATE_STYLE: Record<StepState, { mark: string; className: string }> = {
-  done: { mark: 'DONE', className: 'text-green-700 bg-green-50 border-green-200' },
-  pending: { mark: 'WAITING', className: 'text-navy/70 bg-navy/[0.03] border-navy/15' },
-  attention: { mark: 'ACTION', className: 'text-red-700 bg-red-50 border-red-300' },
-  optional: { mark: 'OPTIONAL', className: 'text-navy/70 bg-navy/[0.03] border-navy/15' },
-  unknown: { mark: 'UNKNOWN', className: 'text-navy/70 bg-navy/[0.03] border-navy/15' },
-};
 
 /**
  * Where the week actually stands, derived rather than recorded.
