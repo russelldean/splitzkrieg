@@ -61,7 +61,11 @@ export function WeekWriteup({ content, title, weekNum, excerpt, defaultOpen }: P
           </span>
         </span>
       </summary>
-      <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-1 border-t border-navy/10">
+      {/* blog-prose supplies the paragraph spacing, list bullets, headings and
+          link styling. Without it the writeup renders as an unstyled wall of
+          text, which is what happened when the recap moved off the blog page
+          and lost BlogPostLayout's <article className="blog-prose"> wrapper. */}
+      <div className="blog-prose px-4 pb-4 sm:px-5 sm:pb-5 pt-1 border-t border-navy/10">
         <MDXRemote source={content} components={components} />
       </div>
     </details>
