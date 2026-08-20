@@ -1,7 +1,13 @@
 /**
  * POST /api/evillair/remind-captains
- * Send lineup reminder emails to captains who haven't submitted yet.
- * Uses bowlers.email via teams.captainBowlerID for contact info.
+ *
+ * Manual counterpart to the cron at /api/cron/lineup-reminder: sends to
+ * captains who have not yet submitted a lineup, picking the same pass
+ * (reminder or last call) the cron would pick right now from the match date.
+ * Deliberately ignores the automation off switch: a human pressing this
+ * button means send regardless of whether the scheduled runs are paused.
+ * Records the send under the shared action-log key, so a manual send stands
+ * down the scheduled one for this week and pass.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

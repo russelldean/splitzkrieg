@@ -26,8 +26,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const result = await pushLineupsToLP(cookie, seasonID, week, teamID);
 
     // Only a full-week push counts for the board. A single-team push is a
-    // repair, not the step, so it must not mark the week as pushed.
-    if (!teamID) await recordAction(actionKeys.lpPush(seasonID, week));
+    // repair, not the step, and a push that pushed nothing is not the step
+    // either: LP failures (an expired cookie is the common one) return
+    // pushed: 0, and recording those would show the board a green row for a
+    // week where nothing reached LeaguePals.
+    if (!teamID && result.pushed > 0) {
+      await recordAction(actionKeys.lpPush(seasonID, week));
+    }
 
     return NextResponse.json(result);
   } catch (err) {

@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
     const doc = await generateScoresheet(matches);
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
+    // Reached only after the PDF is actually built, so there is nothing to
+    // gate on here, unlike the remind and LP push sites.
     await recordAction(actionKeys.scoresheets(seasonID, week));
 
     return new NextResponse(pdfBuffer, {
