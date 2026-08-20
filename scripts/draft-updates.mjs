@@ -16,7 +16,8 @@ if (!log) {
   process.exit(0);
 }
 
-console.log(`// Commits from last ${days} days — edit these into content/updates.ts\n`);
+console.log(`// Commits from last ${days} days. Insert the keepers into the siteUpdates TABLE.`);
+console.log(`// content/updates.ts is dead and imported by nothing; editing it changes nothing.\n`);
 
 for (const line of log.split('\n')) {
   const [datePart, ...rest] = line.split('|');
