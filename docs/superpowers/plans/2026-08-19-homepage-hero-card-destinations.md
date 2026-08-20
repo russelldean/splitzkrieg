@@ -40,7 +40,7 @@ So all pure helpers live in a new `src/lib/home-cards.ts`, which imports nothing
 - Create: `src/lib/home-cards.ts`
 - Test: `src/lib/home-cards.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/lib/home-cards.test.ts`:
 
@@ -149,13 +149,13 @@ describe('postImage', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- src/lib/home-cards.test.ts`
 
 Expected: FAIL, with a resolution error such as `Failed to load url ./home-cards`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `src/lib/home-cards.ts`:
 
@@ -217,19 +217,19 @@ export function cardLabels(post: PostMeta): { badge: string; cta: string } {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -- src/lib/home-cards.test.ts`
 
 Expected: PASS, 14 tests (7 for `selectCardPost`, 3 for `cardLabels`, 4 for `postImage`).
 
-- [ ] **Step 5: Run the full suite to check nothing regressed**
+- [x] **Step 5: Run the full suite to check nothing regressed**
 
 Run: `npm test`
 
 Expected: PASS, including the pre-existing `src/lib/week-writeup.test.ts`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/home-cards.ts src/lib/home-cards.test.ts
@@ -245,7 +245,7 @@ git commit -m "feat(home): pure helpers for card post selection, labels, and ima
 
 There is no unit test for this task. It is a single JSX wrapper with no logic, and the week page is a server component rendered from live query data. It is covered by the manual check in Task 6.
 
-- [ ] **Step 1: Add the anchor wrapper**
+- [x] **Step 1: Add the anchor wrapper**
 
 `TrackVisibility` accepts only `section`, `page`, `children`, and `className` (`src/components/tracking/TrackVisibility.tsx:7-12`), so it cannot carry the `id` itself. Wrap it.
 
@@ -289,13 +289,13 @@ Replace it with:
 
 `scroll-mt-20` clears the sticky header at `src/app/layout.tsx:58`. This matches the existing convention in `PlayoffH2H.tsx:67`, `TeamTimeline.tsx:86`, `SiteUpdates.tsx:33`, and `SeasonAccordion.tsx:51`.
 
-- [ ] **Step 2: Verify it compiles**
+- [x] **Step 2: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/week/WeekPageBody.tsx
@@ -309,7 +309,7 @@ git commit -m "feat(week): add #results anchor for homepage deep-link"
 **Files:**
 - Modify: `src/components/home/RecapSnapshotCard.tsx:1-45`
 
-- [ ] **Step 1: Update the imports**
+- [x] **Step 1: Update the imports**
 
 Find:
 
@@ -324,7 +324,7 @@ import { postHref } from '@/lib/week-writeup';
 import { cardLabels, postImage } from '@/lib/home-cards';
 ```
 
-- [ ] **Step 2: Replace the image variable**
+- [x] **Step 2: Replace the image variable**
 
 Find:
 
@@ -341,7 +341,7 @@ export function RecapSnapshotCard({ post, snapshot, preseason = false }: Props) 
   const labels = cardLabels(post);
 ```
 
-- [ ] **Step 3: Drop the image guard and use the labels**
+- [x] **Step 3: Drop the image guard and use the labels**
 
 Find this block (starting at the `{image && (` line):
 
@@ -394,13 +394,13 @@ Replace with:
 
 Note the removed `)}` on the last line: the `{image && (` wrapper is gone, so its closing parenthesis and brace must go too.
 
-- [ ] **Step 4: Verify it compiles**
+- [x] **Step 4: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 
 Expected: no errors. If you see "')' expected" you left a stray `)}` from the removed guard.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/home/RecapSnapshotCard.tsx
@@ -416,7 +416,7 @@ git commit -m "feat(home): type-aware labels and guaranteed image on recap card"
 
 This component has two image guards, one in the mobile block and one in the desktop block. Both must go.
 
-- [ ] **Step 1: Update the imports and the image variable**
+- [x] **Step 1: Update the imports and the image variable**
 
 Find:
 
@@ -445,7 +445,7 @@ export function PromotedBlogCard({ post }: Props) {
   const image = postImage(post);
 ```
 
-- [ ] **Step 2: Remove the mobile image guard**
+- [x] **Step 2: Remove the mobile image guard**
 
 Find:
 
@@ -479,7 +479,7 @@ Replace with:
       </div>
 ```
 
-- [ ] **Step 3: Remove the desktop image guard**
+- [x] **Step 3: Remove the desktop image guard**
 
 Find:
 
@@ -513,13 +513,13 @@ Replace with:
         </div>
 ```
 
-- [ ] **Step 4: Verify it compiles**
+- [x] **Step 4: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 
 Expected: no errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/home/PromotedBlogCard.tsx
@@ -533,7 +533,7 @@ git commit -m "feat(home): guaranteed image on promoted blog card"
 **Files:**
 - Modify: `src/app/page.tsx:19` (import), `:53-55`, `:188`, `:227-233`, `:330-358`
 
-- [ ] **Step 1: Drop the now-unused import**
+- [x] **Step 1: Drop the now-unused import**
 
 `getPostBySlug` internally calls `getAllPosts()` (`src/lib/blog.ts:57-62`), which this page already awaits into `allPosts`. Looking the promoted post up in `allPosts` removes a redundant round trip.
 
@@ -550,7 +550,7 @@ import { getAllPosts } from '@/lib/blog';
 import { selectCardPost } from '@/lib/home-cards';
 ```
 
-- [ ] **Step 2: Replace the post selection block**
+- [x] **Step 2: Replace the post selection block**
 
 Find:
 
@@ -572,7 +572,7 @@ Replace with:
     : null;
 ```
 
-- [ ] **Step 3: Delete the dead code**
+- [x] **Step 3: Delete the dead code**
 
 Find and delete this line entirely:
 
@@ -582,7 +582,7 @@ Find and delete this line entirely:
 
 It has never been referenced anywhere in the file.
 
-- [ ] **Step 4: Compute the week href, hero href, and card post**
+- [x] **Step 4: Compute the week href, hero href, and card post**
 
 Immediately after the deleted line (just before `return (`), insert:
 
@@ -600,7 +600,7 @@ Immediately after the deleted line (just before `return (`), insert:
   const mobilePromoted = cardPost && cardPost.type !== 'recap' ? cardPost : null;
 ```
 
-- [ ] **Step 5: Anchor the hero link**
+- [x] **Step 5: Anchor the hero link**
 
 Find, inside the hero block:
 
@@ -620,7 +620,7 @@ Replace with:
 
 Only this branch changes. The championship, playoffs, and preseason branches above it are untouched.
 
-- [ ] **Step 6: Restructure the card block**
+- [x] **Step 6: Restructure the card block**
 
 Find the whole block that begins with `{/* === Blog + Snapshot === */}` and ends with the closing `)}` before `{/* === FULL WIDTH: Instagram strip (visual break) === */}`.
 
@@ -655,25 +655,25 @@ Replace it with:
         )}
 ```
 
-- [ ] **Step 7: Check for now-unused imports**
+- [x] **Step 7: Check for now-unused imports**
 
 Run: `npm run lint`
 
 Expected: no errors. `PromotedBlogCard` is still used (mobile branch). If lint reports `SeasonSnapshot` or any other import as unused, you removed a usage you should not have. Re-read Step 6.
 
-- [ ] **Step 8: Verify it compiles**
+- [x] **Step 8: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 
 Expected: no errors.
 
-- [ ] **Step 9: Run the full suite**
+- [x] **Step 9: Run the full suite**
 
 Run: `npm test`
 
 Expected: PASS.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/app/page.tsx
@@ -753,7 +753,7 @@ Confirm with `git diff src/lib/home-cards.ts` that the file is clean before cont
 **Files:**
 - Modify: `content/updates.ts`
 
-- [ ] **Step 1: Add the entries**
+- [x] **Step 1: Add the entries**
 
 Entries are one-line objects matching the `Update` interface at the top of the file. Insert both of these as the first two entries in the `updates` array, immediately after `const updates: Update[] = [`:
 
@@ -766,32 +766,32 @@ Leave the `lastUpdated` constant alone. It is a marker for finding new git entri
 
 Do not use em dashes. `scripts/pre-push-check.mjs:54-61` fails the push on either the U+2014 character or the `&mdash;` entity anywhere in `src/` or `content/`. Use a comma or a full stop instead.
 
-- [ ] **Step 2: Run the pre-push check**
+- [x] **Step 2: Run the pre-push check**
 
 Run: `node scripts/pre-push-check.mjs`
 
 Expected: PASS. This covers cache invariants, the em dash rule, `.data-versions.json` staging, and the published-week marker.
 
-- [ ] **Step 3: Run the cache invariant check**
+- [x] **Step 3: Run the cache invariant check**
 
 Run: `node scripts/check-cache-invariants.mjs`
 
 Expected: PASS. No query text changed in this work, so no `cachedQuery` hash moves and nothing busts. If this reports bust counts above zero, something in `src/lib/queries/` was edited by mistake.
 
-- [ ] **Step 4: Run the full suite one more time**
+- [x] **Step 4: Run the full suite one more time**
 
 Run: `npm test`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add content/updates.ts
 git commit -m "docs(updates): note the homepage link split"
 ```
 
-- [ ] **Step 6: Report, do not push**
+- [x] **Step 6: Report, do not push**
 
 Do not push. Report to Russ what landed, what the manual checks showed, and let him choose the deploy window.
 
