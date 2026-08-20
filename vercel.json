@@ -1,4 +1,7 @@
 {
   "regions": ["cle1"],
-  "crons": []
+  "crons": [
+    { "path": "/api/cron/lineup-reminder", "schedule": "0 14 * * 5" },
+    { "path": "/api/cron/lineup-reminder", "schedule": "0 14 * * 1" }
+  ]
 }

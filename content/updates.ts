@@ -10,6 +10,8 @@ export interface Update {
 export const lastUpdated = '2026-03-14';
 
 const updates: Update[] = [
+  { date: '2026-08-20', text: 'Lineup reminders now go out automatically on Friday, with a last call on bowling day', tag: 'feat' },
+  { date: '2026-08-20', text: 'Admin dashboard shows derived pre-night status instead of a manual checklist', tag: 'feat' },
   { date: '2026-03-14', text: 'Trophy icons next to individual champions in season stats and leaderboards', tag: 'feat' },
   { date: '2026-03-14', text: 'Playoff head-to-head section on team pages with lifetime totals', tag: 'feat', href: '/teams' },
   { date: '2026-03-14', text: 'Corrected cross-division semifinal matchups for Seasons XVIII-XXII', tag: 'fix' },
