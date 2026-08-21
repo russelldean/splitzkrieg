@@ -58,6 +58,7 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
                 <div className="flex items-baseline gap-3">
                   <Link
                     href={`/season/${season.slug}`}
+                    prefetch={false}
                     onClick={(e) => e.stopPropagation()}
                     className="font-heading text-xl text-navy hover:text-red-600 transition-colors"
                   >
@@ -88,6 +89,7 @@ export function SeasonAccordion({ seasons, currentSlug, latestWeek }: Props) {
                         <Link
                           key={week.week}
                           href={`/week/${season.slug}/${week.week}`}
+                    prefetch={false}
                           className={`flex items-center justify-between px-5 py-2.5 hover:bg-navy/[0.02] transition-colors group ${isLatestWeek ? 'bg-red-600/[0.04] border-l-2 border-l-red-600/50' : ''}`}
                         >
                           <div className="flex items-center gap-3">
