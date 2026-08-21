@@ -83,38 +83,6 @@ export const BOWLER_FACTS_SQL = `
   ORDER BY f.factTypeID, f.seasonID, f.week
 `;
 
-export async function getBowlerFacts(bowlerID: number): Promise<RandomFact[]> {
-  const params = JSON.stringify({ bowlerID });
-  return cachedQuery(
-    'getBowlerFacts',
-    async () => {
-      const db = await getDb();
-      const result = await db.request()
-        .input('bowlerID', bowlerID)
-        .query(BOWLER_FACTS_SQL);
-      return result.recordset.map((r: Record<string, unknown>) => ({
-        factTypeID: r.factTypeID as number,
-        bowlerName: r.bowlerName as string,
-        bowlerSlug: r.bowlerSlug as string,
-        seasonSlug: r.seasonSlug as string,
-        week: r.week as number,
-        year: r.year as number,
-        value: r.value as number,
-        previousValue: (r.previousValue as number) ?? null,
-        isCareerHigh: !!(r.isCareerHigh),
-        gender: (r.gender as string) ?? null,
-        referenceDate: r.referenceDate ? (r.referenceDate as Date).toISOString() : null,
-        refMonth: null,
-        refDay: null,
-        milestoneCategory: null,
-        milestoneOrdinal: null,
-      }));
-    },
-    [],
-    { sql: BOWLER_FACTS_SQL + params, dependsOn: ['scores'] },
-  );
-}
-
 export async function getRandomFacts(): Promise<RandomFact[]> {
   return cachedQuery(
     'getRandomFacts',

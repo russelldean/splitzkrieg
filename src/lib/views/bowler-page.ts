@@ -71,7 +71,7 @@ export function reduceStarStats(rows: Array<{ code: string; cnt: number }>): Bow
   };
 }
 
-/** Mirror of getBowlerFacts' row mapping (facts.ts:95-111). */
+/** The single mapping for BOWLER_FACTS_SQL rows, used by the batched view. */
 export function mapFacts(rows: Array<Record<string, unknown>>): RandomFact[] {
   return rows.map((r) => ({
     factTypeID: r.factTypeID as number,
