@@ -21,7 +21,23 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const QUERIES_DIR = path.join(__dirname, '..', 'src', 'lib', 'queries');
+const SRC_DIR = path.join(__dirname, '..', 'src');
+const QUERIES_DIR = path.join(SRC_DIR, 'lib', 'queries');
+
+// Where cachedQuery is EXPECTED to live. Anything outside this is reported by
+// check 6 so a query cannot hide from the other five.
+//
+// This exists because src/components/blog/StandingsSnapshot.tsx held a raw
+// cachedQuery with no seasonID, no dependsOn and no stable, sitting in the
+// legacy always-invalidate bucket, and the checker scanned only QUERIES_DIR so
+// it never saw it. Auditing by hand then turned up two more files in the same
+// blind spot. Widening the scan is the only thing that stops that recurring.
+const ALLOWED_QUERY_DIRS = [
+  path.join(SRC_DIR, 'lib', 'queries'),
+  // Batched page view-models. Legitimately outside queries/ because they
+  // assemble a page's whole payload; still fully checked below.
+  path.join(SRC_DIR, 'lib', 'views'),
+];
 
 // Tables that receive regular inserts (scores, matchResults, schedule imports, patches, etc.)
 // Queries reading these should NOT be stable: true
@@ -98,13 +114,15 @@ let violations = [];
 let warnings = [];
 let queryCount = 0;
 
-function walkDir(dir) {
+function walkDir(dir, exts = ['.ts']) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...walkDir(full));
-    else if (entry.name.endsWith('.ts')) files.push(full);
+    if (entry.isDirectory()) files.push(...walkDir(full, exts));
+    else if (exts.some(e => entry.name.endsWith(e)) && !entry.name.endsWith('.test.ts')) {
+      files.push(full);
+    }
   }
   return files;
 }
@@ -217,12 +235,26 @@ function checkInvariants(query) {
   }
 }
 
-// Run
-const files = walkDir(QUERIES_DIR);
+// Run. Scan ALL of src/, not just queries/: a cachedQuery anywhere gets the
+// same five checks, and one outside the allowed dirs is itself reported.
+const files = walkDir(SRC_DIR, ['.ts', '.tsx']).filter(f =>
+  fs.readFileSync(f, 'utf8').includes('cachedQuery('),
+);
 const allQueries = files.flatMap(f => extractQueries(f));
 queryCount = allQueries.length;
 
 allQueries.forEach(checkInvariants);
+
+// 6. cachedQuery living somewhere the convention does not put it
+for (const file of files) {
+  if (ALLOWED_QUERY_DIRS.some(d => file.startsWith(d + path.sep))) continue;
+  if (file === path.join(SRC_DIR, 'lib', 'db.ts')) continue; // the definition
+  const rel = path.relative(path.join(__dirname, '..'), file);
+  violations.push(
+    `[SQL_OUTSIDE_QUERIES] ${rel} — calls cachedQuery outside src/lib/queries/ ` +
+    `(or src/lib/views/). Move it there so the convention holds and it stays visible.`
+  );
+}
 
 // Report
 console.log(`\nCache Invariant Check — ${queryCount} queries across ${files.length} files\n`);
