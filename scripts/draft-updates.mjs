@@ -17,7 +17,7 @@ if (!log) {
 }
 
 console.log(`// Commits from last ${days} days. Insert the keepers into the siteUpdates TABLE.`);
-console.log(`// content/updates.ts is dead and imported by nothing; editing it changes nothing.\n`);
+console.log(`// The changelog is the siteUpdates TABLE; /resources reads getSiteUpdates().\n`);
 
 for (const line of log.split('\n')) {
   const [datePart, ...rest] = line.split('|');

@@ -51,7 +51,7 @@ When inserting/shifting score data manually, check ALL downstream:
 - **Before reading files:** Verify paths with Glob. Don't guess.
 - **Before touching error-prone areas:** Check `memory/errors.md`.
 - **After visible changes:** Remind Russ to add a changelog row to the `siteUpdates` TABLE.
-  `content/updates.ts` is DEAD, imported by nothing. `/resources` reads `getSiteUpdates()`.
+  There is no file to edit; `/resources`, `/blog` and `/blog/[slug]` all read `getSiteUpdates()`.
   Columns: `updateDate`, `text`, `tag`, `sortOrder` (all NOT NULL), optional `href`,
   `description`. Higher `sortOrder` sorts first within a date. New rows only appear
   after a deploy, since the page reads the table at build time.
