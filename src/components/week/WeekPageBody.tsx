@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   getSeasonBySlug,
   getWeekScores,
@@ -28,6 +27,7 @@ import { toDateKey } from '@/lib/week-utils';
 import { getPostForWeek, getPostContentForWeek, type DraftPostOverride, type PostMeta } from '@/lib/blog';
 import { getSeasonsWithPlayoffData } from '@/lib/queries/playoffs/page';
 import { TrackVisibility } from '@/components/tracking/TrackVisibility';
+import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { WeekWriteup } from '@/components/week/WeekWriteup';
 import { WeekAdminBar } from '@/components/week/WeekAdminBar';
 import { ScrollToHash } from '@/components/ui/ScrollToHash';
@@ -144,7 +144,28 @@ export async function WeekPageBody({
   const olderSeason = seasonIdx < allSeasons.length - 1 ? allSeasons[seasonIdx + 1] : null;
   const newerSeason = seasonIdx > 0 ? allSeasons[seasonIdx - 1] : null;
 
+  const heroSrc = blogPost?.heroImage ?? blogPost?.cardImage ?? null;
+
   return (
+    <>
+      {/* Full-bleed parallax hero, matching the treatment announcements get in
+          BlogPostLayout. The week page is the weekly destination, so it should
+          not open smaller than an occasional announcement does. */}
+      {heroSrc && (
+        <div className="relative overflow-hidden h-52 sm:h-64 md:h-80">
+          <ParallaxBg src={heroSrc} focalY={blogPost?.heroFocalY ?? 0.5} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          <div className="relative z-10 flex flex-col justify-end h-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+            <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-white">
+              Season {strikeX(season.romanNumeral)}
+            </h1>
+            <p className="font-body text-sm text-white/80 mt-1">
+              Week {weekNum} &middot; {season.period} {season.year}
+              {dateStr && <> &middot; {dateStr}</>}
+            </p>
+          </div>
+        </div>
+      )}
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       {/* Holds a #results deep link on target while the rest of this page
           renders. Without it the router scrolls once, too early, and the
@@ -163,16 +184,19 @@ export async function WeekPageBody({
         <WeekAdminBar seasonSlug={seasonSlug} week={weekNum} />
       )}
       <div className="mb-6">
-        {/* Week header */}
-        <div className="pb-5 border-b border-red-600/20">
-          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
-            Season {strikeX(season.romanNumeral)}
-          </h1>
-          <p className="font-body text-sm text-navy/65 mt-1">
-            Week {weekNum} &middot; {season.period} {season.year}
-            {dateStr && <> &middot; {dateStr}</>}
-          </p>
-        </div>
+        {/* Week header. Only when there is no hero: with one, this same
+            heading is overlaid on the image above. */}
+        {!heroSrc && (
+          <div className="pb-5 border-b border-red-600/20">
+            <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
+              Season {strikeX(season.romanNumeral)}
+            </h1>
+            <p className="font-body text-sm text-navy/65 mt-1">
+              Week {weekNum} &middot; {season.period} {season.year}
+              {dateStr && <> &middot; {dateStr}</>}
+            </p>
+          </div>
+        )}
 
         {/* Prev/Next arrows */}
         <div className="flex items-center justify-between mt-4">
@@ -237,20 +261,6 @@ export async function WeekPageBody({
           </div>
         </div>
       </div>
-
-      {/* Hero photo from the week's post */}
-      {(blogPost?.heroImage ?? blogPost?.cardImage) && (
-        <div className="relative mb-4 h-40 sm:h-52 rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
-          <Image
-            src={(blogPost.heroImage ?? blogPost.cardImage)!}
-            alt=""
-            fill
-            className="object-cover"
-            style={{ objectPosition: `center ${(blogPost.heroFocalY ?? 0.5) * 100}%` }}
-            sizes="(max-width: 1024px) 100vw, 960px"
-          />
-        </div>
-      )}
 
       {/* Russ's writeup for the night */}
       {blogPost && writeupContent && (
@@ -350,5 +360,6 @@ export async function WeekPageBody({
         );
       })()}
     </main>
+    </>
   );
 }

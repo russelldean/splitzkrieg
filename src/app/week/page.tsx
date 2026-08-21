@@ -39,7 +39,7 @@ export default async function WeeksIndexPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden h-36 sm:h-44" role="img" aria-label="Bowling balls and shoes on retro red chairs">
+      <section className="relative overflow-hidden h-52 sm:h-64 md:h-80" role="img" aria-label="Bowling balls and shoes on retro red chairs">
         <ParallaxBg
           src="/splitzkrieg-balls-shoes.jpg"
           imgW={1440} imgH={1440}
