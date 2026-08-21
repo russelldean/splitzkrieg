@@ -54,7 +54,7 @@ export function MatchupSummary({
         <tbody>
           <tr className="text-navy">
             <td className="py-0.5">
-              <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+              <Link href={`/team/${homeTeamSlug}`} prefetch={false} className="hover:text-red-600 transition-colors">
                 <TeamName name={homeTeamName} />
               </Link>
             </td>
@@ -69,7 +69,7 @@ export function MatchupSummary({
           </tr>
           <tr className="text-navy">
             <td className="py-0.5">
-              <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+              <Link href={`/team/${awayTeamSlug}`} prefetch={false} className="hover:text-red-600 transition-colors">
                 <TeamName name={awayTeamName} />
               </Link>
             </td>
@@ -138,7 +138,7 @@ export function WeeklySummaryTable({
             return (
               <tr key={idx} className="border-b border-navy/5">
                 <td className={`py-1.5 pl-2 ${homeWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  <Link href={`/team/${homeTeamSlug}`} className="hover:text-red-600 transition-colors">
+                  <Link href={`/team/${homeTeamSlug}`} prefetch={false} className="hover:text-red-600 transition-colors">
                     <TeamName name={homeTeamName} />
                   </Link>
                 </td>
@@ -148,13 +148,13 @@ export function WeeklySummaryTable({
                   <span className={awayWon ? 'font-semibold text-navy' : 'text-navy/70'}>{t2Pts ?? '-'}</span>
                 </td>
                 <td className={`text-right py-1.5 ${awayWon ? 'font-semibold text-navy' : 'text-navy/70'}`}>
-                  <Link href={`/team/${awayTeamSlug}`} className="hover:text-red-600 transition-colors">
+                  <Link href={`/team/${awayTeamSlug}`} prefetch={false} className="hover:text-red-600 transition-colors">
                     <TeamName name={awayTeamName} />
                   </Link>
                 </td>
                 <td className="hidden sm:table-cell pl-4 py-1.5 text-amber-800">
                   {mvpBowler ? (
-                    <Link href={`/bowler/${mvpBowler.bowlerSlug}`} className="hover:text-red-600 transition-colors">
+                    <Link href={`/bowler/${mvpBowler.bowlerSlug}`} prefetch={false} className="hover:text-red-600 transition-colors">
                       {mvpBowler.bowlerName}
                       <span className="text-navy/65 ml-1 text-xs">{mvpBowler.handSeries}</span>
                     </Link>

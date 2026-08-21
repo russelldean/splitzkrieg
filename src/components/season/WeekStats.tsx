@@ -55,7 +55,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
               <div className="font-heading text-lg">
                 {bowlersOfWeek.map((b, i) => (
                   <span key={b.slug}>
-                    <Link href={`/bowler/${b.slug}`} className="text-navy hover:text-red-600 transition-colors">
+                    <Link href={`/bowler/${b.slug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors">
                       {b.name}
                     </Link>
                     {i < bowlersOfWeek.length - 1 && <span className="text-navy/65"> &amp; </span>}
@@ -70,7 +70,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
           {teamOfWeek && (
             <div className="bg-white border border-navy/10 border-l-4 border-l-red-600/40 rounded-lg px-4 py-3 shadow-sm">
               <div className="text-xs font-heading text-red-600/70 uppercase tracking-wider mb-1">Team of the Week</div>
-              <Link href={`/team/${teamOfWeek.teamSlug}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
+              <Link href={`/team/${teamOfWeek.teamSlug}`} prefetch={false} className="font-heading text-lg text-navy hover:text-red-600 transition-colors">
                 {teamOfWeek.teamName}
               </Link>
               <div className="text-sm font-body text-navy/65">
@@ -94,7 +94,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
               {careerMilestones.map((m, i) => (
                 <div key={`${m.slug}-${m.category}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                   <span className="truncate mr-2">
-                    <Link href={`/bowler/${m.slug}`} className="text-navy hover:text-red-600 transition-colors">
+                    <Link href={`/bowler/${m.slug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors">
                       {m.bowlerName}
                     </Link>
                   </span>
@@ -113,7 +113,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                 <div className={compact ? "px-3 py-1" : ""}>
                 {debuts.map(b => (
                   <div key={b.bowlerID} className="text-sm font-body py-0.5">
-                    <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                    <Link href={`/bowler/${b.bowlerSlug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors">
                       {b.bowlerName}
                     </Link>
                   </div>
@@ -128,7 +128,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                 {allTimeHighGames.map((b, i) => (
                   <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                     <span className="truncate mr-2">
-                      <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                      <Link href={`/bowler/${b.bowlerSlug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors">
                         {b.bowlerName}
                       </Link>
                       <span className="text-navy/65 text-xs ml-1">({b.teamName})</span>
@@ -146,7 +146,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                 {allTimeHighSeries.map((b, i) => (
                   <div key={`${b.bowlerSlug}-${i}`} className="flex justify-between text-sm font-body py-0.5">
                     <span className="truncate mr-2">
-                      <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                      <Link href={`/bowler/${b.bowlerSlug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors">
                         {b.bowlerName}
                       </Link>
                       <span className="text-navy/65 text-xs ml-1">({b.teamName})</span>
@@ -172,7 +172,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                 <div className="text-xs font-heading text-navy/60 uppercase tracking-wider mb-1.5">{tier.label}</div>
                 {tier.teams.map(team => (
                   <div key={team.id} className="flex justify-between text-sm font-body py-0.5">
-                    <Link href={`/team/${team.teamSlug}`} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
+                    <Link href={`/team/${team.teamSlug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
                       {team.teamName}
                     </Link>
                     <span className="tabular-nums text-navy/60 shrink-0">{team.hcpSeries}</span>
@@ -197,7 +197,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
                 const isTop = team.scratchSeries === topScratch;
                 return (
                   <div key={team.id} className="flex justify-between text-sm font-body py-0.5">
-                    <Link href={`/team/${team.teamSlug}`} className={`text-navy hover:text-red-600 transition-colors truncate mr-2 ${isTop ? 'font-bold' : ''}`}>
+                    <Link href={`/team/${team.teamSlug}`} prefetch={false} className={`text-navy hover:text-red-600 transition-colors truncate mr-2 ${isTop ? 'font-bold' : ''}`}>
                       {team.teamName}
                     </Link>
                     <span className={`tabular-nums shrink-0 ${isTop ? 'font-bold text-navy' : 'text-navy/60'}`}>{team.scratchSeries}</span>
@@ -237,7 +237,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
             <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Turkeys</h3>
             {turkeyList.map(b => (
               <div key={b.bowlerID} className="flex justify-between text-sm font-body py-0.5">
-                <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
+                <Link href={`/bowler/${b.bowlerSlug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors truncate mr-2">
                   {b.bowlerName}
                 </Link>
                 <span className="shrink-0" title={`${b.turkeys} turkey${b.turkeys > 1 ? 's' : ''}`}>
@@ -254,7 +254,7 @@ export function WeekStats({ weekScores, matchResults, careerMilestones = [], onl
             <h3 className="font-heading text-sm text-navy/60 uppercase tracking-wider mb-1.5">Above Average Every Game</h3>
             {aboveAvgEveryGame.map(b => (
               <div key={b.bowlerID} className="text-sm font-body py-0.5">
-                <Link href={`/bowler/${b.bowlerSlug}`} className="text-navy hover:text-red-600 transition-colors">
+                <Link href={`/bowler/${b.bowlerSlug}`} prefetch={false} className="text-navy hover:text-red-600 transition-colors">
                   {b.bowlerName}
                 </Link>
               </div>

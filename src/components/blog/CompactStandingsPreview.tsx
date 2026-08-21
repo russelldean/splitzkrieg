@@ -53,7 +53,7 @@ export function CompactStandingsPreview({ standings, weekNumber }: Props) {
                       <span className="text-navy/65 tabular-nums w-4 text-right">{i + 1}.</span>
                       {row.teamSlug ? (
                         <Link
-                          href={`/team/${row.teamSlug}`}
+                          href={`/team/${row.teamSlug}`} prefetch={false}
                           className="text-navy hover:text-red-600 transition-colors"
                         >
                           {row.teamName}

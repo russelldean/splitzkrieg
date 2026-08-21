@@ -52,7 +52,7 @@ export function TeamBoxScore({
   return (
     <div>
       <Link
-        href={`/team/${teamSlug}`}
+        href={`/team/${teamSlug}`} prefetch={false}
         className="font-heading text-sm text-navy hover:text-red-600 transition-colors"
       >
         <TeamName name={teamName} />
@@ -93,7 +93,7 @@ export function TeamBoxScore({
                 <tr key={b.bowlerID} className={`border-b border-navy/5 ${isMVP ? 'bg-amber-100/40' : ''}`}>
                   <td className="px-2 py-1">
                     <Link
-                      href={`/bowler/${b.bowlerSlug}`}
+                      href={`/bowler/${b.bowlerSlug}`} prefetch={false}
                       className={`underline-offset-2 hover:underline text-sm ${isMVP ? 'text-amber-800 font-semibold hover:text-red-600' : 'text-navy hover:text-red-600'}`}
                     >
                       {b.bowlerName}

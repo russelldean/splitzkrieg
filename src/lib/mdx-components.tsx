@@ -13,12 +13,12 @@ function toSlug(name: string): string {
 
 function Bowler({ children }: { children: ReactNode }) {
   const name = typeof children === 'string' ? children : String(children);
-  return <Link href={`/bowler/${toSlug(name)}`} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
+  return <Link href={`/bowler/${toSlug(name)}`} prefetch={false} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
 }
 
 function Team({ children }: { children: ReactNode }) {
   const name = typeof children === 'string' ? children : String(children);
-  return <Link href={`/team/${toSlug(name)}`} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
+  return <Link href={`/team/${toSlug(name)}`} prefetch={false} className="text-red-600 hover:text-red-700 font-semibold">{name}</Link>;
 }
 
 /**

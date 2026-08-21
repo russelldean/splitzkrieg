@@ -17,7 +17,7 @@ function TeamNameLabel({ name }: { name: string }) {
 
 function GhostTeamLink({ className }: { className?: string }) {
   return (
-    <Link href={`/team/${GHOST_TEAM_SLUG}`} className={`hover:text-red-600 transition-colors ${className ?? 'text-navy/65'}`}>
+    <Link href={`/team/${GHOST_TEAM_SLUG}`} prefetch={false} className={`hover:text-red-600 transition-colors ${className ?? 'text-navy/65'}`}>
       Ghost Team {'👻'}
     </Link>
   );
