@@ -256,7 +256,7 @@ export default async function Home() {
               : latestWeekDate;
           return (
           <div className="relative rounded-xl overflow-hidden shadow-md ring-1 ring-navy/10">
-            <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={3024} mobileImgH={4032} />
+            <ParallaxBg src="/village-lanes-chairs.jpg" imgW={2048} imgH={1536} focalY={0.5} mobileSrc="/village-lanes-lanes.jpg" mobileFocalY={0.6} mobileImgW={1440} mobileImgH={1440} />
             <div className="absolute inset-0 bg-black/60" />
             {/* Mobile: entire bar is clickable, side by side */}
             <Link
