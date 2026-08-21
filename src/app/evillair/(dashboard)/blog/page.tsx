@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import type { PostMdxIssue } from '@/lib/admin/mdx-health';
 import { useRouter, usePathname } from 'next/navigation';
 import type { BlogPost } from '@/lib/admin/types';
 
@@ -21,9 +22,16 @@ export default function AdminBlogPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bodies that will not render cleanly. Checked against the same compiler the
+  // public pages use, so a problem shows up here before a visitor sees it.
+  const [mdxIssues, setMdxIssues] = useState<PostMdxIssue[]>([]);
 
   const loadPosts = useCallback(async () => {
     try {
+      fetch('/api/evillair/blog/validate')
+        .then((r) => (r.ok ? r.json() : { issues: [] }))
+        .then((d) => setMdxIssues(d.issues ?? []))
+        .catch(() => setMdxIssues([]));
       const res = await fetch('/api/evillair/blog');
       if (!res.ok) throw new Error('Failed to load posts');
       const data = await res.json();
@@ -62,6 +70,8 @@ export default function AdminBlogPage() {
     }
   }
 
+
+  const issueFor = (id: number) => mdxIssues.find((i) => i.postId === id);
 
   if (loading) {
     return (
@@ -128,6 +138,22 @@ export default function AdminBlogPage() {
                   >
                     {post.type}
                   </span>
+                  {issueFor(post.id) && (
+                    <span
+                      className={`shrink-0 inline-block px-2 py-0.5 text-xs font-body font-medium uppercase tracking-wide rounded ${
+                        issueFor(post.id)!.ok
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                      title={
+                        issueFor(post.id)!.ok
+                          ? `Unknown tags: ${issueFor(post.id)!.unknownTags.join(', ')}`
+                          : issueFor(post.id)!.error ?? ''
+                      }
+                    >
+                      {issueFor(post.id)!.ok ? 'unknown tag' : 'will not render'}
+                    </span>
+                  )}
                 </div>
                 <p className="font-body text-xs text-navy/50">
                   {post.excerpt || 'No excerpt'}

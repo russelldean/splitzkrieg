@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import type { PostMdxIssue } from '@/lib/admin/mdx-health';
 import { WeekStatusBoard } from '@/components/admin/WeekStatusBoard';
 import { PreNightStatusBoard } from '@/components/admin/PreNightStatusBoard';
 
@@ -27,9 +28,17 @@ export default function AdminDashboardPage() {
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindResult, setRemindResult] = useState<string | null>(null);
   const [selectedTeamIDs, setSelectedTeamIDs] = useState<Set<number>>(new Set());
+  // Post bodies that will not render cleanly. Since SafeMDX these no longer
+  // fail the build, which means without this they would ship quietly as a
+  // placeholder chip and only ever appear in a Vercel log line.
+  const [mdxIssues, setMdxIssues] = useState<PostMdxIssue[]>([]);
 
   useEffect(() => {
     async function load() {
+      fetch('/api/evillair/blog/validate')
+        .then((r) => (r.ok ? r.json() : { issues: [] }))
+        .then((d) => setMdxIssues(d.issues ?? []))
+        .catch(() => setMdxIssues([]));
       try {
         const res = await fetch('/api/evillair/dashboard');
         if (!res.ok) throw new Error('Failed to load dashboard');
@@ -197,6 +206,38 @@ export default function AdminDashboardPage() {
           {seasonLabel}, week {data?.publishedWeek || 0} complete
         </p>
       </div>
+
+      {mdxIssues.length > 0 && (
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+          <p className="font-body text-sm font-semibold text-amber-800 mb-2">
+            {mdxIssues.length === 1
+              ? '1 post body will not render cleanly'
+              : `${mdxIssues.length} post bodies will not render cleanly`}
+          </p>
+          <ul className="space-y-1">
+            {mdxIssues.map((issue) => (
+              <li key={issue.postId} className="font-body text-sm text-navy/70">
+                <Link
+                  href={`/evillair/blog/${issue.postId}`}
+                  className="text-navy underline hover:text-red-600"
+                >
+                  {issue.title || issue.slug}
+                </Link>{' '}
+                <span className="text-xs text-navy/65">
+                  ({issue.isPublished ? 'published' : 'draft'})
+                </span>{' '}
+                {issue.ok
+                  ? `unknown ${issue.unknownTags.length === 1 ? 'tag' : 'tags'}: ${issue.unknownTags.join(', ')}`
+                  : issue.error}
+              </li>
+            ))}
+          </ul>
+          <p className="font-body text-xs text-navy/65 mt-2">
+            These no longer break the build. A published one is live now,
+            showing a placeholder where the content should be.
+          </p>
+        </div>
+      )}
 
       {/* Where the current week actually stands. Derived, never recorded. */}
       {data?.season && (
