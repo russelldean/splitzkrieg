@@ -40,3 +40,31 @@ export function unknownTags(source: string, known: Iterable<string>): string[] {
   const registered = new Set(known);
   return referencedTags(source).filter((t) => !registered.has(t));
 }
+
+/** Result of checking a draft body, shared by the API route and the editor. */
+export interface MdxValidation {
+  /** False only for a body that will not compile. Unknown tags still compile. */
+  ok: boolean;
+  /** Compiler message, trimmed to the part an author can act on. */
+  error: string | null;
+  /** Capitalized tags nothing has registered. These render as a marker chip. */
+  unknownTags: string[];
+}
+
+/**
+ * MDX parse errors arrive with a stack and a package prefix that bury the one
+ * line the author needs. Strip both so the editor can show something readable
+ * instead of the bare Next digest the author sees today.
+ */
+export function readableMdxError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  return raw
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('at '))
+    .slice(0, 4)
+    .join(' ')
+    .replace(/^\[next-mdx-remote\]\s*/, '')
+    .replace(/^error compiling MDX:\s*/, '')
+    .slice(0, 400);
+}

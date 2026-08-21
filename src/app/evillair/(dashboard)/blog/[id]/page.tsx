@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type { MdxValidation } from '@/lib/mdx-validate';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { BlogPost } from '@/lib/admin/types';
@@ -50,6 +51,11 @@ export default function BlogEditorPage({
   const [heroFocalY, setHeroFocalY] = useState('');
   const [cardImage, setCardImage] = useState('');
   const [cardFocalY, setCardFocalY] = useState('');
+
+  // MDX health of the current body. Checked server-side against the same
+  // compiler the week page uses, so what passes here is what will render.
+  const [mdx, setMdx] = useState<MdxValidation | null>(null);
+  const [mdxChecking, setMdxChecking] = useState(false);
 
   // Resolve params
   useEffect(() => {
@@ -114,6 +120,39 @@ export default function BlogEditorPage({
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
   }, [title, content, excerpt, type, postId, saving]);
+
+  // Validate the body 700ms after typing stops. Deliberately does NOT gate
+  // saving: autosave fires every 30s and a draft mid-tag must never fail to
+  // save. It gates Publish instead, which is where a broken body does damage.
+  useEffect(() => {
+    // Wait for the load to populate `content`, or the first check runs against
+    // an empty body and reports a clean bill for a post nobody has seen yet.
+    if (!postId || loading) return;
+    let cancelled = false;
+    setMdxChecking(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/evillair/blog/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        });
+        if (!res.ok) throw new Error('validate failed');
+        const result: MdxValidation = await res.json();
+        if (!cancelled) setMdx(result);
+      } catch {
+        // A failed check must never look like a failed body.
+        if (!cancelled) setMdx(null);
+      } finally {
+        if (!cancelled) setMdxChecking(false);
+      }
+    }, 700);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+      setMdxChecking(false);
+    };
+  }, [content, postId, loading]);
 
   // Ctrl+S handler
   useEffect(() => {
@@ -292,7 +331,12 @@ export default function BlogEditorPage({
           ) : (
             <button
               onClick={() => handleSave(true)}
-              disabled={saving}
+              disabled={saving || mdxChecking || (mdx !== null && !mdx.ok)}
+              title={
+                mdx !== null && !mdx.ok
+                  ? 'The body will not render. Fix the error below the editor first.'
+                  : undefined
+              }
               className="px-4 py-2 rounded-lg font-body text-sm bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               Publish
@@ -469,6 +513,35 @@ export default function BlogEditorPage({
           height={500}
           visibleDragbar={false}
         />
+        {mdx && !mdx.ok && (
+          <div className="mt-3 rounded-md border border-red-300 bg-red-50 px-4 py-3">
+            <p className="font-body text-sm font-semibold text-red-700">
+              This body will not render.
+            </p>
+            <p className="font-body text-sm text-red-700 mt-1">{mdx.error}</p>
+            <p className="font-body text-xs text-navy/65 mt-2">
+              Publishing is blocked until this is fixed. Saving still works, so
+              nothing is lost. Common causes: a tag closed with
+              {' '}<code>&lt;tag&gt;</code> instead of <code>&lt;/tag&gt;</code>,
+              or an HTML tag like <code>&lt;br&gt;</code> that needs to be
+              written <code>&lt;br /&gt;</code>.
+            </p>
+          </div>
+        )}
+        {mdx && mdx.ok && mdx.unknownTags.length > 0 && (
+          <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+            <p className="font-body text-sm font-semibold text-amber-800">
+              {mdx.unknownTags.length === 1 ? 'Unknown tag' : 'Unknown tags'}:{' '}
+              {mdx.unknownTags.join(', ')}
+            </p>
+            <p className="font-body text-xs text-navy/65 mt-1">
+              Nothing is registered under{' '}
+              {mdx.unknownTags.length === 1 ? 'that name' : 'those names'}, so
+              the page shows a placeholder chip instead of the content you meant.
+              Check the spelling. This does not block publishing.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Delete confirmation modal */}
