@@ -6,9 +6,12 @@ interface ParallaxBgProps {
   src: string;
   /** Vertical focal point as a fraction (0 = top, 1 = bottom). Default 0.65 */
   focalY?: number;
-  /** Native image width for positioning math. Default 640 */
+  /**
+   * First-paint hint for the image's native size. The real dimensions are
+   * measured from the loaded image and take over, so a wrong value here costs
+   * one frame, not a distorted hero. Omit it when the src is dynamic.
+   */
   imgW?: number;
-  /** Native image height for positioning math. Default 478 */
   imgH?: number;
   /** Cap image width (px) so it doesn't stretch edge-to-edge. Centered, dark bg fills sides. */
   maxW?: number;
@@ -17,6 +20,45 @@ interface ParallaxBgProps {
   mobileFocalY?: number;
   mobileImgW?: number;
   mobileImgH?: number;
+}
+
+/**
+ * Natural pixel size of an image, or null until it has loaded.
+ *
+ * The parallax math needs the real aspect ratio. Because the background is
+ * attachment:fixed (desktop) or position:fixed (mobile), `background-size:
+ * cover` would cover the VIEWPORT rather than this element, so the size has to
+ * be computed in explicit pixels from the image's dimensions. Setting both
+ * dimensions means a wrong ratio does not crop, it STRETCHES.
+ *
+ * Callers used to have to hand-declare imgW/imgH. That works for a fixed asset
+ * chosen at build time, but BlogPostLayout renders whatever hero the author set
+ * in the editor, so it hardcoded 4032x3024 and distorted every hero that was
+ * not 4:3 (turkeys.jpg at 3:2 rendered ~12.5% too tall). Measuring makes the
+ * props a first-paint hint rather than the source of truth, and silently
+ * corrects any caller whose numbers are wrong.
+ */
+function useNaturalSize(src: string): { w: number; h: number } | null {
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSize(null);
+    const img = new window.Image();
+    const apply = () => {
+      if (!cancelled && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setSize({ w: img.naturalWidth, h: img.naturalHeight });
+      }
+    };
+    img.onload = apply;
+    img.src = src;
+    if (img.complete) apply();
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  return size;
 }
 
 /**
@@ -31,7 +73,7 @@ interface ParallaxBgProps {
  *   <div className="relative z-10">Content on top</div>
  * </div>
  */
-export function ParallaxBg({ src, focalY = 0.65, imgW = 640, imgH = 478, maxW, mobileSrc, mobileFocalY, mobileImgW, mobileImgH }: ParallaxBgProps) {
+export function ParallaxBg({ src, focalY = 0.65, imgW, imgH, maxW, mobileSrc, mobileFocalY, mobileImgW, mobileImgH }: ParallaxBgProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -67,10 +109,11 @@ function DesktopParallax({
   ref: React.RefObject<HTMLDivElement | null>;
   src: string;
   focalY: number;
-  imgW: number;
-  imgH: number;
+  imgW?: number;
+  imgH?: number;
   maxW?: number;
 }) {
+  const natural = useNaturalSize(src);
   const [style, setStyle] = useState<React.CSSProperties>({
     backgroundImage: `url(${src})`,
     backgroundSize: 'cover',
@@ -81,11 +124,17 @@ function DesktopParallax({
   useEffect(() => {
     function compute() {
       if (!ref.current) return;
+      // Measured size wins; the props are only a first-paint hint. With neither,
+      // stay on `cover` rather than guess: a brief non-parallax frame is a far
+      // better failure than a stretched hero.
+      const w = natural?.w ?? imgW;
+      const h = natural?.h ?? imgH;
+      if (!w || !h) return;
       const rect = ref.current.getBoundingClientRect();
       const fitW = maxW ? Math.min(rect.width, maxW) : rect.width;
-      const scale = Math.max(fitW / imgW, rect.height / imgH);
-      const scaledW = imgW * scale;
-      const scaledH = imgH * scale;
+      const scale = Math.max(fitW / w, rect.height / h);
+      const scaledW = w * scale;
+      const scaledH = h * scale;
       const excessY = scaledH - rect.height;
       const offsetY = excessY * focalY;
       const bgPosY = rect.top + window.scrollY - offsetY;
@@ -107,7 +156,7 @@ function DesktopParallax({
       observer.disconnect();
       window.removeEventListener('resize', compute);
     };
-  }, [src, focalY, ref, maxW]);
+  }, [src, focalY, ref, maxW, natural, imgW, imgH]);
 
   return <div ref={ref} className="absolute inset-0" style={style} />;
 }
@@ -131,26 +180,35 @@ function MobileParallax({
   ref: React.RefObject<HTMLDivElement | null>;
   src: string;
   focalY: number;
-  imgW: number;
-  imgH: number;
+  imgW?: number;
+  imgH?: number;
   maxW?: number;
 }) {
   const innerRef = useRef<HTMLDivElement>(null);
+  const natural = useNaturalSize(src);
 
   const computeLayout = useCallback(() => {
     if (!ref.current || !innerRef.current) return;
+    // Measured size wins; see the desktop path.
+    const w = natural?.w ?? imgW;
+    const h = natural?.h ?? imgH;
+    if (!w || !h) {
+      innerRef.current.style.backgroundSize = 'cover';
+      innerRef.current.style.backgroundPosition = `center ${focalY * 100}%`;
+      return;
+    }
     const rect = ref.current.getBoundingClientRect();
     const pageTop = rect.top + window.scrollY;
     const fitW = maxW ? Math.min(rect.width, maxW) : rect.width;
-    const scale = Math.max(fitW / imgW, rect.height / imgH);
-    const scaledW = imgW * scale;
-    const scaledH = imgH * scale;
+    const scale = Math.max(fitW / w, rect.height / h);
+    const scaledW = w * scale;
+    const scaledH = h * scale;
     const excessY = scaledH - rect.height;
     const bgPosY = pageTop - excessY * focalY;
 
     innerRef.current.style.backgroundSize = `${scaledW}px ${scaledH}px`;
     innerRef.current.style.backgroundPosition = `center ${bgPosY}px`;
-  }, [ref, focalY, maxW]);
+  }, [ref, focalY, maxW, natural, imgW, imgH]);
 
   useEffect(() => {
     computeLayout();

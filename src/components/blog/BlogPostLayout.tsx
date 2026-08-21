@@ -34,8 +34,6 @@ export function BlogPostLayout({ meta, prev, next, children, updates }: BlogPost
           <ParallaxBg
             src={meta.heroImage!}
             focalY={meta.heroFocalY ?? 0.5}
-            imgW={4032}
-            imgH={3024}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="relative z-10 flex flex-col justify-end h-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
