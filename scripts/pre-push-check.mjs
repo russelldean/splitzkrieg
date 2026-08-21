@@ -143,6 +143,40 @@ if (fs.existsSync(publishedWeekPath)) {
   fail('published-week', '.published-week file not found');
 }
 
+// 5. The published tag's redundancy invariant.
+//
+// ~22 queries fold .published-week into their cache key. That is currently
+// harmless dead weight rather than a live dependency, because the ONLY writer
+// of the file is src/app/api/evillair/publish/route.ts, which commits it in the
+// same commit as a bumped .data-versions.json. So the season/channel version
+// already invalidates everything the tag would.
+//
+// That is what makes the tag safe to delete some day. If the marker ever moves
+// WITHOUT a version bump, the invariant breaks, the tag silently becomes
+// load-bearing again, and deleting it would serve stale pages. Flag it here
+// rather than let that happen quietly.
+try {
+  const diff = execSync('git diff --name-only HEAD', { cwd: ROOT, encoding: 'utf-8' });
+  const staged = execSync('git diff --name-only --cached', { cwd: ROOT, encoding: 'utf-8' });
+  const allChanged = (diff + '\n' + staged).split('\n').filter(Boolean);
+
+  const markerChanged = allChanged.includes('.published-week');
+  const versionsChanged = allChanged.includes('.data-versions.json');
+
+  if (markerChanged && !versionsChanged) {
+    warn(
+      'published-tag',
+      '.published-week changed without .data-versions.json. Publishing normally moves both ' +
+      'together; on its own it means the published tag is now the only thing invalidating ' +
+      'those pages, so it can no longer be removed safely.',
+    );
+  } else {
+    pass('published-tag', 'Marker and data versions move together');
+  }
+} catch {
+  warn('published-tag', 'Could not check git diff');
+}
+
 // Summary
 console.log(`\n${failures === 0 && warnings === 0 ? 'All checks passed.' : `${failures} failure(s), ${warnings} warning(s).`}\n`);
 process.exit(failures > 0 ? 1 : 0);
