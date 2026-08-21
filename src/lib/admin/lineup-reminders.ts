@@ -120,35 +120,119 @@ export interface SendOutcome {
   skipped: number;
   noEmail: string[];
   errors: string[];
+  /** True when the budget ran out before every recipient was reached. */
+  stoppedEarly: boolean;
+  /** Recipients never attempted, because the budget ran out first. */
+  remaining: number;
+  /** Names of those recipients, so a caller can re-send to just them. */
+  unreached: string[];
 }
 
-/** Mail each recipient, paced for Resend's 2 per second cap. */
+export interface SendOptions {
+  /**
+   * Called once, right after the first successful send. This is where the
+   * caller stamps its dedupe key.
+   *
+   * It has to happen mid-loop rather than after it. Mailing 41 teams costs at
+   * least 41 x 600ms of pacing, so the run outlives a short function timeout;
+   * a caller that recorded only on return left no trace when it was killed,
+   * and the next cron tick mailed the whole league a second time. Stamping on
+   * the first success means an interrupted run is remembered as having
+   * happened. Some captains then miss a reminder, which is the better failure.
+   *
+   * Throwing here is swallowed: failing to record must not stop the mail.
+   */
+  onFirstSend?: () => Promise<void>;
+  /**
+   * Wall-clock budget for the whole loop. When the next send would not fit,
+   * the loop stops and reports `remaining` instead of being killed with the
+   * outcome unreported. Omit for no limit.
+   */
+  budgetMs?: number;
+  /** Injectable for tests. */
+  now?: () => number;
+  /** Injectable for tests. */
+  sleep?: (ms: number) => Promise<void>;
+}
+
+/** Resend's free tier caps at 2 emails a second. */
+const PACE_MS = 600;
+
+/**
+ * How long the routes give the loop before they cut it off.
+ *
+ * Both reminder routes declare `maxDuration = 60`. Pacing alone costs 600ms a
+ * head, so a 20-team league is already ~12s of pure waiting and a full 41-team
+ * week is ~25s before Resend's own latency. Ten seconds of the sixty are held
+ * back so the route can record and answer rather than being killed. The
+ * literal 60 has to stay written out in each route: Next reads maxDuration
+ * statically and will not follow an imported constant.
+ */
+export const REMINDER_BUDGET_MS = 50_000;
+
+/**
+ * Mail each recipient, paced for Resend's rate cap.
+ *
+ * Not transactional: it can stop partway. See `onFirstSend` and `budgetMs` for
+ * how a caller keeps a partial run from turning into a duplicate blast.
+ */
 export async function sendReminders(
   recipients: ReminderRecipient[],
   pass: ReminderPass,
   week: number,
+  options: SendOptions = {},
 ): Promise<SendOutcome> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error('RESEND_API_KEY not configured');
 
+  const {
+    onFirstSend,
+    budgetMs,
+    now = () => Date.now(),
+    sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)),
+  } = options;
+
   const resend = new Resend(apiKey);
   const from = process.env.RECAP_FROM_ADDRESS || 'Splitzkrieg <noreply@splitzkrieg.com>';
 
-  const outcome: SendOutcome = { sent: 0, skipped: 0, noEmail: [], errors: [] };
-  let attempts = 0;
+  const outcome: SendOutcome = {
+    sent: 0,
+    skipped: 0,
+    noEmail: [],
+    errors: [],
+    stoppedEarly: false,
+    remaining: 0,
+    unreached: [],
+  };
 
-  for (const team of recipients) {
+  const startedAt = now();
+  let attempts = 0;
+  let claimed = false;
+
+  for (let i = 0; i < recipients.length; i++) {
+    const team = recipients[i];
+
     if (!team.email) {
       outcome.noEmail.push(team.teamName);
       outcome.skipped++;
       continue;
     }
 
-    // Resend's free tier caps at 2 emails a second. Paced on ATTEMPTS rather
-    // than successes: gating on successes meant a failed send left the counter
-    // at zero, so the next send fired with no delay and a run of failures
-    // defeated the limit entirely.
-    if (attempts > 0) await new Promise((r) => setTimeout(r, 600));
+    // Stop on our own terms while there is still time to return a response.
+    // Budget is checked before the pacing delay, since that delay is the bulk
+    // of what the next recipient costs.
+    if (budgetMs !== undefined && now() - startedAt >= budgetMs) {
+      const left = recipients.slice(i);
+      outcome.stoppedEarly = true;
+      outcome.remaining = left.length;
+      outcome.unreached = left.map((t) => t.teamName);
+      break;
+    }
+
+    // Paced on ATTEMPTS rather than successes: gating on successes meant a
+    // failed send left the counter at zero, so the next send fired with no
+    // delay and a run of failures defeated the limit entirely.
+    if (attempts > 0) await sleep(PACE_MS);
     attempts++;
 
     const { subject, html } = reminderEmail({
@@ -161,6 +245,15 @@ export async function sendReminders(
     try {
       await resend.emails.send({ from, to: team.email, subject, html });
       outcome.sent++;
+
+      if (!claimed) {
+        claimed = true;
+        try {
+          await onFirstSend?.();
+        } catch (err) {
+          console.error('[REMINDERS] first send recorded nowhere:', err);
+        }
+      }
     } catch (err) {
       outcome.errors.push(
         `${team.teamName}: ${err instanceof Error ? err.message : 'send failed'}`,

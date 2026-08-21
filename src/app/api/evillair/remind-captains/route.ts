@@ -16,9 +16,17 @@ import { todayET } from '@/lib/admin/clock';
 import { getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 import { reminderPlan } from '@/lib/admin/reminder-window';
 import { actionKeys, recordAction } from '@/lib/admin/action-log';
-import { findMissingLineups, sendReminders } from '@/lib/admin/lineup-reminders';
+import {
+  findMissingLineups,
+  sendReminders,
+  REMINDER_BUDGET_MS,
+} from '@/lib/admin/lineup-reminders';
 
 export const dynamic = 'force-dynamic';
+
+// Same reason as the cron: 600ms of pacing per captain does not fit in the
+// platform default. Must be a literal; Next reads it statically.
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,17 +62,31 @@ export async function POST(request: NextRequest) {
     const matchDate = await getUpcomingMatchDate(seasonID, week);
     const { pass } = reminderPlan({ nowET: todayET(), matchDate, enabled: true });
 
-    const outcome = await sendReminders(teams, pass, week);
-    if (outcome.sent > 0) await recordAction(actionKeys.remind(seasonID, week, pass));
+    // Recorded on the first successful send rather than after the loop, so a
+    // run cut short still stands the scheduled send down instead of letting it
+    // mail everyone who was already reached a second time.
+    const outcome = await sendReminders(teams, pass, week, {
+      budgetMs: REMINDER_BUDGET_MS,
+      onFirstSend: () => recordAction(actionKeys.remind(seasonID, week, pass)),
+    });
 
-    const { sent, skipped, noEmail, errors } = outcome;
+    const { sent, skipped, noEmail, errors, stoppedEarly, remaining, unreached } = outcome;
+    const skipNote = skipped > 0 ? `, ${skipped} skipped (no email)` : '';
 
     return NextResponse.json({
       sent,
       skipped,
       noEmail,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Sent ${sent} reminder${sent !== 1 ? 's' : ''}${skipped > 0 ? `, ${skipped} skipped (no email)` : ''}`,
+      stoppedEarly: stoppedEarly || undefined,
+      remaining: remaining || undefined,
+      unreached: unreached.length > 0 ? unreached : undefined,
+      // Names, not just a count: this route takes a teamIDs filter, and
+      // pressing the button again unfiltered would re-mail everyone who has
+      // still not submitted, the already-reminded included.
+      message: stoppedEarly
+        ? `Ran out of time after ${sent}${skipNote}. Still to go: ${unreached.join(', ')}. Select just those and send again.`
+        : `Sent ${sent} reminder${sent !== 1 ? 's' : ''}${skipNote}`,
     });
   } catch (err) {
     console.error('Remind captains error:', err);

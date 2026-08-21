@@ -14,10 +14,18 @@ import { getDb } from '@/lib/db';
 import { getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 import { reminderPlan, isDuplicate } from '@/lib/admin/reminder-window';
 import { actionKeys, automationEnabled, readSettings, recordAction } from '@/lib/admin/action-log';
-import { findMissingLineups, sendReminders } from '@/lib/admin/lineup-reminders';
+import {
+  findMissingLineups,
+  sendReminders,
+  REMINDER_BUDGET_MS,
+} from '@/lib/admin/lineup-reminders';
 import { todayET } from '@/lib/admin/clock';
 
 export const dynamic = 'force-dynamic';
+
+// Mailing the league costs at least 600ms a head in pacing, so this run does
+// not fit in the platform default. Must be a literal; Next reads it statically.
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -86,11 +94,17 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const outcome = await sendReminders(missing, plan.pass, week);
-    if (outcome.sent > 0) await recordAction(key);
+    // The key is stamped from inside the loop, on the first successful send,
+    // not out here on the way back. A run killed partway used to leave no
+    // record at all, so the next tick mailed everyone who had already been
+    // reached a second time.
+    const outcome = await sendReminders(missing, plan.pass, week, {
+      budgetMs: REMINDER_BUDGET_MS,
+      onFirstSend: () => recordAction(key),
+    });
 
     console.info(
-      `Cron lineup-reminder: week ${week}, pass ${plan.pass}, sent ${outcome.sent}, skipped ${outcome.skipped}, errors ${outcome.errors.length}`,
+      `Cron lineup-reminder: week ${week}, pass ${plan.pass}, sent ${outcome.sent}, skipped ${outcome.skipped}, errors ${outcome.errors.length}${outcome.stoppedEarly ? `, STOPPED EARLY with ${outcome.remaining} unreached` : ''}`,
     );
 
     // Every recipient failed, so report it as an error status. A 200 here would
@@ -107,7 +121,13 @@ export async function GET(request: NextRequest) {
         skipped: outcome.skipped,
         noEmail: outcome.noEmail,
         errors: outcome.errors.length > 0 ? outcome.errors : undefined,
-        message: outcome.sent > 0 ? `Sent ${outcome.sent} for week ${week}` : 'Attempted, nothing sent',
+        stoppedEarly: outcome.stoppedEarly || undefined,
+        remaining: outcome.remaining || undefined,
+        message: outcome.stoppedEarly
+          ? `Ran out of time after ${outcome.sent}; ${outcome.remaining} never reached for week ${week}`
+          : outcome.sent > 0
+            ? `Sent ${outcome.sent} for week ${week}`
+            : 'Attempted, nothing sent',
       },
       { status },
     );
