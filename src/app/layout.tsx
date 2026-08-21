@@ -7,6 +7,7 @@ import { PageTransition } from "@/components/ui/PageTransition";
 import { FeedbackButton } from "@/components/layout/FeedbackButton";
 import { ConsoleGreeting } from "@/components/layout/ConsoleGreeting";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
+import { DraftModeBanner } from "@/components/layout/DraftModeBanner";
 import { PostHogProvider } from "@/components/PostHogProvider";
 
 const dmSerif = DM_Serif_Display({
@@ -56,6 +57,7 @@ export default function RootLayout({
         <PostHogProvider>
           <PageTransition />
           <div className="sticky top-0 z-50">
+            <DraftModeBanner />
             <AnnouncementBanner />
             <Header />
           </div>
