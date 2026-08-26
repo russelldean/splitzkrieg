@@ -254,7 +254,24 @@ async function rosterOf(teamId) {
   const det = unwrap(await lp(`/api/loadIndividualTeam?id=${teamId}&noPre=false`));
   return (Array.isArray(det) ? det : []).map(b => ({
     name: b.name, email: b.email, enteringAvg: b.enteringAvg, realAvg: b.realAvg,
+    // Kept for the duplicate-average check in verify(). One entry per
+    // (league, team), so a team reseated onto a different slot leaves its
+    // bowlers holding two rows for the SAME league.
+    averages: Array.isArray(b.averages) ? b.averages : [],
   }));
+}
+
+// Rows in a bowler's `averages[]` that belong to this event. More than one means
+// the bowler has been on two teams in this league -- the roster UI shows
+// `enteringAvg` while the lanes can read the other row. A stale 0 is the
+// "missing handicap" case (avg 0 -> the 147 max); a stale non-zero is the
+// "wrong handicap" case. Diagnosed 2026-08-24: Event A had 2, B had 8 (seven of
+// them Wild Llamas, slot-swapped three times), C had 1.
+function dupAverages(bowler, leagueId) {
+  const mine = bowler.averages.filter(a => String(a.league || '') === leagueId);
+  if (mine.length < 2) return null;
+  const vals = mine.map(a => Number(a.average ?? 0));
+  return { vals, hasZero: vals.some(v => v === 0) };
 }
 
 // ------------------------------------------------------------------------- CSV
@@ -552,7 +569,7 @@ async function verify() {
   const memByEmail = new Map(ev.members.map(m => [String(m.email || '').toLowerCase(), m]));
 
   let seats = 0;
-  const seatNoMember = [], avgBad = [], orderBad = [];
+  const seatNoMember = [], avgBad = [], orderBad = [], dupLineup = [], dupBench = [];
   console.log(`\n=== VERIFY ${DATE} Event ${EVENT} ===`);
   console.log('team                   seats  top4(LP)  lineup order');
 
@@ -561,6 +578,9 @@ async function verify() {
     const roster = await rosterOf(t._id);
     seats += roster.length;
 
+    const ln = mine ? (ours.lineupOf.get(mine.teamID) || []) : [];
+    const bowlingTonight = new Set(ln.map(n => bkey(n)));
+
     for (const b of roster) {
       const m = memByEmail.get(String(b.email || '').toLowerCase());
       if (!m || !(m.team || []).some(x => liveIds.has(x))) seatNoMember.push(`${t.name}: ${b.name}`);
@@ -568,9 +588,15 @@ async function verify() {
       if (expAvg != null && Number(b.enteringAvg) !== expAvg) {
         avgBad.push(`${t.name}: ${b.name} LP=${b.enteringAvg} ours=${expAvg}`);
       }
+      const dup = dupAverages(b, LEAGUE);
+      if (dup) {
+        const why = dup.hasZero ? 'stale 0 -> lanes may apply the 147 max'
+          : `lanes may use ${dup.vals.find(v => v !== Number(b.enteringAvg)) ?? '?'}`;
+        const line = `${t.name}: ${b.name} enteringAvg=${b.enteringAvg} averages[]=[${dup.vals.join(',')}]  ${why}`;
+        (bowlingTonight.has(bkey(b.name)) ? dupLineup : dupBench).push(line);
+      }
     }
 
-    const ln = mine ? (ours.lineupOf.get(mine.teamID) || []) : [];
     let orderOK = true;
     if (ln.length) {
       const lpTop = roster.slice(0, ln.length).map(b => bkey(b.name)).join('|');
@@ -594,7 +620,14 @@ async function verify() {
   console.log(`\nlineup-order mismatches: ${orderBad.length}`);
   orderBad.forEach(s => console.log('   ' + s));
 
-  const clean = !seatNoMember.length && !avgBad.length && !orderBad.length;
+  // Two rows for one league. Only a fail when the bowler actually bowls tonight;
+  // on the bench it is exposure to watch, not a reason to block the night.
+  console.log(`\n*** duplicate averages[] rows, bowler IN TONIGHT'S LINEUP: ${dupLineup.length}`);
+  dupLineup.forEach(s => console.log('   ' + s));
+  console.log(`\nduplicate averages[] rows, bench only (watch, not blocking): ${dupBench.length}`);
+  dupBench.forEach(s => console.log('   ' + s));
+
+  const clean = !seatNoMember.length && !avgBad.length && !orderBad.length && !dupLineup.length;
   console.log(`\n${clean ? 'ALL CLEAR' : '*** PROBLEMS ABOVE ***'}`);
   if (!clean) process.exitCode = 1;
 }

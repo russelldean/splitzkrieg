@@ -1,0 +1,930 @@
+{
+  "Guttersnipes": [
+    {
+      "name": "Lloyd Mason",
+      "avg": 135,
+      "hcp": 85,
+      "g": [
+        137,
+        146,
+        143
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Matt Northrup",
+      "avg": 120,
+      "hcp": 99,
+      "g": [
+        137,
+        154,
+        138
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Max Kaufman",
+      "avg": 113,
+      "hcp": 106,
+      "g": [
+        100,
+        116,
+        110
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Tom Page",
+      "avg": 136,
+      "hcp": 84,
+      "g": [
+        154,
+        141,
+        141
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Sparadigm Shift": [
+    {
+      "name": "Jenna Land",
+      "avg": null,
+      "hcp": null,
+      "g": [
+        101,
+        78,
+        90
+      ],
+      "noAvg": true,
+      "turkeys": 0
+    },
+    {
+      "name": "Michael Parks",
+      "avg": 130,
+      "hcp": 90,
+      "g": [
+        131,
+        164,
+        132
+      ],
+      "note": "prebowl; g2 corrected 131->164",
+      "turkeys": 0
+    },
+    {
+      "name": "Josh Keeney",
+      "avg": 156,
+      "hcp": 65,
+      "g": [
+        178,
+        169,
+        132
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Ben Rice",
+      "avg": 159,
+      "hcp": 62,
+      "g": [
+        166,
+        146,
+        199
+      ],
+      "turkeys": 0
+    }
+  ],
+  "E-Bowla": [
+    {
+      "name": "James Hepler",
+      "avg": 159,
+      "hcp": 62,
+      "g": [
+        163,
+        177,
+        152
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Matt Gocke",
+      "avg": 112,
+      "hcp": 107,
+      "g": [
+        100,
+        129,
+        132
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Amy Kostrewa",
+      "avg": 140,
+      "hcp": 80,
+      "g": [
+        116,
+        140,
+        134
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Spott Philpott",
+      "avg": 161,
+      "hcp": 60,
+      "g": [
+        145,
+        147,
+        162
+      ],
+      "turkeys": 0
+    }
+  ],
+  "HOT FUN": [
+    {
+      "name": "Denis McPhillips",
+      "avg": 128,
+      "hcp": 92,
+      "g": [
+        129,
+        143,
+        172
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "John Bellizzi",
+      "avg": 135,
+      "hcp": 85,
+      "g": [
+        129,
+        158,
+        107
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Matt Wade",
+      "avg": 153,
+      "hcp": 68,
+      "g": [
+        183,
+        164,
+        180
+      ],
+      "turkeys": 2
+    },
+    {
+      "name": "Vance Woods",
+      "avg": 146,
+      "hcp": 75,
+      "g": [
+        149,
+        172,
+        164
+      ],
+      "turkeys": 1
+    }
+  ],
+  "Valley of the Balls": [
+    {
+      "name": "J Peters",
+      "avg": 112,
+      "hcp": 107,
+      "g": [
+        108,
+        130,
+        126
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Alison Trott",
+      "avg": 136,
+      "hcp": 84,
+      "g": [
+        112,
+        126,
+        114
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Jon Hunt",
+      "avg": 148,
+      "hcp": 73,
+      "g": [
+        159,
+        137,
+        138
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Erin Biggerstaff",
+      "avg": 169,
+      "hcp": 53,
+      "g": [
+        195,
+        188,
+        168
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Stinky Cheese": [
+    {
+      "name": "Ulises Palestino",
+      "avg": 152,
+      "hcp": 69,
+      "g": [
+        151,
+        128,
+        198
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Steve Bishop",
+      "avg": 182,
+      "hcp": 40,
+      "g": [
+        185,
+        192,
+        162
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Nathan Boden",
+      "avg": 139,
+      "hcp": 81,
+      "g": [
+        144,
+        173,
+        158
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Denis Webb",
+      "avg": 174,
+      "hcp": 48,
+      "g": [
+        225,
+        176,
+        211
+      ],
+      "turkeys": 2
+    }
+  ],
+  "Guttermouths": [
+    {
+      "name": "Alix Bowman",
+      "avg": 124,
+      "hcp": 95,
+      "g": [
+        138,
+        130,
+        121
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Julie Doring",
+      "avg": 74,
+      "hcp": 143,
+      "g": [
+        71,
+        109,
+        107
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "PENALTY",
+      "avg": null,
+      "hcp": null,
+      "g": [
+        null,
+        null,
+        null
+      ],
+      "penalty": true
+    },
+    {
+      "name": "Brooke Insley",
+      "avg": 146,
+      "hcp": 75,
+      "g": [
+        137,
+        155,
+        114
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Hot Shotz": [
+    {
+      "name": "Ted Glick",
+      "avg": 133,
+      "hcp": 87,
+      "g": [
+        128,
+        122,
+        122
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Kelly Shirley",
+      "avg": 136,
+      "hcp": 84,
+      "g": [
+        109,
+        95,
+        129
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Dave Graedon",
+      "avg": 149,
+      "hcp": 72,
+      "g": [
+        126,
+        152,
+        149
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Paul Marsh",
+      "avg": 149,
+      "hcp": 72,
+      "g": [
+        115,
+        171,
+        120
+      ],
+      "turkeys": 0
+    }
+  ],
+  "The Boom Kings": [
+    {
+      "name": "Kristine Pryzgoda",
+      "avg": 123,
+      "hcp": 96,
+      "g": [
+        93,
+        106,
+        113
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Scott Jeffries",
+      "avg": 142,
+      "hcp": 78,
+      "g": [
+        135,
+        131,
+        158
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Harper Gordek",
+      "avg": 145,
+      "hcp": 76,
+      "g": [
+        175,
+        166,
+        155
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Tony Lawrence",
+      "avg": 163,
+      "hcp": 58,
+      "g": [
+        175,
+        142,
+        148
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Thoughts and Spares": [
+    {
+      "name": "Kristin Pearson",
+      "avg": 148,
+      "hcp": 73,
+      "g": [
+        106,
+        108,
+        147
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Dean Fitzgerald",
+      "avg": 104,
+      "hcp": 114,
+      "g": [
+        128,
+        126,
+        82
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Ben Popik",
+      "avg": 151,
+      "hcp": 70,
+      "g": [
+        180,
+        132,
+        141
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Alex Rubenstein",
+      "avg": 169,
+      "hcp": 53,
+      "g": [
+        189,
+        158,
+        160
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Smoke-a-Bowl": [
+    {
+      "name": "Ady Pratapa",
+      "avg": 120,
+      "hcp": 99,
+      "g": [
+        113,
+        140,
+        102
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Leslie Pierce",
+      "avg": 123,
+      "hcp": 96,
+      "g": [
+        146,
+        138,
+        129
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Alan Fast",
+      "avg": 106,
+      "hcp": 113,
+      "g": [
+        79,
+        124,
+        87
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "John Bekas",
+      "avg": 167,
+      "hcp": 55,
+      "g": [
+        173,
+        114,
+        160
+      ],
+      "turkeys": 1
+    }
+  ],
+  "Wild Llamas": [
+    {
+      "name": "Matt Vogt",
+      "avg": 135,
+      "hcp": 85,
+      "g": [
+        134,
+        123,
+        105
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Matt Stansell",
+      "avg": 154,
+      "hcp": 67,
+      "g": [
+        154,
+        171,
+        166
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Daz Hicks",
+      "avg": 134,
+      "hcp": 86,
+      "g": [
+        131,
+        180,
+        147
+      ],
+      "sub_for": "Ben Wilson",
+      "turkeys": 1
+    },
+    {
+      "name": "Mark Oates",
+      "avg": 160,
+      "hcp": 61,
+      "g": [
+        211,
+        171,
+        143
+      ],
+      "turkeys": 1
+    }
+  ],
+  "Living on a Spare": [
+    {
+      "name": "Lillith Fallon",
+      "avg": 63,
+      "hcp": 147,
+      "g": [
+        71,
+        69,
+        92
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Wes Wood",
+      "avg": null,
+      "hcp": null,
+      "g": [
+        105,
+        114,
+        126
+      ],
+      "noAvg": true,
+      "sub_for": "Danielle Gambol",
+      "turkeys": 0
+    },
+    {
+      "name": "Ellen Duda",
+      "avg": 101,
+      "hcp": 117,
+      "g": [
+        137,
+        104,
+        125
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Ian McCarthy",
+      "avg": 123,
+      "hcp": 96,
+      "g": [
+        127,
+        125,
+        142
+      ],
+      "turkeys": 0
+    }
+  ],
+  "High Rollers": [
+    {
+      "name": "Rebecca Pattillo",
+      "avg": 118,
+      "hcp": 101,
+      "g": [
+        148,
+        130,
+        105
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Hannah Taylor",
+      "avg": 89,
+      "hcp": 129,
+      "g": [
+        99,
+        89,
+        76
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Jacob Steagald",
+      "avg": 126,
+      "hcp": 94,
+      "g": [
+        115,
+        117,
+        110
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Madelyne Rush",
+      "avg": 119,
+      "hcp": 100,
+      "g": [
+        119,
+        107,
+        117
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Alley Oops": [
+    {
+      "name": "Ash Bowie",
+      "avg": 125,
+      "hcp": 95,
+      "g": [
+        133,
+        146,
+        135
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Stephen Conrad",
+      "avg": 161,
+      "hcp": 60,
+      "g": [
+        166,
+        170,
+        156
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "David Felton",
+      "avg": 132,
+      "hcp": 88,
+      "g": [
+        166,
+        134,
+        128
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Katherine Magowan",
+      "avg": 90,
+      "hcp": 128,
+      "g": [
+        79,
+        91,
+        104
+      ],
+      "note": "prebowl",
+      "turkeys": 0
+    }
+  ],
+  "Gutterglory": [
+    {
+      "name": "John Hykes",
+      "avg": 133,
+      "hcp": 87,
+      "g": [
+        129,
+        148,
+        124
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Terrence Chambers",
+      "avg": 181,
+      "hcp": 41,
+      "g": [
+        167,
+        178,
+        112
+      ],
+      "turkeys": 3
+    },
+    {
+      "name": "Marki Braxton",
+      "avg": 87,
+      "hcp": 131,
+      "g": [
+        83,
+        113,
+        76
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Payton McRae",
+      "avg": null,
+      "hcp": null,
+      "g": [
+        123,
+        137,
+        167
+      ],
+      "noAvg": true,
+      "sub_for": "Anthony Bennet",
+      "turkeys": 0
+    }
+  ],
+  "Fancy Pants": [
+    {
+      "name": "Fikri Yucel",
+      "avg": 121,
+      "hcp": 98,
+      "g": [
+        115,
+        124,
+        129
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Valerie Faulkner",
+      "avg": 129,
+      "hcp": 91,
+      "g": [
+        111,
+        117,
+        180
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Chris Chapman",
+      "avg": 120,
+      "hcp": 99,
+      "g": [
+        96,
+        144,
+        135
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Brian Burns",
+      "avg": 150,
+      "hcp": 71,
+      "g": [
+        138,
+        141,
+        135
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Lucky Strikes": [
+    {
+      "name": "Martin Hall",
+      "avg": 120,
+      "hcp": 99,
+      "g": [
+        117,
+        94,
+        156
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Christina Manzella",
+      "avg": 138,
+      "hcp": 82,
+      "g": [
+        126,
+        125,
+        118
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Jim Haverkamp",
+      "avg": 130,
+      "hcp": 90,
+      "g": [
+        141,
+        149,
+        131
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Russ Dean",
+      "avg": 163,
+      "hcp": 58,
+      "g": [
+        189,
+        147,
+        160
+      ],
+      "turkeys": 0
+    }
+  ],
+  "Grandma's Teeth": [
+    {
+      "name": "Joe Brogan",
+      "avg": 148,
+      "hcp": 73,
+      "g": [
+        152,
+        172,
+        163
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Derek Sanger",
+      "avg": 140,
+      "hcp": 80,
+      "g": [
+        150,
+        133,
+        180
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Bob Ellinger",
+      "avg": 153,
+      "hcp": 68,
+      "g": [
+        125,
+        129,
+        157
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Mike DePasquale",
+      "avg": 182,
+      "hcp": 40,
+      "g": [
+        178,
+        137,
+        207
+      ],
+      "turkeys": 1
+    }
+  ],
+  "Pin-Ups": [
+    {
+      "name": "Barrett Jorgensen",
+      "avg": 162,
+      "hcp": 59,
+      "g": [
+        176,
+        245,
+        166
+      ],
+      "turkeys": 2
+    },
+    {
+      "name": "Blake Moriarty",
+      "avg": 123,
+      "hcp": 96,
+      "g": [
+        97,
+        136,
+        101
+      ],
+      "turkeys": 0
+    },
+    {
+      "name": "Forrest DeMarcus",
+      "avg": 155,
+      "hcp": 66,
+      "g": [
+        144,
+        225,
+        137
+      ],
+      "turkeys": 1
+    },
+    {
+      "name": "Tino McCullough",
+      "avg": 143,
+      "hcp": 77,
+      "g": [
+        136,
+        156,
+        168
+      ],
+      "turkeys": 0
+    }
+  ]
+}
