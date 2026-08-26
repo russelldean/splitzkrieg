@@ -408,7 +408,14 @@ export const getBowlerOfTheWeek = cache(async (): Promise<number[]> => {
       .input('week', ctx.week)
       .query<{ bowlerID: number }>(GET_BOWLER_OF_THE_WEEK_SQL);
     return result.recordset.map((r) => r.bowlerID);
-  }, [], { sql: GET_BOWLER_OF_THE_WEEK_SQL, dependsOn: ['scores'] });
+    // The RESULT depends on ctx.week, which appears nowhere in the SQL string and
+    // nowhere in the key: the SQL is constant, and passing dependsOn suppresses the
+    // published-week tag. So advancing the pointer 3 -> 4 left this serving week 3's
+    // winner and the ribbon sat on the wrong bowler. The scores channel does not
+    // save you either, since a week can be published without that version moving
+    // (S36 wk4 bumped `schedule`, not `scores`). Both sibling queries that read
+    // getPublishedContext already set this flag; this one was simply missed.
+  }, [], { sql: GET_BOWLER_OF_THE_WEEK_SQL, dependsOn: ['scores'], includePublishedTag: true });
 });
 
 export interface DirectoryBowler {
