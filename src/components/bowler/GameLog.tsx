@@ -30,6 +30,17 @@ function groupBySeason(rows: GameLogWeek[]): GameLogSeason[] {
   return Array.from(map.values());
 }
 
+/**
+ * Weekly patches worth surfacing on a COLLAPSED season header, in display order.
+ *
+ * The header's job is to tell you which seasons are worth opening, so a tag only
+ * earns its place if it is rare. `aboveAvg` is deliberately absent: it appears in
+ * 2380 of 4253 bowler-seasons (56%), so tagging it would put a pill on more than
+ * half the rows and tell you nothing about which one to open. It is still shown
+ * on the individual week rows inside, where it is precise.
+ */
+const SEASON_TAG_WEEKLY = ['perfectGame', 'botw', 'highGame', 'highSeries', 'threeOfAKind'] as const;
+
 /** Build fast lookup: "seasonID-week" -> set of patch types */
 function buildPatchLookup(patches: BowlerPatch[]) {
   const weekPatches = new Map<string, Set<string>>();
@@ -111,20 +122,16 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
           const hasHighGame = seasonsWithHighGame.has(season.seasonID);
           const hasHighSeries = seasonsWithHighSeries.has(season.seasonID);
           const hasBest = hasHighGame || hasHighSeries;
-          const bestLabel = hasHighGame && hasHighSeries
-            ? 'Career high game + series'
-            : hasHighGame ? 'Career high game' : hasHighSeries ? 'Career high series' : '';
 
           const sPatches = seasonPatches.get(season.seasonID);
           const isOpen = openSeasons.has(season.seasonID);
 
-          // Count week-level patches in this season for the collapsed summary
-          let seasonWeekPatchCount = 0;
-          for (const week of season.weeks) {
-            const wp = weekPatches.get(`${season.seasonID}-${week.week}`);
-            if (wp) seasonWeekPatchCount += wp.size;
-          }
-          const totalPatchCount = seasonWeekPatchCount + (sPatches?.size ?? 0);
+          // Which notable weekly patches this season contains, deduped: a season
+          // with three BOTW weeks gets ONE BOTW tag, because the header answers
+          // "is there anything in here", not "how many".
+          const seasonWeeklyTags = SEASON_TAG_WEEKLY.filter(type =>
+            season.weeks.some(week => weekPatches.get(`${season.seasonID}-${week.week}`)?.has(type)),
+          );
 
           return (
           <div key={season.seasonID} className={`border rounded-lg shadow-sm overflow-hidden ${hasBest && !isOpen ? 'border-amber-300 bg-amber-50/30' : 'border-navy/10 bg-white'}`}>
@@ -134,19 +141,14 @@ export function GameLog({ gameLog, highGame, highSeries, patches = [] }: Props) 
             >
               <div className="flex items-center gap-2 flex-wrap">
                 <Link href={`/stats/${season.weeks[0]?.seasonSlug ?? ''}`} className="font-heading text-lg text-navy hover:text-red-600 transition-colors" onClick={(e) => e.stopPropagation()}>{season.displayName} <span className="text-navy/60">({season.weeks[0]?.romanNumeral ?? ''})</span></Link>
-                {!isOpen && hasBest && (
-                  <span className="text-xs font-body font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                    {bestLabel}
-                  </span>
-                )}
+                {!isOpen && hasHighGame && <PatchBadge type="careerHighGame" />}
+                {!isOpen && hasHighSeries && <PatchBadge type="careerHighSeries" />}
                 {!isOpen && sPatches && Array.from(sPatches).map(p => (
                   <PatchBadge key={p} type={p} />
                 ))}
-                {!isOpen && totalPatchCount > 0 && (
-                  <span className="text-[11px] font-body text-navy/60">
-                    {totalPatchCount} {totalPatchCount === 1 ? 'patch' : 'patches'}
-                  </span>
-                )}
+                {!isOpen && seasonWeeklyTags.map(p => (
+                  <PatchBadge key={p} type={p} />
+                ))}
               </div>
               <span className="text-navy/65 text-sm whitespace-nowrap ml-2">
                 {season.weeks.length} nights {isOpen ? '\u25B2' : '\u25BC'}

@@ -15,6 +15,12 @@ const PATCH_CONFIG: Record<string, { label: string; abbr: string; color: string;
   champion:         { label: 'Champion',            abbr: '\uD83C\uDFC6',  color: 'text-amber-700',   bg: 'bg-amber-100' },
   scratchChampion:  { label: 'Scratch Champion',    abbr: 'SC',   color: 'text-rose-700',    bg: 'bg-rose-200' },
   hcpChampion:      { label: 'Handicap Champion',   abbr: 'HC',   color: 'text-orange-700',  bg: 'bg-orange-200' },
+  // Not patches. Career highs are derived from the scores themselves, but they
+  // read as badges in the game log and used to render as full sentences
+  // ("Career high game + series") that crowded the season header. Routing them
+  // through here buys the same pill and the same hover label as everything else.
+  careerHighGame:   { label: 'Career High Game',    abbr: 'CHG',  color: 'text-amber-800',   bg: 'bg-amber-100' },
+  careerHighSeries: { label: 'Career High Series',  abbr: 'CHS',  color: 'text-amber-800',   bg: 'bg-amber-100' },
 };
 
 export function PatchBadge({ type }: { type: string }) {
