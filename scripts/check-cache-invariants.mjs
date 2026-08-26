@@ -170,14 +170,23 @@ function extractQueries(filePath) {
       }
     }
 
-    queries.push({ name: queryName, file: relPath, line, options, tablesRead });
+    // Does this query's RESULT depend on leagueSettings.publishedWeek? The tell is
+    // a getPublishedContext() read in the enclosing declaration, or the closure
+    // capturing ctx.week / ctx.seasonID inside the call. Neither shows up in the
+    // SQL string, which is exactly why this needs checking separately.
+    const declStart = content.lastIndexOf('export ', match.index);
+    const enclosing = content.slice(declStart === -1 ? 0 : declStart, closeIdx);
+    const usesPublishedContext =
+      /getPublishedContext\s*\(/.test(enclosing) || /\bctx\.(week|seasonID)\b/.test(callText);
+
+    queries.push({ name: queryName, file: relPath, line, options, tablesRead, usesPublishedContext });
   }
 
   return queries;
 }
 
 function checkInvariants(query) {
-  const { name, file, line, options, tablesRead } = query;
+  const { name, file, line, options, tablesRead, usesPublishedContext } = query;
   const loc = `${file}:${line}`;
 
   if (!options) {
@@ -232,6 +241,29 @@ function checkInvariants(query) {
     violations.push(
       `[LEGACY] ${name} (${loc}) — uses allSeasons: true (legacy). Migrate to dependsOn: ['scores'] or ['schedule'] or both.`
     );
+  }
+
+  // 5. Result depends on publishedWeek, but the key suppresses the published tag.
+  //
+  // db.ts drops the tag whenever stable / dependsOn / bowlerID is set, and makes it
+  // CONDITIONAL when seasonID is set without dependsOn. Any of those leaves a query
+  // whose answer changes with the week keyed on something that does not. That is how
+  // getBowlerOfTheWeek kept serving week 3's winner after the pointer moved to 4:
+  // the ribbon sat on the wrong bowler and nothing failed. The scores channel is not
+  // a substitute, since a week can be published without that version moving.
+  const hasIncludePublishedTag = /includePublishedTag:\s*true/.test(options);
+  if (usesPublishedContext && !hasIncludePublishedTag) {
+    const suppressor = isStable ? 'stable: true'
+      : hasDependsOn ? 'dependsOn'
+      : hasBowlerID ? 'bowlerID'
+      : hasSeasonID ? 'seasonID' : null;
+    if (suppressor) {
+      violations.push(
+        `[PUBLISHED_TAG_SUPPRESSED] ${name} (${loc}) \u2014 result depends on the published week ` +
+        `(reads getPublishedContext), but ${suppressor} keeps the published-week tag out of the ` +
+        `cache key. Advancing the week will not invalidate it. Add includePublishedTag: true.`
+      );
+    }
   }
 }
 
