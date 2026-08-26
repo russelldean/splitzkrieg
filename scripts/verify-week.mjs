@@ -47,15 +47,36 @@ console.log(`\nVERIFY S${SEASON} week ${WEEK}\n`);
 
 // ── 1. staging files vs DB ───────────────────────────────────────────────────
 console.log('1. staging vs database');
-const files = existsSync(STAGING)
+const candidates = existsSync(STAGING)
   ? readdirSync(STAGING).filter(f => f.startsWith(`s${SEASON}-week-${WEEK}`) && f.endsWith('.json'))
   : [];
+
+// The name prefix is not proof it is a staging file. Anything else parked here
+// under the same season+week (a paper transcription, notes) used to reach the
+// `s.matches` read below and kill the whole verify run with a TypeError, taking
+// checks 2 to 6 down with it. Identify staging by SHAPE, and say what was
+// ignored rather than dropping it silently.
+const files = [];
+const ignored = [];
+for (const f of candidates) {
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(join(STAGING, f), 'utf8'));
+  } catch {
+    ignored.push(`${f} (unparseable)`);
+    continue;
+  }
+  if (!Array.isArray(parsed?.matches)) { ignored.push(`${f} (no matches array)`); continue; }
+  files.push({ name: f, data: parsed });
+}
+if (ignored.length) warn(`ignored ${ignored.length} non-staging file(s): ${ignored.join(', ')}`);
+// Reaching zero by ignoring everything is NOT the same as a clean run: it must
+// land on the same warning as no file at all, never on a silent pass.
 if (!files.length) warn(`no staging file for week ${WEEK} — cannot cross-check the import`);
 else {
   const staged = [];
-  for (const f of files) {
-    const s = JSON.parse(readFileSync(join(STAGING, f), 'utf8'));
-    for (const m of s.matches) for (const b of m.bowlers) staged.push(b);
+  for (const { data } of files) {
+    for (const m of data.matches) for (const b of (m.bowlers ?? [])) staged.push(b);
   }
   const db = await q(`SELECT bowlerID, teamID, game1, game2, game3, turkeys, incomingAvg
                       FROM scores WHERE seasonID=${SEASON} AND week=${WEEK}`);
