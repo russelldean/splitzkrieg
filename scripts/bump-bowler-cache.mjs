@@ -39,7 +39,13 @@ const COMMIT = process.argv.includes('--commit');
 const arg = (k) => { const h = process.argv.find(a => a.startsWith(`--${k}=`)); return h ? h.split('=')[1] : null; };
 const SEASON = parseInt(arg('season'), 10);
 const WEEK = parseInt(arg('week'), 10);
-if (!SEASON || !WEEK) { console.error('need --season=N --week=N'); process.exit(1); }
+// --ids= is for bowlers whose PAGE changed without their scores changing, e.g. a
+// backfilled patch. Same cache problem, different trigger.
+const IDS = (arg('ids') ?? '').split(',').map(x => parseInt(x, 10)).filter(Number.isFinite);
+if (!IDS.length && (!SEASON || !WEEK)) {
+  console.error('need --season=N --week=N, or --ids=1,2,3');
+  process.exit(1);
+}
 
 const env = readFileSync(resolve(ROOT, '.env.local'), 'utf8');
 for (const l of env.split('\n')) { const m = l.match(/^([^#=]+)=(.*)$/); if (m) process.env[m[1].trim()] = m[2].trim(); }
@@ -49,12 +55,15 @@ const pool = await sql.connect({
   options: { encrypt: true, trustServerCertificate: false, connectTimeout: 120000, requestTimeout: 60000 },
 });
 
-const rows = (await pool.request()
-  .input('s', sql.Int, SEASON).input('w', sql.Int, WEEK)
-  .query(`SELECT DISTINCT s.bowlerID, b.bowlerName FROM scores s
-          JOIN bowlers b ON b.bowlerID = s.bowlerID
-          WHERE s.seasonID = @s AND s.week = @w
-          ORDER BY b.bowlerName`)).recordset;
+const rows = IDS.length
+  ? (await pool.request().query(
+      `SELECT bowlerID, bowlerName FROM bowlers WHERE bowlerID IN (${IDS.join(',')}) ORDER BY bowlerName`)).recordset
+  : (await pool.request()
+      .input('s', sql.Int, SEASON).input('w', sql.Int, WEEK)
+      .query(`SELECT DISTINCT s.bowlerID, b.bowlerName FROM scores s
+              JOIN bowlers b ON b.bowlerID = s.bowlerID
+              WHERE s.seasonID = @s AND s.week = @w
+              ORDER BY b.bowlerName`)).recordset;
 await pool.close();
 
 const versionsPath = resolve(ROOT, '.data-versions.json');
@@ -62,7 +71,9 @@ const versions = JSON.parse(readFileSync(versionsPath, 'utf8'));
 if (!versions.bowlers) versions.bowlers = {};
 
 console.log(COMMIT ? '=== COMMIT ===' : '=== DRY RUN (pass --commit to write) ===');
-console.log(`${rows.length} bowler(s) with scores in S${SEASON} week ${WEEK}\n`);
+console.log(IDS.length
+  ? `${rows.length} bowler(s) by explicit id\n`
+  : `${rows.length} bowler(s) with scores in S${SEASON} week ${WEEK}\n`);
 for (const r of rows) {
   const k = String(r.bowlerID);
   const before = versions.bowlers[k] ?? 1;

@@ -8,6 +8,7 @@
  */
 
 import sql from 'mssql';
+import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -284,6 +285,29 @@ async function main() {
       bumpDataVersion('scores', sid);
     }
   }
+
+
+    // Writing a championship or playoff result CHANGES which patches are earned,
+    // and nothing else notices: populate-patches.mjs is normally run scoped to the
+    // CURRENT season, so a title recorded for a season that has already finished
+    // never gets its patches. That is how 31 patches went missing across S34/S35
+    // and stayed missing for two seasons (found 2026-08-26). Repair it here, at
+    // the source, rather than hoping someone runs an audit later.
+    //
+    // --fix inserts only the diff and never deletes, so this is cheap and cannot
+    // clobber hand-awarded patches (e.g. Geoffrey Berry's playoff 300).
+    if (!DRY_RUN) {
+      console.log('\nAwarding any patches these results earn (audit-patches --fix)...');
+      try {
+        execSync('node scripts/audit-patches.mjs --fix --quiet', {
+          cwd: PROJECT_ROOT, stdio: 'inherit',
+        });
+      } catch {
+        // audit-patches exits non-zero when it FOUND gaps, which is normal here:
+        // it has just repaired them. Re-run it plain to see anything left over.
+        console.log('  (audit reported gaps and repaired them; re-run audit-patches.mjs to confirm)');
+      }
+    }
 
   await pool.close();
 }

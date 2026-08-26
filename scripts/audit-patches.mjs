@@ -9,10 +9,12 @@
  *   - S35 had ZERO scratch-playoff patches (all 16 qualifiers missing)
  * Both were bad/partial runs, not bad logic, which is exactly what a coverage diff catches.
  *
- * WHEN TO RUN ALL SEASONS: only when past data has been deliberately changed (a rule
- * change, a backfill, a score correction in an old season). The weekly gate
- * (`verify-week.mjs`) audits the CURRENT SEASON only — history does not drift on its own,
- * and all 36 seasons were verified clean on 2026-08-04.
+ * WHEN TO RUN ALL SEASONS: for the score-derived patches, only when past data has been
+ * deliberately changed (a rule change, a backfill, a score correction in an old season).
+ * The outcome-based ones ignore --season entirely and are always checked everywhere,
+ * because "history does not drift on its own" turned out to be false: recording a
+ * championship for a finished season IS a change to that season's expected patches, and
+ * nothing was watching for it.
  *
  * Usage:
  *   node scripts/audit-patches.mjs                 # all seasons (after touching history)
@@ -20,8 +22,10 @@
  *   node scripts/audit-patches.mjs --fix           # insert MISSING rows (never deletes)
  *   node scripts/audit-patches.mjs --quiet         # summary table only
  *
- * NOT auto-verifiable (outcome-based, no source of truth in `scores`): playoff, champion,
- * scratchChampion, hcpChampion, captain. Their counts are reported, never diffed.
+ * Outcome-based patches (playoff, champion, scratchChampion, hcpChampion) ARE diffed, against
+ * `playoffResults` / `seasonChampions` rather than `scores`, and ALWAYS across all seasons even
+ * under --season -- they drift when a past season's outcome is recorded late, which is the one
+ * case a current-season scope cannot see. Only `captain` is reported without a diff.
  */
 import sql from 'mssql';
 import { readFileSync } from 'fs';
@@ -112,7 +116,50 @@ const SEASONAL = {
     ) r WHERE r.rnk <= 8`,
 };
 
-const MANUAL = ['playoff', 'champion', 'scratchChampion', 'hcpChampion', 'captain'];
+/**
+ * Outcome-based patches, diffed against the tables that DO hold their truth.
+ *
+ * These four used to sit in MANUAL as "reported only, no source of truth in
+ * `scores`". The premise was half right: `scores` cannot decide who won a
+ * championship, but `seasonChampions` and `playoffResults` can, and those are
+ * exactly what `populate-patches.mjs` derives them from. Reporting a count and
+ * never diffing it is how 31 patches went missing across S34 and S35 without
+ * anyone noticing for two seasons (found 2026-08-26 from one bowler's page).
+ * The queries below are deliberately the same shape as populate-patches.mjs.
+ *
+ * ALWAYS AUDITED ACROSS ALL SEASONS, even under --season. That is the point:
+ * these drift precisely when a PAST season's outcome is recorded after that
+ * season's last populate run, so scoping them to the current season would
+ * reproduce the blind spot this check exists to close.
+ */
+const OUTCOME = {
+  playoff: `
+    SELECT DISTINCT sc.bowlerID, pr.seasonID, NULL AS week
+    FROM playoffResults pr
+    JOIN scores sc ON sc.seasonID = pr.seasonID AND sc.isPenalty = 0
+      AND (sc.teamID = pr.team1ID OR sc.teamID = pr.team2ID)
+    WHERE pr.playoffType = 'Team'
+      AND (SELECT COUNT(*) FROM scores s2 WHERE s2.bowlerID = sc.bowlerID
+             AND s2.seasonID = pr.seasonID AND s2.teamID = sc.teamID AND s2.isPenalty = 0) >= 3`,
+  champion: `
+    SELECT DISTINCT sc.bowlerID, ch.seasonID, NULL AS week
+    FROM seasonChampions ch
+    JOIN scores sc ON sc.seasonID = ch.seasonID AND sc.teamID = ch.winnerTeamID AND sc.isPenalty = 0
+    WHERE ch.championshipType = 'Team'
+      AND (SELECT COUNT(*) FROM scores s2 WHERE s2.bowlerID = sc.bowlerID
+             AND s2.seasonID = ch.seasonID AND s2.teamID = ch.winnerTeamID AND s2.isPenalty = 0) >= 3`,
+  scratchChampion: `
+    SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
+    FROM seasonChampions sc
+    WHERE sc.championshipType IN ('MensScratch','WomensScratch') AND sc.winnerBowlerID IS NOT NULL`,
+  hcpChampion: `
+    SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
+    FROM seasonChampions sc
+    WHERE sc.championshipType = 'Handicap' AND sc.winnerBowlerID IS NOT NULL`,
+};
+
+// Genuinely not derivable: career-level, awarded by hand, no season or outcome row.
+const MANUAL = ['captain'];
 
 // Berry's playoff 300 — see the note at the `extra` filter below.
 const KNOWN_MANUAL_PERFECT = new Set(
@@ -125,11 +172,19 @@ const pid = new Map(patches.map(p => [p.code, p.patchID]));
 const key = (r) => `${r.bowlerID}|${r.seasonID ?? ''}|${r.week ?? ''}`;
 const results = [];
 
-for (const [code, query] of [...Object.entries(WEEKLY), ...Object.entries(SEASONAL)]) {
+// `scoped` follows --season; OUTCOME entries ignore it on BOTH sides of the diff,
+// so expected and actual always cover the same (all-season) population.
+const CHECKS = [
+  ...Object.entries(WEEKLY).map(([c, s]) => [c, s, true]),
+  ...Object.entries(SEASONAL).map(([c, s]) => [c, s, true]),
+  ...Object.entries(OUTCOME).map(([c, s]) => [c, s, false]),
+];
+
+for (const [code, query, scoped] of CHECKS) {
   const expected = await q(query);
   const actual = await q(`
     SELECT bp.bowlerID, bp.seasonID, bp.week FROM bowlerPatches bp
-    WHERE bp.patchID = ${pid.get(code)} ${SEASON ? `AND bp.seasonID = ${parseInt(SEASON, 10)}` : ''}`);
+    WHERE bp.patchID = ${pid.get(code)} ${scoped && SEASON ? `AND bp.seasonID = ${parseInt(SEASON, 10)}` : ''}`);
   const aSet = new Set(actual.map(key));
   const eSet = new Set(expected.map(key));
   const missing = expected.filter(r => !aSet.has(key(r)));
