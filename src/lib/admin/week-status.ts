@@ -39,8 +39,6 @@ export interface WeekCounts {
   deployedBehindBy: number | null;
   /** Short SHA the live build was made from, for the detail line. */
   deployedSha: string | null;
-  /** ISO timestamp recorded when the weekly email went out, else null. */
-  emailSentAt: string | null;
 }
 
 export interface WeekStatusStep {
@@ -137,15 +135,11 @@ export function deriveWeekStatus(counts: WeekCounts): WeekStatusStep[] {
       detail: counts.writeupChars > 0 ? `${counts.writeupChars} characters` : 'none written',
     },
     { key: 'deploy', label: 'Deployed', state: deployState, detail: deployDetail },
-    {
-      key: 'email',
-      label: 'Email sent',
-      // Recorded by the email route on a successful send, so this is derived
-      // like everything else rather than being the one row you tick yourself.
-      state: counts.emailSentAt ? 'done' : 'pending',
-      detail: counts.emailSentAt
-        ? new Date(counts.emailSentAt).toLocaleString('en-US', { timeZone: 'America/New_York' })
-        : 'not sent yet',
-    },
+    // No "Email sent" row. It only ever derived from a send made through
+    // /api/evillair/email, and the email actually goes out by other means, so
+    // the row sat on 'pending' forever and read as work outstanding. Per the
+    // rule this board was built on: make a step derivable or leave it off,
+    // never add a checkbox to paper over it. Bring the row back only alongside
+    // a signal that is true however the email was sent.
   ];
 }

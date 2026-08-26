@@ -184,9 +184,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Record the send so the weekly board can DERIVE that the email went out
-    // rather than relying on a checkbox. Only on success, and never fatal: a
-    // logging failure must not report a sent email as failed.
+    // Log the send. The weekly board USED to derive an "Email sent" row from
+    // this, but the email normally goes out by other means, so the row was only
+    // ever accurate when this route did the sending and has been removed. Kept
+    // as a plain record of sends made here, and because a future signal that
+    // holds however the email was sent would want this history.
+    // Only on success, and never fatal: a logging failure must not report a
+    // sent email as failed.
     if (sent > 0) {
       try {
         const db = await getDb();

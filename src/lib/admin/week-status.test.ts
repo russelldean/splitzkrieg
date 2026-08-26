@@ -13,7 +13,6 @@ const counts = (over: Partial<WeekCounts> = {}): WeekCounts => ({
   commitsAhead: null,
   deployedBehindBy: null,
   deployedSha: null,
-  emailSentAt: null,
   ...over,
 });
 
@@ -81,16 +80,6 @@ describe('deriveWeekStatus', () => {
 
   it('marks deploy done when nothing is unpushed', () => {
     expect(step(deriveWeekStatus(counts({ commitsAhead: 0 })), 'deploy').state).toBe('done');
-  });
-
-  it('marks the email pending when it has not been sent', () => {
-    expect(step(deriveWeekStatus(counts()), 'email').state).toBe('pending');
-  });
-
-  it('marks the email done once a send was recorded', () => {
-    const s = deriveWeekStatus(counts({ emailSentAt: '2026-08-19T21:30:00.000Z' }));
-    expect(step(s, 'email').state).toBe('done');
-    expect(step(s, 'email').detail).toMatch(/2026/);
   });
 
   it('says the live build is current when it matches main', () => {
