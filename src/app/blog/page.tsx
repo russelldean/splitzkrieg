@@ -7,7 +7,7 @@ import { getSiteUpdates } from '@/lib/queries/updates';
 import { postHref } from '@/lib/week-writeup';
 
 export const metadata: Metadata = {
-  title: 'Blog | Splitzkrieg',
+  title: 'Blog',
   description: 'Weekly recaps, league news, and stories from Splitzkrieg Bowling League.',
 };
 

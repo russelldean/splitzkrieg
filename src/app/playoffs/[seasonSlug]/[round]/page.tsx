@@ -75,11 +75,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { seasonSlug, round } = await params;
   const season = await getSeasonBySlug(seasonSlug);
-  if (!season) return { title: 'Playoffs Not Found | Splitzkrieg' };
+  if (!season) return { title: 'Playoffs Not Found' };
   const roundNum = parseInt(round, 10);
   const label = ROUND_LABEL[roundNum] ?? 'Playoffs';
   return {
-    title: `${label} - Season ${season.romanNumeral} | Splitzkrieg`,
+    title: `${label} - Season ${season.romanNumeral}`,
     description: `${label} results for ${season.period} ${season.year}.`,
   };
 }

@@ -4,7 +4,7 @@ import { SeasonDirectory } from '@/components/season/SeasonDirectory';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
-  title: 'Season Stats | Splitzkrieg',
+  title: 'Season Stats',
   description:
     'Leaderboards, averages, and records for every Splitzkrieg Bowling League season.',
 };

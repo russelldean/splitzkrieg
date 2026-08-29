@@ -11,7 +11,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { GameProfileLeaderboard } from '@/components/alltime/GameProfileLeaderboard';
 
 export const metadata: Metadata = {
-  title: 'League Night Profiles | Splitzkrieg',
+  title: 'League Night Profiles',
   description:
     'Are you a Fast Starter, Middle Child, Late Bloomer, or Flatliner? See which game of the night every bowler peaks in.',
 };

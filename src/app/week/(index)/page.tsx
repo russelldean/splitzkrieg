@@ -9,7 +9,7 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { SeasonAccordion } from '@/components/week/SeasonAccordion';
 
 export const metadata: Metadata = {
-  title: 'All League Nights | Splitzkrieg',
+  title: 'All League Nights',
   description: 'Browse every league night across all Splitzkrieg Bowling League seasons.',
 };
 

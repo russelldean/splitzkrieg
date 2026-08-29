@@ -14,7 +14,7 @@ import {
 } from '@/lib/queries';
 
 export const metadata: Metadata = {
-  title: 'All-Time Stats | Splitzkrieg',
+  title: 'All-Time Stats',
   description:
     'All-time leaderboards, records, and championship history across 35+ seasons of Splitzkrieg Bowling League.',
 };

@@ -59,20 +59,20 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const season = await getSeasonBySlug(slug);
-  if (!season) return { title: 'Season Not Found | Splitzkrieg' };
+  if (!season) return { title: 'Season Not Found' };
 
   const heroStats = await getSeasonHeroStats(season.seasonID);
   const avgStr = heroStats?.leagueAverage?.toFixed(1) ?? 'N/A';
   const bowlers = heroStats?.totalBowlers ?? 0;
 
-  const title = `Season ${season.romanNumeral} \u2014 ${season.period} ${season.year} | Splitzkrieg`;
-  const description = `${season.period} ${season.year} \u2014 ${bowlers} bowlers, ${avgStr} league average. Splitzkrieg Bowling League.`;
+  const title = `Season ${season.romanNumeral} - ${season.period} ${season.year}`;
+  const description = `${season.period} ${season.year} - ${bowlers} bowlers, ${avgStr} league average. Splitzkrieg Bowling League.`;
 
   return {
     title,
     description,
     openGraph: {
-      title: `Season ${season.romanNumeral} \u2014 ${season.period} ${season.year} | Splitzkrieg Bowling`,
+      title: `Season ${season.romanNumeral} - ${season.period} ${season.year} | Splitzkrieg Bowling`,
       description,
       url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://splitzkrieg.com'}/season/${slug}`,
       siteName: 'Splitzkrieg Bowling League',

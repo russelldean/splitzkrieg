@@ -8,7 +8,7 @@ import { getAllTimeLeaderboard } from '@/lib/queries';
 import { AllTimeLeaderboardTable } from '@/components/alltime/AllTimeLeaderboardTable';
 
 export const metadata: Metadata = {
-  title: 'Career Leaderboard | Splitzkrieg',
+  title: 'Career Leaderboard',
   description:
     'All-time career leaderboard across 35+ seasons of Splitzkrieg Bowling League.',
 };

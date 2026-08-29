@@ -107,10 +107,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const team = await getTeamBySlug(slug);
-  if (!team) return { title: 'Team Not Found | Splitzkrieg' };
+  if (!team) return { title: 'Team Not Found' };
 
   return {
-    title: `${team.teamName} | Splitzkrieg`,
+    title: team.teamName,
     description: `${team.teamName} team profile. Splitzkrieg Bowling League.`,
     openGraph: {
       title: `${team.teamName} | Splitzkrieg Bowling`,

@@ -8,7 +8,7 @@ import { getAllPlayoffHistory } from '@/lib/queries';
 import { PlayoffHistoryTable } from '@/components/alltime/PlayoffHistoryTable';
 
 export const metadata: Metadata = {
-  title: 'Team Championships | Splitzkrieg',
+  title: 'Team Championships',
   description:
     'Team championship and playoff history across 35+ seasons of Splitzkrieg Bowling League.',
 };

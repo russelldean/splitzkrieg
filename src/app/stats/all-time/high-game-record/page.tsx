@@ -8,7 +8,7 @@ import { getHighGameProgression } from '@/lib/queries/alltime';
 import { HighGameProgression } from '@/components/alltime/HighGameProgression';
 
 export const metadata: Metadata = {
-  title: 'High Game Record | Splitzkrieg',
+  title: 'High Game Record',
   description:
     'How the all-time high scratch game record has progressed across 35+ seasons of Splitzkrieg Bowling League.',
 };

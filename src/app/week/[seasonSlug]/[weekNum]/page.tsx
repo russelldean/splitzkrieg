@@ -64,9 +64,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { seasonSlug, weekNum } = await params;
   const season = await getSeasonBySlug(seasonSlug);
-  if (!season) return { title: 'Week Not Found | Splitzkrieg' };
+  if (!season) return { title: 'Week Not Found' };
 
-  const title = `Week ${weekNum} - Season ${season.romanNumeral} | Splitzkrieg`;
+  const title = `Week ${weekNum} - Season ${season.romanNumeral}`;
   const description = `Week ${weekNum} results for ${season.period} ${season.year} (Season ${season.romanNumeral}). Splitzkrieg Bowling League.`;
 
   return { title, description };

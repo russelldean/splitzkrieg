@@ -3,7 +3,7 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { BackToHome } from '@/components/ui/BackToHome';
 
 export const metadata: Metadata = {
-  title: 'Rules | Splitzkrieg',
+  title: 'Rules',
   description: 'Splitzkrieg Bowling League rules, scoring, and historical data notes.',
 };
 

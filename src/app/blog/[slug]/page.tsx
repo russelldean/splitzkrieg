@@ -21,10 +21,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
-  if (!post) return { title: 'Post Not Found | Splitzkrieg' };
+  if (!post) return { title: 'Post Not Found' };
 
   return {
-    title: `${post.title} | Splitzkrieg Blog`,
+    title: post.title,
     description: post.excerpt,
   };
 }

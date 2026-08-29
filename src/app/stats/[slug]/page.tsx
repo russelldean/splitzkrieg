@@ -47,10 +47,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const season = await getSeasonBySlug(slug);
-  if (!season) return { title: 'Stats Not Found | Splitzkrieg' };
+  if (!season) return { title: 'Stats Not Found' };
 
   return {
-    title: `Stats - Season ${season.romanNumeral} | Splitzkrieg`,
+    title: `Stats - Season ${season.romanNumeral}`,
     description: `Leaderboards and full stats for ${season.period} ${season.year} (Season ${season.romanNumeral}). Splitzkrieg Bowling League.`,
   };
 }

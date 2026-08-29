@@ -7,7 +7,7 @@ import { TeamsDirectory } from '@/components/team/TeamsDirectory';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
-  title: 'Teams | Splitzkrieg',
+  title: 'Teams',
   description: 'Browse all Splitzkrieg Bowling League teams -- active rosters, season history, and franchise profiles.',
 };
 

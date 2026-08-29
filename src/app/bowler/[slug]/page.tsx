@@ -59,7 +59,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const bowler = await getBowlerBySlug(slug);
-  if (!bowler) return { title: 'Bowler Not Found | Splitzkrieg' };
+  if (!bowler) return { title: 'Bowler Not Found' };
 
   // React.cache on getBowlerCareerSummary deduplicates this call
   // (same bowlerID will be called again in the page component)
@@ -69,8 +69,8 @@ export async function generateMetadata({
   const seasons = summary?.seasonsPlayed ?? 0;
 
   return {
-    title: `${bowler.bowlerName} | Splitzkrieg`,
-    description: `${bowler.bowlerName} \u2014 ${avgStr} career average \u00b7 ${games} games across ${seasons} seasons. Splitzkrieg Bowling League.`,
+    title: bowler.bowlerName,
+    description: `${bowler.bowlerName} - ${avgStr} career average \u00b7 ${games} games across ${seasons} seasons. Splitzkrieg Bowling League.`,
     openGraph: {
       title: `${bowler.bowlerName} | Splitzkrieg Bowling`,
       description: `Career average: ${avgStr} \u00b7 ${games} games bowled`,

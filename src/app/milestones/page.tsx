@@ -10,7 +10,7 @@ import { NextStopNudge } from '@/components/ui/NextStopNudge';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
 export const metadata: Metadata = {
-  title: 'Milestone Watch | Splitzkrieg',
+  title: 'Milestone Watch',
   description:
     'Track career milestones across the Splitzkrieg Bowling League - approaching and recently achieved.',
 };

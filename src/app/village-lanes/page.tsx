@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { ParallaxBg } from '@/components/ui/ParallaxBg';
 
 export const metadata: Metadata = {
-  title: 'Village Lanes | Splitzkrieg',
+  title: 'Village Lanes',
   description: 'Village Lanes - home of Splitzkrieg Bowling League from 2007-2023.',
 };
 

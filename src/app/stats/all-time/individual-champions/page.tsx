@@ -8,7 +8,7 @@ import { getAllIndividualChampions } from '@/lib/queries';
 import { IndividualChampionsTable } from '@/components/alltime/IndividualChampionsTable';
 
 export const metadata: Metadata = {
-  title: 'Individual Champions | Splitzkrieg',
+  title: 'Individual Champions',
   description:
     'Individual scratch and handicap championship history across 35+ seasons of Splitzkrieg Bowling League.',
 };

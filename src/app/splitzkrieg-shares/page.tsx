@@ -6,7 +6,7 @@ import { BackToHome } from '@/components/ui/BackToHome';
 import { SharesAnimation, SharesAnimation2 } from '@/components/resources/SharesAnimation';
 
 export const metadata: Metadata = {
-  title: 'Splitzkrieg Shares | Splitzkrieg',
+  title: 'Splitzkrieg Shares',
   description:
     'The Splitzkrieg Shares free table. One bowler\'s junk is another bowler\'s treasure.',
 };

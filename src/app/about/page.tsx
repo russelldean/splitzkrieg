@@ -7,7 +7,7 @@ import { getDataCompleteness, getLeagueStats } from '@/lib/queries/seasons/core'
 
 
 export const metadata: Metadata = {
-  title: 'About | Splitzkrieg',
+  title: 'About',
   description: 'About Splitzkrieg Bowling League - Durham, NC since 2007.',
 };
 

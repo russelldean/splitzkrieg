@@ -3,7 +3,7 @@ import { ParallaxBg } from '@/components/ui/ParallaxBg';
 import { BackToHome } from '@/components/ui/BackToHome';
 
 export const metadata: Metadata = {
-  title: 'How to Join | Splitzkrieg',
+  title: 'How to Join',
   description: 'Interested in joining Splitzkrieg Bowling League? Here is how.',
 };
 
