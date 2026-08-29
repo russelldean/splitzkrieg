@@ -1,0 +1,35 @@
+# Reads what the live site actually serves.
+#
+# This is the check that would have caught, on its own and within hours, the
+# admin action that was invalidating all ~1179 prebuilt pages. That bug was
+# found only because a page took 15 seconds to load and someone mentioned it.
+#
+# Runs after a push to main (once Vercel has had time to deploy) and every 6
+# hours. A failure here emails the repo owner through GitHub's default
+# notifications, so no extra alerting wiring is needed.
+#
+# The sample is about a dozen pages, fetched one at a time. Anything heavier
+# would put real load on Azure SQL Basic, which is the resource this is
+# meant to protect.
+name: smoke
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for the Vercel deploy to land
+        if: github.event_name == 'push'
+        run: sleep 180
+      - name: Smoke check production
+        run: node scripts/smoke-check.mjs https://splitzkrieg.com

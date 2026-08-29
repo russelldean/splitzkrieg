@@ -1,0 +1,32 @@
+# Runs the test suite and the guard scripts on every push.
+#
+# Until now nothing ran these automatically, so a broken test or a cache
+# invariant violation only surfaced if someone remembered to run it by hand.
+#
+# `npm run lint` is deliberately NOT here. The repo has 159 pre-existing lint
+# errors, so wiring it in now would make CI red on arrival and train everyone
+# to ignore it. Worth cleaning up separately, then adding.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit tests
+        run: npm test
+      - name: Cache invariants, purge blast radius, em dashes
+        run: npm run check

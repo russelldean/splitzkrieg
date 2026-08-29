@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "smoke": "node scripts/smoke-check.mjs",
+    "check": "node scripts/pre-push-check.mjs"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
