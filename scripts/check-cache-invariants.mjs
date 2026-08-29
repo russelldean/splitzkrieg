@@ -19,6 +19,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { findBroadPurges } from './lib/purge-scope.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC_DIR = path.join(__dirname, '..', 'src');
@@ -288,8 +289,34 @@ for (const file of files) {
   );
 }
 
+// 7. Blast radius of on-demand purges.
+//
+// revalidatePath(path, 'layout') invalidates that layout and everything nested
+// under it. At the root that is the whole site, which with BUILD_ALL=1 means
+// discarding all ~1179 prebuilt pages. Two admin routes were doing exactly
+// that, one of them to update three photos on the homepage.
+//
+// A layout purge is occasionally correct, so it is opt-in rather than banned:
+// put `purge-scope-ok: <reason>` on or just above the call.
+const purgeFiles = walkDir(SRC_DIR, ['.ts', '.tsx']).filter(f =>
+  fs.readFileSync(f, 'utf8').includes('revalidatePath('),
+);
+let purgeCount = 0;
+for (const file of purgeFiles) {
+  const rel = path.relative(path.join(__dirname, '..'), file);
+  for (const hit of findBroadPurges(fs.readFileSync(file, 'utf8'))) {
+    purgeCount++;
+    violations.push(
+      `[BROAD_PURGE] ${rel}:${hit.line} — revalidatePath(${hit.target}, 'layout') ` +
+      `invalidates every route under that layout. If that is intended, add ` +
+      `\`purge-scope-ok: <reason>\` above the call.`
+    );
+  }
+}
+
 // Report
-console.log(`\nCache Invariant Check — ${queryCount} queries across ${files.length} files\n`);
+console.log(`\nCache Invariant Check — ${queryCount} queries across ${files.length} files, ` +
+  `${purgeFiles.length} file(s) calling revalidatePath\n`);
 
 if (violations.length === 0) {
   console.log('All checks passed.\n');
