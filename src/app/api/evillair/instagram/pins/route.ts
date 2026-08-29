@@ -56,10 +56,14 @@ export async function POST(request: NextRequest) {
         INSERT INTO leagueSettings (settingKey, settingValue) VALUES ('instagramPins', '${value.replace(/'/g, "''")}')
     `);
 
-    // Revalidate homepage so pinned photos appear immediately.
-    // Use 'layout' (not 'page') to match blog publish — more reliable purge
-    // for the fully-static homepage on Vercel.
-    revalidatePath('/', 'layout');
+    // Pins render on the homepage only: getInstagramFeed is imported by
+    // src/app/page.tsx and nowhere else. Scope the purge to that page.
+    // 'layout' invalidated all ~1179 prebuilt pages, and every one of them
+    // then had to re-render live against Azure SQL Basic on its next visit,
+    // which is where the multi-second first-click stalls came from.
+    // getInstagramFeed queries the DB directly with no cachedQuery layer,
+    // so a page-scoped purge is enough for new pins to show up.
+    revalidatePath('/');
 
     return NextResponse.json({ ok: true, pins });
   } catch (err) {
