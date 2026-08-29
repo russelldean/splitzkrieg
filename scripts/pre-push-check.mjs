@@ -17,6 +17,7 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { findEmDashes, shouldScanFile } from './lib/em-dash.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -52,57 +53,48 @@ try {
 }
 
 // 2. Em dash check in src/ and content/
-const EM_DASH_CHAR = '\u2014';
-const EM_DASH_PATTERNS = [EM_DASH_CHAR, '&mdash;'];
-
-function checkEmDashes(dir) {
+//
+// Detection lives in scripts/lib/em-dash.mjs so it can be unit tested. It was
+// inline here and matched only the em dash CHARACTER, which let source written
+// as a \\u2014 escape straight through. Four of those were rendering in live
+// page titles and meta descriptions while this check reported green.
+//
+// Standalone '\\u2014' string literals are the missing-value placeholder in the
+// bowler, team and season tables. Those are reported as a count rather than a
+// failure, so the check does not block every push over a deliberate convention.
+function scanEmDashes(dir) {
   if (!fs.existsSync(dir)) return [];
-  const hits = [];
-  const extensions = ['.ts', '.tsx', '.css', '.js', '.jsx'];
-
+  const found = [];
   function walk(d) {
     for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
       const full = path.join(d, entry.name);
       if (entry.isDirectory()) {
         if (entry.name === 'node_modules' || entry.name === '.next') continue;
         walk(full);
-      } else if (extensions.some(ext => entry.name.endsWith(ext))) {
-        const content = fs.readFileSync(full, 'utf-8');
-        for (const pattern of EM_DASH_PATTERNS) {
-          if (content.includes(pattern)) {
-            const rel = path.relative(ROOT, full);
-            const lines = content.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-              if (lines[i].includes(pattern)) {
-                const trimmed = lines[i].trim();
-                // Skip code comments — only flag user-facing em dashes
-                if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*') || trimmed.startsWith('{/*')) continue;
-                // Skip inline comments: if em dash only appears after // in the line
-                const commentIdx = lines[i].indexOf('//');
-                const dashIdx = lines[i].indexOf(pattern);
-                if (commentIdx !== -1 && dashIdx > commentIdx) continue;
-                hits.push(`${rel}:${i + 1} contains "${pattern === EM_DASH_CHAR ? '\u2014 (em dash char)' : pattern}"`);
-              }
-            }
-          }
+      } else if (shouldScanFile(entry.name)) {
+        const rel = path.relative(ROOT, full);
+        for (const hit of findEmDashes(fs.readFileSync(full, 'utf-8'))) {
+          found.push({ ...hit, rel });
         }
       }
     }
   }
   walk(dir);
-  return hits;
+  return found;
 }
 
 const emDashHits = [
-  ...checkEmDashes(path.join(ROOT, 'src')),
-  ...checkEmDashes(path.join(ROOT, 'content')),
+  ...scanEmDashes(path.join(ROOT, 'src')),
+  ...scanEmDashes(path.join(ROOT, 'content')),
 ];
+const emDashErrors = emDashHits.filter(h => h.severity === 'error');
+const emDashPlaceholders = emDashHits.filter(h => h.severity === 'warn');
 
-if (emDashHits.length === 0) {
-  pass('em-dash', 'No em dashes found in src/ or content/');
+if (emDashErrors.length === 0) {
+  pass('em-dash', `No em dashes in user-facing text (${emDashPlaceholders.length} placeholder literal(s), allowed by convention)`);
 } else {
-  fail('em-dash', `${emDashHits.length} em dash(es) found:`);
-  emDashHits.forEach(h => console.log(`         ${h}`));
+  fail('em-dash', `${emDashErrors.length} em dash(es) found in user-facing text:`);
+  emDashErrors.forEach(h => console.log(`         ${h.rel}:${h.line} (${h.kind}) ${h.snippet}`));
 }
 
 // 3. Check if query files changed but .data-versions.json not committed
