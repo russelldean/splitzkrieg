@@ -14,7 +14,6 @@ interface NavGroup {
   title: string;
   icon: ReactNode;
   links: NavLink[];
-  badge?: string;
 }
 
 interface MobileNavProps {
@@ -96,7 +95,7 @@ export function MobileNav({ groups }: MobileNavProps) {
                     className="flex items-center gap-2 px-3 py-2 text-base font-body font-medium text-navy rounded-lg hover:bg-cream-dark active:bg-cream-dark transition-colors"
                   >
                     {link.label}
-                    {group.badge && link.href === '/blog' && <NewBlogBadge badgeId={group.badge} />}
+                    {link.href === '/blog' && <NewBlogBadge />}
                   </Link>
                 ))}
               </div>

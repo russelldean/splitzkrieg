@@ -4,7 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
 
@@ -42,8 +41,11 @@ export async function POST(request: NextRequest) {
     `UPDATE leagueSettings SET settingValue = '${value}' WHERE settingKey = 'newBlogPost'`
   );
 
-  // Revalidate all pages that show the header
-  revalidatePath('/', 'layout');
-
+  // No revalidation needed. The badge is read client-side from
+  // /api/blog-badge, so promoting a post no longer changes any prerendered
+  // HTML. This used to call revalidatePath('/', 'layout'), which invalidated
+  // every route under the root layout: with BUILD_ALL=1 that is all ~1179
+  // prebuilt pages, thrown away minutes after a deploy had just built them.
+  // Each page then re-rendered live against Azure SQL on its next visit.
   return NextResponse.json({ active: !!slug, slug: slug ?? null });
 }
