@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
+import { bonusPoints } from './scoring-rules';
 import { nextWeekPointer } from './week-pointer';
 import type { StagedMatch, PersonalBest } from './types';
 
@@ -298,18 +299,8 @@ export async function runMatchResults(
 
   const bonusMap = new Map<string, number>();
   for (const [wk, teams] of weekTeams) {
-    const sorted = [...teams].sort((a, b) => b.series - a.series);
-    const cutoff3 = sorted.length >= 5 ? sorted[4].series : -1;
-    const cutoff2 = sorted.length >= 10 ? sorted[9].series : -1;
-    const cutoff1 = sorted.length >= 15 ? sorted[14].series : -1;
-
-    for (const team of sorted) {
-      let bonus: number;
-      if (team.series >= cutoff3 && cutoff3 >= 0) bonus = 3;
-      else if (team.series >= cutoff2 && cutoff2 >= 0) bonus = 2;
-      else if (team.series >= cutoff1 && cutoff1 >= 0) bonus = 1;
-      else bonus = 0;
-      bonusMap.set(`${wk}-${team.teamID}`, bonus);
+    for (const [teamID, bonus] of bonusPoints(teams)) {
+      bonusMap.set(`${wk}-${teamID}`, bonus);
     }
   }
 
