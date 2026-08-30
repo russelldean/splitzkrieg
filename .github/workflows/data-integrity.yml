@@ -1,21 +1,23 @@
-# Checks the DATA, on a schedule.
+# Checks the DATA against the live database.
 #
 # The other workflows cover code and what the site serves. Nothing covered the
 # database, which is where the more expensive mistakes live: a bad import, a
 # duplicate bowler seated from a captain's free-text lineup note, a badge run
 # that half finished. Those surface weeks later, by eye, if at all.
 #
-# Runs daily at 13:00 UTC (9am ET), which is the morning after Monday league
-# night, so a bad Monday import is caught Tuesday morning rather than whenever
-# somebody happens to look at a bowler page.
+# MANUAL ONLY. The scheduled run lives in the app instead, as the Vercel cron
+# /api/cron/data-integrity (see vercel.json), because Vercel already holds the
+# database credentials and Resend is already wired there to mail on failure.
+# Copying the credentials into a second system would mean a second place to
+# rotate and to leak from, for a job that runs the same queries.
 #
-# Deliberately NOT run on push: the code changing does not change the data, and
-# pointing this at every push would put pointless load on Azure SQL Basic.
+# This is kept for the case where you want the check to run independently of
+# the app, for instance while a deploy is broken. It needs AZURE_SQL_* secrets
+# on the repository, which are NOT currently set; the guard step below says so
+# plainly rather than failing with a stack trace.
 name: data-integrity
 
 on:
-  schedule:
-    - cron: '0 13 * * *'
   workflow_dispatch:
 
 jobs:

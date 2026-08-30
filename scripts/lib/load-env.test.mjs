@@ -19,6 +19,14 @@ describe('parseEnvFile', () => {
     expect(parseEnvFile('PW=ab=cd==')).toEqual({ PW: 'ab=cd==' });
   });
 
+  it('tolerates a space before the equals, which .env.local really contains', () => {
+    // RESEND_API_KEY is written as `RESEND_API_KEY =...` in the real file.
+    // Next's own parser accepts it, so this one has to as well: a grep for
+    // `^RESEND_API_KEY=` misses that line and reports the key as absent.
+    expect(parseEnvFile('RESEND_API_KEY =re_abc')).toEqual({ RESEND_API_KEY: 're_abc' });
+    expect(parseEnvFile('A = 1')).toEqual({ A: '1' });
+  });
+
   it('strips matched surrounding quotes', () => {
     expect(parseEnvFile('A="x"\nB=\'y\'')).toEqual({ A: 'x', B: 'y' });
   });

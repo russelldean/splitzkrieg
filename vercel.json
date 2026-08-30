@@ -1,7 +1,19 @@
 {
-  "regions": ["cle1"],
+  "regions": [
+    "cle1"
+  ],
   "crons": [
-    { "path": "/api/cron/lineup-reminder", "schedule": "0 14 * * 5" },
-    { "path": "/api/cron/lineup-reminder", "schedule": "0 14 * * 1" }
+    {
+      "path": "/api/cron/lineup-reminder",
+      "schedule": "0 14 * * 5"
+    },
+    {
+      "path": "/api/cron/lineup-reminder",
+      "schedule": "0 14 * * 1"
+    },
+    {
+      "path": "/api/cron/data-integrity",
+      "schedule": "0 13 * * *"
+    }
   ]
 }

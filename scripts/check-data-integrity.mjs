@@ -28,7 +28,7 @@
 
 import sql from 'mssql';
 import { loadEnv } from './lib/load-env.mjs';
-import { INVARIANTS, evaluate } from './lib/data-invariants.mjs';
+import { INVARIANTS, evaluate } from '../src/lib/data-invariants.mjs';
 
 const QUIET = process.argv.includes('--quiet');
 
