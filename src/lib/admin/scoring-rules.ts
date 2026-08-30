@@ -122,3 +122,25 @@ export function gamePoints(
   }
   return { team1: team1Pts, team2: team2Pts };
 }
+
+/**
+ * Thresholds a bowler crossed THIS week, given where they stand now and how
+ * much of that total the week itself contributed.
+ *
+ * A milestone fires on the crossing, not on the standing: reaching exactly the
+ * threshold this week counts, and every later week at or above it does not.
+ * That is what keeps a re-confirmed week from re-awarding the same badge, and
+ * it is why `prior` is derived by subtracting the week's own contribution
+ * rather than read back from storage.
+ *
+ * A week that contributed nothing can cross nothing, even for a bowler already
+ * well past the mark.
+ */
+export function milestoneCrossings(
+  current: number,
+  addedThisWeek: number,
+  thresholds: readonly number[],
+): number[] {
+  const prior = current - addedThisWeek;
+  return thresholds.filter((t) => current >= t && prior < t);
+}

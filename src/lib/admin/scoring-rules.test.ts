@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bonusPoints, gamePoints } from './scoring-rules';
+import { bonusPoints, gamePoints, milestoneCrossings } from './scoring-rules';
 
 /**
  * bonusPoints was 15 anonymous lines inside runMatchResults, a 234-line
@@ -172,5 +172,49 @@ describe('gamePoints', () => {
       expect(gamePoints(games(9999, 9999, 9999), games(1, 1, 1), { team1Forfeit: true, ghost }))
         .toEqual({ team1: 0, team2: 6 });
     });
+  });
+});
+
+/**
+ * milestoneCrossings was the innermost condition of recordMilestones. It fires
+ * a badge on the CROSSING rather than on the standing, which is what stops a
+ * re-confirmed week from re-awarding milestones a bowler passed long ago.
+ */
+describe('milestoneCrossings', () => {
+  const T = [100, 200, 300] as const;
+
+  it('fires when the week carries a bowler past a threshold', () => {
+    expect(milestoneCrossings(105, 10, T)).toEqual([100]);
+  });
+
+  it('fires on landing exactly on the threshold', () => {
+    expect(milestoneCrossings(100, 5, T)).toEqual([100]);
+  });
+
+  it('stays silent for a bowler already past it', () => {
+    // The standing is well above 100, but the crossing happened weeks ago.
+    expect(milestoneCrossings(150, 10, T)).toEqual([]);
+  });
+
+  it('stays silent when the bowler was already exactly on it', () => {
+    expect(milestoneCrossings(105, 5, T)).toEqual([]);
+  });
+
+  it('fires for several thresholds crossed in one week', () => {
+    // A big week can clear more than one mark at once.
+    expect(milestoneCrossings(250, 200, T)).toEqual([100, 200]);
+  });
+
+  it('crosses nothing when the week contributed nothing', () => {
+    // This is what makes re-confirming a week safe.
+    expect(milestoneCrossings(500, 0, T)).toEqual([]);
+  });
+
+  it('handles a bowler below every threshold', () => {
+    expect(milestoneCrossings(50, 50, T)).toEqual([]);
+  });
+
+  it('returns thresholds in the order given', () => {
+    expect(milestoneCrossings(1000, 1000, T)).toEqual([100, 200, 300]);
   });
 });

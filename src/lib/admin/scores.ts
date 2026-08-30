@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
-import { bonusPoints, gamePoints } from './scoring-rules';
+import { bonusPoints, gamePoints, milestoneCrossings } from './scoring-rules';
 import { nextWeekPointer } from './week-pointer';
 import type { StagedMatch, PersonalBest } from './types';
 
@@ -712,25 +712,21 @@ export async function recordMilestones(
     for (const [category, config] of Object.entries(MILESTONE_THRESHOLDS) as [MilestoneCategory, (typeof MILESTONE_THRESHOLDS)[MilestoneCategory]][]) {
       const current = bowler[STAT_KEY_MAP[category]] as number;
       const weekAdded = contrib ? (contrib[CONTRIB_KEY_MAP[category]] as number) : 0;
-      const prior = current - weekAdded;
 
-      for (const threshold of config.thresholds) {
-        if (current >= threshold && prior < threshold) {
-          const key = `${bowler.bowlerID}-${category}-${threshold}`;
-          if (!existingSet.has(key)) {
-            await db.request()
-              .input('bowlerID', sql.Int, bowler.bowlerID)
-              .input('category', sql.VarChar(30), category)
-              .input('threshold', sql.Int, threshold)
-              .input('seasonID', sql.Int, seasonID)
-              .input('week', sql.Int, week)
-              .query(`
-                INSERT INTO bowlerMilestones (bowlerID, category, threshold, seasonID, week)
-                VALUES (@bowlerID, @category, @threshold, @seasonID, @week)
-              `);
-            inserted++;
-          }
-        }
+      for (const threshold of milestoneCrossings(current, weekAdded, config.thresholds)) {
+        const key = `${bowler.bowlerID}-${category}-${threshold}`;
+        if (existingSet.has(key)) continue;
+        await db.request()
+          .input('bowlerID', sql.Int, bowler.bowlerID)
+          .input('category', sql.VarChar(30), category)
+          .input('threshold', sql.Int, threshold)
+          .input('seasonID', sql.Int, seasonID)
+          .input('week', sql.Int, week)
+          .query(`
+            INSERT INTO bowlerMilestones (bowlerID, category, threshold, seasonID, week)
+            VALUES (@bowlerID, @category, @threshold, @seasonID, @week)
+          `);
+        inserted++;
       }
     }
   }
