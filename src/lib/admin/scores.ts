@@ -396,13 +396,28 @@ export async function runPatches(
     .join(' AND ');
   const weeklyFilter = weeklyAnd ? ` AND ${weeklyAnd}` : '';
 
-  // Wipe existing weekly patches for this scope before repopulating
+  // Wipe existing weekly patches for this scope before repopulating.
+  //
+  // `AND week IS NOT NULL` is load-bearing. Every repopulate query below selects
+  // sc.week from scores, so every row this function can regenerate has a week.
+  // A weekly patch with a NULL week therefore cannot be regenerated at all: it
+  // was awarded by hand. Without this clause the wipe deletes it and nothing
+  // brings it back.
+  //
+  // That is not hypothetical. Geoffrey Berry's perfect game is recorded in
+  // season 28 with a null week and no 300 in scores, and it is the only such
+  // row in the table. Running the documented cascade command,
+  // `fix-rebuild.mjs --season=28`, would have destroyed it permanently. This
+  // guard lives here rather than in that script because the admin confirm route
+  // calls runPatches too, and that is the path used every week.
   if (seasonID != null) {
     const wipeReq = db.request().input('sid', sql.Int, seasonID);
     const weeklyCodes = ['perfectGame', 'botw', 'highGame', 'highSeries', 'aboveAvg', 'threeOfAKind'];
     const weeklyPIDs = weeklyCodes.map(c => patchMap.get(c)).filter((id): id is number => id != null);
     if (weeklyPIDs.length > 0) {
-      let wipeSQL = `DELETE FROM bowlerPatches WHERE patchID IN (${weeklyPIDs.join(',')}) AND seasonID = @sid`;
+      let wipeSQL =
+        `DELETE FROM bowlerPatches WHERE patchID IN (${weeklyPIDs.join(',')}) AND seasonID = @sid` +
+        ` AND week IS NOT NULL`;
       if (week != null) {
         wipeReq.input('wk', sql.Int, week);
         wipeSQL += ' AND week = @wk';

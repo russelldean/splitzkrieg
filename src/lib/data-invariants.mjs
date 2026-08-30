@@ -141,6 +141,32 @@ const CURRENT_SEASON = [
   },
 ];
 
+/**
+ * Hand-awarded patches, which no recompute can restore.
+ *
+ * runPatches wipes the weekly patch codes for a season and rebuilds them from
+ * scores. Every row it can regenerate carries a week, so a NULL-week row is by
+ * construction hand-awarded. The wipe excludes those, and this asserts the
+ * exclusion is still there: if someone drops that clause, the next cascade
+ * silently deletes the row and nothing brings it back.
+ *
+ * Currently one row, Geoffrey Berry's perfect game in season 28.
+ */
+const AT_LEAST = [
+  {
+    name: 'hand-awarded-patches-present',
+    why:
+      'A weekly patch with a NULL week cannot be regenerated from scores. If the ' +
+      'count drops, a cascade deleted it and only a restore from backup brings it ' +
+      'back. Check the week IS NOT NULL clause in runPatches.',
+    sql: `SELECT COUNT(*) n FROM bowlerPatches bp
+          JOIN patches p ON p.patchID = bp.patchID
+          WHERE bp.week IS NULL
+            AND p.code IN ('perfectGame','botw','highGame','highSeries','aboveAvg','threeOfAKind')`,
+    expect: 1,
+  },
+];
+
 /** Exactly one season may be current; zero or several breaks every "this week" query. */
 const EXACTLY_ONE = [
   {
@@ -151,7 +177,7 @@ const EXACTLY_ONE = [
   },
 ];
 
-export const INVARIANTS = [...ALL_TIME, ...CURRENT_SEASON, ...EXACTLY_ONE];
+export const INVARIANTS = [...ALL_TIME, ...CURRENT_SEASON, ...AT_LEAST, ...EXACTLY_ONE];
 
 /**
  * Compare one invariant against its observed count.
