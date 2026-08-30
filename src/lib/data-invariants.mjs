@@ -113,6 +113,27 @@ const CURRENT_SEASON = [
           WHERE se.isCurrentSeason = 1 AND s.teamID IS NOT NULL AND t.teamID IS NULL`,
   },
   {
+    name: 'current-season-matchresults-stale',
+    why:
+      'matchResults stores the team game totals it was computed from. When they ' +
+      'no longer equal the current scores, someone corrected a score without ' +
+      're-running the cascade, and the standings are being served from stale ' +
+      'numbers. Twelve rows across seasons 28 and 32 are already like this; one ' +
+      'of them has the wrong team winning.',
+    sql: `WITH team AS (
+            SELECT seasonID, week, teamID,
+                   SUM(hcpGame1) g1, SUM(hcpGame2) g2, SUM(hcpGame3) g3
+            FROM scores GROUP BY seasonID, week, teamID)
+          SELECT COUNT(*) n
+          FROM matchResults mr
+          JOIN schedule sch ON sch.scheduleID = mr.scheduleID
+          JOIN seasons se ON se.seasonID = sch.seasonID AND se.isCurrentSeason = 1
+          LEFT JOIN team a ON a.seasonID=sch.seasonID AND a.week=sch.week AND a.teamID=sch.team1ID
+          LEFT JOIN team b ON b.seasonID=sch.seasonID AND b.week=sch.week AND b.teamID=sch.team2ID
+          WHERE (a.g1 IS NOT NULL AND (mr.team1Game1<>a.g1 OR mr.team1Game2<>a.g2 OR mr.team1Game3<>a.g3))
+             OR (b.g1 IS NOT NULL AND (mr.team2Game1<>b.g1 OR mr.team2Game2<>b.g2 OR mr.team2Game3<>b.g3))`,
+  },
+  {
     name: 'current-season-schedule-missing-date',
     why: 'matchDate drives the week page and the lineup reminder crons.',
     sql: `SELECT COUNT(*) n FROM schedule sc JOIN seasons se ON se.seasonID = sc.seasonID
