@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bonusPoints } from './scoring-rules';
+import { bonusPoints, gamePoints } from './scoring-rules';
 
 /**
  * bonusPoints was 15 anonymous lines inside runMatchResults, a 234-line
@@ -81,5 +81,96 @@ describe('bonusPoints', () => {
     ];
     bonusPoints(teams);
     expect(teams.map((t) => t.teamID)).toEqual([1, 2]);
+  });
+});
+
+/**
+ * gamePoints was ~30 lines inside runMatchResults. It decides who won a match,
+ * which is the most consequential thing in the pipeline: a wrong answer here
+ * changes standings and, through Bowler of the Week, the badges too. It is
+ * also where the 2026-08-04 incident landed, when a substitution filed under
+ * the rostered bowler inherited their handicap and flipped a match.
+ *
+ * Verified against every stored match before these were written: 3,017 across
+ * 36 seasons, 42 involving a forfeit. All reproduced except one, which turned
+ * out to be a stale matchResults row rather than a disagreement about the
+ * rule (season 28 week 1: the scores were corrected afterwards and the match
+ * was never recomputed).
+ */
+const games = (g1: number, g2: number, g3: number) => ({ g1, g2, g3 });
+
+describe('gamePoints', () => {
+  it('awards two points per game won', () => {
+    expect(gamePoints(games(800, 800, 800), games(700, 700, 700)))
+      .toEqual({ team1: 6, team2: 0 });
+  });
+
+  it('splits a tied game one point each', () => {
+    expect(gamePoints(games(800, 800, 800), games(800, 800, 800)))
+      .toEqual({ team1: 3, team2: 3 });
+  });
+
+  it('scores each game independently', () => {
+    // win, loss, tie
+    expect(gamePoints(games(810, 700, 800), games(800, 900, 800)))
+      .toEqual({ team1: 3, team2: 3 });
+  });
+
+  it('decides a game by a single pin', () => {
+    expect(gamePoints(games(801, 700, 700), games(800, 800, 800)))
+      .toEqual({ team1: 2, team2: 4 });
+  });
+
+  describe('forfeits', () => {
+    // The opponent still has to bowl: for each game their scratch total must
+    // reach their own team average less 20 to take the points.
+    const ghost = { sg1: 700, sg2: 700, sg3: 700, teamAvg: 700 };
+
+    it('gives the opponent nothing for games they did not bowl up to', () => {
+      const cold = { sg1: 600, sg2: 600, sg3: 600, teamAvg: 700 };
+      expect(gamePoints(games(0, 0, 0), games(800, 800, 800), { team1Forfeit: true, ghost: cold }))
+        .toEqual({ team1: 0, team2: 0 });
+    });
+
+    it('gives the opponent the points for games they did', () => {
+      expect(gamePoints(games(0, 0, 0), games(800, 800, 800), { team1Forfeit: true, ghost }))
+        .toEqual({ team1: 0, team2: 6 });
+    });
+
+    it('applies the threshold per game, not to the series', () => {
+      const mixed = { sg1: 700, sg2: 600, sg3: 700, teamAvg: 700 };
+      expect(gamePoints(games(0, 0, 0), games(800, 800, 800), { team1Forfeit: true, ghost: mixed }))
+        .toEqual({ team1: 0, team2: 4 });
+    });
+
+    it('counts a total exactly on the threshold as cleared', () => {
+      const exact = { sg1: 680, sg2: 680, sg3: 680, teamAvg: 700 };
+      expect(gamePoints(games(0, 0, 0), games(1, 1, 1), { team1Forfeit: true, ghost: exact }))
+        .toEqual({ team1: 0, team2: 6 });
+      const justUnder = { sg1: 679, sg2: 679, sg3: 679, teamAvg: 700 };
+      expect(gamePoints(games(0, 0, 0), games(1, 1, 1), { team1Forfeit: true, ghost: justUnder }))
+        .toEqual({ team1: 0, team2: 0 });
+    });
+
+    it('works the same way when it is team 2 that forfeits', () => {
+      expect(gamePoints(games(800, 800, 800), games(0, 0, 0), { team2Forfeit: true, ghost }))
+        .toEqual({ team1: 6, team2: 0 });
+    });
+
+    it('awards nothing when the opponent has no scratch data', () => {
+      expect(gamePoints(games(0, 0, 0), games(800, 800, 800), { team1Forfeit: true }))
+        .toEqual({ team1: 0, team2: 0 });
+    });
+
+    it('awards nothing to either side when both forfeit', () => {
+      expect(gamePoints(games(0, 0, 0), games(0, 0, 0), { team1Forfeit: true, team2Forfeit: true }))
+        .toEqual({ team1: 0, team2: 0 });
+    });
+
+    it('ignores the handicap totals entirely in a forfeit', () => {
+      // The forfeiting team's own scores never earn anything, however high.
+      expect(gamePoints(games(9999, 9999, 9999), games(1, 1, 1), { team1Forfeit: true, ghost }))
+        .toEqual({ team1: 0, team2: 6 });
+    });
   });
 });

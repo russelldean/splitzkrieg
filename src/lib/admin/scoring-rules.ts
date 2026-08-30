@@ -50,3 +50,75 @@ export function bonusPoints(teams: TeamNight[]): Map<number, number> {
   }
   return bonuses;
 }
+
+/** A team's three handicap game totals for one night. */
+export interface TeamGames {
+  g1: number;
+  g2: number;
+  g3: number;
+}
+
+/** A forfeiting team's opponent bowls against their own scratch average. */
+export interface GhostOpponent {
+  /** Scratch totals for the three games. */
+  sg1: number;
+  sg2: number;
+  sg3: number;
+  /** Sum of the team's incoming averages, the bar they must clear. */
+  teamAvg: number;
+}
+
+export interface GamePoints {
+  team1: number;
+  team2: number;
+}
+
+/**
+ * How close to their own average a team must bowl to take a point off a
+ * forfeiting opponent. Their scratch total must reach teamAvg minus this.
+ */
+export const GHOST_THRESHOLD = 20;
+
+/**
+ * Points from the three games of one match. Two for a win, one each for a tie.
+ *
+ * When a team forfeits, the match is not simply awarded. The opponent still
+ * has to bowl: for each game their scratch total must reach their own team
+ * average less GHOST_THRESHOLD to take the two points, and a forfeiting team
+ * scores nothing regardless. If the opponent's scratch data is missing the
+ * game is worth nothing to anyone, which is the `ghost` argument being absent.
+ *
+ * Both teams forfeiting is treated as team 1 forfeiting, matching the original
+ * behaviour: the branch keys off t1Forfeit first, and neither side has an
+ * opponent who bowled, so the result is zero either way.
+ */
+export function gamePoints(
+  team1: TeamGames,
+  team2: TeamGames,
+  opts: { team1Forfeit?: boolean; team2Forfeit?: boolean; ghost?: GhostOpponent } = {},
+): GamePoints {
+  const { team1Forfeit = false, team2Forfeit = false, ghost } = opts;
+
+  if (team1Forfeit || team2Forfeit) {
+    let earned = 0;
+    if (ghost) {
+      const threshold = ghost.teamAvg - GHOST_THRESHOLD;
+      for (const game of ['sg1', 'sg2', 'sg3'] as const) {
+        if (ghost[game] >= threshold) earned += 2;
+      }
+    }
+    return team1Forfeit ? { team1: 0, team2: earned } : { team1: earned, team2: 0 };
+  }
+
+  let team1Pts = 0;
+  let team2Pts = 0;
+  for (const game of ['g1', 'g2', 'g3'] as const) {
+    if (team1[game] > team2[game]) team1Pts += 2;
+    else if (team1[game] < team2[game]) team2Pts += 2;
+    else {
+      team1Pts += 1;
+      team2Pts += 1;
+    }
+  }
+  return { team1: team1Pts, team2: team2Pts };
+}

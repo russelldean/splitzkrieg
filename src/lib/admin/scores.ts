@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
-import { bonusPoints } from './scoring-rules';
+import { bonusPoints, gamePoints } from './scoring-rules';
 import { nextWeekPointer } from './week-pointer';
 import type { StagedMatch, PersonalBest } from './types';
 
@@ -306,7 +306,6 @@ export async function runMatchResults(
 
   // Insert match results
   let totalInserted = 0;
-  const GHOST_THRESHOLD = 20;
 
   for (const match of matchesResult.recordset) {
     const t1 = scoreMap.get(`${match.week}-${match.team1ID}`);
@@ -317,39 +316,14 @@ export async function runMatchResults(
     const t1Forfeit = forfeitSet.has(`${match.week}-${match.team1ID}`);
     const t2Forfeit = forfeitSet.has(`${match.week}-${match.team2ID}`);
 
-    let t1GamePts = 0;
-    let t2GamePts = 0;
-
-    if (t1Forfeit || t2Forfeit) {
-      const opponentKey = t1Forfeit
-        ? `${match.week}-${match.team2ID}`
-        : `${match.week}-${match.team1ID}`;
-      const opp = scratchMap.get(opponentKey);
-
-      if (opp) {
-        for (const game of ['sg1', 'sg2', 'sg3'] as const) {
-          const scratchTotal = opp[game];
-          const threshold = opp.teamAvg - GHOST_THRESHOLD;
-          const oppWins = scratchTotal >= threshold;
-          if (t1Forfeit) {
-            t2GamePts += oppWins ? 2 : 0;
-          } else {
-            t1GamePts += oppWins ? 2 : 0;
-          }
-        }
-      }
-    } else {
-      for (const game of ['g1', 'g2', 'g3'] as const) {
-        if (t1[game] > t2[game]) {
-          t1GamePts += 2;
-        } else if (t1[game] < t2[game]) {
-          t2GamePts += 2;
-        } else {
-          t1GamePts += 1;
-          t2GamePts += 1;
-        }
-      }
-    }
+    const ghostKey = t1Forfeit
+      ? `${match.week}-${match.team2ID}`
+      : `${match.week}-${match.team1ID}`;
+    const { team1: t1GamePts, team2: t2GamePts } = gamePoints(t1, t2, {
+      team1Forfeit: t1Forfeit,
+      team2Forfeit: t2Forfeit,
+      ghost: scratchMap.get(ghostKey),
+    });
 
     const t1Bonus = t1Forfeit
       ? 0
