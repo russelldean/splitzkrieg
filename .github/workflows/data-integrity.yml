@@ -1,0 +1,55 @@
+# Checks the DATA, on a schedule.
+#
+# The other workflows cover code and what the site serves. Nothing covered the
+# database, which is where the more expensive mistakes live: a bad import, a
+# duplicate bowler seated from a captain's free-text lineup note, a badge run
+# that half finished. Those surface weeks later, by eye, if at all.
+#
+# Runs daily at 13:00 UTC (9am ET), which is the morning after Monday league
+# night, so a bad Monday import is caught Tuesday morning rather than whenever
+# somebody happens to look at a bowler page.
+#
+# Deliberately NOT run on push: the code changing does not change the data, and
+# pointing this at every push would put pointless load on Azure SQL Basic.
+name: data-integrity
+
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_SQL_SERVER: ${{ secrets.AZURE_SQL_SERVER }}
+      AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
+      AZURE_SQL_USER: ${{ secrets.AZURE_SQL_USER }}
+      AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Fail early if the secrets are not configured
+        run: |
+          if [ -z "$AZURE_SQL_SERVER" ] || [ -z "$AZURE_SQL_PASSWORD" ]; then
+            echo "::error::Azure SQL secrets are not set on this repository."
+            echo "Add AZURE_SQL_SERVER, AZURE_SQL_DATABASE, AZURE_SQL_USER and"
+            echo "AZURE_SQL_PASSWORD under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      # 17 counting queries on one connection. Exits 1 on a violation and 2 if
+      # it cannot connect, so a broken credential can never read as clean data.
+      - name: Data invariants
+        run: node scripts/check-data-integrity.mjs
+
+      # Recomputes every derivable badge from scores and diffs it against
+      # bowlerPatches. This is the check that found 31 missing outcome badges
+      # across S34/S35. Never pass --fix here; it writes.
+      - name: Patch coverage
+        run: node scripts/audit-patches.mjs --quiet

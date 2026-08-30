@@ -10,7 +10,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "smoke": "node scripts/smoke-check.mjs",
-    "check": "node scripts/pre-push-check.mjs"
+    "check": "node scripts/pre-push-check.mjs",
+    "check:data": "node scripts/check-data-integrity.mjs"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

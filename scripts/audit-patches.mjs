@@ -28,23 +28,18 @@
  * case a current-season scope cannot see. Only `captain` is reported without a diff.
  */
 import sql from 'mssql';
-import { readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { loadEnv } from './lib/load-env.mjs';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(__dirname, '..');
 const arg = (k, d) => { const h = process.argv.find(a => a.startsWith(`--${k}=`)); return h ? h.split('=')[1] : d; };
 const SEASON = arg('season');
 const FIX = process.argv.includes('--fix');
 const QUIET = process.argv.includes('--quiet');
 
-const env = readFileSync(resolve(ROOT, '.env.local'), 'utf8');
-for (const l of env.split('\n')) { const m = l.match(/^([^#=]+)=(.*)$/); if (m) process.env[m[1].trim()] = m[2].trim(); }
-
+// loadEnv prefers real environment variables and falls back to .env.local, so
+// this runs unchanged locally and in CI, where there is no .env.local on disk
+// and the credentials arrive as repository secrets.
 const pool = await sql.connect({
-  server: process.env.AZURE_SQL_SERVER, database: process.env.AZURE_SQL_DATABASE,
-  user: process.env.AZURE_SQL_USER, password: process.env.AZURE_SQL_PASSWORD,
+  ...loadEnv(),
   options: { encrypt: true, trustServerCertificate: false, connectTimeout: 180000, requestTimeout: 180000 },
 });
 const q = async (s) => (await pool.request().query(s)).recordset;
