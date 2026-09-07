@@ -78,6 +78,17 @@ const BOWLER_ALIAS = {
 // Our team name -> the C league's spelling, where it is not a punctuation variant.
 const TEAM_ALIAS = { 'hotfun': 'bowlonomics' };
 
+// "Penalty" is a SCORING placeholder in our DB (bowlerID 629, flat 199/game), not a
+// person: one bowlers row, one LP address. Two teams taking a penalty on the same
+// night therefore collide on it, and the dedupe silently strips it from one of them
+// while a bench bowler slides into the top four. LP only needs a real body in the
+// slot so the lanes work; Russ enters the penalty himself on the night. So we never
+// seat Penalty, and substitute a named bench bowler instead. Keyed by tkey().
+const PENALTY_STANDIN = {
+  alleyoops: 'Brent Arnold',            // Russ, 2026-09-07
+  livingonaspare: 'Annie Segrest',      // Russ, 2026-09-07
+};
+
 const norm = s => String(s).toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
 const bkey = s => norm(BOWLER_ALIAS[norm(s)] || s);
 // Teams: drop punctuation AND spaces AND a leading "the" so "Smoke-a-Bowl" ==
@@ -209,6 +220,26 @@ async function readOurNight(pool) {
     }
   }
 
+  // Swap the Penalty placeholder out for a real body (see PENALTY_STANDIN). Done here
+  // so everything downstream -- dedupe, ordering, the CSV and --verify -- sees one
+  // coherent lineup. An unconfigured team is reported, never silently dropped.
+  const penaltySubs = [];
+  for (const [teamID, names] of lineupOf) {
+    const at = names.findIndex(n => norm(n) === 'penalty');
+    if (at === -1) continue;
+    const tName = (teams.find(t => t.teamID === teamID) || {}).name || String(teamID);
+    const sub = PENALTY_STANDIN[tkey(tName)];
+    if (!sub) {
+      penaltySubs.push(`${tName}: Penalty at position ${at + 1} and NO stand-in configured ` +
+        `- add one to PENALTY_STANDIN or LP will backfill from the bench`);
+      continue;
+    }
+    const next = names.slice();
+    next[at] = sub;
+    lineupOf.set(teamID, next);
+    penaltySubs.push(`${tName}: position ${at + 1} Penalty -> ${sub} (LP only; the penalty itself is not seated)`);
+  }
+
   // The team each bowler most recently bowled FOR, per our own scores. Used to
   // break double-seat ties and to explain them in the output.
   const homeRows = (await pool.request().query(`
@@ -219,7 +250,7 @@ async function readOurNight(pool) {
     LEFT JOIN teams t ON t.teamID = x.teamID`)).recordset;
   const homeOf = new Map(homeRows.map(r => [norm(r.bowlerName), { teamID: r.teamID, teamName: r.teamName }]));
 
-  return { seasonID, week, matches, teams, avgByName, dbNames, lineupOf, inheritedFrom, homeOf };
+  return { seasonID, week, matches, teams, avgByName, dbNames, lineupOf, inheritedFrom, homeOf, penaltySubs };
 }
 
 // ------------------------------------------------------------------- LP reading
@@ -291,7 +322,7 @@ async function main() {
   let ours;
   try { ours = await readOurNight(pool); } finally { /* keep pool for now */ }
 
-  const { seasonID, week, matches, teams, avgByName, dbNames, lineupOf, inheritedFrom, homeOf } = ours;
+  const { seasonID, week, matches, teams, avgByName, dbNames, lineupOf, inheritedFrom, homeOf, penaltySubs } = ours;
   await pool.close();
 
   console.log(`\n=== ${DATE}  season ${seasonID} week ${week}  Event ${EVENT} ===`);
@@ -522,6 +553,7 @@ async function main() {
   console.log(`\nTOTAL ROWS: ${rows.length}`);
 
   const report = [
+    ['Penalty substituted for LP (our DB still records the penalty)', penaltySubs],
     ['no lineup submitted, reusing their last one', notes.inherited],
     ['no lineup at all, not even a prior one', notes.noLineup],
     ['lineup shorter than 4', notes.shortLineup],
