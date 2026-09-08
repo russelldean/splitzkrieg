@@ -32,6 +32,26 @@ export interface TeamNight {
  * A cutoff needs enough teams to exist: with fewer than 15 no team can take
  * the 1-point band, which is what a bye week or a split night produces.
  */
+/**
+ * Is a week's field complete enough to rank?
+ *
+ * Bonus points are a ranking across the WHOLE field, so a week missing a team
+ * cannot be scored: adding that team later shifts everyone below it down, and a
+ * team sitting on a bucket boundary silently loses a point. A postponed match is
+ * the case that matters -- S36 week 5 was bowled 18 teams of 20.
+ *
+ * A forfeiting team is NOT missing. It files four penalty rows, so it appears in
+ * `scoredTeamIDs` and is merely excluded from the ranking itself. Treating a
+ * forfeit as an incomplete week would have rewritten historical seasons.
+ */
+export function weekIsComplete(
+  scheduledTeamIDs: Iterable<number>,
+  scoredTeamIDs: ReadonlySet<number>,
+): boolean {
+  for (const id of scheduledTeamIDs) if (!scoredTeamIDs.has(id)) return false;
+  return true;
+}
+
 export function bonusPoints(teams: TeamNight[]): Map<number, number> {
   const sorted = [...teams].sort((a, b) => b.series - a.series);
 

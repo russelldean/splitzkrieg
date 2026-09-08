@@ -187,11 +187,47 @@ async function main() {
       }
     }
 
+    // A week's XP is a RANKING across the whole field, so it cannot be computed
+    // until every scheduled team has bowled. A postponed match leaves two teams
+    // out of the sort, and once they are added everyone below them shifts down --
+    // a team on a bucket boundary silently loses a point. So withhold XP for any
+    // week still missing a team, and let it compute itself once the week is whole.
+    // A forfeit team is NOT missing: it has four penalty rows, so it is present in
+    // scoredByWeek and only excluded from the ranking itself.
+    const scheduledByWeek = new Map();
+    for (const m of matches.recordset) {
+      if (!scheduledByWeek.has(m.week)) scheduledByWeek.set(m.week, new Set());
+      scheduledByWeek.get(m.week).add(m.team1ID);
+      scheduledByWeek.get(m.week).add(m.team2ID);
+    }
+    const scoredByWeek = new Map();
+    for (const row of teamScores.recordset) {
+      if (!scoredByWeek.has(row.week)) scoredByWeek.set(row.week, new Set());
+      scoredByWeek.get(row.week).add(row.teamID);
+    }
+    const incompleteWeeks = new Set();
+    for (const [week, scheduled] of scheduledByWeek) {
+      const scored = scoredByWeek.get(week);
+      if (!scored || scored.size === 0) continue; // week not bowled at all
+      const missing = [...scheduled].filter(t => !scored.has(t));
+      if (missing.length > 0) {
+        incompleteWeeks.add(week);
+        console.log(
+          `  Week ${week}: XP WITHHELD — ${missing.length} team(s) have not bowled ` +
+          `(teamID ${missing.join(', ')}). Re-run after the makeup to award it.`,
+        );
+      }
+    }
+
     // Calculate bonus points (XP): rank all teams by hcp series each week
     // Standard rule: top 5 = 3pts, 6-10 = 2pts, 11-15 = 1pt, 16+ = 0pts
     // Ties at cutoffs: both teams get the higher bucket
     const bonusMap = new Map();
     for (const [week, teams] of weekTeams) {
+      if (incompleteWeeks.has(week)) {
+        for (const team of teams) bonusMap.set(`${week}-${team.teamID}`, 0);
+        continue;
+      }
       const sorted = [...teams].sort((a, b) => b.series - a.series);
 
       // Determine cutoff series values (use the 5th, 10th, 15th team's series)

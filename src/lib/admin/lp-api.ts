@@ -10,6 +10,9 @@ const LP_LEAGUE_ID = '696e613d3d649815687f7823';
 const LP_BASE = 'https://www.leaguepals.com';
 
 // LP team name -> DB teamID (normalized LP names, lowercase for matching)
+// The single `bowlers` row every isPenalty score is filed under.
+const PENALTY_BOWLER_ID = 629;
+
 const LP_TEAM_MAP: Record<string, number> = {
   'alley oops': 1,
   'bowl durham': 4,
@@ -22,6 +25,7 @@ const LP_TEAM_MAP: Record<string, number> = {
   'guttersnipes': 13,
   'the guttersnipes': 13,
   'hot fun': 14,
+  'bowlonomics': 14, // Event C carries HOT FUN's slot under its old S35 name
   'hot shotz': 15,
   'living on a spare': 17,
   'lucky strikes': 18,
@@ -346,8 +350,12 @@ export async function lpPullScores(
           );
         }
 
+        // Every penalty row in `scores` sits on bowlerID 629 ("Penalty"). Leaving it
+        // null here meant insertScores hit its `if (!b.bowlerID) continue` guard and
+        // dropped the row, putting the team at three bowlers -- which makes
+        // populate-match-results skip the whole match. Silent at both steps.
         const bowlerEntry: StagedBowler = {
-          bowlerID: dbMatch?.bowlerID ?? null,
+          bowlerID: isPenalty ? PENALTY_BOWLER_ID : (dbMatch?.bowlerID ?? null),
           bowlerName: dbMatch?.bowlerName ?? (isPenalty ? 'Penalty' : lpName),
           teamID: teamID ?? 0,
           teamName: teamName ?? '',

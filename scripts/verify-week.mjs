@@ -95,7 +95,11 @@ else {
 
 // ── 2. shape ────────────────────────────────────────────────────────────────
 console.log('\n2. week shape');
-const dup = await q(`SELECT bowlerID FROM scores WHERE seasonID=${SEASON} AND week=${WEEK} GROUP BY bowlerID HAVING COUNT(*)>1`);
+// isPenalty rows all sit on bowlerID 629 ("Penalty"), so a night with two or more
+// short teams legitimately repeats that id. Counting it as a duplicate bowler is a
+// false alarm -- S36 had only ever had one penalty a week, so this never fired until
+// week 5 came in with three.
+const dup = await q(`SELECT bowlerID FROM scores WHERE seasonID=${SEASON} AND week=${WEEK} AND isPenalty=0 GROUP BY bowlerID HAVING COUNT(*)>1`);
 dup.length ? bad(`${dup.length} bowler(s) appear twice`) : ok('no bowler appears twice');
 const teams = await q(`SELECT teamID, COUNT(*) n FROM scores WHERE seasonID=${SEASON} AND week=${WEEK} GROUP BY teamID`);
 const wrong = teams.filter(t => t.n !== 4);

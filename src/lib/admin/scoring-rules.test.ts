@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bonusPoints, gamePoints, milestoneCrossings } from './scoring-rules';
+import { bonusPoints, gamePoints, milestoneCrossings, weekIsComplete } from './scoring-rules';
 
 /**
  * bonusPoints was 15 anonymous lines inside runMatchResults, a 234-line
@@ -216,5 +216,32 @@ describe('milestoneCrossings', () => {
 
   it('returns thresholds in the order given', () => {
     expect(milestoneCrossings(1000, 1000, T)).toEqual([100, 200, 300]);
+  });
+});
+
+describe('weekIsComplete', () => {
+  it('is complete when every scheduled team has scores', () => {
+    expect(weekIsComplete([1, 2, 3, 4], new Set([1, 2, 3, 4]))).toBe(true);
+  });
+
+  it('is incomplete when a scheduled team has no scores at all', () => {
+    // S36 week 5: Hot Shotz (15) and Living on a Spare (17) were postponed.
+    expect(weekIsComplete([9, 14, 15, 17], new Set([9, 14]))).toBe(false);
+  });
+
+  it('counts a forfeiting team as present, since it files penalty rows', () => {
+    // The exact shape that would have rewritten history if we had got this wrong:
+    // the forfeit team is in scoredTeamIDs even though it is out of the ranking.
+    expect(weekIsComplete([1, 2], new Set([1, 2]))).toBe(true);
+  });
+
+  it('is complete for an empty schedule rather than throwing', () => {
+    expect(weekIsComplete([], new Set())).toBe(true);
+  });
+
+  it('withholds XP for the exact S36 w5 field that shipped', () => {
+    const scheduled = [1, 4, 7, 8, 9, 11, 12, 13, 14, 15, 17, 18, 22, 26, 28, 31, 33, 38, 39, 42];
+    const scored = new Set(scheduled.filter((t) => t !== 15 && t !== 17));
+    expect(weekIsComplete(scheduled, scored)).toBe(false);
   });
 });

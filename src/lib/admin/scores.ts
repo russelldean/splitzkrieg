@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
-import { bonusPoints, gamePoints, milestoneCrossings } from './scoring-rules';
+import { bonusPoints, gamePoints, milestoneCrossings, weekIsComplete } from './scoring-rules';
 import { nextWeekPointer } from './week-pointer';
 import type { StagedMatch, PersonalBest } from './types';
 
@@ -297,8 +297,28 @@ export async function runMatchResults(
     }
   }
 
+  // XP ranks the whole field, so a week missing a team cannot be scored yet --
+  // see weekIsComplete. Withheld as zero and awarded on a later run, once the
+  // postponed match is in. The script path does the same thing.
+  const scheduledByWeek = new Map<number, Set<number>>();
+  for (const m of matchesResult.recordset) {
+    if (!scheduledByWeek.has(m.week)) scheduledByWeek.set(m.week, new Set());
+    scheduledByWeek.get(m.week)!.add(m.team1ID);
+    scheduledByWeek.get(m.week)!.add(m.team2ID);
+  }
+  const scoredByWeek = new Map<number, Set<number>>();
+  for (const row of teamScoresResult.recordset) {
+    if (!scoredByWeek.has(row.week)) scoredByWeek.set(row.week, new Set());
+    scoredByWeek.get(row.week)!.add(row.teamID);
+  }
+
   const bonusMap = new Map<string, number>();
   for (const [wk, teams] of weekTeams) {
+    const scored = scoredByWeek.get(wk) ?? new Set<number>();
+    if (!weekIsComplete(scheduledByWeek.get(wk) ?? [], scored)) {
+      for (const t of teams) bonusMap.set(`${wk}-${t.teamID}`, 0);
+      continue;
+    }
     for (const [teamID, bonus] of bonusPoints(teams)) {
       bonusMap.set(`${wk}-${teamID}`, bonus);
     }

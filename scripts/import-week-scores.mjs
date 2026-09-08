@@ -58,6 +58,9 @@ const LP_LEAGUES = {
 let LP_LEAGUE_ID = null; // resolved from --league= in the arg block below
 const LP_BASE = 'https://www.leaguepals.com';
 
+// The single `bowlers` row every isPenalty score is filed under.
+const PENALTY_BOWLER_ID = 629;
+
 // LP team name → DB teamID (normalized LP names, lowercase for matching)
 const LP_TEAM_MAP = {
   'alley oops': 1,
@@ -72,6 +75,7 @@ const LP_TEAM_MAP = {
   'guttersnipes': 13,
   'the guttersnipes': 13,
   'hot fun': 14,
+  'bowlonomics': 14, // Event C carries HOT FUN's slot under its old S35 name
   'hot shotz': 15,
   'living on a spare': 17,
   'lucky strikes': 18,
@@ -418,13 +422,19 @@ async function pullScores() {
         // Try to match to DB bowler
         const dbMatch = isPenalty ? null : matchBowlerToDB(lpName, dbBowlers);
 
+        // Every penalty row in `scores` sits on bowlerID 629 ("Penalty"). The pull used
+        // to leave these null, and `import` then hit its `SKIP: No bowlerID` branch and
+        // dropped the row -- leaving the team with three bowlers, which makes
+        // populate-match-results skip the whole match. Silent both times. Assign it here.
+        const bowlerID = isPenalty ? PENALTY_BOWLER_ID : (dbMatch?.bowlerID ?? null);
+
         const bowlerEntry = {
           lpName,
           side: isHome ? 'home' : 'away',
           teamID,
           teamName,
-          bowlerID: dbMatch?.bowlerID ?? null,
-          bowlerName: dbMatch?.bowlerName ?? (isPenalty ? null : lpName),
+          bowlerID,
+          bowlerName: dbMatch?.bowlerName ?? (isPenalty ? 'Penalty' : lpName),
           gender: dbMatch?.gender ?? null,
           game1: isPenalty ? null : (games[0] ?? null),
           game2: isPenalty ? null : (games[1] ?? null),
