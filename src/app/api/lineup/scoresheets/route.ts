@@ -5,6 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { actionKeys, recordAction } from '@/lib/admin/action-log';
 import { getCurrentLineupContext } from '@/lib/admin/lineups';
 import { getMatchupsForWeek, generateScoresheet, getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 
@@ -34,6 +35,12 @@ export async function GET() {
 
     const doc = await generateScoresheet(matches);
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+
+    // The admin page is not the only way these get printed -- this public link on
+    // /lineup is the one an assistant (or Russ) actually clicks, and it used to
+    // record nothing, so the pre-night board's Scoresheets row read "not recorded"
+    // every week of its life. Same PDF, same meaning: the sheets exist for this week.
+    await recordAction(actionKeys.scoresheets(seasonID, week));
 
     return new NextResponse(pdfBuffer, {
       status: 200,

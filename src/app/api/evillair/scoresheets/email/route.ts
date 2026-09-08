@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { requireAdmin } from '@/lib/admin/auth';
+import { actionKeys, recordAction } from '@/lib/admin/action-log';
 import { getMatchupsForWeek, generateScoresheet, getUpcomingMatchDate } from '@/lib/admin/scoresheets';
 
 export const dynamic = 'force-dynamic';
@@ -86,6 +87,10 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    // Recorded only past the error branch, so a failed send never marks the step
+    // done. Emailing the sheets out counts the same as downloading them.
+    await recordAction(actionKeys.scoresheets(seasonID, week));
 
     return NextResponse.json({ sent: true, to });
   } catch (err) {

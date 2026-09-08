@@ -662,6 +662,35 @@ async function verify() {
   const clean = !seatNoMember.length && !avgBad.length && !orderBad.length && !dupLineup.length;
   console.log(`\n${clean ? 'ALL CLEAR' : '*** PROBLEMS ABOVE ***'}`);
   if (!clean) process.exitCode = 1;
+
+  // The pre-night board's "LP push" row reads `lpPushed-s<season>-w<week>`, and only
+  // the admin button ever wrote it -- so prepping the night by script (which is how
+  // every night is actually prepped) left that row reading "not recorded" forever.
+  // Recorded on a clean verify only, mirroring the admin route's rule that a push
+  // which did not actually push does not count.
+  if (clean) await recordLpPush(ours.seasonID, ours.week);
+}
+
+/** Stamp the pre-night board's LP push row. Never fatal: the prep already happened. */
+async function recordLpPush(seasonID, week) {
+  const key = `lpPushed-s${seasonID}-w${week}`;
+  try {
+    const pool = await connect();
+    await pool.request()
+      .input('key', sql.VarChar(50), key)
+      .input('value', sql.NVarChar(255), new Date().toISOString())
+      .query(`
+        MERGE leagueSettings AS target
+        USING (SELECT @key AS settingKey) AS source
+        ON target.settingKey = source.settingKey
+        WHEN MATCHED THEN UPDATE SET settingValue = @value
+        WHEN NOT MATCHED THEN INSERT (settingKey, settingValue) VALUES (@key, @value);
+      `);
+    await pool.close();
+    console.log(`recorded ${key}`);
+  } catch (e) {
+    console.error(`WARNING: prep is fine but recording ${key} failed: ${e.message}`);
+  }
 }
 
 // ------------------------------------------------------------------- lanes phase
