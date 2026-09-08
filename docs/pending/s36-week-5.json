@@ -1,0 +1,89 @@
+{
+  "seasonID": 36,
+  "week": 5,
+  "matchDate": null,
+  "pulledAt": "2026-09-08T00:00:00.000Z",
+  "note": "PREBOWL. Living on a Spare's half of match 48 (vs Hot Shotz), bowled ahead of the 9/7 night. Hot Shotz has still not bowled, so match 48 has no result and week 5 stays incomplete -- XP remains withheld for the whole week. Entered from Russ's numbers, not from LeaguePals. No turkeys, confirmed.",
+  "matches": [
+    {
+      "homeTeamName": "Living on a Spare",
+      "awayTeamName": "Hot Shotz",
+      "homeTeamID": 17,
+      "awayTeamID": 15,
+      "bowlers": [
+        {
+          "lpName": "Jack Marone",
+          "side": "home",
+          "teamID": 17,
+          "teamName": "Living on a Spare",
+          "bowlerID": 638,
+          "bowlerName": "Jack Marone",
+          "gender": "M",
+          "game1": 73,
+          "game2": 80,
+          "game3": 107,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 91,
+          "flags": [
+            "PREBOWL"
+          ]
+        },
+        {
+          "lpName": "Danielle Gambogi",
+          "side": "home",
+          "teamID": 17,
+          "teamName": "Living on a Spare",
+          "bowlerID": 147,
+          "bowlerName": "Danielle Gambogi",
+          "gender": "F",
+          "game1": 102,
+          "game2": 126,
+          "game3": 120,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 112,
+          "flags": [
+            "PREBOWL"
+          ]
+        },
+        {
+          "lpName": "Ellen Duda",
+          "side": "home",
+          "teamID": 17,
+          "teamName": "Living on a Spare",
+          "bowlerID": 191,
+          "bowlerName": "Ellen Duda",
+          "gender": "F",
+          "game1": 81,
+          "game2": 123,
+          "game3": 108,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 103,
+          "flags": [
+            "PREBOWL"
+          ]
+        },
+        {
+          "lpName": "Lillith Fallon",
+          "side": "home",
+          "teamID": 17,
+          "teamName": "Living on a Spare",
+          "bowlerID": 410,
+          "bowlerName": "Lillith Fallon",
+          "gender": "F",
+          "game1": 73,
+          "game2": 76,
+          "game3": 64,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 66,
+          "flags": [
+            "PREBOWL"
+          ]
+        }
+      ]
+    }
+  ]
+}
