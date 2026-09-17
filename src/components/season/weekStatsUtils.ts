@@ -4,6 +4,7 @@
  */
 import type { WeeklyMatchScore, WeeklyMatchupResult } from '@/lib/queries';
 import { topWithTies, type TopResult } from './WeekStatsCards';
+import { isAboveAverageAllThree } from '@/lib/scoring/above-average.mjs';
 
 // ── XP Rankings ──────────────────────────────────────────────
 
@@ -81,22 +82,9 @@ export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: Wee
   // Turkeys
   const turkeyList = bowlers.filter(b => b.turkeys > 0).sort((a, b) => b.turkeys - a.turkeys);
 
-  // Above Average Every Game
-  //
-  // Matching the average COUNTS (Russ, 2026-08-04: "we give above average even
-  // if you tie it"). This must stay in step with the same rule in
-  // scripts/populate-patches.mjs, which was moved to >= then and backfilled 343
-  // patches. This copy was missed, so for 347 bowler-weeks a bowler who tied
-  // carried the badge on their bowler page yet was absent from the list on
-  // their own week page. See weekStatsUtils.test.ts.
-  const aboveAvgEveryGame = bowlers.filter(b => {
-    if (b.incomingAvg == null || b.incomingAvg === 0) return false;
-    return (
-      b.game1 != null && b.game1 >= b.incomingAvg &&
-      b.game2 != null && b.game2 >= b.incomingAvg &&
-      b.game3 != null && b.game3 >= b.incomingAvg
-    );
-  });
+  // Above Average Every Game. The rule itself lives in one place now; this used
+  // to be a third copy of it and had drifted to `>`. See above-average.mjs.
+  const aboveAvgEveryGame = bowlers.filter(isAboveAverageAllThree);
 
   // Debuts
   const debuts = weekScores.filter(s => s.isFirstNight && !s.isPenalty);

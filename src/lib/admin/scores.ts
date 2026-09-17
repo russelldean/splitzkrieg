@@ -10,6 +10,7 @@ import path from 'path';
 import { getDb, withRetry } from '@/lib/db';
 import { MILESTONE_THRESHOLDS, type MilestoneCategory } from '@/lib/milestone-config';
 import { bonusPoints, gamePoints, milestoneCrossings, weekIsComplete } from './scoring-rules';
+import { ABOVE_AVG_SQL } from '@/lib/scoring/above-average.mjs';
 import { nextWeekPointer } from './week-pointer';
 import type { StagedMatch, PersonalBest } from './types';
 
@@ -535,12 +536,12 @@ export async function runPatches(
     'Weekly High Series',
   );
 
-  // Above Average All 3 Games
+  // Above Average All 3 Games. Shares its definition with the week page and
+  // populate-patches; see src/lib/scoring/above-average.mjs.
   await insertPatchBatch(
     'aboveAvg',
     `SELECT sc.bowlerID, sc.seasonID, sc.week FROM scores sc
-     WHERE sc.isPenalty = 0 AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-       AND sc.game1 >= sc.incomingAvg AND sc.game2 >= sc.incomingAvg AND sc.game3 >= sc.incomingAvg${weeklyFilter}`,
+     WHERE ${ABOVE_AVG_SQL}${weeklyFilter}`,
     'Above Average',
   );
 

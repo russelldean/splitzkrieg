@@ -12,6 +12,7 @@
  *                                                  # wipe+rebuild aboveAvg for one season
  */
 import sql from 'mssql';
+import { ABOVE_AVG_SQL } from '../src/lib/scoring/above-average.mjs';
 import { readFileSync } from 'fs';
 
 const envContent = readFileSync('.env.local', 'utf8');
@@ -206,16 +207,13 @@ async function main() {
   `, 'Weekly High Series');
 
   // ─── Above Average All 3 Games ───
+  // Matching the average COUNTS (Russ, 2026-08-04: "we give above average even if
+  // you tie it"). The rule is defined once, in src/lib/scoring/above-average.mjs,
+  // and shared with src/lib/admin/scores.ts and the week page renderer.
   await insertPatches('aboveAvg', `
     SELECT sc.bowlerID, sc.seasonID, sc.week
     FROM scores sc
-    WHERE sc.isPenalty = 0
-      AND sc.incomingAvg IS NOT NULL AND sc.incomingAvg > 0
-      -- Matching the average COUNTS (Russ, 2026-08-04: "we give above average even if
-      -- you tie it"). This was ">" until then, which withheld 343 patches league-wide.
-      AND sc.game1 >= sc.incomingAvg
-      AND sc.game2 >= sc.incomingAvg
-      AND sc.game3 >= sc.incomingAvg
+    WHERE ${ABOVE_AVG_SQL}
       ${weeklyAnd}
   `, 'Above Average All 3 Games');
 
