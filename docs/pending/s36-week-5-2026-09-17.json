@@ -1,0 +1,89 @@
+{
+  "seasonID": 36,
+  "week": 5,
+  "matchDate": "2026-09-17",
+  "pulledAt": "2026-09-17T00:00:00.000Z",
+  "note": "MAKEUP. Hot Shotz's half of match 48 (vs Living on a Spare), bowled after the 9/7 night. This closes week 5: with these four rows the week reaches 80 of 80 and match 48 finally produces a result, so weekIsComplete flips true and XP can be awarded for the whole field. Entered from Russ's numbers, not from LeaguePals. No turkeys, confirmed. Filed as a third staging file because the import guard is team-scoped.",
+  "matches": [
+    {
+      "homeTeamName": "Living on a Spare",
+      "awayTeamName": "Hot Shotz",
+      "homeTeamID": 17,
+      "awayTeamID": 15,
+      "bowlers": [
+        {
+          "lpName": "Ted Glick",
+          "side": "away",
+          "teamID": 15,
+          "teamName": "Hot Shotz",
+          "bowlerID": 597,
+          "bowlerName": "Ted Glick",
+          "gender": "M",
+          "game1": 128,
+          "game2": 140,
+          "game3": 120,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 129,
+          "flags": [
+            "MAKEUP"
+          ]
+        },
+        {
+          "lpName": "Dave Graedon",
+          "side": "away",
+          "teamID": 15,
+          "teamName": "Hot Shotz",
+          "bowlerID": 154,
+          "bowlerName": "Dave Graedon",
+          "gender": "M",
+          "game1": 150,
+          "game2": 103,
+          "game3": 150,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 146,
+          "flags": [
+            "MAKEUP"
+          ]
+        },
+        {
+          "lpName": "Kelly Shirley",
+          "side": "away",
+          "teamID": 15,
+          "teamName": "Hot Shotz",
+          "bowlerID": 374,
+          "bowlerName": "Kelly Shirley",
+          "gender": "M",
+          "game1": 122,
+          "game2": 124,
+          "game3": 148,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 133,
+          "flags": [
+            "MAKEUP"
+          ]
+        },
+        {
+          "lpName": "Paul Marsh",
+          "side": "away",
+          "teamID": 15,
+          "teamName": "Hot Shotz",
+          "bowlerID": 512,
+          "bowlerName": "Paul Marsh",
+          "gender": "M",
+          "game1": 108,
+          "game2": 124,
+          "game3": 156,
+          "isPenalty": false,
+          "turkeys": 0,
+          "incomingAvg": 150,
+          "flags": [
+            "MAKEUP"
+          ]
+        }
+      ]
+    }
+  ]
+}
