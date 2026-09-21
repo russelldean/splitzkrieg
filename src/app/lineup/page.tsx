@@ -384,6 +384,17 @@ export default function LineupPage() {
             </svg>
             Download Week {seasonInfo.week} Scoresheets (PDF)
           </a>
+          <div className="mt-3">
+            <a
+              href="/lineup/bowlers"
+              className="inline-flex items-center gap-2 font-body text-sm text-navy/60 hover:text-navy transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+              </svg>
+              Bowler List (averages and handicaps)
+            </a>
+          </div>
         </div>
       </div>
     );

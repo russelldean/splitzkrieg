@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sql from 'mssql';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getDb } from '@/lib/db';
-import { getRollingAverages } from '@/lib/admin/rolling-averages';
-import { getCurrentLineupContext } from '@/lib/admin/lineups';
+import { getBowlerListWithAverages } from '@/lib/admin/bowler-list';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,25 +17,14 @@ export async function GET(request: NextRequest) {
     const db = await getDb();
     const showAll = request.nextUrl.searchParams.get('all') === '1';
 
-    const query = showAll
-      ? 'SELECT bowlerID, bowlerName, isActive, establishedAvg FROM bowlers ORDER BY bowlerName'
-      : 'SELECT bowlerID, bowlerName FROM bowlers WHERE isActive = 1 ORDER BY bowlerName';
-
-    const result = await db.request().query(query);
-
-    // For the full list, attach current rolling averages
+    // The full list carries current rolling averages
     if (showAll) {
-      const context = await getCurrentLineupContext();
-      if (context) {
-        const avgMap = await getRollingAverages(db, context.seasonID, context.nextWeek);
-        for (const bowler of result.recordset) {
-          const avg = avgMap.get(bowler.bowlerID) ?? null;
-          bowler.currentAvg = avg;
-          bowler.handicap = avg != null ? Math.min(Math.floor((225 - avg) * 0.95), 147) : null;
-        }
-      }
+      return NextResponse.json({ bowlers: await getBowlerListWithAverages(db) });
     }
 
+    const result = await db.request().query(
+      'SELECT bowlerID, bowlerName FROM bowlers WHERE isActive = 1 ORDER BY bowlerName',
+    );
     return NextResponse.json({ bowlers: result.recordset });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
