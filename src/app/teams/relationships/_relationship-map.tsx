@@ -12,7 +12,6 @@ const STEPS = [
   'Indexing unconfirmed hookups...',
   'Consulting text chains...',
   'Querying relationship data tables...',
-  'Cross-referencing parking lot footage...',
 ];
 const STEP_MS = 3600;
 const EMOJI = ['\u{1F48D}', '\u{1F389}', '\u{1F942}', '\u{1F492}', '\u{1F38A}', '\u{1F470}', '\u{1F935}', '\u{2764}\u{FE0F}'];
@@ -48,7 +47,7 @@ export function RelationshipMap() {
         <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Relationship Map</h1>
         <p style={{ color: '#94a3b8', fontSize: 14, margin: 0, maxWidth: 520 }}>
           Every marriage, divorce and ‘less official’ relationship in league history. Each bowler is a node. Hover over a
-          bowler to see who they have been with, click for the full story.
+          bowler to see who they have been with, click the name of the bowler for their full story.
         </p>
       </div>
 
