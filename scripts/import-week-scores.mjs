@@ -652,6 +652,21 @@ async function importScores() {
 
   console.log(`\n${dryRun ? 'Would insert' : 'Inserted'}: ${inserted} rows`);
 
+  if (!dryRun && inserted > 0) {
+    // The ~26 queries keyed on the `scores` channel (all-time leaderboard, milestones
+    // page, homepage facts, team all-time rosters...) only refresh when scores.<season>
+    // moves. Only the admin confirm route bumped it, and on Vercel that write hits a
+    // read-only filesystem, so script imports left scores.36 frozen from week 3 to
+    // week 6 (Kelly Shirley's 250th game showed as 246). Bump it here, every import.
+    const versionsPath = resolve(PROJECT_ROOT, '.data-versions.json');
+    const versions = JSON.parse(readFileSync(versionsPath, 'utf8'));
+    versions.scores ??= {};
+    const key = String(staged.seasonID);
+    versions.scores[key] = (versions.scores[key] || 1) + 1;
+    writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n');
+    console.log(`\nBumped .data-versions.json: scores.${key} -> v${versions.scores[key]}`);
+  }
+
   if (!dryRun) {
     console.log('\n=== POST-IMPORT STEPS ===');
     console.log('Run these next:');
@@ -659,7 +674,10 @@ async function importScores() {
     console.log(`  node scripts/populate-patches.mjs --season=${staged.seasonID} --week=${staged.week}`);
     console.log(`  node scripts/record-milestones.mjs --season=${staged.seasonID} --week=${staged.week}`);
     console.log(`  node scripts/populate-facts.mjs --season=${staged.seasonID} --week=${staged.week}`);
-    console.log(`  Then bust cache for S${staged.seasonID} queries and deploy.`);
+    console.log(`  node scripts/advance-week-pointer.mjs --season=${staged.seasonID} --week=${staged.week} --commit`);
+    console.log(`  node scripts/bump-bowler-cache.mjs --season=${staged.seasonID} --week=${staged.week} --commit`);
+    console.log(`  node scripts/verify-week.mjs --season=${staged.seasonID} --week=${staged.week}`);
+    console.log('  Then commit .data-versions.json and deploy.');
   }
 }
 
