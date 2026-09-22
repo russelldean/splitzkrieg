@@ -64,7 +64,7 @@ export function RelationshipMap() {
         ) : (
           <>
             <p style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.2, margin: '0 0 16px', maxWidth: 640 }}>
-              Did you really think that I built that?
+              I did not build that.
             </p>
             <p
               style={{
