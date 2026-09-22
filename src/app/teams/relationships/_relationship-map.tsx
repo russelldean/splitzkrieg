@@ -11,7 +11,7 @@ const STEPS = [
   'Indexing hookups, Season 1 to present...',
   'Interviewing the bartender...',
 ];
-const STEP_MS = 550;
+const STEP_MS = 1400;
 
 export function RelationshipMap() {
   const [step, setStep] = useState(0);
