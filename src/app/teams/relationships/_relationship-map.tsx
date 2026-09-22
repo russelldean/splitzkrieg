@@ -8,7 +8,8 @@ const STEPS = [
   'Loading 36 seasons of bowlers...',
   'Cross-referencing marriages...',
   'Cross-referencing divorces...',
-  'Indexing hookups, Season 1 to present...',
+  'Indexing confirmed hookups...',
+  'Indexing unconfirmed hookups...',
   'Consulting text chains...',
   'Cross-referencing parking lot footage...',
 ];
