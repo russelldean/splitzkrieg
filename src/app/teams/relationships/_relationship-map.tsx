@@ -9,7 +9,6 @@ const STEPS = [
   'Cross-referencing marriages...',
   'Cross-referencing divorces...',
   'Indexing confirmed hookups...',
-  'Indexing unconfirmed hookups...',
   'Consulting text chains...',
   'Querying relationship data tables...',
 ];
@@ -63,7 +62,7 @@ export function RelationshipMap() {
         ) : (
           <>
             <p style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.2, margin: '0 0 16px', maxWidth: 640 }}>
-              I did not build that.
+              There is no map.
             </p>
             <p
               style={{
