@@ -11,9 +11,10 @@ const STEPS = [
   'Indexing confirmed hookups...',
   'Indexing unconfirmed hookups...',
   'Consulting text chains...',
+  'Querying relationship data tables...',
   'Cross-referencing parking lot footage...',
 ];
-const STEP_MS = 2600;
+const STEP_MS = 3600;
 const EMOJI = ['\u{1F48D}', '\u{1F389}', '\u{1F942}', '\u{1F492}', '\u{1F38A}', '\u{1F470}', '\u{1F935}', '\u{2764}\u{FE0F}'];
 
 // Fixed pseudo-random layout: pure, so render stays pure and SSR-safe.
