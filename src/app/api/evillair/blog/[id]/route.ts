@@ -10,6 +10,20 @@ import {
 export const dynamic = 'force-dynamic';
 
 /**
+ * A recap renders on its week page (/blog/<slug> just redirects there since the
+ * recap-week merge), so that is the page a save or publish has to refresh.
+ * Without this, every edit and every first publish needed a full deploy.
+ * One path only: never widen this to '/' with 'layout' (see the 2026-08-28
+ * purge that discarded all 1179 prebuilt pages).
+ */
+async function revalidateWeekPage(postId: number) {
+  const post = await getBlogPostById(postId);
+  if (post?.seasonSlug && post.week) {
+    revalidatePath(`/week/${post.seasonSlug}/${post.week}`);
+  }
+}
+
+/**
  * GET: Single blog post by ID (for admin editor).
  */
 export async function GET(
@@ -73,6 +87,7 @@ export async function PUT(
     }
     revalidatePath('/blog');
     revalidatePath('/');
+    await revalidateWeekPage(postId);
 
     return NextResponse.json({ updated: true });
   } catch (err) {
@@ -104,8 +119,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
+    const doomed = await getBlogPostById(postId);
     await deleteBlogPost(postId);
     revalidatePath('/blog', 'page');
+    if (doomed?.seasonSlug && doomed.week) revalidatePath(`/week/${doomed.seasonSlug}/${doomed.week}`);
     return NextResponse.json({ deleted: true });
   } catch (err) {
     console.error('Admin blog DELETE error:', err);
