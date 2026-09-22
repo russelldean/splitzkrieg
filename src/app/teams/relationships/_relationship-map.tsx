@@ -9,9 +9,10 @@ const STEPS = [
   'Cross-referencing marriages...',
   'Cross-referencing divorces...',
   'Indexing hookups, Season 1 to present...',
-  'Interviewing the bartender...',
+  'Consulting text chains...',
+  'Cross-referencing parking lot footage...',
 ];
-const STEP_MS = 1400;
+const STEP_MS = 2000;
 
 export function RelationshipMap() {
   const [step, setStep] = useState(0);
