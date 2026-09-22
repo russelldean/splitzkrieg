@@ -6,11 +6,10 @@ import { useEffect, useState } from 'react';
 // Styled to match Team Networks (/teams/network) so the loader sells it.
 const STEPS = [
   'Loading 36 seasons of bowlers...',
-  'Cross-referencing marriages...',
-  'Cross-referencing divorces...',
+  'Cross-referencing marriage records...',
+  'Querying public divorce data...',
   'Indexing confirmed hookups...',
   'Consulting text chains...',
-  'Querying relationship data tables...',
 ];
 const STEP_MS = 3600;
 const EMOJI = ['\u{1F48D}', '\u{1F389}', '\u{1F942}', '\u{1F492}', '\u{1F38A}', '\u{1F470}', '\u{1F935}', '\u{2764}\u{FE0F}'];
