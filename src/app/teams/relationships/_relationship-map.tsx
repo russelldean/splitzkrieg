@@ -47,7 +47,7 @@ export function RelationshipMap() {
         <h1 style={{ fontSize: 38, fontWeight: 900, margin: '0 0 8px', lineHeight: 1.1 }}>Relationship Map</h1>
         <p style={{ color: '#94a3b8', fontSize: 14, margin: 0, maxWidth: 520 }}>
           Every marriage, divorce and ‘less official’ relationship in league history. Each bowler is a node. Hover over a
-          bowler to see who they have been with, click the name of the bowler for their full story.
+          bowler to see their entanglements, click the name of the bowler for their full story.
         </p>
       </div>
 
