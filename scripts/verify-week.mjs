@@ -166,7 +166,7 @@ dupF.length ? bad(`${dupF.length} duplicated fact row(s) — a re-run without cl
 // ── 6. possible unrecorded substitutions ────────────────────────────────────
 console.log('\n6. substitution screen');
 const dev = await q(`
-  SELECT b.bowlerName, s.incomingAvg, s.scratchSeries/3.0 night
+  SELECT b.bowlerName, s.incomingAvg, s.scratchSeries*1.0/NULLIF(s.gamesBowled,0) night
   FROM scores s JOIN bowlers b ON b.bowlerID=s.bowlerID
   WHERE s.seasonID=${SEASON} AND s.week=${WEEK} AND s.isPenalty=0 AND s.incomingAvg IS NOT NULL`);
 const out = dev.map(r => ({ ...r, d: Number(r.night) - Number(r.incomingAvg) }))

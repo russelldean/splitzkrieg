@@ -59,16 +59,16 @@ const GET_ALL_TIME_LEADERBOARD_SQL = `
   FROM (
     SELECT
       sc.bowlerID,
-      COUNT(sc.scoreID) * 3                                AS gamesBowled,
+      SUM(sc.gamesBowled)                                AS gamesBowled,
       SUM(sc.scratchSeries)                                AS totalPins,
       CAST(
         SUM(sc.scratchSeries) * 1.0 /
-        NULLIF(COUNT(sc.scoreID) * 3, 0)
+        NULLIF(SUM(sc.gamesBowled), 0)
       AS DECIMAL(5,1))                                     AS careerAverage,
       MAX(
         CASE
-          WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
-          WHEN sc.game2 >= sc.game3 THEN sc.game2
+          WHEN ISNULL(sc.game1, 0) >= ISNULL(sc.game2, 0) AND ISNULL(sc.game1, 0) >= ISNULL(sc.game3, 0) THEN sc.game1
+          WHEN ISNULL(sc.game2, 0) >= ISNULL(sc.game3, 0) THEN sc.game2
           ELSE sc.game3
         END
       )                                                    AS highGame,

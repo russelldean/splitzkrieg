@@ -67,11 +67,11 @@ const GET_SEASON_STANDINGS_SQL = `
       sc.teamID,
       CAST(
         SUM(sc.scratchSeries) * 1.0 /
-        NULLIF(COUNT(sc.scoreID) * 3, 0)
+        NULLIF(SUM(sc.gamesBowled), 0)
       AS DECIMAL(5,1))                     AS teamScratchAvg,
       CAST(
-        SUM(sc.handSeries) * 1.0 /
-        NULLIF(COUNT(sc.scoreID) * 3, 0)
+        SUM(sc.bowledHandSeries) * 1.0 /
+        NULLIF(SUM(sc.gamesBowled), 0)
       AS DECIMAL(5,1))                     AS teamHcpAvg
     FROM scores sc
     WHERE sc.seasonID = @seasonID
@@ -319,7 +319,7 @@ export async function getSeasonLeaderboard(
 
   switch (category) {
     case 'avg':
-      selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+      selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1))`;
       havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
       break;
     case 'highGame': {
@@ -381,7 +381,7 @@ export async function getSeasonLeaderboard(
       selectExpr = `SUM(ISNULL(sc.turkeys, 0))`;
       break;
     case 'hcpAvg':
-      selectExpr = `CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+      selectExpr = `CAST(SUM(sc.bowledHandSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1))`;
       havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
       break;
     case 'hcpHighSeries':
@@ -472,20 +472,20 @@ const GET_SEASON_FULL_STATS_SQL = `
   FROM (
     SELECT
       sc.bowlerID,
-      COUNT(sc.scoreID) * 3                                AS gamesBowled,
+      SUM(sc.gamesBowled)                                AS gamesBowled,
       SUM(sc.scratchSeries)                                AS totalPins,
       CAST(
         SUM(sc.scratchSeries) * 1.0 /
-        NULLIF(COUNT(sc.scoreID) * 3, 0)
+        NULLIF(SUM(sc.gamesBowled), 0)
       AS DECIMAL(5,1))                                     AS scratchAvg,
       CAST(
-        SUM(sc.handSeries) * 1.0 /
-        NULLIF(COUNT(sc.scoreID) * 3, 0)
+        SUM(sc.bowledHandSeries) * 1.0 /
+        NULLIF(SUM(sc.gamesBowled), 0)
       AS DECIMAL(5,1))                                     AS hcpAvg,
       MAX(
         CASE
-          WHEN sc.game1 >= sc.game2 AND sc.game1 >= sc.game3 THEN sc.game1
-          WHEN sc.game2 >= sc.game3 THEN sc.game2
+          WHEN ISNULL(sc.game1, 0) >= ISNULL(sc.game2, 0) AND ISNULL(sc.game1, 0) >= ISNULL(sc.game3, 0) THEN sc.game1
+          WHEN ISNULL(sc.game2, 0) >= ISNULL(sc.game3, 0) THEN sc.game2
           ELSE sc.game3
         END
       )                                                    AS highGame,

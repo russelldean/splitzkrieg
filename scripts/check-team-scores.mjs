@@ -45,7 +45,7 @@ async function main() {
       SUM(s.hcpGame2) AS teamGame2,
       SUM(s.hcpGame3) AS teamGame3,
       SUM(s.hcpGame1 + s.hcpGame2 + s.hcpGame3) AS teamHcpSeries,
-      SUM(s.game1 + s.game2 + s.game3) AS teamScratchSeries,
+      SUM(s.scratchSeries) AS teamScratchSeries,
       COUNT(*) AS bowlerCount
     FROM scores s
     JOIN teams t ON s.teamID = t.teamID

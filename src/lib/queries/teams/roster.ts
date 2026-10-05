@@ -38,10 +38,10 @@ export const GET_TEAM_CURRENT_ROSTER_SQL = `
     b.bowlerID,
     b.bowlerName,
     b.slug,
-    COUNT(sc.scoreID) * 3 AS gamesBowled,
+    SUM(sc.gamesBowled) AS gamesBowled,
     CAST(
       SUM(sc.scratchSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
+      NULLIF(SUM(sc.gamesBowled), 0)
     AS DECIMAL(5,1)) AS seasonAverage,
     (
       SELECT TOP 1 sn.displayName
@@ -78,11 +78,11 @@ const GET_TEAM_SEASON_BOWLERS_SQL = `
     b.bowlerID,
     b.bowlerName,
     b.slug,
-    COUNT(sc.scoreID) * 3 AS gamesBowled,
+    SUM(sc.gamesBowled) AS gamesBowled,
     SUM(sc.scratchSeries) AS totalPins,
     CAST(
       SUM(sc.scratchSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
+      NULLIF(SUM(sc.gamesBowled), 0)
     AS DECIMAL(5,1)) AS average
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
@@ -113,7 +113,7 @@ export async function getTeamSeasonBowlers(teamID: number, seasonID: number): Pr
 // 4-15x faster.
 export const GET_TEAM_ALL_TIME_ROSTER_SQL = `
   WITH teamScores AS (
-    SELECT sc.bowlerID, sc.scoreID, sc.scratchSeries, sc.seasonID,
+    SELECT sc.bowlerID, sc.scoreID, sc.scratchSeries, sc.gamesBowled, sc.seasonID,
            sn.displayName, sn.year, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END AS pOrd
     FROM scores sc
     JOIN seasons sn ON sc.seasonID = sn.seasonID
@@ -135,11 +135,11 @@ export const GET_TEAM_ALL_TIME_ROSTER_SQL = `
     b.bowlerID,
     b.bowlerName,
     b.slug,
-    COUNT(ts.scoreID) * 3 AS totalGames,
+    SUM(ts.gamesBowled) AS totalGames,
     SUM(ts.scratchSeries) AS totalPins,
     CAST(
       SUM(ts.scratchSeries) * 1.0 /
-      NULLIF(COUNT(ts.scoreID) * 3, 0)
+      NULLIF(SUM(ts.gamesBowled), 0)
     AS DECIMAL(5,1)) AS average,
     COUNT(DISTINCT ts.seasonID) AS seasonsWithTeam,
     fl.firstSeason,

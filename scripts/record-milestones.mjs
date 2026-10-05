@@ -56,7 +56,7 @@ const STATS_SQL = `
   SELECT
     sc.bowlerID,
     b.bowlerName,
-    COUNT(*) * 3 AS totalGamesBowled,
+    SUM(sc.gamesBowled) AS totalGamesBowled,
     SUM(sc.scratchSeries) AS totalPins,
     SUM(CASE WHEN sc.game1 >= 200 THEN 1 ELSE 0 END
       + CASE WHEN sc.game2 >= 200 THEN 1 ELSE 0 END

@@ -100,10 +100,21 @@ const ALL_TIME = [
 const CURRENT_SEASON = [
   {
     name: 'current-season-missing-games',
-    why: 'A non-penalty row missing a game means a partial import of this week.',
-    sql: `SELECT COUNT(*) n FROM scores s JOIN seasons se ON se.seasonID = s.seasonID
-          WHERE se.isCurrentSeason = 1 AND s.isPenalty = 0
-            AND (s.game1 IS NULL OR s.game2 IS NULL OR s.game3 IS NULL)`,
+    why:
+      'A non-penalty row missing a game means a partial import of this week. ' +
+      'A bowler who leaves mid-night is legitimate and leaves only the LAST ' +
+      'game(s) empty (Molly Halligan S36 w6), so that alone does not count. ' +
+      'Flagged: an empty game before a bowled one, or 3+ partial rows in one ' +
+      'week, which is what a half-finished import looks like.',
+    sql: `WITH partial AS (
+            SELECT s.week,
+                   CASE WHEN (s.game1 IS NULL AND (s.game2 IS NOT NULL OR s.game3 IS NOT NULL))
+                          OR (s.game2 IS NULL AND s.game3 IS NOT NULL) THEN 1 ELSE 0 END AS gap,
+                   COUNT(*) OVER (PARTITION BY s.week) AS perWeek
+            FROM scores s JOIN seasons se ON se.seasonID = s.seasonID
+            WHERE se.isCurrentSeason = 1 AND s.isPenalty = 0
+              AND (s.game1 IS NULL OR s.game2 IS NULL OR s.game3 IS NULL))
+          SELECT COUNT(*) n FROM partial WHERE gap = 1 OR perWeek >= 3`,
   },
   {
     name: 'current-season-orphan-team',

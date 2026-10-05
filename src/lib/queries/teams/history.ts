@@ -97,11 +97,11 @@ export const GET_TEAM_SEASON_BY_SEASON_SQL = `
     LOWER(REPLACE(sn.displayName, ' ', '-'))           AS seasonSlug,
     sn.romanNumeral,
     COALESCE(tnh.teamName, t.teamName)                 AS teamNameAtTime,
-    COUNT(sc.scoreID) * 3                              AS totalGames,
+    SUM(sc.gamesBowled)                              AS totalGames,
     SUM(sc.scratchSeries)                              AS totalPins,
     CAST(
       SUM(sc.scratchSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
+      NULLIF(SUM(sc.gamesBowled), 0)
     AS DECIMAL(5,1))                                   AS teamAverage,
     COUNT(DISTINCT sc.bowlerID)                        AS rosterSize,
     CAST(CASE WHEN EXISTS (
@@ -185,7 +185,7 @@ const GET_ALL_TEAMS_DIRECTORY_SQL = `
     SELECT sc.teamID,
       COUNT(DISTINCT sc.bowlerID) AS rosterCount,
       COUNT(DISTINCT sc.seasonID) AS seasonsActive,
-      COUNT(sc.scoreID) * 3       AS totalGames,
+      SUM(sc.gamesBowled)       AS totalGames,
       SUM(sc.scratchSeries)       AS totalPins
     FROM scores sc
     WHERE sc.isPenalty = 0

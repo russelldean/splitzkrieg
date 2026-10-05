@@ -49,7 +49,7 @@ const GET_RECENT_MILESTONES_SQL = `
       sc.bowlerID,
       b.bowlerName,
       b.slug,
-      COUNT(sc.scoreID) * 3 AS totalGames
+      SUM(sc.gamesBowled) AS totalGames
     FROM scores sc
     JOIN bowlers b ON sc.bowlerID = b.bowlerID
     WHERE sc.isPenalty = 0
@@ -163,7 +163,7 @@ const SNAPSHOT_STATS_SQL = `/* v4: week passed as param */
   SELECT
     @week AS weekNumber,
     COUNT(DISTINCT sc.bowlerID) AS totalBowlers,
-    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage,
+    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS leagueAverage,
     CAST(AVG(CASE WHEN sc.incomingAvg > 0 THEN CAST(sc.incomingAvg AS DECIMAL(5,1)) END) AS DECIMAL(5,1)) AS expectedLeagueAverage
   FROM scores sc
   WHERE sc.seasonID = @seasonID
@@ -174,7 +174,7 @@ const SNAPSHOT_STATS_SQL = `/* v4: week passed as param */
 const SNAPSHOT_TOP_MALE_AVG_SQL = `
   SELECT TOP 1
     b.bowlerName, b.slug,
-    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
+    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS average
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0 AND b.gender = 'M'
@@ -186,7 +186,7 @@ const SNAPSHOT_TOP_MALE_AVG_SQL = `
 const SNAPSHOT_TOP_FEMALE_AVG_SQL = `
   SELECT TOP 1
     b.bowlerName, b.slug,
-    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
+    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS average
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0 AND b.gender = 'F'
@@ -198,7 +198,7 @@ const SNAPSHOT_TOP_FEMALE_AVG_SQL = `
 const SNAPSHOT_TOP_HCP_AVG_SQL = `
   SELECT TOP 1
     b.bowlerName, b.slug,
-    CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average
+    CAST(SUM(sc.bowledHandSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS average
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0

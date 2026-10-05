@@ -224,23 +224,23 @@ async function main() {
             RANK() OVER (ORDER BY ss.hcpAvg DESC) AS hcpRank
           FROM (
             SELECT sc2.bowlerID,
-              CAST(SUM(sc2.handSeries) * 1.0 / NULLIF(COUNT(sc2.scoreID) * 3, 0) AS DECIMAL(5,1)) AS hcpAvg
+              CAST(SUM(sc2.bowledHandSeries) * 1.0 / NULLIF(SUM(sc2.gamesBowled), 0) AS DECIMAL(5,1)) AS hcpAvg
             FROM scores sc2
             WHERE sc2.isPenalty = 0 AND sc2.seasonID = @seasonID
             GROUP BY sc2.bowlerID
-            HAVING COUNT(*) * 3 >= @minGames
+            HAVING SUM(sc2.gamesBowled) >= @minGames
           ) ss
           WHERE NOT EXISTS (
             SELECT 1 FROM (
               SELECT sc3.bowlerID,
                 RANK() OVER (PARTITION BY b3.gender ORDER BY
-                  CAST(SUM(sc3.game1 + sc3.game2 + sc3.game3) * 1.0 / NULLIF(COUNT(sc3.scoreID) * 3, 0) AS DECIMAL(5,1)) DESC
+                  CAST(SUM(sc3.scratchSeries) * 1.0 / NULLIF(SUM(sc3.gamesBowled), 0) AS DECIMAL(5,1)) DESC
                 ) AS scratchRank
               FROM scores sc3
               JOIN bowlers b3 ON b3.bowlerID = sc3.bowlerID
               WHERE sc3.isPenalty = 0 AND sc3.seasonID = @seasonID AND b3.gender IN ('M', 'F')
               GROUP BY sc3.bowlerID, b3.gender
-              HAVING COUNT(*) * 3 >= @minGames
+              HAVING SUM(sc3.gamesBowled) >= @minGames
             ) sq
             WHERE sq.bowlerID = ss.bowlerID AND sq.scratchRank <= 8
           )

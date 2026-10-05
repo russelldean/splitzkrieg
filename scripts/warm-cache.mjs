@@ -130,7 +130,7 @@ async function main() {
                    WHEN sc.game2 >= ISNULL(sc.game1, 0) AND sc.game2 >= ISNULL(sc.game3, 0) THEN sc.game2
                    ELSE sc.game3 END) AS highGame,
           MAX(sc.scratchSeries) AS highSeries,
-          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAvg,
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS leagueAvg,
           CAST(AVG(CAST(sc.incomingAvg AS DECIMAL(5,1))) AS DECIMAL(5,1)) AS expectedAvg
         FROM scores sc
         LEFT JOIN schedule sch ON sch.seasonID = sc.seasonID AND sch.week = sc.week

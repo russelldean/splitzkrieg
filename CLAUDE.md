@@ -5,7 +5,8 @@
 - **Static site** — Next.js with build-time Azure SQL data fetching. Visitors never hit the DB.
 - **Azure SQL** — Provisioned tier (not serverless). 30 concurrent request limit.
 - All SQL queries live in `src/lib/queries/` (split by domain). Components never use raw SQL.
-- `scores` table has computed columns (hcpGame1/2/3, handSeries, incomingHcp, scratchSeries) — never INSERT these.
+- `scores` table has computed columns (hcpGame1/2/3, handSeries, incomingHcp, scratchSeries, gamesBowled, bowledHandSeries) — never INSERT these.
+- **Per-game averages divide by `SUM(gamesBowled)`, never `COUNT(rows) * 3`.** A bowler who leaves mid-night keeps their row with the unbowled game NULL. Bowler hcp averages use `bowledHandSeries`; team totals keep `handSeries` (it carries the 199 for the missed game).
 - DB schema documented in `memory/db-schema.md` — ALWAYS check before writing raw SQL.
 - Vercel auto-deploys on push to main.
 

@@ -258,8 +258,8 @@ const LEAGUE_STATS_SQL = `
     (SELECT COUNT(DISTINCT winnerTeamID) FROM seasonChampions WHERE championshipType = 'team' AND winnerTeamID IS NOT NULL) AS distinctChampionTeams
   FROM (
     SELECT
-      COUNT(*) * 3 AS totalGames,
-      SUM(CAST(game1 AS BIGINT) + CAST(game2 AS BIGINT) + CAST(game3 AS BIGINT)) AS totalPins,
+      SUM(gamesBowled) AS totalGames,
+      SUM(CAST(scratchSeries AS BIGINT)) AS totalPins,
       SUM(ISNULL(turkeys, 0)) AS totalTurkeys,
       SUM(
         CASE WHEN game1 >= 200 THEN 1 ELSE 0 END +

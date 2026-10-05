@@ -407,14 +407,14 @@ export async function getLeaderboardSnapshot(
 
   switch (category) {
     case 'avg':
-      selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+      selectExpr = `CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1))`;
       havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
       break;
     case 'highSeries':
       selectExpr = `MAX(sc.scratchSeries)`;
       break;
     case 'hcpAvg':
-      selectExpr = `CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1))`;
+      selectExpr = `CAST(SUM(sc.bowledHandSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1))`;
       havingClause = `HAVING COUNT(sc.scoreID) >= ${minNights}`;
       break;
   }

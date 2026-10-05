@@ -63,11 +63,11 @@ const GET_TEAM_ALL_SEASON_BOWLERS_SQL = `
     b.bowlerID,
     b.bowlerName,
     b.slug,
-    COUNT(sc.scoreID) * 3 AS gamesBowled,
+    SUM(sc.gamesBowled) AS gamesBowled,
     SUM(sc.scratchSeries) AS totalPins,
     CAST(
       SUM(sc.scratchSeries) * 1.0 /
-      NULLIF(COUNT(sc.scoreID) * 3, 0)
+      NULLIF(SUM(sc.gamesBowled), 0)
     AS DECIMAL(5,1)) AS average
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID

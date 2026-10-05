@@ -17,9 +17,9 @@ const pool = await new sql.ConnectionPool({
 const OLD = `
   SELECT
     b.bowlerID, b.bowlerName, b.slug,
-    COUNT(sc.scoreID) * 3 AS totalGames,
+    SUM(sc.gamesBowled) AS totalGames,
     SUM(sc.scratchSeries) AS totalPins,
-    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average,
+    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS average,
     COUNT(DISTINCT sc.seasonID) AS seasonsWithTeam,
     (SELECT TOP 1 sn.displayName FROM scores sc2 JOIN seasons sn ON sc2.seasonID = sn.seasonID
      WHERE sc2.bowlerID = b.bowlerID AND sc2.teamID = @teamID AND sc2.isPenalty = 0
@@ -36,7 +36,7 @@ const OLD = `
 
 const NEW = `
   WITH teamScores AS (
-    SELECT sc.bowlerID, sc.scoreID, sc.scratchSeries, sc.seasonID,
+    SELECT sc.bowlerID, sc.scoreID, sc.scratchSeries, sc.gamesBowled, sc.seasonID,
            sn.displayName, sn.year, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END AS pOrd
     FROM scores sc
     JOIN seasons sn ON sc.seasonID = sn.seasonID
@@ -56,9 +56,9 @@ const NEW = `
   )
   SELECT
     b.bowlerID, b.bowlerName, b.slug,
-    COUNT(ts.scoreID) * 3 AS totalGames,
+    SUM(ts.gamesBowled) AS totalGames,
     SUM(ts.scratchSeries) AS totalPins,
-    CAST(SUM(ts.scratchSeries) * 1.0 / NULLIF(COUNT(ts.scoreID) * 3, 0) AS DECIMAL(5,1)) AS average,
+    CAST(SUM(ts.scratchSeries) * 1.0 / NULLIF(SUM(ts.gamesBowled), 0) AS DECIMAL(5,1)) AS average,
     COUNT(DISTINCT ts.seasonID) AS seasonsWithTeam,
     fl.firstSeason, fl.lastSeason
   FROM teamScores ts

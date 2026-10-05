@@ -131,8 +131,8 @@ export async function getSeasonRecords(seasonID: number): Promise<SeasonRecords>
 
 const HERO_STATS_SQL = `
   SELECT
-    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS leagueAverage,
-    COUNT(sc.scoreID) * 3           AS totalGames,
+    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS leagueAverage,
+    SUM(sc.gamesBowled)           AS totalGames,
     COUNT(DISTINCT sc.bowlerID)     AS totalBowlers
   FROM scores sc
   WHERE sc.seasonID = @seasonID
@@ -142,7 +142,7 @@ const HERO_STATS_SQL = `
 const HERO_TOP_AVG_SQL = `
   SELECT TOP 1
     b.bowlerName, b.slug,
-    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS value
+    CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS value
   FROM scores sc
   JOIN bowlers b ON sc.bowlerID = b.bowlerID
   WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0

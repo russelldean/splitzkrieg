@@ -89,21 +89,21 @@ const SEASONAL = {
     SELECT r.bowlerID, r.seasonID, NULL AS week FROM (
       SELECT sc2.seasonID, sc2.bowlerID,
         RANK() OVER (PARTITION BY sc2.seasonID, b2.gender ORDER BY
-          CAST(SUM(sc2.game1 + sc2.game2 + sc2.game3) * 1.0 / NULLIF(COUNT(sc2.scoreID) * 3, 0) AS DECIMAL(5,1)) DESC) AS rnk
+          CAST(SUM(sc2.scratchSeries) * 1.0 / NULLIF(SUM(sc2.gamesBowled), 0) AS DECIMAL(5,1)) DESC) AS rnk
       FROM scores sc2 JOIN bowlers b2 ON b2.bowlerID = sc2.bowlerID
       WHERE sc2.isPenalty = 0 AND b2.gender IN ('M','F') ${sf2}
       GROUP BY sc2.seasonID, sc2.bowlerID, b2.gender
-      HAVING COUNT(*) * 3 >= ${MIN_GAMES.replace('seasonID', 'sc2.seasonID')}
+      HAVING SUM(sc2.gamesBowled) >= ${MIN_GAMES.replace('seasonID', 'sc2.seasonID')}
     ) r WHERE r.rnk <= 8`,
   hcpPlayoff: `
     SELECT r.bowlerID, r.seasonID, NULL AS week FROM (
       SELECT ss.seasonID, ss.bowlerID, RANK() OVER (PARTITION BY ss.seasonID ORDER BY ss.hcpAvg DESC) AS rnk
       FROM (
         SELECT sc2.seasonID, sc2.bowlerID,
-          CAST(SUM(sc2.handSeries) * 1.0 / NULLIF(COUNT(sc2.scoreID) * 3, 0) AS DECIMAL(5,1)) AS hcpAvg
+          CAST(SUM(sc2.bowledHandSeries) * 1.0 / NULLIF(SUM(sc2.gamesBowled), 0) AS DECIMAL(5,1)) AS hcpAvg
         FROM scores sc2 WHERE sc2.isPenalty = 0 ${sf2}
         GROUP BY sc2.seasonID, sc2.bowlerID
-        HAVING COUNT(*) * 3 >= ${MIN_GAMES.replace('seasonID', 'sc2.seasonID')}
+        HAVING SUM(sc2.gamesBowled) >= ${MIN_GAMES.replace('seasonID', 'sc2.seasonID')}
       ) ss
       WHERE NOT EXISTS (
         SELECT 1 FROM bowlerPatches bp JOIN patches p ON p.patchID = bp.patchID

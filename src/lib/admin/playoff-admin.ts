@@ -338,12 +338,12 @@ export async function getTopScratchBowlers(
       WITH agg AS (
         SELECT
           sc.bowlerID,
-          COUNT(sc.scoreID) * 3 AS gamesBowled,
-          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS value
+          SUM(sc.gamesBowled) AS gamesBowled,
+          CAST(SUM(sc.scratchSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS value
         FROM scores sc
         WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
         GROUP BY sc.bowlerID
-        HAVING COUNT(sc.scoreID) * 3 >= @minGames
+        HAVING SUM(sc.gamesBowled) >= @minGames
       ),
       ranked AS (
         SELECT TOP (@limit)
@@ -394,13 +394,13 @@ export async function getTopHandicapBowlers(
       WITH agg AS (
         SELECT
           sc.bowlerID,
-          COUNT(sc.scoreID) * 3 AS gamesBowled,
-          CAST(SUM(sc.handSeries) * 1.0 / NULLIF(COUNT(sc.scoreID) * 3, 0) AS DECIMAL(5,1)) AS value
+          SUM(sc.gamesBowled) AS gamesBowled,
+          CAST(SUM(sc.bowledHandSeries) * 1.0 / NULLIF(SUM(sc.gamesBowled), 0) AS DECIMAL(5,1)) AS value
         FROM scores sc
         WHERE sc.seasonID = @seasonID AND sc.isPenalty = 0
           AND sc.bowlerID NOT IN (${exclusionList})
         GROUP BY sc.bowlerID
-        HAVING COUNT(sc.scoreID) * 3 >= @minGames
+        HAVING SUM(sc.gamesBowled) >= @minGames
       ),
       ranked AS (
         SELECT TOP (@limit)
