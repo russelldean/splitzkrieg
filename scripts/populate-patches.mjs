@@ -263,6 +263,10 @@ async function main() {
   } ELSE 18 END`;
 
   // ─── Scratch Playoff qualifiers ───
+  // Finished seasons only. Mid-season the top 8 churns weekly and this script only
+  // inserts, so awarding the current season left badges on bowlers who later fell
+  // out (35 bad S36 rows, 2026-10-06). Run --season=N for the old season once it
+  // stops being current.
   // Use DECIMAL(5,1) to match the UI leaderboard rounding
   await insertPatches('scratchPlayoff', `
     SELECT ranked.bowlerID, ranked.seasonID, NULL AS week
@@ -274,6 +278,7 @@ async function main() {
       FROM scores sc2
       JOIN bowlers b2 ON b2.bowlerID = sc2.bowlerID
       WHERE sc2.isPenalty = 0 AND b2.gender IN ('M', 'F')
+        AND sc2.seasonID NOT IN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
         ${seasonFilter ? `AND sc2.seasonID = ${seasonFilter}` : ''}
       GROUP BY sc2.seasonID, sc2.bowlerID, b2.gender
       HAVING SUM(sc2.gamesBowled) >= ${minGamesCaseExpr}
@@ -293,6 +298,7 @@ async function main() {
           CAST(SUM(sc2.bowledHandSeries) * 1.0 / NULLIF(SUM(sc2.gamesBowled), 0) AS DECIMAL(5,1)) AS hcpAvg
         FROM scores sc2
         WHERE sc2.isPenalty = 0
+          AND sc2.seasonID NOT IN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
           ${seasonFilter ? `AND sc2.seasonID = ${seasonFilter}` : ''}
         GROUP BY sc2.seasonID, sc2.bowlerID
         HAVING SUM(sc2.gamesBowled) >= ${minGamesCaseExpr}
