@@ -38,12 +38,12 @@ const SEASON_RANK_CUTOFF = 10;
 export function seasonRankPhrase(r: RankInfo): string | null {
   if (r.rank > SEASON_RANK_CUTOFF) return null;
   const tie = r.tied ? 'tied for ' : '';
-  if (r.rank === 1) return `${tie}best of the season so far`;
-  return `${tie}${ordinal(r.rank)} best of the season`;
+  if (r.rank === 1) return `${tie}best series of the season so far`;
+  return `${tie}${ordinal(r.rank)} best series of the season`;
 }
 
-export function clubPhrase(r: RankInfo): string {
-  return `${r.tied ? 'tied for ' : ''}#${r.rank} in the club`;
+export function clubPhrase(r: RankInfo, category: MilestoneCategory, threshold: number): string {
+  return `${r.tied ? 'tied for ' : ''}#${r.rank} in the ${milestoneLabel(category, threshold)} club`;
 }
 
 export function fastestPhrase(r: RankInfo): string {
@@ -129,7 +129,7 @@ export function buildWeekDraft(input: DraftInput): string {
 
   if (input.milestones.length > 0) {
     const lines = input.milestones.map((m) => {
-      const facts = [milestoneLabel(m.category, m.threshold), clubPhrase(m.club)];
+      const facts = [clubPhrase(m.club, m.category, m.threshold)];
       if (m.fastest) facts.push(fastestPhrase(m.fastest));
       return `   - <bowler>${m.bowlerName}</bowler> - ${facts.join(', ')}`;
     });

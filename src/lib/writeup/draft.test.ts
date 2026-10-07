@@ -35,25 +35,28 @@ describe('seasonRankPhrase', () => {
     expect(seasonRankPhrase({ rank: 11, tied: false })).toBeNull();
   });
   it('reads "best of the season so far" for 1st', () => {
-    expect(seasonRankPhrase({ rank: 1, tied: false })).toBe('best of the season so far');
+    expect(seasonRankPhrase({ rank: 1, tied: false })).toBe('best series of the season so far');
   });
   it('reads "tied for best" for a shared 1st', () => {
-    expect(seasonRankPhrase({ rank: 1, tied: true })).toBe('tied for best of the season so far');
+    expect(seasonRankPhrase({ rank: 1, tied: true })).toBe('tied for best series of the season so far');
   });
-  it('reads "3rd best of the season"', () => {
-    expect(seasonRankPhrase({ rank: 3, tied: false })).toBe('3rd best of the season');
+  it('reads "3rd best series of the season"', () => {
+    expect(seasonRankPhrase({ rank: 3, tied: false })).toBe('3rd best series of the season');
   });
-  it('reads "tied for 10th best of the season"', () => {
-    expect(seasonRankPhrase({ rank: 10, tied: true })).toBe('tied for 10th best of the season');
+  it('reads "tied for 10th best series of the season"', () => {
+    expect(seasonRankPhrase({ rank: 10, tied: true })).toBe('tied for 10th best series of the season');
   });
 });
 
 describe('clubPhrase', () => {
-  it('reads "#91 in the club"', () => {
-    expect(clubPhrase({ rank: 91, tied: false })).toBe('#91 in the club');
+  it('names the club', () => {
+    expect(clubPhrase({ rank: 92, tied: false }, 'totalGames', 250)).toBe('#92 in the 250 career games club');
   });
-  it('reads "tied for #90 in the club"', () => {
-    expect(clubPhrase({ rank: 90, tied: true })).toBe('tied for #90 in the club');
+  it('reads "tied for #90 in the ... club"', () => {
+    expect(clubPhrase({ rank: 90, tied: true }, 'totalGames', 250)).toBe('tied for #90 in the 250 career games club');
+  });
+  it('formats big thresholds', () => {
+    expect(clubPhrase({ rank: 14, tied: false }, 'totalPins', 100000)).toBe('#14 in the 100,000 career pins club');
   });
 });
 
@@ -98,16 +101,16 @@ describe('buildWeekDraft', () => {
   it('writes all four sections in Russ\'s format', () => {
     expect(buildWeekDraft(base)).toBe(
       [
-        '**Bowler of the Week**: <bowler>Vance Woods</bowler> (HOT FUN) - 741 handicap series (3rd best of the season)',
+        '**Bowler of the Week**: <bowler>Vance Woods</bowler> (HOT FUN) - 741 handicap series (3rd best series of the season)',
         '',
-        '**Team of the Week**: <team>Wild Llamas</team> - 2,813 handicap series (best of the season so far)',
+        '**Team of the Week**: <team>Wild Llamas</team> - 2,813 handicap series (best series of the season so far)',
         '',
         '**Personal Bests**: 6 all-time high games, 7 all-time high series, see below',
         '',
         '**Career Milestones**',
         '',
-        '   - <bowler>Mark Oates</bowler> - 100,000 career pins, #14 in the club, 9th fastest',
-        '   - <bowler>Kelly Shirley</bowler> - 250 career games, tied for #90 in the club',
+        '   - <bowler>Mark Oates</bowler> - #14 in the 100,000 career pins club, 9th fastest',
+        '   - <bowler>Kelly Shirley</bowler> - tied for #90 in the 250 career games club',
         '',
       ].join('\n'),
     );
