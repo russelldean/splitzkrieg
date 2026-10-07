@@ -51,7 +51,8 @@ export function WeekAdminBar({ seasonSlug, week }: Props) {
 
   async function openEditor() {
     if (!state) return;
-    if (state.postID) {
+    // An existing but empty post still goes through POST, which fills in the draft.
+    if (state.postID && state.hasWriteup) {
       window.location.href = `/evillair/blog/${state.postID}`;
       return;
     }
@@ -88,7 +89,7 @@ export function WeekAdminBar({ seasonSlug, week }: Props) {
           disabled={busy}
           className="rounded-md bg-navy px-3 py-1.5 font-body text-sm text-cream transition-colors hover:bg-navy-light disabled:opacity-60"
         >
-          {busy ? 'Creating...' : state.postID ? 'Edit writeup' : 'Write one'}
+          {busy ? 'Creating...' : state.hasWriteup ? 'Edit writeup' : 'Write one'}
         </button>
       </span>
     </div>

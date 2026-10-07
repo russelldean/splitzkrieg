@@ -85,8 +85,9 @@ export async function GET(request: NextRequest) {
 /**
  * POST: ensure a post exists for this week and return its ID.
  *
- * Idempotent: if one already exists it is returned untouched rather than
- * duplicated, so double clicking cannot produce two posts for one week.
+ * Idempotent: a post with text is returned untouched rather than duplicated,
+ * so double clicking cannot produce two posts for one week. A post that exists
+ * but is still EMPTY (the draft failed the first time) gets the draft filled in.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -105,7 +106,9 @@ export async function POST(request: NextRequest) {
     }
 
     const existing = await findWeekPost(seasonSlug, week);
-    if (existing) return NextResponse.json({ postID: existing.postID, created: false });
+    if (existing && Number(existing.contentChars ?? 0) > 0) {
+      return NextResponse.json({ postID: existing.postID, created: false });
+    }
 
     const season = await seasonFor(seasonSlug);
     if (!season) {
@@ -145,6 +148,27 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       console.error('[WEEK_WRITEUP] draft failed, creating an empty post', err);
     }
+
+    if (existing) {
+      // Only ever fills an empty post: the WHERE re-checks emptiness so text
+      // Russ typed in the meantime can never be overwritten.
+      if (content) {
+        await withRetry(
+          () =>
+            db
+              .request()
+              .input('postID', sql.Int, existing.postID)
+              .input('content', sql.NVarChar(sql.MAX), content)
+              .query(`
+                UPDATE blogPosts SET content = @content, modifiedDate = GETDATE()
+                WHERE postID = @postID AND LEN(ISNULL(content, '')) = 0
+              `),
+          'week-writeup:fill',
+        );
+      }
+      return NextResponse.json({ postID: existing.postID, created: false });
+    }
+
     const postID = await createBlogPost({
       slug: recapSlug(roman, week),
       title: recapTitle(roman, week),
