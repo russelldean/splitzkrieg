@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ordinal, rankAmong, seasonRankPhrase, clubPhrase, fastestPhrase, milestoneLabel } from './draft';
+import { ordinal, rankAmong, seasonRankPhrase, clubPhrase, fastestPhrase, milestoneLabel, buildWeekDraft, type DraftInput } from './draft';
 
 describe('ordinal', () => {
   it.each([
@@ -81,5 +81,76 @@ describe('milestoneLabel', () => {
     ['series600Plus', 10, '10 600 series'],
   ] as const)('%s %i -> %s', (category, threshold, label) => {
     expect(milestoneLabel(category, threshold)).toBe(label);
+  });
+});
+
+const base: DraftInput = {
+  bowlersOfWeek: [{ bowlerName: 'Vance Woods', teamName: 'HOT FUN', handSeries: 741, seasonRank: { rank: 3, tied: false } }],
+  teamOfWeek: { teamName: 'Wild Llamas', hcpSeries: 2813, seasonRank: { rank: 1, tied: false } },
+  personalBests: { highGames: 6, highSeries: 7 },
+  milestones: [
+    { bowlerName: 'Mark Oates', category: 'totalPins', threshold: 100000, club: { rank: 14, tied: false }, fastest: { rank: 9, tied: false } },
+    { bowlerName: 'Kelly Shirley', category: 'totalGames', threshold: 250, club: { rank: 90, tied: true }, fastest: null },
+  ],
+};
+
+describe('buildWeekDraft', () => {
+  it('writes all four sections in Russ\'s format', () => {
+    expect(buildWeekDraft(base)).toBe(
+      [
+        '**Bowler of the Week**: <bowler>Vance Woods</bowler> (HOT FUN) - 741 handicap series (3rd best of the season)',
+        '',
+        '**Team of the Week**: <team>Wild Llamas</team> - 2,813 handicap series (best of the season so far)',
+        '',
+        '**Personal Bests**: 6 all-time high games, 7 all-time high series, see below',
+        '',
+        '**Career Milestones**',
+        '',
+        '   - <bowler>Mark Oates</bowler> - 100,000 career pins, #14 in the club, 9th fastest',
+        '   - <bowler>Kelly Shirley</bowler> - 250 career games, tied for #90 in the club',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('drops the season rank clause outside the top 10', () => {
+    const out = buildWeekDraft({
+      ...base,
+      bowlersOfWeek: [{ ...base.bowlersOfWeek[0], seasonRank: { rank: 12, tied: false } }],
+    });
+    expect(out).toContain('(HOT FUN) - 741 handicap series\n');
+  });
+
+  it('joins tied bowlers of the week with "and"', () => {
+    const out = buildWeekDraft({
+      ...base,
+      bowlersOfWeek: [
+        { bowlerName: 'A One', teamName: 'T1', handSeries: 700, seasonRank: { rank: 20, tied: true } },
+        { bowlerName: 'B Two', teamName: 'T2', handSeries: 700, seasonRank: { rank: 20, tied: true } },
+      ],
+    });
+    expect(out).toContain('**Bowlers of the Week**: <bowler>A One</bowler> (T1) and <bowler>B Two</bowler> (T2) - 700 handicap series');
+  });
+
+  it('drops a zero personal-best clause, and the line when both are zero', () => {
+    expect(buildWeekDraft({ ...base, personalBests: { highGames: 0, highSeries: 2 } }))
+      .toContain('**Personal Bests**: 2 all-time high series, see below');
+    expect(buildWeekDraft({ ...base, personalBests: { highGames: 1, highSeries: 0 } }))
+      .toContain('**Personal Bests**: 1 all-time high game, see below');
+    expect(buildWeekDraft({ ...base, personalBests: { highGames: 0, highSeries: 0 } }))
+      .not.toContain('Personal Bests');
+  });
+
+  it('drops the milestones section when there are none', () => {
+    expect(buildWeekDraft({ ...base, milestones: [] })).not.toContain('Career Milestones');
+  });
+
+  it('omits BOTW and TOTW lines when there is nothing to report', () => {
+    const out = buildWeekDraft({ ...base, bowlersOfWeek: [], teamOfWeek: null });
+    expect(out).not.toContain('of the Week');
+  });
+
+  it('never contains an em dash', () => {
+    expect(buildWeekDraft(base)).not.toMatch(/\u2014/);
   });
 });

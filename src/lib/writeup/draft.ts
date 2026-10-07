@@ -64,3 +64,77 @@ const MILESTONE_NOUN: Record<MilestoneCategory, string> = {
 export function milestoneLabel(category: MilestoneCategory, threshold: number): string {
   return `${threshold.toLocaleString('en-US')} ${MILESTONE_NOUN[category]}`;
 }
+
+export interface DraftBowlerOfWeek {
+  bowlerName: string;
+  teamName: string;
+  handSeries: number;
+  seasonRank: RankInfo;
+}
+
+export interface DraftTeamOfWeek {
+  teamName: string;
+  hcpSeries: number;
+  seasonRank: RankInfo;
+}
+
+export interface DraftMilestone {
+  bowlerName: string;
+  category: MilestoneCategory;
+  threshold: number;
+  club: RankInfo;
+  /** null for games milestones: everyone takes the same number of games. */
+  fastest: RankInfo | null;
+}
+
+export interface DraftInput {
+  bowlersOfWeek: DraftBowlerOfWeek[];
+  teamOfWeek: DraftTeamOfWeek | null;
+  personalBests: { highGames: number; highSeries: number };
+  milestones: DraftMilestone[];
+}
+
+const num = (n: number) => n.toLocaleString('en-US');
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+function withRank(text: string, rank: RankInfo): string {
+  const phrase = seasonRankPhrase(rank);
+  return phrase ? `${text} (${phrase})` : text;
+}
+
+/** The recap post body. Each section is a paragraph; empty sections are left out. */
+export function buildWeekDraft(input: DraftInput): string {
+  const blocks: string[] = [];
+
+  const botw = input.bowlersOfWeek;
+  if (botw.length > 0) {
+    const heading = botw.length > 1 ? 'Bowlers of the Week' : 'Bowler of the Week';
+    const names = botw.map((b) => `<bowler>${b.bowlerName}</bowler> (${b.teamName})`).join(' and ');
+    blocks.push(withRank(`**${heading}**: ${names} - ${num(botw[0].handSeries)} handicap series`, botw[0].seasonRank));
+  }
+
+  const totw = input.teamOfWeek;
+  if (totw) {
+    blocks.push(withRank(`**Team of the Week**: <team>${totw.teamName}</team> - ${num(totw.hcpSeries)} handicap series`, totw.seasonRank));
+  }
+
+  const { highGames, highSeries } = input.personalBests;
+  const pbParts = [
+    highGames > 0 ? plural(highGames, 'all-time high game', 'all-time high games') : null,
+    highSeries > 0 ? `${highSeries} all-time high series` : null,
+  ].filter(Boolean);
+  if (pbParts.length > 0) {
+    blocks.push(`**Personal Bests**: ${pbParts.join(', ')}, see below`);
+  }
+
+  if (input.milestones.length > 0) {
+    const lines = input.milestones.map((m) => {
+      const facts = [milestoneLabel(m.category, m.threshold), clubPhrase(m.club)];
+      if (m.fastest) facts.push(fastestPhrase(m.fastest));
+      return `   - <bowler>${m.bowlerName}</bowler> - ${facts.join(', ')}`;
+    });
+    blocks.push(`**Career Milestones**\n\n${lines.join('\n')}`);
+  }
+
+  return blocks.length > 0 ? `${blocks.join('\n\n')}\n` : '';
+}
