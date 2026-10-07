@@ -4,6 +4,8 @@ import { requireAdminOrWriter } from '@/lib/admin/auth';
 import { getDb, withRetry } from '@/lib/db';
 import { createBlogPost } from '@/lib/admin/blog-db';
 import { recapSlug, recapTitle } from '@/lib/recap-naming';
+import { buildWeekDraft } from '@/lib/writeup/draft';
+import { gatherDraftInput } from '@/lib/writeup/draft-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,20 +37,20 @@ async function findWeekPost(seasonSlug: string, week: number): Promise<WeekPost 
   return result.recordset[0] ?? null;
 }
 
-async function seasonRoman(seasonSlug: string): Promise<string | null> {
+async function seasonFor(seasonSlug: string): Promise<{ romanNumeral: string; seasonID: number } | null> {
   const db = await getDb();
   const r = await withRetry(
     () =>
       db
         .request()
         .input('slug', sql.VarChar(50), seasonSlug)
-        .query<{ romanNumeral: string }>(`
-          SELECT TOP 1 romanNumeral FROM seasons
+        .query<{ romanNumeral: string; seasonID: number }>(`
+          SELECT TOP 1 romanNumeral, seasonID FROM seasons
           WHERE LOWER(CONCAT(period, '-', year)) = LOWER(@slug)
         `),
     'week-writeup:season',
   );
-  return r.recordset[0]?.romanNumeral ?? null;
+  return r.recordset[0] ?? null;
 }
 
 /** GET: does this week have a writeup and a photo, and which post holds them. */
@@ -105,10 +107,11 @@ export async function POST(request: NextRequest) {
     const existing = await findWeekPost(seasonSlug, week);
     if (existing) return NextResponse.json({ postID: existing.postID, created: false });
 
-    const roman = await seasonRoman(seasonSlug);
-    if (!roman) {
+    const season = await seasonFor(seasonSlug);
+    if (!season) {
       return NextResponse.json({ error: `Unknown season slug: ${seasonSlug}` }, { status: 400 });
     }
+    const roman = season.romanNumeral;
 
     // Refuse to create a recap for a week that has not been bowled. Inherited
     // from the auto-draft route this replaces: without it, one stray click on a
@@ -133,12 +136,19 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    // Empty content on purpose: every stat on the week page comes from the page
-    // itself, so a template would only be something to delete.
+    // Start from a written draft (BOTW, TOTW, personal bests, milestones with
+    // club and fastest ranks) so Russ only adds what he wants. A failure here
+    // must never block writing a post, so it falls back to empty.
+    let content = '';
+    try {
+      content = buildWeekDraft(await gatherDraftInput(season.seasonID, week));
+    } catch (err) {
+      console.error('[WEEK_WRITEUP] draft failed, creating an empty post', err);
+    }
     const postID = await createBlogPost({
       slug: recapSlug(roman, week),
       title: recapTitle(roman, week),
-      content: '',
+      content,
       excerpt: null,
       type: 'recap',
       seasonRomanNumeral: roman,
