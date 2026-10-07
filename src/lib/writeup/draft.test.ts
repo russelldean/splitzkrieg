@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ordinal, rankAmong } from './draft';
+import { ordinal, rankAmong, seasonRankPhrase, clubPhrase, fastestPhrase, milestoneLabel } from './draft';
 
 describe('ordinal', () => {
   it.each([
@@ -27,5 +27,59 @@ describe('rankAmong', () => {
 
   it('ranks lowest first when asked (fastest = fewest games)', () => {
     expect(rankAmong(300, [280, 300, 300, 350], 'asc')).toEqual({ rank: 2, tied: true });
+  });
+});
+
+describe('seasonRankPhrase', () => {
+  it('is null outside the top 10', () => {
+    expect(seasonRankPhrase({ rank: 11, tied: false })).toBeNull();
+  });
+  it('reads "best of the season so far" for 1st', () => {
+    expect(seasonRankPhrase({ rank: 1, tied: false })).toBe('best of the season so far');
+  });
+  it('reads "tied for best" for a shared 1st', () => {
+    expect(seasonRankPhrase({ rank: 1, tied: true })).toBe('tied for best of the season so far');
+  });
+  it('reads "3rd best of the season"', () => {
+    expect(seasonRankPhrase({ rank: 3, tied: false })).toBe('3rd best of the season');
+  });
+  it('reads "tied for 10th best of the season"', () => {
+    expect(seasonRankPhrase({ rank: 10, tied: true })).toBe('tied for 10th best of the season');
+  });
+});
+
+describe('clubPhrase', () => {
+  it('reads "#91 in the club"', () => {
+    expect(clubPhrase({ rank: 91, tied: false })).toBe('#91 in the club');
+  });
+  it('reads "tied for #90 in the club"', () => {
+    expect(clubPhrase({ rank: 90, tied: true })).toBe('tied for #90 in the club');
+  });
+});
+
+describe('fastestPhrase', () => {
+  it('reads "9th fastest"', () => {
+    expect(fastestPhrase({ rank: 9, tied: false })).toBe('9th fastest');
+  });
+  it('reads "fastest ever" for 1st', () => {
+    expect(fastestPhrase({ rank: 1, tied: false })).toBe('fastest ever');
+  });
+  it('reads "tied for 4th fastest"', () => {
+    expect(fastestPhrase({ rank: 4, tied: true })).toBe('tied for 4th fastest');
+  });
+  it('reads "tied for fastest ever" for a shared 1st', () => {
+    expect(fastestPhrase({ rank: 1, tied: true })).toBe('tied for fastest ever');
+  });
+});
+
+describe('milestoneLabel', () => {
+  it.each([
+    ['totalGames', 250, '250 career games'],
+    ['totalPins', 100000, '100,000 career pins'],
+    ['totalTurkeys', 100, '100 career turkeys'],
+    ['games200Plus', 25, '25 200 games'],
+    ['series600Plus', 10, '10 600 series'],
+  ] as const)('%s %i -> %s', (category, threshold, label) => {
+    expect(milestoneLabel(category, threshold)).toBe(label);
   });
 });
