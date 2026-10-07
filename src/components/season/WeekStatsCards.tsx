@@ -1,30 +1,10 @@
 'use client';
 import Link from 'next/link';
 
-export interface TopResult<T> {
-  items: T[];
-  tiedCount: number;
-  tiedValue: number;
-}
-
-/**
- * Return top N items from a pre-sorted array, expanding ties at the cutoff.
- * If expanding would exceed maxShow, truncate and return tied count instead.
- */
-export function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => number, maxShow = 7): TopResult<T> {
-  if (sorted.length <= n) return { items: sorted, tiedCount: 0, tiedValue: 0 };
-  const cutoffValue = getValue(sorted[n - 1]);
-  let end = n;
-  while (end < sorted.length && getValue(sorted[end]) === cutoffValue) end++;
-  if (end <= maxShow) {
-    return { items: sorted.slice(0, end), tiedCount: 0, tiedValue: 0 };
-  }
-  // Too many ties — show items above the tie value, then "X tied with Y"
-  let aboveTie = 0;
-  while (aboveTie < sorted.length && getValue(sorted[aboveTie]) > cutoffValue) aboveTie++;
-  const tiedCount = end - aboveTie;
-  return { items: sorted.slice(0, aboveTie), tiedCount, tiedValue: cutoffValue };
-}
+// Pure helper, kept in weekStatsUtils so server code can call it too (this
+// file is 'use client'). Re-exported for existing importers.
+import { topWithTies, type TopResult } from './weekStatsUtils';
+export { topWithTies, type TopResult };
 
 function TiedNote({ count, value, prefix }: { count: number; value: number; prefix?: string }) {
   if (count === 0) return null;

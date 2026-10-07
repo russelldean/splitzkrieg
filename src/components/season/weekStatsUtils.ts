@@ -3,8 +3,32 @@
  * Extracts all statistical calculations from the component.
  */
 import type { WeeklyMatchScore, WeeklyMatchupResult } from '@/lib/queries';
-import { topWithTies, type TopResult } from './WeekStatsCards';
 import { isAboveAverageAllThree } from '@/lib/scoring/above-average.mjs';
+
+export interface TopResult<T> {
+  items: T[];
+  tiedCount: number;
+  tiedValue: number;
+}
+
+/**
+ * Return top N items from a pre-sorted array, expanding ties at the cutoff.
+ * If expanding would exceed maxShow, truncate and return tied count instead.
+ */
+export function topWithTies<T>(sorted: T[], n: number, getValue: (item: T) => number, maxShow = 7): TopResult<T> {
+  if (sorted.length <= n) return { items: sorted, tiedCount: 0, tiedValue: 0 };
+  const cutoffValue = getValue(sorted[n - 1]);
+  let end = n;
+  while (end < sorted.length && getValue(sorted[end]) === cutoffValue) end++;
+  if (end <= maxShow) {
+    return { items: sorted.slice(0, end), tiedCount: 0, tiedValue: 0 };
+  }
+  // Too many ties: show items above the tie value, then "X tied with Y"
+  let aboveTie = 0;
+  while (aboveTie < sorted.length && getValue(sorted[aboveTie]) > cutoffValue) aboveTie++;
+  const tiedCount = end - aboveTie;
+  return { items: sorted.slice(0, aboveTie), tiedCount, tiedValue: cutoffValue };
+}
 
 // ── XP Rankings ──────────────────────────────────────────────
 
