@@ -43,6 +43,9 @@ describe('seasonRankPhrase', () => {
   it('reads "3rd best series of the season"', () => {
     expect(seasonRankPhrase({ rank: 3, tied: false })).toBe('3rd best series of the season');
   });
+  it('names a team series when asked', () => {
+    expect(seasonRankPhrase({ rank: 5, tied: false }, 'team series')).toBe('5th best team series of the season');
+  });
   it('reads "tied for 10th best series of the season"', () => {
     expect(seasonRankPhrase({ rank: 10, tied: true })).toBe('tied for 10th best series of the season');
   });
@@ -92,8 +95,8 @@ const base: DraftInput = {
   teamOfWeek: { teamName: 'Wild Llamas', hcpSeries: 2813, seasonRank: { rank: 1, tied: false } },
   personalBests: { highGames: 6, highSeries: 7 },
   milestones: [
-    { bowlerName: 'Mark Oates', category: 'totalPins', threshold: 100000, club: { rank: 14, tied: false }, fastest: { rank: 9, tied: false } },
-    { bowlerName: 'Kelly Shirley', category: 'totalGames', threshold: 250, club: { rank: 90, tied: true }, fastest: null },
+    { bowlerName: 'Mark Oates', category: 'totalPins', threshold: 100000, club: { rank: 14, tied: false }, clubSize: 14, fastest: { rank: 9, tied: false } },
+    { bowlerName: 'Kelly Shirley', category: 'totalGames', threshold: 250, club: { rank: 90, tied: true }, clubSize: 91, fastest: null },
   ],
 };
 
@@ -103,14 +106,14 @@ describe('buildWeekDraft', () => {
       [
         '**Bowler of the Week**: <bowler>Vance Woods</bowler> (HOT FUN) - 741 handicap series (3rd best series of the season)',
         '',
-        '**Team of the Week**: <team>Wild Llamas</team> - 2,813 handicap series (best series of the season so far)',
+        '**Team of the Week**: <team>Wild Llamas</team> - 2,813 handicap series (best team series of the season so far)',
         '',
         '**Personal Bests**: 6 all-time high games, 7 all-time high series, see below',
         '',
         '**Career Milestones**',
         '',
-        '   - <bowler>Mark Oates</bowler> - #14 in the 100,000 career pins club, 9th fastest',
         '   - <bowler>Kelly Shirley</bowler> - tied for #90 in the 250 career games club',
+        '   - <bowler>Mark Oates</bowler> - #14 in the 100,000 career pins club, 9th fastest',
         '',
       ].join('\n'),
     );
@@ -142,6 +145,19 @@ describe('buildWeekDraft', () => {
       .toContain('**Personal Bests**: 1 all-time high game, see below');
     expect(buildWeekDraft({ ...base, personalBests: { highGames: 0, highSeries: 0 } }))
       .not.toContain('Personal Bests');
+  });
+
+  it('orders milestones from the biggest club to the rarest', () => {
+    const out = buildWeekDraft({
+      ...base,
+      milestones: [
+        { ...base.milestones[0], bowlerName: 'Rare', clubSize: 3 },
+        { ...base.milestones[0], bowlerName: 'Common', clubSize: 300 },
+        { ...base.milestones[0], bowlerName: 'Middle', clubSize: 40 },
+      ],
+    });
+    expect(out.indexOf('Common')).toBeLessThan(out.indexOf('Middle'));
+    expect(out.indexOf('Middle')).toBeLessThan(out.indexOf('Rare'));
   });
 
   it('drops the milestones section when there are none', () => {

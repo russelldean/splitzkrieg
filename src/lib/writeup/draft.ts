@@ -35,11 +35,11 @@ export function rankAmong(value: number, all: number[], direction: 'desc' | 'asc
 const SEASON_RANK_CUTOFF = 10;
 
 /** Season rank clause for a series, or null when it is not worth mentioning. */
-export function seasonRankPhrase(r: RankInfo): string | null {
+export function seasonRankPhrase(r: RankInfo, noun = 'series'): string | null {
   if (r.rank > SEASON_RANK_CUTOFF) return null;
   const tie = r.tied ? 'tied for ' : '';
-  if (r.rank === 1) return `${tie}best series of the season so far`;
-  return `${tie}${ordinal(r.rank)} best series of the season`;
+  if (r.rank === 1) return `${tie}best ${noun} of the season so far`;
+  return `${tie}${ordinal(r.rank)} best ${noun} of the season`;
 }
 
 export function clubPhrase(r: RankInfo, category: MilestoneCategory, threshold: number): string {
@@ -83,6 +83,8 @@ export interface DraftMilestone {
   category: MilestoneCategory;
   threshold: number;
   club: RankInfo;
+  /** Members of this club, for ordering: least rare first, rarest last. */
+  clubSize: number;
   /** null for games milestones: everyone takes the same number of games. */
   fastest: RankInfo | null;
 }
@@ -97,8 +99,8 @@ export interface DraftInput {
 const num = (n: number) => n.toLocaleString('en-US');
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-function withRank(text: string, rank: RankInfo): string {
-  const phrase = seasonRankPhrase(rank);
+function withRank(text: string, rank: RankInfo, noun?: string): string {
+  const phrase = seasonRankPhrase(rank, noun);
   return phrase ? `${text} (${phrase})` : text;
 }
 
@@ -115,7 +117,7 @@ export function buildWeekDraft(input: DraftInput): string {
 
   const totw = input.teamOfWeek;
   if (totw) {
-    blocks.push(withRank(`**Team of the Week**: <team>${totw.teamName}</team> - ${num(totw.hcpSeries)} handicap series`, totw.seasonRank));
+    blocks.push(withRank(`**Team of the Week**: <team>${totw.teamName}</team> - ${num(totw.hcpSeries)} handicap series`, totw.seasonRank, 'team series'));
   }
 
   const { highGames, highSeries } = input.personalBests;
@@ -128,7 +130,10 @@ export function buildWeekDraft(input: DraftInput): string {
   }
 
   if (input.milestones.length > 0) {
-    const lines = input.milestones.map((m) => {
+    // Least rare first, rarest last (Russ's order). sort is stable, so equal
+    // clubs keep the order they came in.
+    const ordered = [...input.milestones].sort((a, b) => b.clubSize - a.clubSize);
+    const lines = ordered.map((m) => {
       const facts = [clubPhrase(m.club, m.category, m.threshold)];
       if (m.fastest) facts.push(fastestPhrase(m.fastest));
       return `   - <bowler>${m.bowlerName}</bowler> - ${facts.join(', ')}`;

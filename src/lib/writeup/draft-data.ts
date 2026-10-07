@@ -81,7 +81,6 @@ export async function gatherDraftInput(seasonID: number, week: number): Promise<
 
   const milestones: DraftMilestone[] = clubs.recordset
     .filter((r) => r.seasonID === seasonID && r.week === week)
-    .sort((a, b) => b.threshold - a.threshold) // the week page's order
     .map((m) => {
       const members = clubs.recordset.filter((r) => r.category === m.category && r.threshold === m.threshold);
       const club = rankAmong(when(m.seasonID, m.week), members.map((r) => when(r.seasonID, r.week)), 'asc');
@@ -93,7 +92,7 @@ export async function gatherDraftInput(seasonID: number, week: number): Promise<
               members.map((r) => r.careerGames).filter((g): g is number => g != null),
               'asc',
             );
-      return { bowlerName: m.bowlerName, category: m.category, threshold: m.threshold, club, fastest };
+      return { bowlerName: m.bowlerName, category: m.category, threshold: m.threshold, club, clubSize: members.length, fastest };
     });
 
   return {
