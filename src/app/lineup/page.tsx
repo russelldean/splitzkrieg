@@ -213,6 +213,18 @@ export default function LineupPage() {
     setActiveSlot(null);
   }, []);
 
+  const addNewFromSearch = useCallback((slotIndex: number, name: string) => {
+    setSlots((prev) =>
+      prev.map((s, i) =>
+        i === slotIndex
+          ? { ...s, isNew: true, bowlerID: null, bowlerName: '', newBowlerName: name }
+          : s,
+      ),
+    );
+    setActiveSlot(null);
+    setSearchQuery('');
+  }, []);
+
   const updateNewBowlerName = useCallback(
     (slotIndex: number, name: string) => {
       setSlots((prev) =>
@@ -472,6 +484,12 @@ export default function LineupPage() {
         </div>
       )}
 
+      <p className="font-body text-sm text-navy/70 mb-4">
+        People who have bowled with your team in the last two seasons are listed
+        first but you can type any name to find all bowlers in the league. Bowling
+        with someone brand new? Type their full name and add them.
+      </p>
+
       <div className="space-y-3 mb-6">
         {slots.map((slot, index) => (
           <div
@@ -517,10 +535,10 @@ export default function LineupPage() {
                     className="flex-1 font-body text-sm border border-navy/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
                   />
                   <button
-                    onClick={() => toggleNewBowler(index)}
+                    onClick={() => { toggleNewBowler(index); setActiveSlot(index); }}
                     className="font-body text-xs text-navy/65 hover:text-navy whitespace-nowrap"
                   >
-                    Pick existing
+                    Back to search
                   </button>
                 </div>
                 {slot.newBowlerName.trim() && !slot.newBowlerName.trim().includes(' ') && (
@@ -569,7 +587,7 @@ export default function LineupPage() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search all bowlers or add new"
+                      placeholder="Type any name"
                       className="w-full font-body text-sm border border-navy/20 rounded-md px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-navy/20"
                       autoFocus
                     />
@@ -584,6 +602,10 @@ export default function LineupPage() {
                         const showBowlers = isSearching ? filteredBowlers.slice(0, 30) : teamBowlers;
 
                         if (isSearching) {
+                          const typed = searchQuery.trim();
+                          const exactMatch = filteredBowlers.some(
+                            (b) => `${b.firstName} ${b.lastName}`.toLowerCase() === typed.toLowerCase(),
+                          );
                           return (
                             <>
                               {showBowlers.length > 0 ? showBowlers.map((bowler) => (
@@ -599,8 +621,16 @@ export default function LineupPage() {
                                 </button>
                               )) : (
                                 <p className="px-3 py-2 font-body text-sm text-navy/65">
-                                  No bowlers found
+                                  Nobody by that name has bowled with us yet.
                                 </p>
+                              )}
+                              {!exactMatch && (
+                                <button
+                                  onClick={() => addNewFromSearch(index, typed)}
+                                  className="w-full text-left px-3 py-2 font-body text-sm text-navy hover:bg-navy/5 border-t border-navy/10 bg-navy/[0.02]"
+                                >
+                                  + Add &ldquo;{typed}&rdquo; as a new bowler
+                                </button>
                               )}
                             </>
                           );
@@ -623,45 +653,32 @@ export default function LineupPage() {
                                   </button>
                                 ))}
                               </>
-                            ) : (
-                              <p className="px-3 py-2 font-body text-sm text-navy/65">
-                                Type to search all bowlers
-                              </p>
-                            )}
+                            ) : null}
+                            <p className="px-3 py-2.5 font-body text-xs text-navy/70 bg-navy/[0.03] border-t border-navy/10">
+                              Don&apos;t see them? Type their name above. Everyone who has
+                              ever bowled in the league is searchable, and if they&apos;re
+                              brand new you can add them right there.
+                            </p>
                           </>
                         );
                       })()}
                     </div>
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2">
                       <button
                         onClick={() => { setActiveSlot(null); setSearchQuery(''); }}
                         className="font-body text-xs text-navy/65 hover:text-navy"
                       >
                         Cancel
                       </button>
-                      <button
-                        onClick={() => toggleNewBowler(index)}
-                        className="font-body text-xs text-navy/65 hover:text-navy"
-                      >
-                        New bowler instead
-                      </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setActiveSlot(index)}
-                      className="font-body text-sm text-navy/65 hover:text-navy border border-dashed border-navy/20 rounded-md px-3 py-2 flex-1 text-left"
-                    >
-                      Select bowler...
-                    </button>
-                    <button
-                      onClick={() => toggleNewBowler(index)}
-                      className="font-body text-xs text-navy/65 hover:text-navy whitespace-nowrap px-2"
-                    >
-                      New bowler
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setActiveSlot(index)}
+                    className="w-full font-body text-sm text-navy/65 hover:text-navy border border-dashed border-navy/20 rounded-md px-3 py-2 text-left"
+                  >
+                    Pick a teammate or type any name...
+                  </button>
                 )}
               </div>
             )}
