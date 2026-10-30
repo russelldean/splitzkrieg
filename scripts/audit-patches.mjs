@@ -28,6 +28,7 @@
  * case a current-season scope cannot see. Only `captain` is reported without a diff.
  */
 import sql from 'mssql';
+import { attendanceSql } from '../src/lib/scoring/attendance.mjs';
 import { loadEnv } from './lib/load-env.mjs';
 
 const arg = (k, d) => { const h = process.argv.find(a => a.startsWith(`--${k}=`)); return h ? h.split('=')[1] : d; };
@@ -112,6 +113,8 @@ const SEASONAL = {
         SELECT 1 FROM bowlerPatches bp JOIN patches p ON p.patchID = bp.patchID
         WHERE p.code = 'scratchPlayoff' AND bp.bowlerID = ss.bowlerID AND bp.seasonID = ss.seasonID)
     ) r WHERE r.rnk <= 8`,
+  // Missed at most one available night in a completed season; one definition in src/lib/scoring/attendance.mjs.
+  attendance: attendanceSql({ seasonID: SEASON }),
 };
 
 /**

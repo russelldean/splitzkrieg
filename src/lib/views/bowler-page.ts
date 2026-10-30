@@ -68,6 +68,7 @@ export function reduceStarStats(rows: Array<{ code: string; cnt: number }>): Bow
     hcpPlayoffAppearances: counts.get('hcpPlayoff') ?? 0,
     scratchChampionships: counts.get('scratchChampion') ?? 0,
     hcpChampionships: counts.get('hcpChampion') ?? 0,
+    perfectEnoughSeasons: counts.get('attendance') ?? 0,
   };
 }
 

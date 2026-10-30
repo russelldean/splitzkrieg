@@ -90,7 +90,7 @@ export default function SpecsPage() {
 
           {/* Patches */}
           <Section title="Achievement Patches">
-            <TechItem name="13 Patch Types" desc="Pre-computed achievements stored in the database. Awarded by a populate script after each score upload. Build-time queries are simple indexed lookups, not heavy computations." />
+            <TechItem name="14 Patch Types" desc="Pre-computed achievements stored in the database. Awarded by a populate script after each score upload. Build-time queries are simple indexed lookups, not heavy computations." />
           </Section>
 
           {/* Testing */}

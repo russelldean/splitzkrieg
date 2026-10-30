@@ -28,6 +28,8 @@ const PATCH_STYLE: Record<string, { abbr: string; color: string; bg: string }> =
   threeOfAKind:    { abbr: '3K',   color: 'text-pink-700',    bg: 'bg-pink-100' },
   scratchChampion: { abbr: 'SC',   color: 'text-rose-700',    bg: 'bg-rose-200' },
   hcpChampion:     { abbr: 'HC',   color: 'text-orange-700',  bg: 'bg-orange-200' },
+  attendance:      { abbr: '\uD83D\uDD52',  color: 'text-sky-700',     bg: 'bg-sky-100' },
+  captain:         { abbr: '\u2693',        color: 'text-navy',        bg: 'bg-navy/10' },
 };
 
 /** Mini $2 bill rendered inline */
@@ -137,6 +139,15 @@ export function YouAreAStar({ stats, slug, easterEgg }: Props) {
     });
   }
 
+  if (stats.perfectEnoughSeasons > 0) {
+    lines.push({
+      patch: 'attendance',
+      label: 'Like Clockwork',
+      value: String(stats.perfectEnoughSeasons),
+      hint: '8 of 9 league nights in a season',
+    });
+  }
+
   if (stats.botwWins > 0) {
     lines.push({
       patch: 'botw',
@@ -179,6 +190,7 @@ export function YouAreAStar({ stats, slug, easterEgg }: Props) {
 
   if (stats.isCaptain) {
     lines.push({
+      patch: 'captain',
       label: 'Team Captain',
       value: '\u2713',
       hint: 'Teams',

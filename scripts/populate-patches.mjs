@@ -13,6 +13,7 @@
  */
 import sql from 'mssql';
 import { ABOVE_AVG_SQL } from '../src/lib/scoring/above-average.mjs';
+import { attendanceSql } from '../src/lib/scoring/attendance.mjs';
 import { readFileSync } from 'fs';
 
 const envContent = readFileSync('.env.local', 'utf8');
@@ -254,6 +255,10 @@ async function main() {
            WHERE sc2.bowlerID = sc.bowlerID AND sc2.seasonID = ch.seasonID
              AND sc2.teamID = ch.winnerTeamID AND sc2.isPenalty = 0) >= 3
   `, 'Team Championship');
+
+  // ─── Like Clockwork (missed at most one available night, completed seasons only) ───
+  // Rule lives in src/lib/scoring/attendance.mjs, shared with audit-patches.mjs.
+  await insertPatches('attendance', attendanceSql({ seasonID: seasonFilter }), 'Like Clockwork');
 
   // ─── Playoff min-games override per season (default 18) ───
   // Some seasons had shorter schedules or different qualification rules.
