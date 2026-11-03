@@ -87,6 +87,7 @@ const TEAM_ALIAS = { 'hotfun': 'bowlonomics' };
 const PENALTY_STANDIN = {
   alleyoops: 'Brent Arnold',            // Russ, 2026-09-07
   livingonaspare: 'Annie Segrest',      // Russ, 2026-09-07
+  sparadigmshift: 'Jeremy Kumin',       // Russ, 2026-10-05
 };
 
 const norm = s => String(s).toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
