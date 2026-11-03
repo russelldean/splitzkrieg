@@ -71,6 +71,7 @@ export default async function Home() {
   let latestWeekDate: string | null = null;
   let playoffsNextWeek: { divisionName: string; topSeed: { teamName: string; teamSlug: string }; secondSeed: { teamName: string; teamSlug: string } }[] = [];
   let playoffsRoundOneDate: string | null = null;
+  let playoffRoundOnePlayed = false;
   let playoffFinal: { team1Name: string; team1Slug: string; team2Name: string; team2Slug: string } | null = null;
   let playoffFinalDate: string | null = null;
   let playoffBrackets: Array<{ title: string; bowlers: Array<{ bowlerName: string; slug: string }> }> = [];
@@ -134,7 +135,19 @@ export default async function Home() {
             secondSeed: { teamName: rows[1].teamName, teamSlug: rows[1].teamSlug },
           }));
 
-        playoffsRoundOneDate = '2026-05-11T00:00:00.000Z';
+        // Playoffs are not in the schedule table: round 1 is the Monday after the
+        // last regular night, the final the Monday after that.
+        const lastRegularNight = countdownSchedule.length > 0
+          ? countdownSchedule[countdownSchedule.length - 1].matchDate
+          : null;
+        const plusDays = (iso: string, days: number) =>
+          new Date(new Date(iso).getTime() + days * 86400000).toISOString();
+        playoffsRoundOneDate = lastRegularNight ? plusDays(lastRegularNight, 7) : null;
+
+        // The hero only points at playoff results once round 1 has a recorded
+        // winner. Until then the latest regular week is still the result to show.
+        const roundOneMatches = await getPlayoffTeamMatches(season.seasonID, 1);
+        playoffRoundOnePlayed = roundOneMatches.some(m => m.winnerTeamID != null);
 
         // If the Final matchup exists in playoffResults, expose it so the
         // homepage "Up Next" card switches to the championship view.
@@ -147,7 +160,7 @@ export default async function Home() {
             team2Name: f.team2Name,
             team2Slug: f.team2Slug,
           };
-          playoffFinalDate = '2026-05-18T00:00:00.000Z';
+          playoffFinalDate = lastRegularNight ? plusDays(lastRegularNight, 14) : null;
 
           if (f.winnerTeamID != null) {
             const champTeamName = f.winnerTeamID === f.team1ID ? f.team1Name : f.team2Name;
@@ -236,7 +249,7 @@ export default async function Home() {
 
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
         {seasonSnapshot && (() => {
-          const playoffsActive = nextWeekNumber === 0 && playoffsNextWeek.length > 0;
+          const playoffsActive = nextWeekNumber === 0 && playoffRoundOnePlayed;
           const heroHref = championship
             ? `/playoffs/${championship.slug}/2`
             : playoffsActive
