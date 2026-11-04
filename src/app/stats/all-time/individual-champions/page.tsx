@@ -10,7 +10,7 @@ import { IndividualChampionsTable } from '@/components/alltime/IndividualChampio
 export const metadata: Metadata = {
   title: 'Individual Champions',
   description:
-    'Individual scratch and handicap championship history across 35+ seasons of Splitzkrieg Bowling League.',
+    'Individual scratch, handicap and turkey trophy history across 35+ seasons of Splitzkrieg Bowling League.',
 };
 
 export default async function IndividualChampionsPage() {
@@ -30,7 +30,7 @@ export default async function IndividualChampionsPage() {
         Individual Champions
       </h1>
       <p className="font-body text-lg text-navy/60 mt-1">
-        Scratch and handicap champions across all seasons
+        Scratch, handicap and turkey trophy winners across all seasons
       </p>
 
       <div className="mt-8">

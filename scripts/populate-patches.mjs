@@ -345,6 +345,17 @@ async function main() {
       ${seasonFilter ? `AND sc.seasonID = ${seasonFilter}` : ''}
   `, 'Handicap Champion');
 
+  // ─── Turkey Trophy (most turkeys in a season, as engraved on the trophy) ───
+  // Source is seasonChampions type 'Turkeys', loaded from the trophy plates on
+  // 2026-11-04. The plate wins where it disagrees with SUM(turkeys) in scores.
+  await insertPatches('turkeyTrophy', `
+    SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
+    FROM seasonChampions sc
+    WHERE sc.championshipType = 'Turkeys'
+      AND sc.winnerBowlerID IS NOT NULL
+      ${seasonFilter ? `AND sc.seasonID = ${seasonFilter}` : ''}
+  `, 'Turkey Trophy');
+
   // ─── Team Captain (career-level, no season/week — skip if scoped) ───
   if (!targetSeasonID) {
     await insertPatches('captain', `

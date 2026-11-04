@@ -5,24 +5,31 @@ interface IndividualCellCounts {
   mensScratch: number;
   womensScratch: number;
   handicap: number;
+  turkeys: number;
 }
 
 function computeIndividualCounts(seasons: IndividualChampionSeason[]) {
   const counts = new Map<string, number>();
   const snapshots = new Map<number, IndividualCellCounts>();
 
+  // Each column keeps its own running tally so a scratch title and a turkey
+  // trophy for the same bowler do not add together.
+  const bump = (key: string, slug: string | null) => {
+    if (!slug) return 0;
+    const k = `${key}:${slug}`;
+    const next = (counts.get(k) || 0) + 1;
+    counts.set(k, next);
+    return next;
+  };
+
   const sorted = [...seasons].reverse();
   for (const s of sorted) {
-    if (s.mensScratchSlug) counts.set(s.mensScratchSlug, (counts.get(s.mensScratchSlug) || 0) + 1);
-    const mensScratch = s.mensScratchSlug ? counts.get(s.mensScratchSlug)! : 0;
-
-    if (s.womensScratchSlug) counts.set(s.womensScratchSlug, (counts.get(s.womensScratchSlug) || 0) + 1);
-    const womensScratch = s.womensScratchSlug ? counts.get(s.womensScratchSlug)! : 0;
-
-    if (s.handicapSlug) counts.set(s.handicapSlug, (counts.get(s.handicapSlug) || 0) + 1);
-    const handicap = s.handicapSlug ? counts.get(s.handicapSlug)! : 0;
-
-    snapshots.set(s.seasonID, { mensScratch, womensScratch, handicap });
+    snapshots.set(s.seasonID, {
+      mensScratch: bump('m', s.mensScratchSlug),
+      womensScratch: bump('w', s.womensScratchSlug),
+      handicap: bump('h', s.handicapSlug),
+      turkeys: bump('t', s.turkeySlug),
+    });
   }
   return snapshots;
 }
@@ -52,6 +59,9 @@ function CovidRow({ colSpan }: { colSpan: number }) {
   );
 }
 
+const CELL = 'py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60';
+const EMPTY = <span className="font-heading text-red-600/60 font-bold">X</span>;
+
 function IndividualChampionRow({
   season,
   counts,
@@ -65,38 +75,48 @@ function IndividualChampionRow({
         <div className="font-heading text-navy/70">{season.romanNumeral}</div>
         <div className="text-navy/65 text-xs">{season.displayName}</div>
       </td>
-      <td className="py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60">
+      <td className={CELL}>
         {season.mensScratchName && season.mensScratchSlug ? (
           <BowlerLink
             name={season.mensScratchName}
             slug={season.mensScratchSlug}
             count={counts.mensScratch}
           />
-        ) : (
-          <span className="font-heading text-red-600/60 font-bold">X</span>
-        )}
+        ) : EMPTY}
       </td>
-      <td className="py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60">
+      <td className={CELL}>
         {season.womensScratchName && season.womensScratchSlug ? (
           <BowlerLink
             name={season.womensScratchName}
             slug={season.womensScratchSlug}
             count={counts.womensScratch}
           />
-        ) : (
-          <span className="font-heading text-red-600/60 font-bold">X</span>
-        )}
+        ) : EMPTY}
       </td>
-      <td className="py-3 px-3 align-top font-body text-navy font-semibold bg-amber-50/60">
+      <td className={CELL}>
         {season.handicapName && season.handicapSlug ? (
           <BowlerLink
             name={season.handicapName}
             slug={season.handicapSlug}
             count={counts.handicap}
           />
-        ) : (
-          <span className="font-heading text-red-600/60 font-bold">X</span>
-        )}
+        ) : EMPTY}
+      </td>
+      <td className={CELL}>
+        {season.turkeyName && season.turkeySlug ? (
+          <>
+            <BowlerLink
+              name={season.turkeyName}
+              slug={season.turkeySlug}
+              count={counts.turkeys}
+            />
+            {season.turkeyCount != null && (
+              <div className="text-navy/65 text-xs font-normal">
+                {season.turkeyCount} turkeys
+              </div>
+            )}
+          </>
+        ) : EMPTY}
       </td>
     </tr>
   );
@@ -110,7 +130,7 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
 
   for (const s of champions) {
     if (!covidInserted && s.seasonID < 25) {
-      rows.push(<CovidRow key="covid" colSpan={3} />);
+      rows.push(<CovidRow key="covid" colSpan={4} />);
       covidInserted = true;
     }
     rows.push(
@@ -121,7 +141,7 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
       />,
     );
   }
-  if (!covidInserted) rows.push(<CovidRow key="covid" colSpan={3} />);
+  if (!covidInserted) rows.push(<CovidRow key="covid" colSpan={4} />);
 
   return (
     <div className="relative overflow-x-auto bg-white rounded-lg border border-navy/10 shadow-sm px-4 py-2">
@@ -147,6 +167,9 @@ export function IndividualChampionsTable({ champions }: { champions: IndividualC
             </th>
             <th className="py-2 px-3 font-heading text-amber-800/70 text-sm uppercase tracking-wider">
               Handicap
+            </th>
+            <th className="py-2 px-3 font-heading text-amber-800/70 text-sm uppercase tracking-wider">
+              Turkey Trophy
             </th>
           </tr>
         </thead>

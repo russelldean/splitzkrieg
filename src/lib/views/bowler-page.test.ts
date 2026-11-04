@@ -27,11 +27,13 @@ describe('reduceStarStats', () => {
       { code: 'perfectGame', cnt: 1 },
       { code: 'botw', cnt: 3 },
       { code: 'captain', cnt: 1 },
+      { code: 'turkeyTrophy', cnt: 6 },
     ]);
     expect(s.perfectGames).toBe(1);
     expect(s.botwWins).toBe(3);
     expect(s.isCaptain).toBe(true);
     expect(s.championships).toBe(0);
+    expect(s.turkeyTrophies).toBe(6);
   });
   it('all-zero / not-captain for an empty recordset', () => {
     const s = reduceStarStats([]);

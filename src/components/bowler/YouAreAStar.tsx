@@ -28,7 +28,8 @@ const PATCH_STYLE: Record<string, { abbr: string; color: string; bg: string }> =
   threeOfAKind:    { abbr: '3K',   color: 'text-pink-700',    bg: 'bg-pink-100' },
   scratchChampion: { abbr: 'SC',   color: 'text-rose-700',    bg: 'bg-rose-200' },
   hcpChampion:     { abbr: 'HC',   color: 'text-orange-700',  bg: 'bg-orange-200' },
-  attendance:      { abbr: '\uD83D\uDD52',  color: 'text-sky-700',     bg: 'bg-sky-100' },
+  turkeyTrophy:    { abbr: '🦃', color: 'text-lime-800',    bg: 'bg-lime-100' },
+  attendance:     { abbr: '\uD83D\uDD52',  color: 'text-sky-700',     bg: 'bg-sky-100' },
   captain:         { abbr: '\u2693',        color: 'text-navy',        bg: 'bg-navy/10' },
 };
 
@@ -112,6 +113,15 @@ export function YouAreAStar({ stats, slug, easterEgg }: Props) {
       patch: 'hcpChampion',
       label: 'Handicap Championships',
       value: String(stats.hcpChampionships),
+    });
+  }
+
+  if (stats.turkeyTrophies > 0) {
+    lines.push({
+      patch: 'turkeyTrophy',
+      label: 'Turkey Trophy',
+      value: String(stats.turkeyTrophies),
+      hint: 'Most turkeys in a season',
     });
   }
 

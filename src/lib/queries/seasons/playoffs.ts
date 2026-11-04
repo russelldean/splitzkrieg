@@ -207,6 +207,11 @@ export interface IndividualChampionSeason {
   womensScratchSlug: string | null;
   handicapName: string | null;
   handicapSlug: string | null;
+  /** Turkey trophy winner. turkeyCount is the number engraved on the trophy,
+   *  which is the official figure even where it differs from the scores table. */
+  turkeyName: string | null;
+  turkeySlug: string | null;
+  turkeyCount: number | null;
 }
 
 const GET_ALL_INDIVIDUAL_CHAMPIONS_SQL = `
@@ -216,7 +221,8 @@ const GET_ALL_INDIVIDUAL_CHAMPIONS_SQL = `
     s.displayName,
     bm.bowlerName AS mensScratchName, bm.slug AS mensScratchSlug,
     bw.bowlerName AS womensScratchName, bw.slug AS womensScratchSlug,
-    bh.bowlerName AS handicapName, bh.slug AS handicapSlug
+    bh.bowlerName AS handicapName, bh.slug AS handicapSlug,
+    bt.bowlerName AS turkeyName, bt.slug AS turkeySlug, ct.value AS turkeyCount
   FROM seasons s
   LEFT JOIN seasonChampions cm ON cm.seasonID = s.seasonID AND cm.championshipType = 'MensScratch'
   LEFT JOIN bowlers bm ON cm.winnerBowlerID = bm.bowlerID
@@ -224,7 +230,9 @@ const GET_ALL_INDIVIDUAL_CHAMPIONS_SQL = `
   LEFT JOIN bowlers bw ON cw.winnerBowlerID = bw.bowlerID
   LEFT JOIN seasonChampions ch ON ch.seasonID = s.seasonID AND ch.championshipType = 'Handicap'
   LEFT JOIN bowlers bh ON ch.winnerBowlerID = bh.bowlerID
-  WHERE cm.id IS NOT NULL OR cw.id IS NOT NULL OR ch.id IS NOT NULL
+  LEFT JOIN seasonChampions ct ON ct.seasonID = s.seasonID AND ct.championshipType = 'Turkeys'
+  LEFT JOIN bowlers bt ON ct.winnerBowlerID = bt.bowlerID
+  WHERE cm.id IS NOT NULL OR cw.id IS NOT NULL OR ch.id IS NOT NULL OR ct.id IS NOT NULL
   ORDER BY s.seasonID DESC
 `;
 
@@ -336,6 +344,7 @@ const GET_INDIVIDUAL_CHAMPIONSHIP_WINS_SQL = `
   SELECT winnerBowlerID AS bowlerID, championshipType, COUNT(*) AS wins
   FROM seasonChampions
   WHERE winnerBowlerID IS NOT NULL
+    AND championshipType IN ('MensScratch', 'WomensScratch', 'Handicap')
   GROUP BY winnerBowlerID, championshipType
 `;
 

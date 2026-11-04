@@ -466,6 +466,7 @@ export interface BowlerStarStats {
   scratchChampionships: number;
   hcpChampionships: number;
   perfectEnoughSeasons: number;
+  turkeyTrophies: number;
 }
 
 export const GET_BOWLER_STAR_STATS_SQL = `
@@ -479,7 +480,7 @@ export const GET_BOWLER_STAR_STATS_SQL = `
 export interface BowlerPatch {
   seasonID: number;
   week: number | null;
-  patch: 'perfectGame' | 'botw' | 'highGame' | 'highSeries' | 'threeOfAKind' | 'playoff' | 'champion' | 'scratchPlayoff' | 'hcpPlayoff' | 'scratchChampion' | 'hcpChampion' | 'attendance';
+  patch: 'perfectGame' | 'botw' | 'highGame' | 'highSeries' | 'threeOfAKind' | 'playoff' | 'champion' | 'scratchPlayoff' | 'hcpPlayoff' | 'scratchChampion' | 'hcpChampion' | 'attendance' | 'turkeyTrophy';
 }
 
 export const GET_BOWLER_PATCHES_SQL = `
@@ -517,6 +518,7 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
     scratchChampionships: 0,
     hcpChampionships: 0,
     perfectEnoughSeasons: 0,
+    turkeyTrophies: 0,
   };
   return cachedQuery(`getBowlerStarStats-${bowlerID}`, async () => {
     const db = await getDb();
@@ -541,6 +543,7 @@ export async function getBowlerStarStats(bowlerID: number): Promise<BowlerStarSt
       scratchChampionships: counts.get('scratchChampion') ?? 0,
       hcpChampionships: counts.get('hcpChampion') ?? 0,
       perfectEnoughSeasons: counts.get('attendance') ?? 0,
+      turkeyTrophies: counts.get('turkeyTrophy') ?? 0,
     };
   }, empty, { sql: GET_BOWLER_STAR_STATS_SQL, bowlerID });
 }

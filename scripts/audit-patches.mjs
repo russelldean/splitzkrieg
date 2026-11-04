@@ -157,6 +157,10 @@ const OUTCOME = {
     SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
     FROM seasonChampions sc
     WHERE sc.championshipType = 'Handicap' AND sc.winnerBowlerID IS NOT NULL`,
+  turkeyTrophy: `
+    SELECT sc.winnerBowlerID AS bowlerID, sc.seasonID, NULL AS week
+    FROM seasonChampions sc
+    WHERE sc.championshipType = 'Turkeys' AND sc.winnerBowlerID IS NOT NULL`,
 };
 
 // Genuinely not derivable: career-level, awarded by hand, no season or outcome row.

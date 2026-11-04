@@ -69,6 +69,7 @@ export function reduceStarStats(rows: Array<{ code: string; cnt: number }>): Bow
     scratchChampionships: counts.get('scratchChampion') ?? 0,
     hcpChampionships: counts.get('hcpChampion') ?? 0,
     perfectEnoughSeasons: counts.get('attendance') ?? 0,
+    turkeyTrophies: counts.get('turkeyTrophy') ?? 0,
   };
 }
 

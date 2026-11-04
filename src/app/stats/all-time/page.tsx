@@ -120,6 +120,7 @@ export default async function AllTimeStatsPage() {
               latestIndividual.mensScratchName,
               latestIndividual.womensScratchName,
               latestIndividual.handicapName,
+              latestIndividual.turkeyName,
             ].filter(Boolean).join(' \u00B7 ')}
             cta="All individual champs"
             accent="amber"
