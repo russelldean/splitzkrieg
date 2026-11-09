@@ -323,7 +323,6 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
     <WrappedCard tone="navy" key="cover">
       <p className="text-xs sm:text-sm font-body font-semibold uppercase tracking-[0.2em] text-cream/80">Frame by Frame &middot; {season} &middot; {w.season.displayName}</p>
       <h1 className="font-heading text-5xl sm:text-7xl leading-none mt-4">{w.bowlerName}</h1>
-      <Headline className="mt-6 text-cream/90">{w.nights > 0 ? 'This Is Your Season, Frame by Frame.' : 'This Is Your Bowling Life, Frame by Frame.'}</Headline>
       {w.nights > 0
         ? <ScoresheetStrip weeks={w.weeks} weekCount={w.season.weekCount ?? Math.max(9, ...w.weeks.map(x => x.week))} pins={w.pins} />
         : (w.tenure.firstNight && w.tenure.lastNight && (
