@@ -20,6 +20,7 @@ import { getBowlerPageView, computeWeekDelta } from '@/lib/views/bowler-page';
 import { getLeagueContext } from '@/lib/views/league-context';
 import { RecordProgression } from '@/components/bowler/RecordProgression';
 import { BowlerHero } from '@/components/bowler/BowlerHero';
+import { FrameByFrameBanner } from '@/components/bowler/FrameByFrameBanner';
 import { PersonalRecordsPanel } from '@/components/bowler/PersonalRecordsPanel';
 import { SeasonStatsTable } from '@/components/bowler/SeasonStatsTable';
 import { AverageProgressionChartLazy as AverageProgressionChart } from '@/components/bowler/AverageProgressionChartLazy';
@@ -138,6 +139,14 @@ export default async function BowlerPage({
         slug={slug}
         lastWeek={lastWeek}
       />
+
+      {latestSeason && (
+        <FrameByFrameBanner
+          slug={slug}
+          season={isCurrentSeason ? latestSeason.romanNumeral : null}
+          bowledThisSeason={isCurrentSeason}
+        />
+      )}
 
       <div className="mt-8 space-y-8">
 

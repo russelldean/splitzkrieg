@@ -50,6 +50,28 @@ export async function getCurrentSeasonBowlerSlugs(): Promise<BowlerSlug[]> {
   }, [], { sql: GET_CURRENT_SEASON_BOWLER_SLUGS_SQL, dependsOn: ['scores'] });
 }
 
+const GET_LATEST_SCORED_SEASON_BOWLER_SLUGS_SQL = `
+  SELECT DISTINCT b.slug
+  FROM bowlers b
+  JOIN scores sc ON sc.bowlerID = b.bowlerID
+  WHERE sc.isPenalty = 0 AND b.slug IS NOT NULL
+    AND sc.seasonID = (
+      SELECT TOP 1 sn.seasonID FROM seasons sn
+      WHERE EXISTS (SELECT 1 FROM scores x WHERE x.seasonID = sn.seasonID AND x.isPenalty = 0)
+      ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+    )
+  ORDER BY b.slug
+`;
+
+/** Everyone who scored in the most recent season with scores; the set of Frame by Frame pages worth prebuilding. */
+export async function getLatestScoredSeasonBowlerSlugs(): Promise<BowlerSlug[]> {
+  return cachedQuery('getLatestScoredSeasonBowlerSlugs', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{ slug: string }>(GET_LATEST_SCORED_SEASON_BOWLER_SLUGS_SQL);
+    return result.recordset;
+  }, [], { sql: GET_LATEST_SCORED_SEASON_BOWLER_SLUGS_SQL, dependsOn: ['scores'] });
+}
+
 const GET_BOWLER_BY_SLUG_SQL = `
   SELECT
     bowlerID,
@@ -383,6 +405,25 @@ export const getCurrentSeasonID = cache(async (): Promise<number | null> => {
     const result = await db.request().query<{ seasonID: number }>(GET_CURRENT_SEASON_ID_SQL);
     return result.recordset[0]?.seasonID ?? null;
   }, null, { stable: true, sql: GET_CURRENT_SEASON_ID_SQL });
+});
+
+const GET_LATEST_SCORED_SEASON_ID_SQL = `
+  SELECT TOP 1 sn.seasonID FROM seasons sn
+  WHERE EXISTS (SELECT 1 FROM scores sc WHERE sc.seasonID = sn.seasonID AND sc.isPenalty = 0)
+  ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+`;
+
+/**
+ * The most recent season that has scores. Differs from getCurrentSeasonID in the
+ * offseason, once the next season exists but nobody has bowled it yet: the recap
+ * keeps pointing at the season people actually played.
+ */
+export const getLatestScoredSeasonID = cache(async (): Promise<number | null> => {
+  return cachedQuery('getLatestScoredSeasonID', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{ seasonID: number }>(GET_LATEST_SCORED_SEASON_ID_SQL);
+    return result.recordset[0]?.seasonID ?? null;
+  }, null, { sql: GET_LATEST_SCORED_SEASON_ID_SQL, dependsOn: ['scores'] });
 });
 
 const GET_BOWLER_OF_THE_WEEK_SQL = `/* v3: co-winners on ties */

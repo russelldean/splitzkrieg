@@ -4,6 +4,7 @@
  */
 import type { WeeklyMatchScore, WeeklyMatchupResult } from '@/lib/queries';
 import { isAboveAverageAllThree } from '@/lib/scoring/above-average.mjs';
+import { pinScoresForWeek } from '@/lib/scoring/pin';
 
 export interface TopResult<T> {
   items: T[];
@@ -197,105 +198,13 @@ function computeLeagueHeat(weekScores: WeeklyMatchScore[]): {
 }
 
 // ── PIN Calculation ──────────────────────────────────────────
-
-const PENALTY_HCP_GAME = 199;
+// The arithmetic lives in lib/scoring/pin.ts so the season recap can share it.
 
 export function computePIN(
   bowlers: WeeklyMatchScore[],
   matchResults: WeeklyMatchupResult[],
   compact: boolean,
 ): TopResult<{ name: string; slug: string; team: string; pin: number }> {
-  const pinScores: { name: string; slug: string; team: string; pin: number }[] = [];
-  if (matchResults.length === 0) return { items: [], tiedCount: 0, tiedValue: 0 };
-
-  const teamGameTotals = new Map<number, { g1: number; g2: number; g3: number; series: number }>();
-  for (const mr of matchResults) {
-    if (mr.team1Game1 != null) {
-      teamGameTotals.set(mr.homeTeamID, {
-        g1: mr.team1Game1, g2: mr.team1Game2 ?? 0, g3: mr.team1Game3 ?? 0, series: mr.team1Series ?? 0,
-      });
-    }
-    if (mr.team2Game1 != null) {
-      teamGameTotals.set(mr.awayTeamID, {
-        g1: mr.team2Game1, g2: mr.team2Game2 ?? 0, g3: mr.team2Game3 ?? 0, series: mr.team2Series ?? 0,
-      });
-    }
-  }
-
-  const opponentMap = new Map<number, number>();
-  for (const mr of matchResults) {
-    opponentMap.set(mr.homeTeamID, mr.awayTeamID);
-    opponentMap.set(mr.awayTeamID, mr.homeTeamID);
-  }
-
-  function calcGamePts(t1: { g1: number; g2: number; g3: number }, t2: { g1: number; g2: number; g3: number }) {
-    let p1 = 0, p2 = 0;
-    for (const [a, b] of [[t1.g1, t2.g1], [t1.g2, t2.g2], [t1.g3, t2.g3]] as [number, number][]) {
-      if (a > b) p1 += 2;
-      else if (b > a) p2 += 2;
-      else { p1 += 1; p2 += 1; }
-    }
-    return { p1, p2 };
-  }
-
-  function getXP(rank: number) { return rank < 5 ? 3 : rank < 10 ? 2 : rank < 15 ? 1 : 0; }
-
-  const actualSeriesRanked = [...teamGameTotals.entries()].sort((a, b) => b[1].series - a[1].series);
-  const actualXP = new Map<number, number>();
-  actualSeriesRanked.forEach(([id], i) => actualXP.set(id, getXP(i)));
-
-  const actualPoints = new Map<number, number>();
-  for (const [tid] of teamGameTotals) actualPoints.set(tid, actualXP.get(tid) ?? 0);
-  for (const mr of matchResults) {
-    const t1 = teamGameTotals.get(mr.homeTeamID);
-    const t2 = teamGameTotals.get(mr.awayTeamID);
-    if (!t1 || !t2) continue;
-    const pts = calcGamePts(t1, t2);
-    actualPoints.set(mr.homeTeamID, (actualPoints.get(mr.homeTeamID) ?? 0) + pts.p1);
-    actualPoints.set(mr.awayTeamID, (actualPoints.get(mr.awayTeamID) ?? 0) + pts.p2);
-  }
-
-  for (const b of bowlers) {
-    if (b.incomingHcp == null || b.game1 == null || b.game2 == null || b.game3 == null) continue;
-    const teamGames = teamGameTotals.get(b.teamID);
-    const oppID = opponentMap.get(b.teamID);
-    if (!teamGames || oppID == null) continue;
-    const oppGames = teamGameTotals.get(oppID);
-    if (!oppGames) continue;
-
-    const bHcp1 = b.game1 + b.incomingHcp;
-    const bHcp2 = b.game2 + b.incomingHcp;
-    const bHcp3 = b.game3 + b.incomingHcp;
-
-    const hypTeam = {
-      g1: teamGames.g1 - bHcp1 + PENALTY_HCP_GAME,
-      g2: teamGames.g2 - bHcp2 + PENALTY_HCP_GAME,
-      g3: teamGames.g3 - bHcp3 + PENALTY_HCP_GAME,
-      series: 0,
-    };
-    hypTeam.series = hypTeam.g1 + hypTeam.g2 + hypTeam.g3;
-
-    const hypSeriesMap = new Map(actualSeriesRanked.map(([id, t]) => [id, t.series]));
-    hypSeriesMap.set(b.teamID, hypTeam.series);
-    const hypRanked = [...hypSeriesMap.entries()].sort((a, b) => b[1] - a[1]);
-    const hypXP = new Map<number, number>();
-    hypRanked.forEach(([id], i) => hypXP.set(id, getXP(i)));
-
-    const hypPoints = new Map<number, number>();
-    for (const [tid] of teamGameTotals) hypPoints.set(tid, hypXP.get(tid) ?? 0);
-    for (const mr of matchResults) {
-      const t1g = mr.homeTeamID === b.teamID ? hypTeam : teamGameTotals.get(mr.homeTeamID)!;
-      const t2g = mr.awayTeamID === b.teamID ? hypTeam : teamGameTotals.get(mr.awayTeamID)!;
-      const pts = calcGamePts(t1g, t2g);
-      hypPoints.set(mr.homeTeamID, (hypPoints.get(mr.homeTeamID) ?? 0) + pts.p1);
-      hypPoints.set(mr.awayTeamID, (hypPoints.get(mr.awayTeamID) ?? 0) + pts.p2);
-    }
-
-    const pin = (actualPoints.get(b.teamID) ?? 0) - (hypPoints.get(b.teamID) ?? 0);
-    pinScores.push({ name: b.bowlerName, slug: b.bowlerSlug, team: b.teamName, pin });
-  }
-  pinScores.sort((a, b) => b.pin - a.pin);
-
-  const positivePIN = pinScores.filter(p => p.pin > 0);
+  const positivePIN = pinScoresForWeek(bowlers, matchResults).filter(p => p.pin > 0);
   return topWithTies(positivePIN, compact ? 1 : 5, p => p.pin);
 }
