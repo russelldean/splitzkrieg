@@ -342,6 +342,10 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
   // 1. Cover
   cards.push(
     <WrappedCard tone="navy" key="cover">
+      <div className="mb-8">
+        <p className="text-xs sm:text-sm font-body font-semibold uppercase tracking-[0.25em] text-cream/85">Splitzkrieg Bowling League</p>
+        <span className="block w-10 h-0.5 mt-2 bg-red-light" />
+      </div>
       <h1 className="font-heading text-6xl sm:text-8xl leading-none">{w.bowlerName}</h1>
       <p className="mt-4 text-sm sm:text-base font-body font-semibold uppercase tracking-[0.25em] text-cream/85">Frame by Frame</p>
       <p className="mt-1.5 text-sm sm:text-base font-body font-semibold uppercase tracking-[0.25em] text-cream/85">
@@ -354,8 +358,8 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
             {formatMatchDate(w.tenure.firstNight, { year: 'numeric' })} to {formatMatchDate(w.tenure.lastNight, { year: 'numeric' })}, {w.seasons.length} {w.seasons.length === 1 ? 'season' : 'seasons'}, {fmt(w.tenure.careerNights)} nights.
           </Muted>
         ))}
-      <div className="absolute inset-x-0 bottom-5 flex justify-center text-cream/80" aria-hidden>
-        <svg width="44" height="44" viewBox="0 0 40 40" className="motion-safe:animate-bounce">
+      <div className="absolute inset-x-0 bottom-2 flex justify-center text-cream/80" aria-hidden>
+        <svg width="32" height="32" viewBox="0 0 40 40" className="motion-safe:animate-bounce">
           <path d="M8 12l12 12 12-12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M8 22l12 12 12-12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
         </svg>
