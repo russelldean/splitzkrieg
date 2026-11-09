@@ -32,6 +32,7 @@ import { getInstagramFeed } from '@/lib/queries/instagram';
 import { getRandomFacts } from '@/lib/queries/facts';
 import { getPlayoffTeamMatches, getPlayoffBracketParticipants } from '@/lib/queries/playoffs/page';
 import { RandomFact } from '@/components/home/RandomFact';
+import { FrameByFrameCallout } from '@/components/home/FrameByFrameCallout';
 
 
 export const metadata = {
@@ -246,6 +247,13 @@ export default async function Home() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 space-y-5 sm:space-y-6">
+
+        {/* === FULL WIDTH: Frame by Frame callout (new feature, people have to find it) === */}
+        {seasonSnapshot && (
+          <TrackVisibility section="frame-by-frame" page="home">
+            <FrameByFrameCallout season={seasonSnapshot.romanNumeral} />
+          </TrackVisibility>
+        )}
 
         {/* === FULL WIDTH: Week Results Bar (hero moment) === */}
         {seasonSnapshot && (() => {

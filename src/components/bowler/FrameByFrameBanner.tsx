@@ -6,8 +6,8 @@ interface Props {
   season: string | null;
 }
 
-/** A row of tiny scoresheet frames, decoration for the banner. */
-function MiniSheet() {
+/** A row of tiny scoresheet frames, decoration for the banner and the homepage callout. */
+export function MiniSheet() {
   return (
     <div className="hidden sm:flex border border-cream/50 rounded-sm" aria-hidden>
       {Array.from({ length: 10 }, (_, i) => (
