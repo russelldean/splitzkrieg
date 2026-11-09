@@ -30,7 +30,10 @@ export function FrameByFrameCallout({ season }: Props) {
           </div>
         </div>
         <div className="w-full max-w-sm md:w-80 md:max-w-none shrink-0">
-          <SearchBar variant="dark" />
+          {/* The dark search is navy on navy; inside this navy card it needs an edge to be seen. */}
+          <div className="rounded-lg ring-1 ring-cream/70 shadow-md">
+            <SearchBar variant="dark" />
+          </div>
           <p className="font-body text-xs text-cream/80 mt-2 text-center md:text-right">
             or <Link href="/bowlers" className="underline underline-offset-2 hover:text-cream">browse every bowler</Link>
           </p>
