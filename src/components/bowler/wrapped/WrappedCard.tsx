@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+
 export type CardTone = 'navy' | 'red' | 'cream' | 'gold';
 
 const TONE: Record<CardTone, { card: string; eyebrow: string; muted: string; rule: string; divider: string }> = {
@@ -28,9 +29,7 @@ export function WrappedCard({ tone, eyebrow, children, index, total, compact = f
   const t = TONE[tone];
   return (
     <section className={`relative rounded-2xl shadow-md px-6 py-10 sm:px-10 sm:py-14 ${compact ? 'min-h-0' : 'min-h-[70svh]'} flex flex-col justify-center ${t.card}`}>
-      {index != null && total != null && (
-        <span className={`absolute top-4 right-5 text-xs font-body tabular-nums ${t.muted}`}>{index} / {total}</span>
-      )}
+      {index != null && total != null && <FrameCorner index={index} total={total} tone={tone} />}
       {eyebrow && (
         <div className="mb-6">
           <p className={`text-xs sm:text-sm font-body font-semibold uppercase tracking-[0.2em] ${t.eyebrow}`}>{eyebrow}</p>
@@ -59,4 +58,37 @@ export const toneMuted = (tone: CardTone) => TONE[tone].muted;
 /** Hairline between sections of a long card. */
 export function Divider({ tone }: { tone: CardTone }) {
   return <span aria-hidden className={`block h-px w-full my-8 ${TONE[tone].divider}`} />;
+}
+
+/**
+ * The scoresheet corner, top right of every card, scored like a real frame:
+ * two ball boxes on top and the running total underneath. Every frame is one
+ * pin and a gutter, so the running total is the card number. The last card is
+ * the tenth frame: three strikes, and the total finally jumps.
+ */
+function FrameCorner({ index, total, tone }: { index: number; total: number; tone: CardTone }) {
+  const line = TONE[tone].divider.replace('bg-', 'border-');
+  const muted = TONE[tone].muted;
+  const last = index === total;
+  const balls = last ? ['X', 'X', 'X'] : ['1', '\u2013'];
+  const score = last ? index - 1 + 30 : index;
+  return (
+    <span
+      className={`absolute top-0 right-0 flex flex-col border-b border-l ${line} font-heading leading-none`}
+      style={{ width: last ? '4.5rem' : '3rem' }}
+      aria-label={last ? `Tenth frame, three strikes, ${score}` : `Frame ${index}, one pin, running total ${index}`}
+    >
+      <span className="flex justify-end">
+        {balls.map((b, i) => (
+          <span
+            key={i}
+            className={`flex h-5 w-5 items-center justify-center border-b border-l ${line} text-[11px] ${b === 'X' ? 'text-red-600/60 font-bold' : muted}`}
+          >
+            {b}
+          </span>
+        ))}
+      </span>
+      <span className={`flex h-7 items-center justify-center text-base tabular-nums ${muted}`}>{score}</span>
+    </span>
+  );
 }

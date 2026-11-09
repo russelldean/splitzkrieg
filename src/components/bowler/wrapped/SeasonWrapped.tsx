@@ -1,3 +1,4 @@
+import { cloneElement, isValidElement } from 'react';
 import Link from 'next/link';
 import type { BowlerWrapped, WrappedWeek } from '@/lib/views/bowler-wrapped';
 import { ANIMAL_SILHOUETTES } from './animal-silhouettes';
@@ -8,6 +9,7 @@ import type { BowlerCareerSummary } from '@/lib/queries';
 import { fmt, ordinal, animalWeight, stackedFeet, peakComparison, rankPhrase, nearestMilestone, timeSince } from '@/lib/wrapped-text';
 import { PatchBadge } from '@/components/ui/PatchBadge';
 import { ShareButton } from '@/components/bowler/ShareButton';
+import { strikeX } from '@/components/ui/StrikeX';
 import { WrappedCard, BigNumber, Headline, Muted, type CardTone, Divider } from './WrappedCard';
 import { RankLadder } from './RankLadder';
 import { formatMatchDate } from '@/lib/bowling-time';
@@ -177,25 +179,44 @@ function ScoresheetStrip({ weeks, weekCount, pins }: { weeks: WrappedWeek[]; wee
   const byWeek = new Map(weeks.map(w => [w.week, w]));
   const frames = Array.from({ length: Math.min(10, Math.max(weekCount, ...weeks.map(w => w.week))) }, (_, i) => i + 1);
   return (
-    <div className="mt-10" role="img" aria-label="Season scoresheet">
+    <div className="mt-8" role="img" aria-label="Season scoresheet">
       <div className="flex border border-cream/70 rounded-sm font-heading tabular-nums">
         {frames.map(n => {
           const wk = byWeek.get(n);
           return (
-            <div key={n} className="relative flex-1 min-w-0 h-14 sm:h-16 border-r border-cream/70">
-              <span className="absolute top-0 right-0 w-4 h-4 border-l border-b border-cream/70 flex items-center justify-center font-body text-[8px] text-cream/80">{n}</span>
-              <span className="absolute inset-x-0 bottom-1.5 text-center text-sm sm:text-base">
+            <div key={n} className="relative flex-1 min-w-0 h-16 sm:h-20 border-r border-cream/70">
+              <span className="absolute top-0 right-0 w-4 h-4 sm:w-5 sm:h-5 border-l border-b border-cream/70 flex items-center justify-center font-body text-[8px] sm:text-[9px] text-cream/80">{n}</span>
+              <span className="absolute inset-x-0 bottom-2 text-center text-base sm:text-xl">
                 {wk?.scratchSeries ?? ''}
               </span>
             </div>
           );
         })}
-        <div className="relative flex-none w-16 sm:w-20 h-14 sm:h-16 bg-cream/10">
-          <span className="absolute top-1 left-0 right-0 text-center font-body text-[8px] uppercase tracking-widest text-cream/80">Total</span>
-          <span className="absolute inset-x-0 bottom-1.5 text-center text-base sm:text-lg">{fmt(pins)}</span>
+        <div className="relative flex-none w-16 sm:w-20 h-16 sm:h-20 bg-cream/10">
+          <span className="absolute top-1 left-0 right-0 text-center font-body text-[8px] sm:text-[9px] uppercase tracking-widest text-cream/80">Total</span>
+          <span className="absolute inset-x-0 bottom-2 text-center text-lg sm:text-2xl">{fmt(pins)}</span>
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * A slow gold sheen sweeping across the text, for the song that was number one
+ * the night a bowler started. Pure CSS; still for reduced motion.
+ */
+function Shimmer({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="font-semibold text-cream bg-clip-text motion-safe:text-transparent motion-safe:[animation:shimmer_4.5s_ease-in-out_infinite]"
+      style={{
+        backgroundImage: 'linear-gradient(110deg, #FFFBF2 0%, #FFFBF2 38%, #FDE68A 47%, #FFFFFF 50%, #FDE68A 53%, #FFFBF2 62%, #FFFBF2 100%)',
+        backgroundSize: '250% 100%',
+      }}
+    >
+      {children}
+      <style>{`@keyframes shimmer { 0% { background-position: 120% 0; } 100% { background-position: -130% 0; } }`}</style>
+    </span>
   );
 }
 
@@ -321,17 +342,20 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
   // 1. Cover
   cards.push(
     <WrappedCard tone="navy" key="cover">
-      <p className="text-xs sm:text-sm font-body font-semibold uppercase tracking-[0.2em] text-cream/80">Frame by Frame &middot; {season} &middot; {w.season.displayName}</p>
-      <h1 className="font-heading text-5xl sm:text-7xl leading-none mt-4">{w.bowlerName}</h1>
+      <h1 className="font-heading text-6xl sm:text-8xl leading-none">{w.bowlerName}</h1>
+      <p className="mt-4 text-sm sm:text-base font-body font-semibold uppercase tracking-[0.25em] text-cream/85">Frame by Frame</p>
+      <p className="mt-1.5 text-sm sm:text-base font-body font-semibold uppercase tracking-[0.25em] text-cream/85">
+        Season {strikeX(w.season.romanNumeral)} &middot; {w.season.displayName}
+      </p>
       {w.nights > 0
         ? <ScoresheetStrip weeks={w.weeks} weekCount={w.season.weekCount ?? Math.max(9, ...w.weeks.map(x => x.week))} pins={w.pins} />
         : (w.tenure.firstNight && w.tenure.lastNight && (
-          <Muted tone="navy" className="mt-10">
+          <Muted tone="navy" className="mt-8">
             {formatMatchDate(w.tenure.firstNight, { year: 'numeric' })} to {formatMatchDate(w.tenure.lastNight, { year: 'numeric' })}, {w.seasons.length} {w.seasons.length === 1 ? 'season' : 'seasons'}, {fmt(w.tenure.careerNights)} nights.
           </Muted>
         ))}
-      <div className="mt-12 flex justify-center text-cream/80" aria-hidden>
-        <svg width="40" height="40" viewBox="0 0 40 40" className="motion-safe:animate-bounce">
+      <div className="absolute inset-x-0 bottom-5 flex justify-center text-cream/80" aria-hidden>
+        <svg width="44" height="44" viewBox="0 0 40 40" className="motion-safe:animate-bounce">
           <path d="M8 12l12 12 12-12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M8 22l12 12 12-12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
         </svg>
@@ -357,7 +381,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
           {w.firstNightFilm && <>That weekend <em>{w.firstNightFilm}</em> was number one at the box office</>}
           {w.firstNightFilm && w.firstNightCulture && <>, and </>}
           {!w.firstNightFilm && w.firstNightCulture && <>That week </>}
-          {w.firstNightCulture && <>&ldquo;{w.firstNightCulture.song}&rdquo; by {w.firstNightCulture.artist} topped the Hot 100</>}.
+          {w.firstNightCulture && <><Shimmer>&ldquo;{w.firstNightCulture.song}&rdquo; by {w.firstNightCulture.artist}</Shimmer> topped the Hot 100</>}.
         </Muted>
       )}
       <FirstNightClassmates classmates={w.firstNightClassmates} />
@@ -795,7 +819,9 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
   return (
     <div className="space-y-5">
       {ordered.map((c, i) => (
-        <div key={i} data-card={i + 1} data-total={total}>{c}</div>
+        <div key={i} data-card={i + 1} data-total={total}>
+          {isValidElement(c) ? cloneElement(c as React.ReactElement<{ index?: number; total?: number }>, { index: i + 1, total }) : c}
+        </div>
       ))}
     </div>
   );
