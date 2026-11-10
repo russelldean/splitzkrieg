@@ -2,8 +2,10 @@ import Link from 'next/link';
 
 interface Props {
   slug: string;
-  /** Roman numeral of the season the recap covers, null when the bowler did not play it. */
-  season: string | null;
+  /** Roman numeral of the season the recap covers. */
+  season: string;
+  /** False when that is an earlier season than the league's latest. */
+  current: boolean;
 }
 
 /** A row of tiny scoresheet frames, decoration for the banner and the homepage callout. */
@@ -24,7 +26,7 @@ export function MiniSheet() {
  * The door to Frame by Frame from the bowler page: sits right under the hero so
  * it is the first thing after the name.
  */
-export function FrameByFrameBanner({ slug, season }: Props) {
+export function FrameByFrameBanner({ slug, season, current }: Props) {
   return (
     <Link
       href={`/bowler/${slug}/frame-by-frame`}
@@ -34,7 +36,7 @@ export function FrameByFrameBanner({ slug, season }: Props) {
       <div className="flex items-center gap-5 min-w-0">
         <MiniSheet />
         <div className="min-w-0">
-          {season && <p className="font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-cream/80">Season {season}</p>}
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-cream/80">Season {season}</p>
           <p className="font-heading text-xl sm:text-2xl leading-tight mt-0.5">Frame by Frame</p>
         </div>
       </div>
@@ -44,7 +46,7 @@ export function FrameByFrameBanner({ slug, season }: Props) {
           <span className="absolute -top-2 -right-2 z-10 rounded-full bg-amber-300 px-1.5 py-0.5 font-body text-[10px] font-bold uppercase tracking-wider text-navy shadow motion-safe:[animation:fbf-new_1.6s_ease-in-out_infinite]">New</span>
           <span className="relative overflow-hidden inline-flex items-center gap-2 rounded-full bg-red px-5 py-2.5 font-body text-sm sm:text-base font-semibold text-cream shadow-lg group-hover:bg-red-light transition-colors motion-safe:[animation:fbf-glow_2.2s_ease-in-out_infinite,fbf-wiggle_3.4s_ease-in-out_infinite]">
             <span className="pointer-events-none absolute inset-0 motion-safe:[animation:fbf-shine_2.6s_ease-in-out_infinite]" style={{ background: 'linear-gradient(115deg, transparent 35%, rgba(255,251,242,0.55) 50%, transparent 65%)' }} aria-hidden />
-            <span className="relative">{season ? 'See your season' : 'See your bowling life'}</span>
+            <span className="relative">{current ? 'See your season' : 'See your bowling history'}</span>
             <svg className="relative w-4 h-4 motion-safe:group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>

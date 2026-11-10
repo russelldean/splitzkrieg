@@ -18,6 +18,8 @@ interface Props {
   w: BowlerWrapped;
   career: BowlerCareerSummary | null;
   shareUrl: string;
+  /** True when the recap is for an earlier season than the league's latest. */
+  past?: boolean;
 }
 
 const PATCH_LABEL: Record<string, string> = {
@@ -50,14 +52,14 @@ function Scoreline({ wk, tone }: { wk: WrappedWeek; tone: CardTone }) {
 }
 
 const ARCHETYPE_LINE: Record<string, string> = {
-  'Fast Starter': 'You came out hot in game one this season.',
-  'Middle Child': 'You peaked in game two this season.',
-  'Late Bloomer': 'You saved your best for game three this season.',
-  'Flatliner': 'Steady across all three games this season.',
+  'Fast Starter': 'You came out hot in game one',
+  'Middle Child': 'You peaked in game two',
+  'Late Bloomer': 'You saved your best for game three',
+  'Flatliner': 'Steady across all three games',
 };
 
 /** This season's game 1/2/3 averages as the bowler page draws them: your line against the league's, normalized to each average. */
-function SlotProfileBlock({ p }: { p: BowlerWrapped['slotProfile'] & {} }) {
+function SlotProfileBlock({ p, ts }: { p: BowlerWrapped['slotProfile'] & {}; ts: string }) {
   const mine = [p.avg1, p.avg2, p.avg3];
   const overall = (p.avg1 + p.avg2 + p.avg3) / 3;
   const norm = mine.map(v => v / overall);
@@ -71,8 +73,8 @@ function SlotProfileBlock({ p }: { p: BowlerWrapped['slotProfile'] & {} }) {
   return (
     <div>
       <p className="font-heading text-3xl leading-tight">{p.archetype}</p>
-      <Muted tone="cream" className="mt-1">{ARCHETYPE_LINE[p.archetype]}</Muted>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-sm h-auto mt-4" role="img" aria-label="Average by game this season against the league">
+      <Muted tone="cream" className="mt-1">{ARCHETYPE_LINE[p.archetype]} {ts}.</Muted>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-sm h-auto mt-4" role="img" aria-label="Average by game against the league">
         {lg && <path d={path(lg)} fill="none" stroke="currentColor" strokeOpacity={0.6} strokeWidth={2} strokeDasharray="6 4" strokeLinecap="round" strokeLinejoin="round" />}
         <path d={path(norm)} fill="none" className="text-red" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         {norm.map((v, i) => (
@@ -83,7 +85,7 @@ function SlotProfileBlock({ p }: { p: BowlerWrapped['slotProfile'] & {} }) {
           </g>
         ))}
       </svg>
-      {lg && <Muted tone="cream" className="mt-2">Dashed line: the league this season.</Muted>}
+      {lg && <Muted tone="cream" className="mt-2">Dashed line: the league {ts}.</Muted>}
     </div>
   );
 }
@@ -95,7 +97,7 @@ function NightBars({ weeks, best }: { weeks: WrappedWeek[]; best: WrappedWeek })
   const vals = nights.map(w => w.scratchSeries as number);
   const min = Math.min(...vals), max = Math.max(...vals), span = Math.max(1, max - min);
   return (
-    <div className="mt-8 flex items-end gap-2 h-24" role="img" aria-label="Series by night this season">
+    <div className="mt-8 flex items-end gap-2 h-24" role="img" aria-label="Series by night">
       {nights.map(w => {
         const isBest = w === best;
         const pct = 30 + (((w.scratchSeries as number) - min) / span) * 70;
@@ -132,7 +134,7 @@ function GameBars({ weeks, best }: { weeks: WrappedWeek[]; best: { week: number;
   if (all.length < 2) return null;
   const min = Math.min(...all.map(g => g.score)), max = Math.max(...all.map(g => g.score)), span = Math.max(1, max - min);
   return (
-    <div className="mt-8 flex items-end gap-[3px] h-20" role="img" aria-label="Every game this season">
+    <div className="mt-8 flex items-end gap-[3px] h-20" role="img" aria-label="Every game">
       {all.map(g => {
         const isBest = g.week === best.week && g.gameNo === best.gameNo;
         return (
@@ -334,9 +336,11 @@ function SeasonBars({ w }: { w: BowlerWrapped }) {
   );
 }
 
-export function SeasonWrapped({ w, career, shareUrl }: Props) {
+export function SeasonWrapped({ w, career, shareUrl, past = false }: Props) {
   const name = firstName(w.bowlerName);
   const season = `Season ${w.season.romanNumeral}`;
+  // A past recap follows career cards that name other seasons, so it says which one every time.
+  const ts = past ? `in ${season}` : 'this season';
   const cards: React.ReactNode[] = [];
 
   // 1. Cover
@@ -402,13 +406,13 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
     <WrappedCard tone="cream" eyebrow="Nights" key="nights">
       <Headline>
         {w.nights > 0
-          ? <>You bowled {w.nights} {w.nights === 1 ? 'night' : 'nights'} this season.</>
+          ? <>You bowled {w.nights} {w.nights === 1 ? 'night' : 'nights'} {past ? <>in the last season you bowled, {season}</> : 'this season'}.</>
           : <>Your last night on the lanes was {lastNightText}.</>}
       </Headline>
       {w.nights > 0 && lastNightText && (
         <Muted tone="cream" className="mt-6">Your last night on the lanes was {lastNightText}.</Muted>
       )}
-      {w.nights === 0 && missed && (
+      {missed && (
         <Muted tone="cream" className="mt-6">You are missed.</Muted>
       )}
       {w.tenure.leagueNightsSinceFirst > w.nights ? (
@@ -420,7 +424,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
         </Muted>
       ) : (
         <Muted tone="cream" className="mt-4">
-          Out of {w.season.weekCount ?? w.nights} league nights this season
+          Out of {w.season.weekCount ?? w.nights} league nights {ts}
           {att.pctOfNights != null && <>, you were on the lanes {att.pctOfNights}% of the time since you joined</>}.
         </Muted>
       )}
@@ -442,7 +446,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
   const beast = animalWeight(w.pins);
   const stack = stackedFeet(w.pins);
   if (w.nights > 0) cards.push(
-    <WrappedCard tone="red" eyebrow="Pins this season" key="pins">
+    <WrappedCard tone="red" eyebrow={`Pins ${ts}`} key="pins">
       <div className="flex items-baseline gap-3 flex-wrap">
         <BigNumber>{fmt(w.pins)}</BigNumber>
         <span className="font-heading text-2xl sm:text-3xl text-cream/85 tabular-nums whitespace-nowrap">/ {w.games} games</span>
@@ -493,15 +497,15 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
     const o = w.ownSeasons;
     cards.push(
       <WrappedCard tone="navy" eyebrow="Among your seasons" key="own">
-        <Headline>Your {ordinal(o.rank)} best season of {o.total}.</Headline>
+        <Headline>{past ? <>{season} was your {ordinal(o.rank)} best season of {o.total}.</> : <>Your {ordinal(o.rank)} best season of {o.total}.</>}</Headline>
         <Muted tone="navy" className="mt-6">
           {o.bestSince && <>Your best since Season {o.bestSince.romanNumeral} ({o.bestSince.average.toFixed(1)}). </>}
           {o.previous && (
             <>
-              Last season you averaged {o.previous.average.toFixed(1)}
+              {past ? `In Season ${o.previous.romanNumeral} you averaged` : 'Last season you averaged'} {o.previous.average.toFixed(1)}
               {w.average >= o.previous.average
                 ? <>, so that is {(w.average - o.previous.average).toFixed(1)} pins better.</>
-                : <>, {(o.previous.average - w.average).toFixed(1)} pins ahead of this one.</>}
+                : <>, {(o.previous.average - w.average).toFixed(1)} pins ahead of {past ? season : 'this one'}.</>}
             </>
           )}
         </Muted>
@@ -521,7 +525,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
       : `More mercurial than ${st.variationPercentile}% of the league.`;
     cards.push(
       <WrappedCard tone="cream" eyebrow="Your style" key="style">
-        {w.slotProfile && <SlotProfileBlock p={w.slotProfile} />}
+        {w.slotProfile && <SlotProfileBlock p={w.slotProfile} ts={ts} />}
         {w.slotProfile && <Divider tone="cream" />}
         <SteadinessLine percentile={st.variationPercentile} />
         <Muted tone="cream" className="mt-4">
@@ -529,7 +533,8 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
         </Muted>
       </WrappedCard>,
     );
-    cards.push(
+    // Impact is about the season just played; a past recap skips it.
+    if (!past) cards.push(
       <WrappedCard tone="cream" eyebrow="Your impact" key="impact" compact>
         <div className="flex items-baseline gap-6 font-heading tabular-nums">
           <span><span className="text-5xl">{ab.above}</span><span className="font-body text-base text-navy/70"> above</span></span>
@@ -542,9 +547,9 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
           <>
             <Divider tone="cream" />
             <p className="font-heading text-3xl leading-tight">
-              {st.impact.total > 0 && <>Your team would have lost {st.impact.total} {st.impact.total === 1 ? 'point' : 'points'} this season if you didn't show up.</>}
-              {st.impact.total === 0 && <>Your team would have taken the same points this season without you. Call it a team effort.</>}
-              {st.impact.total < 0 && <>A blind 199 would have earned your team {Math.abs(st.impact.total)} more {st.impact.total === -1 ? 'point' : 'points'} this season. It happens.</>}
+              {st.impact.total > 0 && <>Your team would have lost {st.impact.total} {st.impact.total === 1 ? 'point' : 'points'} {ts} if you didn't show up.</>}
+              {st.impact.total === 0 && <>Your team would have taken the same points {ts} without you. Call it a team effort.</>}
+              {st.impact.total < 0 && <>A blind 199 would have earned your team {Math.abs(st.impact.total)} more {st.impact.total === -1 ? 'point' : 'points'} {ts}. It happens.</>}
             </p>
           </>
         )}
@@ -565,7 +570,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
         {ctx && (
           <Muted tone="gold" className="mt-6">
             {ctx.otherNightsAvg != null && ctx.otherNightsAvg < (b.scratchSeries ?? 0) && (
-              <>Your other nights this season averaged {ctx.otherNightsAvg}, so this one was {(b.scratchSeries ?? 0) - ctx.otherNightsAvg} pins better. </>
+              <>Your other nights {ts} averaged {ctx.otherNightsAvg}, so this one was {(b.scratchSeries ?? 0) - ctx.otherNightsAvg} pins better. </>
             )}
             {ctx.careerNights > 1 && (ctx.careerRank === 1
               ? <>The best night of your career.</>
@@ -599,9 +604,9 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
         <GameBars weeks={w.weeks} best={g} />
         <Muted tone="navy" className="mt-6">
           {gx.otherGamesAvg != null && gx.otherGamesAvg < g.score && (
-            <>Your other games this season averaged {gx.otherGamesAvg}, so this one was {g.score - gx.otherGamesAvg} pins over. </>
+            <>Your other games {ts} averaged {gx.otherGamesAvg}, so this one was {g.score - gx.otherGamesAvg} pins over. </>
           )}
-          {gx.games200 >= 2 && g.score >= 200 && <>One of {gx.games200} games of 200 or better this season. </>}
+          {gx.games200 >= 2 && g.score >= 200 && <>One of {gx.games200} games of 200 or better {ts}. </>}
           {w.seasonNumber > 1 && (gx.careerRank === 1
             ? <>The highest game of your career.</>
             : <>Your {ordinal(gx.careerRank)} highest game of the {fmt(gx.careerGames)} you have bowled.</>)}
@@ -609,14 +614,14 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
         {gx.lastAsGood && gx.lastAsGood.matchDate && nightDate && (
           <Muted tone="navy" className="mt-4">
             {gx.lastAsGood.seasonID === w.season.seasonID
-              ? <>You had already shot {gx.lastAsGood.score} in week {gx.lastAsGood.week}, so this was not even your first time this season.</>
+              ? <>You had already shot {gx.lastAsGood.score} in week {gx.lastAsGood.week}, so this was not even your first time {ts}.</>
               : <>It had been {timeSince(gx.lastAsGood.matchDate, nightDate)} since you bowled a game that high: a {gx.lastAsGood.score} in Season {gx.lastAsGood.romanNumeral}, {formatMatchDate(gx.lastAsGood.matchDate, { month: 'long', year: 'numeric' })}.</>}
           </Muted>
         )}
         {!gx.lastAsGood && w.seasonNumber > 1 && gx.careerRank === 1 && (
           <Muted tone="navy" className="mt-4">You had never bowled a game that high before.</Muted>
         )}
-        <Muted tone="navy" className="mt-4">{rankPhrase(w.ranks.highGame.rank, w.ranks.highGame.field).replace('Most', 'Highest')} this season.</Muted>
+        <Muted tone="navy" className="mt-4">{rankPhrase(w.ranks.highGame.rank, w.ranks.highGame.field).replace('Most', 'Highest')} {ts}.</Muted>
       </WrappedCard>,
     );
   }
@@ -627,7 +632,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
       <WrappedCard tone="cream" eyebrow="Turkeys" key="turkeys" compact>
         <BigNumber>{w.turkeys}</BigNumber>
         <Muted tone="cream" className="mt-4">
-          {w.turkeys === 1 ? 'One turkey this season, and here it comes.' : `${w.turkeys} turkeys this season, and here they come.`}
+          {w.turkeys === 1 ? `One turkey ${ts}, and here it comes.` : `${w.turkeys} turkeys ${ts}, and here they come.`}
         </Muted>
         <TurkeyParade count={w.turkeys} />
       </WrappedCard>,
@@ -661,7 +666,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
   if (w.isFloater && w.teamStints.length > 1) {
     cards.push(
       <WrappedCard tone="navy" eyebrow="Your teams" key="team">
-        <Headline>You bowled for {w.teamStints.length} teams this season.</Headline>
+        <Headline>You bowled for {w.teamStints.length} teams {ts}.</Headline>
         <Muted tone="navy" className="mt-4">A floater. Every captain had your number.</Muted>
         <ul className="mt-8 space-y-5">
           {w.teamStints.map(st => (
@@ -737,7 +742,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
     const counts = new Map<string, number>();
     for (const p of w.patches) counts.set(p.code, (counts.get(p.code) ?? 0) + 1);
     cards.push(
-      <WrappedCard tone="gold" eyebrow="Badges this season" key="badges">
+      <WrappedCard tone="gold" eyebrow={`Badges ${ts}`} key="badges">
         <BigNumber>{w.patches.length}</BigNumber>
         <ul className="mt-8 space-y-3">
           {[...counts.entries()].sort((a, b) => b[1] - a[1]).map(([code, n]) => (
@@ -752,14 +757,15 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
     );
   }
 
-  // 11. Milestones crossed this season, and the next one on the horizon
+  // 11. Milestones crossed this season, and the next one on the horizon.
+  // Not for a past recap: the horizon is a nudge, and the season is long over.
   const next = career ? nearestMilestone(career) : null;
-  if (w.milestones.length > 0 || next) {
+  if (!past && (w.milestones.length > 0 || next)) {
     cards.push(
       <WrappedCard tone="red" eyebrow="Milestones" key="milestones" compact={w.milestones.length === 0}>
         {w.milestones.length > 0 && (
           <>
-            <Headline>You crossed {w.milestones.length === 1 ? 'a career line' : `${w.milestones.length} career lines`} this season.</Headline>
+            <Headline>You crossed {w.milestones.length === 1 ? 'a career line' : `${w.milestones.length} career lines`} {ts}.</Headline>
             <ul className="mt-8 space-y-4">
               {w.milestones.map(m => (
                 <li key={`${m.category}-${m.threshold}`} className="flex items-baseline gap-4">
@@ -789,7 +795,7 @@ export function SeasonWrapped({ w, career, shareUrl }: Props) {
     <WrappedCard tone="cream" key="close">
       <Headline>{w.nights > 0 ? <>That was your {season}, {name}.</> : <>That is your bowling life so far, {name}.</>}</Headline>
       <Muted tone="cream" className="mt-6">
-        {w.nights > 0
+        {w.nights > 0 && !past
           ? <>Thank you, sincerely, for choosing to spend your Monday nights with Splitzkrieg.</>
           : <>Thank you, sincerely, for the time you spent with Splitzkrieg. The lanes are right where you left them.</>}
       </Muted>

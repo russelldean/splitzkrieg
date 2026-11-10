@@ -25,7 +25,7 @@ export function FrameByFrameCallout({ season }: Props) {
             </p>
             <h2 className="font-heading text-2xl sm:text-3xl leading-tight mt-1">Your season, one frame at a time.</h2>
             <p className="font-body text-sm sm:text-base text-cream/85 mt-1">
-              If you bowled this season, you have one. Find your name and see yours.
+              If you ever bowled here, you have one. Find your name and see yours.
             </p>
           </div>
         </div>

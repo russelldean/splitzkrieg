@@ -426,6 +426,37 @@ export const getLatestScoredSeasonID = cache(async (): Promise<number | null> =>
   }, null, { sql: GET_LATEST_SCORED_SEASON_ID_SQL, dependsOn: ['scores'] });
 });
 
+const GET_BOWLER_LATEST_SEASON_ID_SQL = `
+  SELECT TOP 1 sn.seasonID FROM seasons sn
+  WHERE EXISTS (SELECT 1 FROM scores sc WHERE sc.seasonID = sn.seasonID AND sc.bowlerID = @bowlerID AND sc.isPenalty = 0)
+  ORDER BY sn.year DESC, CASE sn.period WHEN 'Fall' THEN 2 ELSE 1 END DESC
+`;
+
+/** The most recent season this bowler has a real score in, null if none. Frame by Frame falls back to it. */
+export const getBowlerLatestSeasonID = cache(async (bowlerID: number): Promise<number | null> => {
+  return cachedQuery(`getBowlerLatestSeasonID-${bowlerID}`, async () => {
+    const db = await getDb();
+    const result = await db.request().input('bowlerID', bowlerID).query<{ seasonID: number }>(GET_BOWLER_LATEST_SEASON_ID_SQL);
+    return result.recordset[0]?.seasonID ?? null;
+  }, null, { sql: GET_BOWLER_LATEST_SEASON_ID_SQL, bowlerID });
+});
+
+const GET_SCORED_BOWLER_SLUGS_SQL = `
+  SELECT DISTINCT b.slug
+  FROM bowlers b
+  JOIN scores sc ON sc.bowlerID = b.bowlerID
+  WHERE sc.isPenalty = 0 AND b.slug IS NOT NULL AND b.isPublic = 1
+`;
+
+/** Everyone public with at least one real score, for prebuilding Frame by Frame. */
+export async function getScoredBowlerSlugs(): Promise<BowlerSlug[]> {
+  return cachedQuery('getScoredBowlerSlugs', async () => {
+    const db = await getDb();
+    const result = await db.request().query<{ slug: string }>(GET_SCORED_BOWLER_SLUGS_SQL);
+    return result.recordset;
+  }, [], { sql: GET_SCORED_BOWLER_SLUGS_SQL, dependsOn: ['scores'] });
+}
+
 const GET_BOWLER_OF_THE_WEEK_SQL = `/* v3: co-winners on ties */
   SELECT sc.bowlerID
   FROM scores sc

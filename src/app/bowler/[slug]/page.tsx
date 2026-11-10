@@ -143,7 +143,8 @@ export default async function BowlerPage({
       {latestSeason && (
         <FrameByFrameBanner
           slug={slug}
-          season={isCurrentSeason ? latestSeason.romanNumeral : null}
+          season={latestSeason.romanNumeral}
+          current={isCurrentSeason}
         />
       )}
 
