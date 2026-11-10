@@ -234,6 +234,21 @@ describe('assembleWrapped', () => {
     expect(v.attendance.longestStreak?.length).toBe(2);
     expect(v.attendance.currentStreak).toBe(1);
   });
+  it('keeps the bowler in the average field when they are under the games line, like rankDebut', () => {
+    // Martin Hall, S36 week 8: 12 games against a 15-game line. He dropped out of
+    // his own ladder and the card printed "0th Martin Hall 0.0".
+    const rs = recordsets();
+    rs[3] = league([
+      { bowlerID: 548, bowlerName: 'Russ Dean', games: 12, pins: 1444, average: 180.5, turkeys: 3, highGame: 212 },
+      { bowlerID: 1, bowlerName: 'Steve', games: 27, pins: 5008, average: 185.5, turkeys: 10, highGame: 256 },
+      { bowlerID: 2, bowlerName: 'Sub', games: 6, pins: 1300, average: 216.7, turkeys: 0, highGame: 230 },
+    ]);
+    const v = assembleWrapped(rs as unknown[][])!;
+    expect(v.ranks.average.value).toBe(180.5);
+    expect(v.ranks.average.rank).toBe(2);
+    expect(v.ranks.average.field).toBe(2);
+    expect(v.ranks.average.above.map(a => a.bowlerName)).toEqual(['Steve']);
+  });
   it('still assembles the career cards when the bowler sat this season out', () => {
     const rs = recordsets();
     rs[1] = [];

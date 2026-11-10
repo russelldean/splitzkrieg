@@ -980,8 +980,9 @@ export function assembleWrapped(recordsets: unknown[][]): BowlerWrapped | null {
     ranks: {
       pins: rankWithin(league, 'pins', bowlerID),
       // Average is the one rank where a two-night sub would distort the field,
-      // so it uses the same minimum-games line as the season leaderboards.
-      average: rankWithin(league.filter(r => r.games >= minGames), 'average', bowlerID),
+      // so it uses the same minimum-games line as the season leaderboards. The
+      // bowler always stays in, like rankDebut, or their own ladder prints 0.0.
+      average: rankWithin(league.filter(r => r.games >= minGames || r.bowlerID === bowlerID), 'average', bowlerID),
       turkeys: rankWithin(league, 'turkeys', bowlerID),
       highGame: rankWithin(league, 'highGame', bowlerID),
     },
