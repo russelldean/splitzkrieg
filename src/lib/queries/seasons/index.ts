@@ -6,3 +6,4 @@ export * from './standings';
 export * from './records';
 export * from './playoffs';
 export * from './weekly';
+export * from './badges';
