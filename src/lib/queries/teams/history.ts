@@ -264,18 +264,21 @@ export async function getTeamSeasonPresence(): Promise<TeamSeasonPresence[]> {
   }, [], { sql: GET_TEAM_SEASON_PRESENCE_SQL, dependsOn: ['scores'] });
 }
 
-const GET_TEAM_PLAYOFF_FINISHES_SQL = `
-  SELECT team1ID AS teamID, seasonID, 'champion' AS finish
+// Outcomes come from winnerTeamID only, never from team1/team2 position, and an
+// undecided match yields no finish for either team. See GET_ALL_PLAYOFF_HISTORY_SQL
+// and scripts/check-no-early-results.mjs.
+export const GET_TEAM_PLAYOFF_FINISHES_SQL = `
+  SELECT winnerTeamID AS teamID, seasonID, 'champion' AS finish
   FROM playoffResults
-  WHERE playoffType = 'Team' AND round = 'final'
+  WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL
   UNION ALL
-  SELECT team2ID AS teamID, seasonID, 'runner-up' AS finish
+  SELECT CASE WHEN winnerTeamID = team1ID THEN team2ID ELSE team1ID END AS teamID, seasonID, 'runner-up' AS finish
   FROM playoffResults
-  WHERE playoffType = 'Team' AND round = 'final'
+  WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL
   UNION ALL
-  SELECT team1ID AS teamID, seasonID, 'semifinalist' AS finish
+  SELECT CASE WHEN winnerTeamID = team1ID THEN team2ID ELSE team1ID END AS teamID, seasonID, 'semifinalist' AS finish
   FROM playoffResults
-  WHERE playoffType = 'Team' AND round = 'semifinal'
+  WHERE playoffType = 'Team' AND round = 'semifinal' AND winnerTeamID IS NOT NULL
 `;
 
 export const getTeamPlayoffFinishes = cache(async (): Promise<TeamPlayoffFinish[]> => {

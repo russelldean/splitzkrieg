@@ -146,17 +146,23 @@ export interface PlayoffSeason {
   semi2HistoricName: string | null;
 }
 
-const GET_ALL_PLAYOFF_HISTORY_SQL = `
+// Outcomes come from winnerTeamID only, never from which slot a team sits in.
+// The final row exists as soon as the semis are bowled, so reading team1ID as
+// the champion showed Lucky Strikes as S36 champion for the week BEFORE the
+// final (2026-11-09 to 11-16). An undecided match produces no champion,
+// runner-up or eliminated semifinalist. Guarded by scripts/check-no-early-results.mjs.
+export const GET_ALL_PLAYOFF_HISTORY_SQL = `
   WITH finals AS (
-    SELECT seasonID, team1ID AS championTeamID, team2ID AS runnerUpTeamID
+    SELECT seasonID, winnerTeamID AS championTeamID,
+           CASE WHEN winnerTeamID = team1ID THEN team2ID ELSE team1ID END AS runnerUpTeamID
     FROM playoffResults
-    WHERE playoffType = 'Team' AND round = 'final'
+    WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL
   ),
   semis AS (
-    SELECT seasonID, team1ID AS semiTeamID,
+    SELECT seasonID, CASE WHEN winnerTeamID = team1ID THEN team2ID ELSE team1ID END AS semiTeamID,
            ROW_NUMBER() OVER (PARTITION BY seasonID ORDER BY playoffID) AS rn
     FROM playoffResults
-    WHERE playoffType = 'Team' AND round = 'semifinal'
+    WHERE playoffType = 'Team' AND round = 'semifinal' AND winnerTeamID IS NOT NULL
   )
   SELECT
     s.seasonID,

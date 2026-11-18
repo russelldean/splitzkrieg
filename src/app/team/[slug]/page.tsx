@@ -12,7 +12,8 @@
  */
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getTeamBySlug, getGhostTeamH2H, getAllTeamSlugs, getCurrentSeasonTeamIDs, getTeamCurrentSeasonSchedule, getCurrentSeasonID, type GhostTeamMatchup } from '@/lib/queries';
+import { getTeamBySlug, getGhostTeamH2H, getAllTeamSlugs, getCurrentSeasonTeamIDs, getTeamCurrentSeasonSchedule, getCurrentSeasonID, getTeamPlayoffFinishes, type GhostTeamMatchup } from '@/lib/queries';
+import { decidedPlayoffH2H } from '@/lib/scoring/decided-playoffs.mjs';
 import { getTeamPageView } from '@/lib/views/team-page';
 import { getTeamLeagueContext } from '@/lib/views/team-league-context';
 import { TeamHero } from '@/components/team/TeamHero';
@@ -135,12 +136,15 @@ export default async function TeamPage({
 
   const isGhostTeam = team.teamID === 45;
 
-  const [view, league] = await Promise.all([
+  const [view, league, playoffFinishes] = await Promise.all([
     getTeamPageView(team.teamID),
     getTeamLeagueContext(),
+    getTeamPlayoffFinishes(),
   ]);
 
-  const { currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, h2hMatchups, playoffH2H, bowlersBySeason } = view;
+  const { currentRoster, teamSeasons, allTimeRoster, franchiseHistory, currentStanding, h2hMatchups, bowlersBySeason } = view;
+  // An unbowled playoff match must not show as a loss. See decided-playoffs.mjs.
+  const playoffH2H = decidedPlayoffH2H(view.playoffH2H, playoffFinishes, team.teamID);
   const { activeTeams, currentSlug } = league;
 
   // Ghost Team (teamID 45) uses a bespoke matchup query; unused for all other teams.

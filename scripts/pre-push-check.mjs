@@ -11,6 +11,7 @@
  *   3. .data-versions.json is staged/committed if query files changed
  *   4. .published-week exists and looks reasonable
  *   5. No stable: true on queries reading mutable tables (via invariant checker)
+ *   6. No playoff result shows before it is bowled (check-no-early-results.mjs, needs DB)
  */
 
 import { execSync } from 'child_process';
@@ -167,6 +168,18 @@ try {
   }
 } catch {
   warn('published-tag', 'Could not check git diff');
+}
+
+// 6. No early playoff results. Replays the latest season's playoffs as unbowled
+// inside a rolled-back transaction and runs the real SQL. Needs the DB, so CI
+// (no credentials) gets a warning instead of a failure.
+try {
+  execSync('node scripts/check-no-early-results.mjs', { cwd: ROOT, stdio: 'pipe' });
+  pass('early-results', 'Undecided playoff matches show no outcome');
+} catch (err) {
+  const out = `${err.stdout || ''}${err.stderr || ''}`.trim();
+  if (err.status === 2) warn('early-results', 'No DB credentials, skipped');
+  else fail('early-results', out || err.message);
 }
 
 // Summary

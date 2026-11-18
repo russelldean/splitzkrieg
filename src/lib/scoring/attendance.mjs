@@ -20,9 +20,9 @@
  * each of those 2026-10-30. S2 is the one override: 17 weeks with a bye each
  * week, so 16 possible nights, and Russ set the bar at 15.
  *
- * Only completed seasons qualify (isCurrentSeason = 0), so the current season
- * never earns it mid-season and it is awarded at the changeover, next to the
- * playoff badges.
+ * Only completed seasons qualify: not current, or current with a decided final
+ * (Russ, 2026-11-18: award season badges right after finals, not at the
+ * changeover). The current season never earns it mid-season.
  *
  * Shared by scripts/populate-patches.mjs (writer) and scripts/audit-patches.mjs
  * (diff), following above-average.mjs, so the two cannot drift apart.
@@ -56,7 +56,9 @@ export function attendanceSql({ seasonID = null } = {}) {
       GROUP BY sc.seasonID
     ) s ON s.seasonID = a.seasonID
     JOIN seasons se ON se.seasonID = a.seasonID
-    WHERE se.isCurrentSeason = 0
+    WHERE (se.isCurrentSeason = 0
+           OR se.seasonID IN (SELECT seasonID FROM playoffResults
+                              WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL))
       AND a.nights >= CASE ${overrides} ELSE s.nights - 1 END
       ${seasonFilter}`;
 }
