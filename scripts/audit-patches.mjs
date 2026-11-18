@@ -94,7 +94,8 @@ const SEASONAL = {
           CAST(SUM(sc2.scratchSeries) * 1.0 / NULLIF(SUM(sc2.gamesBowled), 0) AS DECIMAL(5,1)) DESC) AS rnk
       FROM scores sc2 JOIN bowlers b2 ON b2.bowlerID = sc2.bowlerID
       WHERE sc2.isPenalty = 0 AND b2.gender IN ('M','F') ${sf2}
-        AND sc2.seasonID NOT IN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
+        AND (sc2.seasonID NOT IN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
+             OR sc2.seasonID IN (SELECT seasonID FROM playoffResults WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL))
       GROUP BY sc2.seasonID, sc2.bowlerID, b2.gender
       HAVING SUM(sc2.gamesBowled) >= ${MIN_GAMES.replace('seasonID', 'sc2.seasonID')}
     ) r WHERE r.rnk <= 8`,
@@ -105,7 +106,8 @@ const SEASONAL = {
         SELECT sc2.seasonID, sc2.bowlerID,
           CAST(SUM(sc2.bowledHandSeries) * 1.0 / NULLIF(SUM(sc2.gamesBowled), 0) AS DECIMAL(5,1)) AS hcpAvg
         FROM scores sc2 WHERE sc2.isPenalty = 0 ${sf2}
-          AND sc2.seasonID NOT IN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
+          AND (sc2.seasonID NOT IN (SELECT seasonID FROM seasons WHERE isCurrentSeason = 1)
+             OR sc2.seasonID IN (SELECT seasonID FROM playoffResults WHERE playoffType = 'Team' AND round = 'final' AND winnerTeamID IS NOT NULL))
         GROUP BY sc2.seasonID, sc2.bowlerID
         HAVING SUM(sc2.gamesBowled) >= ${MIN_GAMES.replace('seasonID', 'sc2.seasonID')}
       ) ss
