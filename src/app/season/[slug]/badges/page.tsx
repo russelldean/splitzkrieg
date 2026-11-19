@@ -14,6 +14,7 @@ import {
   type SeasonBadgeRow,
 } from '@/lib/queries';
 import { PatchBadge } from '@/components/ui/PatchBadge';
+import { compareByLastName } from '@/lib/name-sort';
 import { TrailNav } from '@/components/ui/TrailNav';
 import { strikeX } from '@/components/ui/StrikeX';
 
@@ -84,7 +85,7 @@ function earnersFor(rows: SeasonBadgeRow[], code: string, alphabetical = false):
     if (r.week != null) e.weeks.push(r.week);
   }
   return [...byBowler.values()].sort(
-    (a, b) => (alphabetical ? 0 : b.count - a.count) || a.bowlerName.localeCompare(b.bowlerName),
+    (a, b) => (alphabetical ? 0 : b.count - a.count) || compareByLastName(a.bowlerName, b.bowlerName),
   );
 }
 

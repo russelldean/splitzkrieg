@@ -4,6 +4,7 @@
  */
 import type { WeeklyMatchScore, WeeklyMatchupResult } from '@/lib/queries';
 import { isAboveAverageAllThree } from '@/lib/scoring/above-average.mjs';
+import { compareByLastName } from '@/lib/name-sort';
 import { pinScoresForWeek } from '@/lib/scoring/pin';
 
 export interface TopResult<T> {
@@ -105,14 +106,17 @@ export function computeIndividualLeaders(weekScores: WeeklyMatchScore[], compact
 
 export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: WeeklyMatchScore[]) {
   // Turkeys
-  const turkeyList = bowlers.filter(b => b.turkeys > 0).sort((a, b) => b.turkeys - a.turkeys);
+  const turkeyList = bowlers.filter(b => b.turkeys > 0)
+    .sort((a, b) => b.turkeys - a.turkeys || compareByLastName(a.bowlerName, b.bowlerName));
 
   // Above Average Every Game. The rule itself lives in one place now; this used
   // to be a third copy of it and had drifted to `>`. See above-average.mjs.
-  const aboveAvgEveryGame = bowlers.filter(isAboveAverageAllThree);
+  const aboveAvgEveryGame = bowlers.filter(isAboveAverageAllThree)
+    .sort((a, b) => compareByLastName(a.bowlerName, b.bowlerName));
 
   // Debuts
-  const debuts = weekScores.filter(s => s.isFirstNight && !s.isPenalty);
+  const debuts = weekScores.filter(s => s.isFirstNight && !s.isPenalty)
+    .sort((a, b) => compareByLastName(a.bowlerName, b.bowlerName));
 
   // All-Time High Game
   const allTimeHighGames: { bowlerName: string; bowlerSlug: string; teamName: string; score: number }[] = [];
@@ -155,7 +159,7 @@ export function computeWeeklyAwards(weekScores: WeeklyMatchScore[], bowlers: Wee
           series: b.scratchSeries ?? 0,
           handSeries: b.handSeries ?? 0,
         }))
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => compareByLastName(a.name, b.name))
     : [];
 
   // Team of the Week

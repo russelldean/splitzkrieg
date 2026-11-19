@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { compareByLastName } from '@/lib/name-sort';
 
 type RosterEntry = {
   bowlerID: number;
@@ -363,7 +364,7 @@ function buildBowlerRows(): BowlerRow[] {
   }
   const rows = Array.from(map.values());
   rows.forEach(r => { r.totalSeasons = r.seasons.size; });
-  rows.sort((a, b) => a.firstSeason - b.firstSeason || a.bowlerName.localeCompare(b.bowlerName));
+  rows.sort((a, b) => a.firstSeason - b.firstSeason || compareByLastName(a.bowlerName, b.bowlerName));
   return rows;
 }
 

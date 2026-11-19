@@ -3,10 +3,11 @@
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { DirectoryBowler } from '@/lib/queries';
+import { compareByLastName, surnameInitial } from '@/lib/name-sort';
 
 function groupByLetter(bowlers: DirectoryBowler[]) {
   return bowlers.reduce<Record<string, DirectoryBowler[]>>((groups, bowler) => {
-    const letter = bowler.bowlerName[0].toUpperCase();
+    const letter = surnameInitial(bowler.bowlerName);
     if (!groups[letter]) groups[letter] = [];
     groups[letter].push(bowler);
     return groups;
@@ -22,7 +23,7 @@ export function BowlerDirectory({ bowlers }: { bowlers: DirectoryBowler[] }) {
     router.replace(current ? `${pathname}?filter=current` : pathname, { scroll: false });
   };
   const filtered = showCurrent ? bowlers.filter(b => b.isActive) : bowlers;
-  const grouped = groupByLetter(filtered);
+  const grouped = groupByLetter([...filtered].sort((a, b) => compareByLastName(a.bowlerName, b.bowlerName)));
   const letters = Object.keys(grouped).sort();
 
   return (

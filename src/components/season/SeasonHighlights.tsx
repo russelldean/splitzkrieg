@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import type { WeeklyMatchScore } from '@/lib/queries';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { compareByLastName } from '@/lib/name-sort';
 
 interface Props {
   weeklyScores: WeeklyMatchScore[];
@@ -125,7 +126,7 @@ export function SeasonHighlights({ weeklyScores }: Props) {
     }
   }
   const turkeyListAll: CountEntryWithDelta[] = Array.from(turkeyMap.values())
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    .sort((a, b) => b.count - a.count || compareByLastName(a.name, b.name));
   const topTurkeys = topWithTies(turkeyListAll, 5, e => e.count);
 
   // --- 200 Games (season cumulative + this week delta) ---
@@ -143,7 +144,7 @@ export function SeasonHighlights({ weeklyScores }: Props) {
     }
   }
   const twoHundredListAll: CountEntryWithDelta[] = Array.from(twoHundredMap.values())
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    .sort((a, b) => b.count - a.count || compareByLastName(a.name, b.name));
   const topTwoHundred = topWithTies(twoHundredListAll, 5, e => e.count);
 
   return (

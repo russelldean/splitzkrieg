@@ -16,6 +16,7 @@ import { getDb, cachedQuery } from '../db';
 import { getMinGamesForWeek } from '../queries/seasons/standings';
 import { classifyArchetype, type GameArchetype } from '../queries/alltime';
 import { pinScoresForWeek, type PinBowler, type PinMatch } from '../scoring/pin';
+import { compareByLastName } from '@/lib/name-sort';
 
 export interface WrappedWeek {
   week: number;
@@ -560,7 +561,7 @@ export function rankWithin(
   key: 'pins' | 'average' | 'turkeys' | 'highGame',
   bowlerID: number,
 ): Ranked {
-  const sorted = [...field].sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0) || a.bowlerName.localeCompare(b.bowlerName));
+  const sorted = [...field].sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0) || compareByLastName(a.bowlerName, b.bowlerName));
   const idx = sorted.findIndex(r => r.bowlerID === bowlerID);
   const value = idx >= 0 ? sorted[idx][key] : 0;
   const rankOf = (v: number) => sorted.findIndex(r => r[key] === v) + 1;

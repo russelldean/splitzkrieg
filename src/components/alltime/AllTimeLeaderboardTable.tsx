@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { AllTimeLeaderRow } from '@/lib/queries';
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { ScrollableTable } from '@/components/ui/ScrollableTable';
+import { compareByLastName } from '@/lib/name-sort';
 
 type SortColumn =
   | 'bowlerName'
@@ -69,7 +70,7 @@ export function AllTimeLeaderboardTable({ data }: Props) {
       if (bVal === null) return -1;
 
       if (typeof aVal === 'string' && typeof bVal === 'string') {
-        const cmp = aVal.localeCompare(bVal);
+        const cmp = sortColumn === 'bowlerName' ? compareByLastName(aVal, bVal) : aVal.localeCompare(bVal);
         return sortDirection === 'asc' ? cmp : -cmp;
       }
 

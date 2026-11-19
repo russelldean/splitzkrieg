@@ -7,6 +7,7 @@ import type { SeasonFullStatsRow, SeasonIndividualChampions } from '@/lib/querie
 import { scoreColorClass, seriesColorClass } from '@/lib/score-utils';
 import { ScrollableTable } from '@/components/ui/ScrollableTable';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { compareByLastName } from '@/lib/name-sort';
 
 interface Props {
   stats: SeasonFullStatsRow[];
@@ -121,7 +122,7 @@ export function FullStatsTable({ stats, minGames, champions }: Props) {
       if (bVal === null) return -1;
 
       if (typeof aVal === 'string' && typeof bVal === 'string') {
-        const cmp = aVal.localeCompare(bVal);
+        const cmp = sortColumn === 'bowlerName' ? compareByLastName(aVal, bVal) : aVal.localeCompare(bVal);
         return sortDirection === 'asc' ? cmp : -cmp;
       }
 
