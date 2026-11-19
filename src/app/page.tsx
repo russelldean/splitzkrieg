@@ -33,6 +33,7 @@ import { getRandomFacts } from '@/lib/queries/facts';
 import { getPlayoffTeamMatches, getPlayoffBracketParticipants } from '@/lib/queries/playoffs/page';
 import { RandomFact } from '@/components/home/RandomFact';
 import { FrameByFrameCallout } from '@/components/home/FrameByFrameCallout';
+import { BadgeWallCallout } from '@/components/home/BadgeWallCallout';
 
 
 export const metadata = {
@@ -252,6 +253,13 @@ export default async function Home() {
         {seasonSnapshot && (
           <TrackVisibility section="frame-by-frame" page="home">
             <FrameByFrameCallout season={seasonSnapshot.romanNumeral} />
+          </TrackVisibility>
+        )}
+
+        {/* === FULL WIDTH: Badge Wall (temporary; only once the final has a winner) === */}
+        {championship && (
+          <TrackVisibility section="badge-wall" page="home">
+            <BadgeWallCallout romanNumeral={championship.romanNumeral} seasonSlug={championship.slug} />
           </TrackVisibility>
         )}
 
