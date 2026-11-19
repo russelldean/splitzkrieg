@@ -24,7 +24,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
   return slug ? [{ slug }] : [];
 }
 
-const GROUPS: { title: string; badges: { code: string; label: string; blurb: string }[] }[] = [
+const GROUPS: { title: string; badges: { code: string; label: string; blurb: string; alphaList?: boolean }[] }[] = [
   {
     title: 'Champions',
     badges: [
@@ -56,7 +56,8 @@ const GROUPS: { title: string; badges: { code: string; label: string; blurb: str
       { code: 'highGame', label: 'Weekly High Game', blurb: 'Top scratch game of the night' },
       { code: 'highSeries', label: 'Weekly High Series', blurb: 'Top scratch series of the night' },
       { code: 'threeOfAKind', label: 'Three of a Kind', blurb: 'Same score all three games' },
-      { code: 'aboveAvg', label: 'Above Average All 3', blurb: 'Matched or beat average every game' },
+      // Long list: alphabetical, one name per row, so bowlers can find themselves.
+      { code: 'aboveAvg', label: 'Above Average All 3', blurb: 'Matched or beat average every game', alphaList: true },
     ],
   },
 ];
@@ -70,7 +71,7 @@ interface Earner {
   count: number;
 }
 
-function earnersFor(rows: SeasonBadgeRow[], code: string): Earner[] {
+function earnersFor(rows: SeasonBadgeRow[], code: string, alphabetical = false): Earner[] {
   const byBowler = new Map<number, Earner>();
   for (const r of rows) {
     if (r.code !== code) continue;
@@ -83,7 +84,7 @@ function earnersFor(rows: SeasonBadgeRow[], code: string): Earner[] {
     if (r.week != null) e.weeks.push(r.week);
   }
   return [...byBowler.values()].sort(
-    (a, b) => b.count - a.count || a.bowlerName.localeCompare(b.bowlerName),
+    (a, b) => (alphabetical ? 0 : b.count - a.count) || a.bowlerName.localeCompare(b.bowlerName),
   );
 }
 
@@ -135,7 +136,7 @@ export default async function BadgeWallPage({ params }: { params: Promise<{ slug
       <div className="mt-8 space-y-10">
         {GROUPS.map((group) => {
           const sections = group.badges
-            .map((b) => ({ ...b, earners: earnersFor(badges, b.code) }))
+            .map((b) => ({ ...b, earners: earnersFor(badges, b.code, b.alphaList) }))
             .filter((b) => b.earners.length > 0);
           if (sections.length === 0) return null;
           return (
@@ -159,9 +160,9 @@ export default async function BadgeWallPage({ params }: { params: Promise<{ slug
                             : `${awards} awards, ${s.earners.length} bowlers`}
                         </span>
                       </div>
-                      <ul className="flex flex-wrap gap-x-5 gap-y-2 px-4 py-3">
+                      <ul className={s.alphaList ? 'divide-y divide-navy/5' : 'flex flex-wrap gap-x-5 gap-y-2 px-4 py-3'}>
                         {s.earners.map((e) => (
-                          <li key={e.bowlerID} className="font-body text-sm text-navy">
+                          <li key={e.bowlerID} className={`font-body text-sm text-navy ${s.alphaList ? 'px-4 py-2' : ''}`}>
                             {e.isPublic ? (
                               <Link
                                 href={`/bowler/${e.slug}`}
