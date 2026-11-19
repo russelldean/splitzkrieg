@@ -63,6 +63,17 @@ const GROUPS: { title: string; badges: { code: string; label: string; blurb: str
   },
 ];
 
+/**
+ * Site palette per group (navy, cream, red, gold). The badge pills keep their
+ * own colors; everything around them stays in the house colors.
+ */
+const GROUP_STYLE: Record<string, { stripe: string; header: string; chip: string }> = {
+  Champions: { stripe: 'border-l-amber-400', header: 'bg-amber-200', chip: 'bg-amber-300 text-navy' },
+  Playoffs: { stripe: 'border-l-red-600', header: 'bg-cream-dark', chip: 'bg-red-600/10 text-red-700' },
+  Season: { stripe: 'border-l-navy', header: 'bg-cream-dark', chip: 'bg-navy/10 text-navy' },
+  Weekly: { stripe: 'border-l-navy', header: 'bg-cream-dark', chip: 'bg-navy/10 text-navy' },
+};
+
 interface Earner {
   bowlerID: number;
   bowlerName: string;
@@ -122,17 +133,41 @@ export default async function BadgeWallPage({ params }: { params: Promise<{ slug
         Back to Season {season.romanNumeral}
       </Link>
 
-      <div className="pb-5 border-b border-red-600/20">
-        <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-navy">
-          Season {strikeX(season.romanNumeral)}
-        </h1>
-        <p className="font-body text-sm text-navy/65 mt-1">
+      <section className="rounded-xl bg-navy text-cream shadow-md ring-1 ring-navy/10 px-5 py-5 sm:px-8 sm:py-7">
+        <p className="font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-cream/80">
           Badge Wall &middot; {season.period} {season.year}
         </p>
-        <p className="font-body text-sm text-navy/65 mt-3">
-          {badges.length} badges earned by {bowlerCount} bowlers.
+        <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl leading-tight mt-1">
+          Season {strikeX(season.romanNumeral)}
+        </h1>
+        <p className="font-body text-sm sm:text-base text-cream/85 mt-1">
+          <span className="font-semibold text-amber-300 tabular-nums">{badges.length}</span> badges earned by{' '}
+          <span className="font-semibold text-amber-300 tabular-nums">{bowlerCount}</span> bowlers.
         </p>
-      </div>
+
+        {/* One tile per badge earned this season; each jumps to its section. */}
+        <nav aria-label="Badges" className="mt-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+          {GROUPS.flatMap((g) => g.badges).map((b) => {
+            const n = badges.filter((r) => r.code === b.code).length;
+            if (n === 0) return null;
+            return (
+              <a
+                key={b.code}
+                href={`#${b.code}`}
+                className="group rounded-lg bg-white/5 px-3 py-2.5 ring-1 ring-cream/15 transition-colors hover:bg-white/10 hover:ring-amber-300/60"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-heading text-2xl leading-none tabular-nums text-amber-300">{n}</span>
+                  <PatchBadge type={b.code} />
+                </div>
+                <div className="mt-1.5 font-body text-xs font-semibold leading-tight text-cream/85 group-hover:text-cream">
+                  {b.label}
+                </div>
+              </a>
+            );
+          })}
+        </nav>
+      </section>
 
       <div className="mt-8 space-y-10">
         {GROUPS.map((group) => {
@@ -140,22 +175,29 @@ export default async function BadgeWallPage({ params }: { params: Promise<{ slug
             .map((b) => ({ ...b, earners: earnersFor(badges, b.code, b.alphaList) }))
             .filter((b) => b.earners.length > 0);
           if (sections.length === 0) return null;
+          const style = GROUP_STYLE[group.title] ?? GROUP_STYLE.Weekly;
           return (
             <section key={group.title}>
-              <h2 className="font-heading text-xl text-navy mb-3">{group.title}</h2>
+              <h2 className="font-heading text-xl text-navy mb-3 flex items-center gap-3">
+                {group.title}
+                <span className="h-px flex-1 bg-gradient-to-r from-red-600/40 to-transparent" />
+              </h2>
               <div className="space-y-4">
                 {sections.map((s) => {
                   const awards = s.earners.reduce((n, e) => n + e.count, 0);
                   return (
-                    <div key={s.code} className="rounded-lg border border-navy/10 bg-white shadow-sm">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-navy/5 px-4 py-3">
-                        <PatchBadge type={s.code} />
+                    <div key={s.code} id={s.code} className={`scroll-mt-20 overflow-hidden rounded-lg border border-navy/10 border-l-4 ${style.stripe} bg-white shadow-sm`}>
+                      <div className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-navy/5 px-4 py-3 ${style.header}`}>
+                        {/* A white ring lifts the pill off the tinted header. */}
+                        <span className="inline-flex rounded-full ring-2 ring-white shadow-sm">
+                          <PatchBadge type={s.code} />
+                        </span>
                         <h3 className="font-heading text-base text-navy">
                           {s.label}
                           {s.code === 'champion' && championTeamName ? `: ${championTeamName}` : ''}
                         </h3>
-                        <span className="font-body text-sm text-navy/65">{s.blurb}</span>
-                        <span className="ml-auto font-body text-sm tabular-nums text-navy/65">
+                        <span className="font-body text-sm text-navy/70">{s.blurb}</span>
+                        <span className="ml-auto font-body text-sm tabular-nums text-navy/70">
                           {awards === s.earners.length
                             ? `${awards} ${awards === 1 ? 'bowler' : 'bowlers'}`
                             : `${awards} awards, ${s.earners.length} bowlers`}
@@ -175,7 +217,11 @@ export default async function BadgeWallPage({ params }: { params: Promise<{ slug
                             ) : (
                               <span className="font-medium">{e.bowlerName}</span>
                             )}
-                            {e.count > 1 && <span className="ml-1 font-semibold text-navy/80">(x{e.count})</span>}
+                            {e.count > 1 && (
+                              <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold ${style.chip}`}>
+                                x{e.count}
+                              </span>
+                            )}
                             {e.weeks.length > 0 && (
                               <span className="ml-1.5 text-xs tabular-nums text-navy/65">
                                 Wk {e.weeks.join(', ')}
